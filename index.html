@@ -2109,134 +2109,146 @@
 
 
 
+  // ── Captura robusta: resetea zoom antes de capturar ─────────────
+  function resetZoomAndCapture(callback) {
+    const meta = document.querySelector('meta[name="viewport"]');
+    const originalContent = meta ? meta.getAttribute('content') : '';
+
+    // Forzar zoom=1 en el viewport
+    if (meta) {
+      meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+    window.scrollTo(0, 0);
+
+    // Esperar a que el navegador aplique el reset de zoom
+    setTimeout(() => {
+      callback(() => {
+        // Restaurar viewport original después de capturar
+        if (meta && originalContent) {
+          meta.setAttribute('content', originalContent);
+        }
+      });
+    }, 400);
+  }
+
+  function captureContainer(options, onSuccess, onError) {
+    const container = document.querySelector('.container');
+    const W = container.offsetWidth || document.documentElement.clientWidth;
+    const H = container.offsetHeight || document.documentElement.scrollHeight;
+    const scale = Math.max(Math.min(window.devicePixelRatio || 2, 3), 1);
+
+    html2canvas(container, {
+      backgroundColor: '#060b14',
+      scale: scale,
+      width: W,
+      height: H,
+      windowWidth: W,
+      windowHeight: H,
+      scrollX: 0,
+      scrollY: 0,
+      useCORS: true,
+      allowTaint: true,
+      imageTimeout: 0,
+      logging: false,
+      onclone: (doc) => {
+        doc.querySelectorAll('img').forEach(img => {
+          if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
+        });
+        doc.querySelectorAll('svg').forEach(svg => {
+          if (!svg.getAttribute('width')) svg.setAttribute('width', '180');
+          if (!svg.getAttribute('height')) svg.setAttribute('height', '180');
+          svg.style.animation = 'none';
+          svg.style.transform = 'rotate(-90deg)';
+        });
+        const styleEl = doc.createElement('style');
+        styleEl.textContent = `
+          .profile-avatar-wrapper { animation: none !important; background: none !important; }
+          .profile-avatar-wrapper::before { display: none !important; content: none !important; }
+          .profile-avatar-wrapper::after { display: none !important; content: none !important; }
+          .profile-avatar { border: 6px solid #00c8ff !important; animation: none !important; }
+          @keyframes spinBorder { 0%,100% { transform: none; } }
+          @keyframes spinDonut { 0%,100% { transform: rotate(-90deg); } }
+          @keyframes glowCompass { 0%,100% { filter: none; } }
+          #visit-wrapper { display: none !important; }
+        `;
+        doc.head.appendChild(styleEl);
+        if (options.replaceUsername) {
+          const usernameInput = doc.getElementById('username');
+          if (usernameInput) {
+            const span = doc.createElement('span');
+            span.textContent = usernameInput.value || usernameInput.placeholder;
+            span.style.cssText = "font-family:'Orbitron',monospace;font-size:inherit;font-weight:900;color:#fff;letter-spacing:2px;text-transform:uppercase;white-space:nowrap;display:inline-block;";
+            usernameInput.parentNode.replaceChild(span, usernameInput);
+          }
+        }
+        if (options.hideElements) {
+          options.hideElements.forEach(sel => {
+            doc.querySelectorAll(sel).forEach(el => el.style.display = 'none');
+          });
+        }
+      }
+    }).then(onSuccess).catch(onError);
+  }
+
   function takePartialScreenshot() {
     const btn = document.getElementById('btn-share-partial');
     btn.textContent = '⏳  Generando...';
     btn.disabled = true;
 
-    // Resetear zoom y scroll antes de capturar
-    window.scrollTo(0, 0);
-    document.body.style.zoom = '';
-
     const resultsCard = document.querySelector('.results-card');
     const saveBar = document.querySelector('.save-bar');
     const footerPs = document.querySelectorAll('.container > p');
+
+    const restore = () => {
+      resultsCard.style.display = '';
+      saveBar.style.display = '';
+      footerPs.forEach(p => p.style.display = '');
+      btn.disabled = false;
+    };
+
     resultsCard.style.display = 'none';
     saveBar.style.display = 'none';
     footerPs.forEach(p => p.style.display = 'none');
 
-    setTimeout(() => {
-      const container = document.querySelector('.container');
-      // Calcular dimensiones reales ignorando zoom del navegador
-      const vp = window.visualViewport;
-      const zoom = vp ? vp.scale : 1;
-      const captureWidth = Math.round(container.getBoundingClientRect().width * zoom) || document.documentElement.clientWidth;
-      const captureHeight = Math.round(container.getBoundingClientRect().height * zoom) || document.documentElement.clientHeight;
-      const captureScale = Math.max(Math.min(window.devicePixelRatio || 2, 3), 1);
+    resetZoomAndCapture((done) => {
+      captureContainer(
+        { replaceUsername: true, hideElements: ['.results-card', '.save-bar'] },
+        async (canvas) => {
+          done();
+          restore();
+          btn.textContent = '✔ ¡Listo!';
+          setTimeout(() => { btn.innerHTML = '📤 &nbsp;Compartir'; }, 2500);
 
-      if (!captureWidth || !captureHeight || captureWidth < 10 || captureHeight < 10) {
-        resultsCard.style.display = '';
-        saveBar.style.display = '';
-        footerPs.forEach(p => p.style.display = '');
-        btn.innerHTML = '📤 &nbsp;Compartir';
-        btn.disabled = false;
-        alert('Por favor regresa el zoom a normal (pellizca la pantalla) e intenta de nuevo.');
-        return;
-      }
+          const now = new Date();
+          const filename = 'atlas-earth-perfil-' + now.toISOString().slice(0,10) + '.png';
 
-      html2canvas(container, {
-        backgroundColor: '#060b14',
-        scale: captureScale,
-        width: captureWidth,
-        height: captureHeight,
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight,
-        scrollX: -window.scrollX,
-        scrollY: -window.scrollY,
-        useCORS: true,
-        allowTaint: true,
-        imageTimeout: 0,
-        logging: false,
-        onclone: (doc) => {
-          doc.querySelectorAll('img').forEach(img => {
-            if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
-          });
-          doc.querySelectorAll('svg').forEach(svg => {
-            if (!svg.getAttribute('width')) svg.setAttribute('width', '180');
-            if (!svg.getAttribute('height')) svg.setAttribute('height', '180');
-            svg.style.animation = 'none';
-            svg.style.transform = 'rotate(-90deg)';
-          });
-          // Eliminar completamente el efecto conic-gradient que rompe html2canvas en móvil
-          const styleEl = doc.createElement('style');
-          styleEl.textContent = `
-            .profile-avatar-wrapper { animation: none !important; background: none !important; }
-            .profile-avatar-wrapper::before { display: none !important; content: none !important; }
-            .profile-avatar-wrapper::after { display: none !important; content: none !important; }
-            .profile-avatar { border: 6px solid #00c8ff !important; animation: none !important; }
-            @keyframes spinBorder { 0%,100% { transform: none; } }
-            @keyframes spinDonut { 0%,100% { transform: rotate(-90deg); } }
-            @keyframes glowCompass { 0%,100% { filter: none; } }
-          `;
-          doc.head.appendChild(styleEl);
-          // Reemplazar input por span para mostrar nombre completo
-          const usernameInput = doc.getElementById('username');
-          if (usernameInput) {
-            const span = doc.createElement('span');
-            span.textContent = usernameInput.value || usernameInput.placeholder;
-            span.style.fontFamily = usernameInput.style.fontFamily || "'Orbitron', monospace";
-            span.style.fontSize = getComputedStyle(usernameInput).fontSize;
-            span.style.fontWeight = '900';
-            span.style.color = '#fff';
-            span.style.letterSpacing = '2px';
-            span.style.textTransform = 'uppercase';
-            span.style.whiteSpace = 'nowrap';
-            span.style.display = 'inline-block';
-            usernameInput.parentNode.replaceChild(span, usernameInput);
-          }
-        }
-      }).then(async canvas => {
-        resultsCard.style.display = '';
-        saveBar.style.display = '';
-        footerPs.forEach(p => p.style.display = '');
-        btn.textContent = '✔ ¡Listo!';
-        btn.disabled = false;
-        setTimeout(() => { btn.innerHTML = '📤 &nbsp;Compartir'; }, 2500);
-
-        const now = new Date();
-        const fecha = now.toISOString().slice(0,10);
-        const filename = 'atlas-earth-perfil-' + fecha + '.png';
-
-        // Intentar Web Share API con archivo (móvil)
-        if (navigator.canShare) {
-          try {
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-            const file = new File([blob], filename, { type: 'image/png' });
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], title: 'Atlas Earth AEMX' });
-              return;
+          if (navigator.canShare) {
+            try {
+              const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+              const file = new File([blob], filename, { type: 'image/png' });
+              if (navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'Atlas Earth AEMX' });
+                return;
+              }
+            } catch(e) {
+              if (e.name === 'AbortError') return;
             }
-          } catch(e) {
-            if (e.name === 'AbortError') return;
           }
+          const link = document.createElement('a');
+          link.download = filename;
+          link.href = canvas.toDataURL('image/png');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        },
+        (err) => {
+          done();
+          restore();
+          btn.innerHTML = '📤 &nbsp;Compartir';
+          alert('Error al generar la imagen: ' + err.message);
         }
-
-        // Fallback: descarga directa (PC)
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = canvas.toDataURL('image/png');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }).catch((err) => {
-        resultsCard.style.display = '';
-        saveBar.style.display = '';
-        footerPs.forEach(p => p.style.display = '');
-        btn.innerHTML = '📤 &nbsp;Compartir';
-        btn.disabled = false;
-        alert('Error al generar la imagen: ' + err.message);
-      });
-    }, 100);
+      );
+    });
   }
 
   function takeScreenshot() {
@@ -2244,128 +2256,45 @@
     btn.textContent = '⏳  Generando...';
     btn.disabled = true;
 
-    // Hide buttons bar temporarily
     const saveBar = document.querySelector('.save-bar');
     const footerP = document.querySelector('.container > p');
+
+    const restore = () => {
+      saveBar.style.display = '';
+      if (footerP) footerP.style.display = '';
+      btn.disabled = false;
+    };
+
     saveBar.style.display = 'none';
     if (footerP) footerP.style.display = 'none';
 
-    // Resetear scroll antes de capturar
-    window.scrollTo(0, 0);
+    resetZoomAndCapture((done) => {
+      captureContainer(
+        { replaceUsername: false, hideElements: ['.save-bar'] },
+        (canvas) => {
+          done();
+          restore();
+          btn.textContent = '✔ ¡Listo!';
+          setTimeout(() => { btn.innerHTML = '📸 &nbsp;Guardar PNG'; }, 2500);
 
-    setTimeout(() => {
-      const container2 = document.querySelector('.container');
-      const vp2 = window.visualViewport;
-      const zoom2 = vp2 ? vp2.scale : 1;
-      const captureWidth2 = Math.round(container2.getBoundingClientRect().width * zoom2) || document.documentElement.clientWidth;
-      const captureHeight2 = Math.round(container2.getBoundingClientRect().height * zoom2) || document.documentElement.clientHeight;
-      const captureScale2 = Math.max(Math.min(window.devicePixelRatio || 2, 3), 1);
-
-      if (!captureWidth2 || !captureHeight2 || captureWidth2 < 10 || captureHeight2 < 10) {
-        saveBar.style.display = '';
-        if (footerP) footerP.style.display = '';
-        btn.innerHTML = '📸 &nbsp;Guardar PNG';
-        btn.disabled = false;
-        alert('Por favor regresa el zoom a normal (pellizca la pantalla) e intenta de nuevo.');
-        return;
-      }
-
-      html2canvas(container2, {
-        backgroundColor: '#060b14',
-        scale: captureScale2,
-        width: captureWidth2,
-        height: captureHeight2,
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight,
-        scrollX: -window.scrollX,
-        scrollY: -window.scrollY,
-        useCORS: true,
-        allowTaint: true,
-        imageTimeout: 0,
-        logging: false,
-        onclone: (doc) => {
-          doc.querySelectorAll('img').forEach(img => {
-            if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
-          });
-          doc.querySelectorAll('svg').forEach(svg => {
-            if (!svg.getAttribute('width')) svg.setAttribute('width', '180');
-            if (!svg.getAttribute('height')) svg.setAttribute('height', '180');
-            svg.style.animation = 'none';
-            svg.style.transform = 'rotate(-90deg)';
-          });
-          // Eliminar completamente el efecto conic-gradient que rompe html2canvas en móvil
-          const styleEl = doc.createElement('style');
-          styleEl.textContent = `
-            .profile-avatar-wrapper { animation: none !important; background: none !important; }
-            .profile-avatar-wrapper::before { display: none !important; content: none !important; }
-            .profile-avatar-wrapper::after { display: none !important; content: none !important; }
-            .profile-avatar { border: 6px solid #00c8ff !important; animation: none !important; }
-            @keyframes spinBorder { 0%,100% { transform: none; } }
-            @keyframes spinDonut { 0%,100% { transform: rotate(-90deg); } }
-            @keyframes glowCompass { 0%,100% { filter: none; } }
-          `;
-          doc.head.appendChild(styleEl);
+          const link = document.createElement('a');
+          const fecha = new Date().toISOString().slice(0,10);
+          link.download = 'atlas-earth-renta-' + fecha + '.png';
+          link.href = canvas.toDataURL('image/png');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        },
+        (err) => {
+          done();
+          restore();
+          btn.innerHTML = '📸 &nbsp;Guardar PNG';
+          alert('Error al generar la imagen: ' + err.message);
         }
-      }).then(canvas => {
-        saveBar.style.display = '';
-        if (footerP) footerP.style.display = '';
-        btn.textContent = '✔ ¡Listo!';
-        btn.disabled = false;
-        setTimeout(() => { btn.innerHTML = '📸 &nbsp;Guardar PNG'; }, 2500);
-
-        const link = document.createElement('a');
-        const now = new Date();
-        const fecha = now.toISOString().slice(0,10);
-        link.download = 'atlas-earth-renta-' + fecha + '.png';
-        link.href = canvas.toDataURL('image/png');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }).catch((err) => {
-        saveBar.style.display = '';
-        if (footerP) footerP.style.display = '';
-        btn.innerHTML = '📸 &nbsp;Guardar PNG';
-        btn.disabled = false;
-        alert('Error al generar la imagen: ' + err.message);
-      });
-    }, 100);
-  }
-
-
-  // ── Contador de visitas (counterapi.dev) ─────────────────────────
-  async function initVisitCounter() {
-    const wrapper = document.createElement('div');
-    wrapper.id = 'visit-wrapper';
-    wrapper.innerHTML = `
-      <span style="font-size:13px;opacity:0.7;">👁</span>
-      <span id="visit-count-display" style="font-family:'Share Tech Mono',monospace;font-size:15px;color:#4a6a8a;letter-spacing:3px;background:#0b1626;border:1px solid #1a3a5c;border-radius:6px;padding:3px 10px;">00000000</span>
-    `;
-    Object.assign(wrapper.style, {
-      position: 'fixed',
-      bottom: '14px',
-      right: '18px',
-      zIndex: '99999',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      opacity: '0.55',
-      transition: 'opacity 0.3s',
-      cursor: 'default',
-      willChange: 'auto',
-      transform: 'none'
+      );
     });
-    wrapper.onmouseenter = () => wrapper.style.opacity = '0.85';
-    wrapper.onmouseleave = () => wrapper.style.opacity = '0.55';
-    document.body.appendChild(wrapper);
-
-    try {
-      const res = await fetch('https://api.counterapi.dev/v1/socram-13-gamertag/visits/up');
-      const data = await res.json();
-      const el = document.getElementById('visit-count-display');
-      if (el && data.count !== undefined) el.textContent = String(data.count).padStart(8, '0');
-    } catch(e) {}
   }
-  initVisitCounter();
+
 </script>
 </body>
 </html>
