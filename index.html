@@ -1670,6 +1670,12 @@
       desc.textContent = 'Inactivo: diamantes ÷ 5 giros de ruleta';
       badge.style.display = 'none';
     }
+    // Guardar estado automáticamente
+    try {
+      const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
+      saved.explorer = explorerActive;
+      localStorage.setItem(SAVE_KEY, JSON.stringify(saved));
+    } catch(e) {}
     calc();
   }
 
@@ -2004,8 +2010,13 @@
       if (data[k] !== undefined) document.getElementById(k).value = data[k];
     });
     if (data.explorer === false || data.explorer === 'false') {
-      explorerActive = true;
-      toggleExplorer();
+      explorerActive = false;
+      const check = document.getElementById('explorer-check');
+      const desc  = document.getElementById('explorer-desc');
+      const badge = document.getElementById('explorer-badge');
+      check.classList.remove('checked');
+      desc.textContent = 'Inactivo: diamantes ÷ 5 giros de ruleta';
+      badge.style.display = 'none';
     }
     calc();
   }
