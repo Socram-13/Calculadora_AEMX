@@ -1317,7 +1317,7 @@
       <div class="booster-row">
         <div class="booster-icon">🏅</div>
         <div class="booster-info">
-          <div class="booster-name">Insignias <span id="b-badge-pct" class="boost-badge">+0%</span></div>
+          <div class="booster-name">Insignias <span id="b-badge-pct" class="boost-badge" style="display:none;">+0%</span></div>
 
         </div>
         <div class="counter">
@@ -1625,11 +1625,11 @@
 
     // Badge boost: tiered percentage
     let badgePct = 0;
-    if (badges >= 1 && badges <= 10)   badgePct = 0.05;
-    else if (badges <= 30)             badgePct = 0.10;
-    else if (badges <= 60)             badgePct = 0.15;
-    else if (badges <= 100)            badgePct = 0.20;
-    else if (badges > 100)             badgePct = 0.25;
+    if (badges >= 1 && badges <= 10)        badgePct = 0.05;
+    else if (badges >= 11 && badges <= 30)  badgePct = 0.10;
+    else if (badges >= 31 && badges <= 60)  badgePct = 0.15;
+    else if (badges >= 61 && badges <= 100) badgePct = 0.20;
+    else if (badges > 100)                  badgePct = 0.25;
     const badgeBoost = 1 + badgePct;
 
     // Parcelas comprables con Atlas Bucks (100 AB cada una)
@@ -1679,7 +1679,13 @@
     document.getElementById('r-month').textContent = fmt(perMonth);
 
     document.getElementById('b-base').textContent      = '$' + basePerMonth.toFixed(4) + '/mes';
-    document.getElementById('b-badge-pct').textContent = '+' + (badgePct * 100) + '%';
+    const badgePctEl = document.getElementById('b-badge-pct');
+    if (badgePct === 0) {
+      badgePctEl.style.display = 'none';
+    } else {
+      badgePctEl.style.display = '';
+      badgePctEl.textContent = '+' + (badgePct * 100) + '%';
+    }
     document.getElementById('b-badge').textContent     = '+$' + badgeExtra.toFixed(4) + '/mes';
     document.getElementById('b-ad-x').textContent      = adBoost + '×';
     document.getElementById('b-ad').textContent        = '+$' + adExtra.toFixed(4) + '/mes';
