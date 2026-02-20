@@ -85,7 +85,7 @@
     justify-content: space-between;
     gap: 12px;
     background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%);
-    border: 1px solid var(--border);
+    border: 3px solid var(--border);
     border-radius: 14px;
     padding: 10px 16px;
     position: relative;
@@ -230,7 +230,7 @@
 
   .card {
     background: var(--panel);
-    border: 1px solid var(--border);
+    border: 3px solid var(--border);
     border-radius: 12px;
     padding: 14px;
     position: relative;
@@ -362,7 +362,7 @@
   /* Results */
   .results-card {
     background: linear-gradient(135deg, #0a1f38 0%, #060f1e 100%);
-    border: 1px solid var(--glow);
+    border: 3px solid var(--glow);
     border-radius: 12px;
     padding: 18px;
     margin-top: 16px;
@@ -371,7 +371,7 @@
 
   .results-title {
     font-family: 'Orbitron', monospace;
-    font-size: 11px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 5px;
     color: var(--glow);
@@ -735,7 +735,7 @@
     align-items: center;
     gap: 12px;
     background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%);
-    border: 1px solid var(--border);
+    border: 3px solid var(--border);
     border-radius: 14px;
     padding: 10px 16px;
     margin-bottom: 16px;
@@ -1549,7 +1549,7 @@
         <tr style="background:rgba(0,200,255,0.03);">
           <td><div class="rt-period" style="color:var(--glow)"><span class="dot" style="background:var(--glow);box-shadow:0 0 4px var(--glow)"></span>Por Año</div></td>
           <td class="rt-base" id="r-year-base">$0.00</td>
-          <td class="rt-boost highlight" id="r-year" style="color:var(--glow);text-shadow:0 0 16px rgba(0,200,255,0.5);font-size:17px;">$0.00</td>
+          <td class="rt-boost highlight" id="r-year" style="color:#00ff9d;text-shadow:0 0 20px rgba(0,255,157,0.6);font-size:26px;font-weight:900;letter-spacing:1px;">$0.00</td>
         </tr>
       </tbody>
     </table>
@@ -1768,7 +1768,7 @@
     const perDay   = boostedPerSec * 86400;
     const perWeek  = perDay * 7;
     const perMonth = perDay * 28;
-    const perYear  = perDay * 365;
+    // perYear se calcula más abajo incluyendo eventos SRB
 
     // Base per month
     const basePerMonth = basePerSec * 86400 * 28;
@@ -1798,7 +1798,7 @@
     document.getElementById('r-hour').textContent  = '$' + (boostedPerSec * 3600).toFixed(8);
     document.getElementById('r-day').textContent   = fmt(perDay);
     document.getElementById('r-week').textContent  = fmt(perWeek);
-    document.getElementById('r-year').textContent   = fmt(perYear);
+    document.getElementById('r-year').textContent   = fmt(perDay * 365); // se actualiza abajo con SRB
     document.getElementById('r-month').textContent = fmt(perMonth);
 
     document.getElementById('b-base').textContent      = '$' + basePerMonth.toFixed(4) + '/mes';
@@ -1813,7 +1813,7 @@
     document.getElementById('b-ad-x').textContent      = adBoost + '×';
     document.getElementById('b-ad').textContent        = '+$' + adExtra.toFixed(4) + '/mes';
     document.getElementById('b-total').textContent     = '$' + perMonth.toFixed(4);
-    document.getElementById('b-year').textContent      = '$' + perYear.toFixed(4);
+    // b-year se actualiza después del bloque SRB
 
 
     // ── Evento quincenal: 2 × 32h con Ad Boost 50× ───────────────────────────
@@ -1842,6 +1842,13 @@
     document.getElementById('b-event-normal').textContent      = fmt(incomeNormal) + '/mes';
     document.getElementById('b-event-income').textContent      = fmt(incomeAllEvts);
     document.getElementById('b-event-total').textContent       = fmt(totalWithEvents);
+
+    // Renta anual = 13 meses (365/28) incluyendo eventos SRB cada mes
+    const monthsPerYear = 365 / 28;
+    const perYear = totalWithEvents * monthsPerYear;
+    document.getElementById('r-year').textContent = fmt(perYear);
+    document.getElementById('r-year-base').textContent = fmt(basePerYear);
+    document.getElementById('b-year').textContent = '$' + perYear.toFixed(4);
 
 
     // Time to earn $1 with boost
@@ -2191,9 +2198,32 @@
       btn.style.boxShadow = `0 0 12px rgba(${rgb},0.2)`;
     });
 
-    // counter-btn: color del texto y hover
+    // counter-btn: color del texto
     document.querySelectorAll('.counter-btn').forEach(btn => {
       btn.style.color = color;
+    });
+
+    // Títulos de secciones
+    document.querySelectorAll('.card-title').forEach(el => {
+      el.style.color = color;
+    });
+    document.querySelectorAll('.results-title, .breakdown-title').forEach(el => {
+      el.style.color = color;
+    });
+
+    // Bordes de todas las secciones
+    document.querySelectorAll('.card').forEach(el => {
+      el.style.borderColor = `rgba(${rgb},0.5)`;
+    });
+    document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
+      el.style.borderColor = `rgba(${rgb},0.5)`;
+    });
+    document.querySelectorAll('.results-card').forEach(el => {
+      el.style.borderColor = color;
+      el.style.boxShadow = `0 0 40px rgba(${rgb},0.08), inset 0 0 40px rgba(${rgb},0.03)`;
+    });
+    document.querySelectorAll('.save-bar').forEach(el => {
+      el.style.borderColor = `rgba(${rgb},0.3)`;
     });
   }
 
