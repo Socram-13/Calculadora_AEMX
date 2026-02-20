@@ -2145,18 +2145,17 @@
             svg.style.animation = 'none';
             svg.style.transform = 'rotate(-90deg)';
           });
-          // Neutralizar el wrapper giratorio que causa canvas 0x0 en móvil
-          doc.querySelectorAll('.profile-avatar-wrapper').forEach(el => {
-            el.style.animation = 'none';
-            el.style.background = 'none';
-            const borderColor = el.style.getPropertyValue('--avatar-border-color') || '#00c8ff';
-            el.style.setProperty('--avatar-border-color', 'transparent');
-            el.style.border = '6px solid ' + borderColor;
-            el.style.borderRadius = '50%';
-          });
-          // Agregar estilo para ocultar los pseudo-elementos ::before y ::after
+          // Eliminar completamente el efecto conic-gradient que rompe html2canvas en móvil
           const styleEl = doc.createElement('style');
-          styleEl.textContent = '.profile-avatar-wrapper::before, .profile-avatar-wrapper::after { display: none !important; }';
+          styleEl.textContent = `
+            .profile-avatar-wrapper { animation: none !important; background: none !important; }
+            .profile-avatar-wrapper::before { display: none !important; content: none !important; }
+            .profile-avatar-wrapper::after { display: none !important; content: none !important; }
+            .profile-avatar { border: 6px solid #00c8ff !important; animation: none !important; }
+            @keyframes spinBorder { 0%,100% { transform: none; } }
+            @keyframes spinDonut { 0%,100% { transform: rotate(-90deg); } }
+            @keyframes glowCompass { 0%,100% { filter: none; } }
+          `;
           doc.head.appendChild(styleEl);
           // Reemplazar input por span para mostrar nombre completo
           const usernameInput = doc.getElementById('username');
@@ -2255,18 +2254,17 @@
             svg.style.animation = 'none';
             svg.style.transform = 'rotate(-90deg)';
           });
-          // Neutralizar el wrapper giratorio que causa canvas 0x0 en móvil
-          doc.querySelectorAll('.profile-avatar-wrapper').forEach(el => {
-            el.style.animation = 'none';
-            el.style.background = 'none';
-            const borderColor = el.style.getPropertyValue('--avatar-border-color') || '#00c8ff';
-            el.style.setProperty('--avatar-border-color', 'transparent');
-            el.style.border = '6px solid ' + borderColor;
-            el.style.borderRadius = '50%';
-          });
-          // Agregar estilo para ocultar los pseudo-elementos ::before y ::after
+          // Eliminar completamente el efecto conic-gradient que rompe html2canvas en móvil
           const styleEl = doc.createElement('style');
-          styleEl.textContent = '.profile-avatar-wrapper::before, .profile-avatar-wrapper::after { display: none !important; }';
+          styleEl.textContent = `
+            .profile-avatar-wrapper { animation: none !important; background: none !important; }
+            .profile-avatar-wrapper::before { display: none !important; content: none !important; }
+            .profile-avatar-wrapper::after { display: none !important; content: none !important; }
+            .profile-avatar { border: 6px solid #00c8ff !important; animation: none !important; }
+            @keyframes spinBorder { 0%,100% { transform: none; } }
+            @keyframes spinDonut { 0%,100% { transform: rotate(-90deg); } }
+            @keyframes glowCompass { 0%,100% { filter: none; } }
+          `;
           doc.head.appendChild(styleEl);
         }
       }).then(canvas => {
