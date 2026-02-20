@@ -2296,10 +2296,8 @@
   }
 
 
-  // ── Contador de visitas (CountAPI) ───────────────────────────────
+  // ── Contador de visitas (counterapi.dev) ─────────────────────────
   async function initVisitCounter() {
-    // Crear el elemento e inyectarlo directamente en document.body
-    // usando un iframe de 0px para escapar el stacking context del body
     const wrapper = document.createElement('div');
     wrapper.id = 'visit-wrapper';
     wrapper.innerHTML = `
@@ -2325,10 +2323,10 @@
     document.body.appendChild(wrapper);
 
     try {
-      const res = await fetch('https://api.countapi.xyz/hit/Socram-13/GamerTag_AEMX');
+      const res = await fetch('https://api.counterapi.dev/v1/socram-13-gamertag/visits/up');
       const data = await res.json();
       const el = document.getElementById('visit-count-display');
-      if (el && data.value) el.textContent = String(data.value).padStart(8, '0');
+      if (el && data.count !== undefined) el.textContent = String(data.count).padStart(8, '0');
     } catch(e) {}
   }
   initVisitCounter();
