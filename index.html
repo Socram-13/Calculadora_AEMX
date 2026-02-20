@@ -2316,6 +2316,36 @@
   }
   initVisitCounter();
 
+  // ── Bloquear botones si hay zoom activo ──────────────────────────
+  function checkZoomButtons() {
+    const scale = window.visualViewport ? window.visualViewport.scale : 1;
+    const zoomActivo = scale < 0.99 || scale > 1.01;
+    const btnPng = document.getElementById('btn-screenshot');
+    const btnShare = document.getElementById('btn-share-partial');
+    const tooltip = '⚠️ Regresa el zoom al 100% para usar este botón';
+
+    if (btnPng) {
+      btnPng.disabled = zoomActivo;
+      btnPng.title = zoomActivo ? tooltip : '';
+      btnPng.style.opacity = zoomActivo ? '0.4' : '';
+      btnPng.style.cursor = zoomActivo ? 'not-allowed' : '';
+    }
+    if (btnShare) {
+      btnShare.disabled = zoomActivo;
+      btnShare.title = zoomActivo ? tooltip : '';
+      btnShare.style.opacity = zoomActivo ? '0.4' : '';
+      btnShare.style.cursor = zoomActivo ? 'not-allowed' : '';
+    }
+  }
+
+  // Revisar al cargar y cada vez que cambie el zoom
+  checkZoomButtons();
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('scale', checkZoomButtons);
+    window.visualViewport.addEventListener('resize', checkZoomButtons);
+  }
+  // ─────────────────────────────────────────────────────────────────
+
 </script>
 </body>
 </html>
