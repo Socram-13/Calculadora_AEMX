@@ -2111,7 +2111,6 @@
     btn.textContent = '⏳  Generando...';
     btn.disabled = true;
 
-    // Ocultar temporalmente la results-card y save-bar y footer
     const resultsCard = document.querySelector('.results-card');
     const saveBar = document.querySelector('.save-bar');
     const footerPs = document.querySelectorAll('.container > p');
@@ -2119,50 +2118,63 @@
     saveBar.style.display = 'none';
     footerPs.forEach(p => p.style.display = 'none');
 
-    html2canvas(document.querySelector('.container'), {
-      backgroundColor: '#060b14',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    }).then(async canvas => {
-      resultsCard.style.display = '';
-      saveBar.style.display = '';
-      footerPs.forEach(p => p.style.display = '');
-      btn.textContent = '✔ ¡Listo!';
-      btn.disabled = false;
-      setTimeout(() => { btn.innerHTML = '📤 &nbsp;Compartir'; }, 2500);
-
-      const now = new Date();
-      const fecha = now.toISOString().slice(0,10);
-      const filename = 'atlas-earth-perfil-' + fecha + '.png';
-
-      // Intentar Web Share API con archivo (móvil)
-      if (navigator.canShare) {
-        try {
-          const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-          const file = new File([blob], filename, { type: 'image/png' });
-          if (navigator.canShare({ files: [file] })) {
-            await navigator.share({ files: [file], title: 'Atlas Earth AEMX' });
-            return;
-          }
-        } catch(e) {
-          if (e.name === 'AbortError') return;
+    // Pequeño delay para que el DOM se actualice antes de capturar
+    setTimeout(() => {
+      html2canvas(document.querySelector('.container'), {
+        backgroundColor: '#060b14',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 0,
+        logging: false,
+        onclone: (doc) => {
+          // Asegura que las imágenes del clon no bloqueen la captura
+          doc.querySelectorAll('img').forEach(img => {
+            if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
+          });
         }
-      }
+      }).then(async canvas => {
+        resultsCard.style.display = '';
+        saveBar.style.display = '';
+        footerPs.forEach(p => p.style.display = '');
+        btn.textContent = '✔ ¡Listo!';
+        btn.disabled = false;
+        setTimeout(() => { btn.innerHTML = '📤 &nbsp;Compartir'; }, 2500);
 
-      // Fallback: descarga directa
-      const link = document.createElement('a');
-      link.download = filename;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }).catch(() => {
-      resultsCard.style.display = '';
-      saveBar.style.display = '';
-      footerPs.forEach(p => p.style.display = '');
-      btn.innerHTML = '📤 &nbsp;Compartir';
-      btn.disabled = false;
-      alert('Error al generar la imagen. Intenta de nuevo.');
-    });
+        const now = new Date();
+        const fecha = now.toISOString().slice(0,10);
+        const filename = 'atlas-earth-perfil-' + fecha + '.png';
+
+        // Intentar Web Share API con archivo (móvil)
+        if (navigator.canShare) {
+          try {
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+            const file = new File([blob], filename, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: 'Atlas Earth AEMX' });
+              return;
+            }
+          } catch(e) {
+            if (e.name === 'AbortError') return;
+          }
+        }
+
+        // Fallback: descarga directa (PC)
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }).catch((err) => {
+        resultsCard.style.display = '';
+        saveBar.style.display = '';
+        footerPs.forEach(p => p.style.display = '');
+        btn.innerHTML = '📤 &nbsp;Compartir';
+        btn.disabled = false;
+        alert('Error al generar la imagen: ' + err.message);
+      });
+    }, 100);
   }
 
   function takeScreenshot() {
@@ -2176,33 +2188,42 @@
     saveBar.style.display = 'none';
     if (footerP) footerP.style.display = 'none';
 
-    html2canvas(document.querySelector('.container'), {
-      backgroundColor: '#060b14',
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    }).then(canvas => {
-      // Restore UI
-      saveBar.style.display = '';
-      if (footerP) footerP.style.display = '';
-      btn.textContent = '✔ ¡Listo!';
-      btn.disabled = false;
-      setTimeout(() => { btn.innerHTML = '📸 &nbsp;Guardar PNG'; }, 2500);
+    setTimeout(() => {
+      html2canvas(document.querySelector('.container'), {
+        backgroundColor: '#060b14',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        imageTimeout: 0,
+        logging: false,
+        onclone: (doc) => {
+          doc.querySelectorAll('img').forEach(img => {
+            if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
+          });
+        }
+      }).then(canvas => {
+        saveBar.style.display = '';
+        if (footerP) footerP.style.display = '';
+        btn.textContent = '✔ ¡Listo!';
+        btn.disabled = false;
+        setTimeout(() => { btn.innerHTML = '📸 &nbsp;Guardar PNG'; }, 2500);
 
-      // Download
-      const link = document.createElement('a');
-      const now = new Date();
-      const fecha = now.toISOString().slice(0,10);
-      link.download = 'atlas-earth-renta-' + fecha + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    }).catch(() => {
-      saveBar.style.display = '';
-      if (footerP) footerP.style.display = '';
-      btn.innerHTML = '📸 &nbsp;Guardar PNG';
-      btn.disabled = false;
-      alert('Error al generar la imagen. Intenta de nuevo.');
-    });
+        const link = document.createElement('a');
+        const now = new Date();
+        const fecha = now.toISOString().slice(0,10);
+        link.download = 'atlas-earth-renta-' + fecha + '.png';
+        link.href = canvas.toDataURL('image/png');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }).catch((err) => {
+        saveBar.style.display = '';
+        if (footerP) footerP.style.display = '';
+        btn.innerHTML = '📸 &nbsp;Guardar PNG';
+        btn.disabled = false;
+        alert('Error al generar la imagen: ' + err.message);
+      });
+    }, 100);
   }
 
 
