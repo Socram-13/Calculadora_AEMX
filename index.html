@@ -1436,6 +1436,11 @@
           <td class="rt-base" id="r-week-base">$0.0000</td>
           <td class="rt-boost" id="r-week">$0.0000</td>
         </tr>
+        <tr style="background:rgba(0,200,255,0.03);">
+          <td><div class="rt-period" style="color:var(--glow)"><span class="dot" style="background:var(--glow);box-shadow:0 0 4px var(--glow)"></span>Por Año</div></td>
+          <td class="rt-base" id="r-year-base">$0.00</td>
+          <td class="rt-boost highlight" id="r-year" style="color:var(--glow);text-shadow:0 0 16px rgba(0,200,255,0.5);font-size:17px;">$0.00</td>
+        </tr>
         <tr style="background:rgba(0,255,157,0.03);">
           <td><div class="rt-period" style="color:var(--glow2)"><span class="dot" style="background:var(--glow2);box-shadow:0 0 4px var(--glow2)"></span>Renta Base</div></td>
           <td class="rt-base" id="r-month-base">$0.0000</td>
@@ -1478,6 +1483,10 @@
       <div class="breakdown-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
         <span class="breakdown-label" style="font-weight:700;color:var(--text)">Total mensual estimado</span>
         <span class="breakdown-value highlight" id="b-total">$0.00</span>
+      </div>
+      <div class="breakdown-row" style="margin-top:4px;">
+        <span class="breakdown-label" style="font-weight:700;color:var(--glow)">💫 Total anual estimado</span>
+        <span class="breakdown-value" style="color:var(--glow);font-size:15px;font-weight:700;text-shadow:0 0 12px rgba(0,200,255,0.4);" id="b-year">$0.00</span>
       </div>
 
 
@@ -1636,6 +1645,7 @@
     const perDay   = boostedPerSec * 86400;
     const perWeek  = perDay * 7;
     const perMonth = perDay * 28;
+    const perYear  = perDay * 365;
 
     // Base per month
     const basePerMonth = basePerSec * 86400 * 28;
@@ -1649,12 +1659,14 @@
     const basePerDay  = basePerSec * 86400;
     const basePerWeek = basePerDay * 7;
     const basePerMo   = basePerDay * 28;
+    const basePerYear = basePerDay * 365;
 
     document.getElementById('r-sec-base').textContent  = '$' + basePerSec.toFixed(12);
     document.getElementById('r-min-base').textContent  = '$' + basePerMin.toFixed(10);
     document.getElementById('r-hour-base').textContent = '$' + basePerHour.toFixed(8);
     document.getElementById('r-day-base').textContent  = fmt(basePerDay);
     document.getElementById('r-week-base').textContent = fmt(basePerWeek);
+    document.getElementById('r-year-base').textContent  = fmt(basePerYear);
     document.getElementById('r-month-base').textContent = fmt(basePerMo);
 
     // Boosted values
@@ -1663,6 +1675,7 @@
     document.getElementById('r-hour').textContent  = '$' + (boostedPerSec * 3600).toFixed(8);
     document.getElementById('r-day').textContent   = fmt(perDay);
     document.getElementById('r-week').textContent  = fmt(perWeek);
+    document.getElementById('r-year').textContent   = fmt(perYear);
     document.getElementById('r-month').textContent = fmt(perMonth);
 
     document.getElementById('b-base').textContent      = '$' + basePerMonth.toFixed(4) + '/mes';
@@ -1671,6 +1684,7 @@
     document.getElementById('b-ad-x').textContent      = adBoost + '×';
     document.getElementById('b-ad').textContent        = '+$' + adExtra.toFixed(4) + '/mes';
     document.getElementById('b-total').textContent     = '$' + perMonth.toFixed(4);
+    document.getElementById('b-year').textContent      = '$' + perYear.toFixed(4);
 
 
     // ── Evento quincenal: 2 × 32h con Ad Boost 50× ───────────────────────────
