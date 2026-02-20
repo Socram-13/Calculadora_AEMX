@@ -752,6 +752,36 @@
     position: relative;
     flex-shrink: 0;
     cursor: pointer;
+    width: 142px;
+    height: 142px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .profile-avatar-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: conic-gradient(var(--avatar-border-color, #00c8ff), transparent 40%, var(--avatar-border-color, #00c8ff));
+    animation: spinBorder 2.5s linear infinite;
+    z-index: 0;
+  }
+
+  .profile-avatar-wrapper::after {
+    content: '';
+    position: absolute;
+    inset: 6px;
+    border-radius: 50%;
+    background: var(--bg);
+    z-index: 1;
+  }
+
+  @keyframes spinBorder {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
   .profile-avatar {
@@ -759,10 +789,12 @@
     height: 130px;
     border-radius: 50%;
     object-fit: cover;
-    border: 2px solid var(--glow);
+    border: none;
     box-shadow: 0 0 16px rgba(0,200,255,0.35);
     display: block;
     background: #0f1e35;
+    position: relative;
+    z-index: 2;
   }
 
   .profile-avatar-placeholder {
@@ -803,18 +835,19 @@
     position: absolute;
     bottom: 2px;
     right: 2px;
-    width: 20px;
-    height: 20px;
+    width: 32px;
+    height: 32px;
     background: var(--glow);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 16px;
     color: #000;
     cursor: pointer;
     box-shadow: 0 0 8px rgba(0,200,255,0.5);
     display: none;
+    z-index: 3;
   }
 
   .profile-info {
@@ -1157,13 +1190,13 @@
   <!-- Profile section -->
   <div class="profile-section">
     <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)">
-    <div class="profile-avatar-wrapper" onclick="document.getElementById('avatar-input').click()">
-      <div class="profile-avatar-placeholder" id="avatar-placeholder">
+    <div class="profile-avatar-wrapper" onclick="document.getElementById('avatar-border-color').click()">
+      <div class="profile-avatar-placeholder" id="avatar-placeholder" onclick="event.stopPropagation();document.getElementById('avatar-input').click()">
         <span class="upload-icon">👤</span>
         <span class="upload-label">Foto de<br>perfil</span>
       </div>
       <img id="avatar-img" class="profile-avatar" src="" alt="avatar" style="display:none;">
-      <div class="profile-avatar-edit" id="avatar-edit">✎</div>
+      <div class="profile-avatar-edit" id="avatar-edit" onclick="event.stopPropagation();document.getElementById('avatar-input').click()">✎</div>
     </div>
     <div class="profile-info">
       <div class="profile-name-label">Nombre de usuario</div>
@@ -1180,6 +1213,7 @@
         <div class="explorer-badge-inline" id="explorer-badge" style="display:none;margin-left:8px;flex-shrink:0;">🧭</div>
       </div>
       <div class="profile-hint">Haz clic para cambiar tu Foto</div>
+      <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
     </div>
 
     <!-- Donut chart -->
@@ -1942,6 +1976,12 @@
   }
   init();
 
+  function changeAvatarBorder(color) {
+    document.querySelector('.profile-avatar-wrapper').style.setProperty('--avatar-border-color', color);
+    localStorage.setItem('atlas-avatar-border', color);
+    try { window.storage.set('atlas-avatar-border', color); } catch(e) {}
+  }
+
   // Avatar upload
   function loadAvatar(event) {
     const file = event.target.files[0];
@@ -2011,6 +2051,19 @@
       img.style.display = 'block';
       placeholder.style.display = 'none';
       editBtn.style.display = 'flex';
+    }
+
+    // Border color
+    let borderColor = localStorage.getItem('atlas-avatar-border') || '';
+    if (!borderColor) {
+      try {
+        const r = await window.storage.get('atlas-avatar-border');
+        if (r && r.value) borderColor = r.value;
+      } catch(e) {}
+    }
+    if (borderColor) {
+      document.querySelector('.profile-avatar-wrapper').style.setProperty('--avatar-border-color', borderColor);
+      document.getElementById('avatar-border-color').value = borderColor;
     }
   }
 
