@@ -813,6 +813,8 @@
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
     gap: 4px;
+    position: relative;
+    z-index: 3;
   }
 
   .profile-avatar-placeholder:hover {
@@ -1209,14 +1211,17 @@
 
   <!-- Profile section -->
   <div class="profile-section">
-    <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)">
-    <div class="profile-avatar-wrapper" onclick="document.getElementById('avatar-border-color').click()">
-      <div class="profile-avatar-placeholder" id="avatar-placeholder" onclick="event.stopPropagation();document.getElementById('avatar-input').click()">
+    <!-- Input file nativo como label para máxima compatibilidad -->
+    <label for="avatar-input" style="display:none;" id="avatar-label"></label>
+    <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
+    <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
+    <div class="profile-avatar-wrapper" id="avatar-wrapper">
+      <div class="profile-avatar-placeholder" id="avatar-placeholder">
         <span class="upload-icon">👤</span>
         <span class="upload-label">Foto de<br>perfil</span>
       </div>
       <img id="avatar-img" class="profile-avatar" src="" alt="avatar" style="display:none;">
-      <div class="profile-avatar-edit" id="avatar-edit" onclick="event.stopPropagation();document.getElementById('avatar-input').click()">✎</div>
+      <div class="profile-avatar-edit" id="avatar-edit">✎</div>
     </div>
     <div class="profile-info">
       <div class="profile-name-label">Nombre de usuario</div>
@@ -1233,7 +1238,7 @@
         <div class="explorer-badge-inline" id="explorer-badge" style="display:none;margin-left:8px;flex-shrink:0;">🧭</div>
       </div>
       <div class="profile-hint">Haz clic para cambiar tu Foto</div>
-      <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
+      <!-- color picker movido arriba -->
       <!-- Fecha y hora en tiempo real -->
       <div style="margin-top:8px;">
         <div style="display:inline-flex;justify-content:center;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);letter-spacing:1px;">
@@ -2026,6 +2031,60 @@
     document.getElementById('explorer-badge').style.display = 'block';
   }
   init();
+
+  // ── Eventos del avatar (separados para máxima compatibilidad móvil) ──
+  document.addEventListener('DOMContentLoaded', function() {
+    // Ya debería estar listo pero por si acaso
+  });
+
+  // Placeholder: abrir galería al hacer tap/click
+  const avatarPlaceholder = document.getElementById('avatar-placeholder');
+  const avatarEdit = document.getElementById('avatar-edit');
+  const avatarInput = document.getElementById('avatar-input');
+  const avatarWrapper = document.getElementById('avatar-wrapper');
+  const avatarBorderColor = document.getElementById('avatar-border-color');
+
+  function openFilePicker() {
+    avatarInput.click();
+  }
+
+  function openColorPicker() {
+    avatarBorderColor.click();
+  }
+
+  if (avatarPlaceholder) {
+    avatarPlaceholder.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openFilePicker();
+    });
+    // Touch explícito para Chrome Android
+    avatarPlaceholder.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openFilePicker();
+    });
+  }
+
+  if (avatarEdit) {
+    avatarEdit.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openFilePicker();
+    });
+    avatarEdit.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openFilePicker();
+    });
+  }
+
+  // Wrapper: solo abre color picker (cambiar borde)
+  if (avatarWrapper) {
+    avatarWrapper.addEventListener('click', function(e) {
+      // Solo si el click fue directamente en el wrapper (no en hijos)
+      if (e.target === avatarWrapper) openColorPicker();
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────
 
   // Reloj en tiempo real
   function updateClock() {
