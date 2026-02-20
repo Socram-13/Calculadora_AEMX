@@ -836,6 +836,23 @@
     line-height: 1.3;
   }
 
+  .profile-avatar-color {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    width: 32px;
+    height: 32px;
+    background: #7c3aed;
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 0 8px rgba(124,58,237,0.6);
+    z-index: 3;
+  }
+
   .profile-avatar-edit {
     position: absolute;
     bottom: 2px;
@@ -1222,6 +1239,7 @@
       </div>
       <img id="avatar-img" class="profile-avatar" src="" alt="avatar" style="display:none;">
       <div class="profile-avatar-edit" id="avatar-edit">✎</div>
+      <div class="profile-avatar-color" id="avatar-color-btn">🎨</div>
     </div>
     <div class="profile-info">
       <div class="profile-name-label">Nombre de usuario</div>
@@ -1237,7 +1255,7 @@
         >
         <div class="explorer-badge-inline" id="explorer-badge" style="display:none;margin-left:8px;flex-shrink:0;">🧭</div>
       </div>
-      <div class="profile-hint">Haz clic para cambiar tu Foto</div>
+      <div class="profile-hint">Toca el avatar para cambiar foto</div>
       <!-- color picker movido arriba -->
       <!-- Fecha y hora en tiempo real -->
       <div style="margin-top:8px;">
@@ -2077,11 +2095,17 @@
     });
   }
 
-  // Wrapper: solo abre color picker (cambiar borde)
-  if (avatarWrapper) {
-    avatarWrapper.addEventListener('click', function(e) {
-      // Solo si el click fue directamente en el wrapper (no en hijos)
-      if (e.target === avatarWrapper) openColorPicker();
+  // Botón color de borde
+  const avatarColorBtn = document.getElementById('avatar-color-btn');
+  if (avatarColorBtn) {
+    avatarColorBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      openColorPicker();
+    });
+    avatarColorBtn.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      openColorPicker();
     });
   }
   // ─────────────────────────────────────────────────────────────────
@@ -2125,6 +2149,8 @@
       img.style.display = 'block';
       placeholder.style.display = 'none';
       editBtn.style.display = 'flex';
+      const colorBtn = document.getElementById('avatar-color-btn');
+      if (colorBtn) colorBtn.style.display = 'flex';
       // Save to storage
       localStorage.setItem('atlas-avatar', e.target.result);
       try { window.storage.set('atlas-avatar', e.target.result); } catch(err) {}
@@ -2181,6 +2207,8 @@
       img.style.display = 'block';
       placeholder.style.display = 'none';
       editBtn.style.display = 'flex';
+      const colorBtn2 = document.getElementById('avatar-color-btn');
+      if (colorBtn2) colorBtn2.style.display = 'flex';
     }
 
     // Border color
