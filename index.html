@@ -2119,12 +2119,16 @@
     footerPs.forEach(p => p.style.display = 'none');
 
     // Pequeño delay para que el DOM se actualice antes de capturar
-    const zoom = window.outerWidth / window.innerWidth || 1;
-    const captureScale = Math.max(Math.min((window.devicePixelRatio || 2) / zoom, 3), 1);
+    const vvScale = (window.visualViewport && window.visualViewport.scale) ? window.visualViewport.scale : 1;
+    const captureScale = Math.max(Math.round((window.devicePixelRatio || 2) / vvScale), 1);
+    const container = document.querySelector('.container');
+    const containerRect = container.getBoundingClientRect();
     setTimeout(() => {
       html2canvas(document.querySelector('.container'), {
         backgroundColor: '#060b14',
         scale: captureScale,
+        width: Math.round(containerRect.width),
+        height: Math.round(containerRect.height),
         windowWidth: document.documentElement.scrollWidth,
         windowHeight: document.documentElement.scrollHeight,
         useCORS: true,
@@ -2225,12 +2229,16 @@
     saveBar.style.display = 'none';
     if (footerP) footerP.style.display = 'none';
 
-    const zoom2 = window.outerWidth / window.innerWidth || 1;
-    const captureScale2 = Math.max(Math.min((window.devicePixelRatio || 2) / zoom2, 3), 1);
+    const vvScale2 = (window.visualViewport && window.visualViewport.scale) ? window.visualViewport.scale : 1;
+    const captureScale2 = Math.max(Math.round((window.devicePixelRatio || 2) / vvScale2), 1);
+    const container2 = document.querySelector('.container');
+    const containerRect2 = container2.getBoundingClientRect();
     setTimeout(() => {
       html2canvas(document.querySelector('.container'), {
         backgroundColor: '#060b14',
         scale: captureScale2,
+        width: Math.round(containerRect2.width),
+        height: Math.round(containerRect2.height),
         windowWidth: document.documentElement.scrollWidth,
         windowHeight: document.documentElement.scrollHeight,
         useCORS: true,
