@@ -2121,19 +2121,21 @@
     saveBar.style.display = 'none';
     footerPs.forEach(p => p.style.display = 'none');
 
-    // Pequeño delay para que el DOM se actualice antes de capturar
-    const vvScale = (window.visualViewport && window.visualViewport.scale) ? window.visualViewport.scale : 1;
-    const captureScale = Math.max(Math.round((window.devicePixelRatio || 2) / vvScale), 1);
     const container = document.querySelector('.container');
-    const containerRect = container.getBoundingClientRect();
+    // Usar scrollWidth/scrollHeight para ignorar el zoom del viewport en móvil
+    const captureWidth = container.scrollWidth;
+    const captureHeight = container.scrollHeight;
+    const captureScale = Math.min(window.devicePixelRatio || 2, 3);
     setTimeout(() => {
-      html2canvas(document.querySelector('.container'), {
+      html2canvas(container, {
         backgroundColor: '#060b14',
         scale: captureScale,
-        width: Math.round(containerRect.width),
-        height: Math.round(containerRect.height),
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight,
+        width: captureWidth,
+        height: captureHeight,
+        windowWidth: captureWidth,
+        windowHeight: captureHeight,
+        scrollX: 0,
+        scrollY: 0,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 0,
@@ -2231,18 +2233,21 @@
     saveBar.style.display = 'none';
     if (footerP) footerP.style.display = 'none';
 
-    const vvScale2 = (window.visualViewport && window.visualViewport.scale) ? window.visualViewport.scale : 1;
-    const captureScale2 = Math.max(Math.round((window.devicePixelRatio || 2) / vvScale2), 1);
     const container2 = document.querySelector('.container');
-    const containerRect2 = container2.getBoundingClientRect();
+    // Usar scrollWidth/scrollHeight para ignorar el zoom del viewport en móvil
+    const captureWidth2 = container2.scrollWidth;
+    const captureHeight2 = container2.scrollHeight;
+    const captureScale2 = Math.min(window.devicePixelRatio || 2, 3);
     setTimeout(() => {
-      html2canvas(document.querySelector('.container'), {
+      html2canvas(container2, {
         backgroundColor: '#060b14',
         scale: captureScale2,
-        width: Math.round(containerRect2.width),
-        height: Math.round(containerRect2.height),
-        windowWidth: document.documentElement.scrollWidth,
-        windowHeight: document.documentElement.scrollHeight,
+        width: captureWidth2,
+        height: captureHeight2,
+        windowWidth: captureWidth2,
+        windowHeight: captureHeight2,
+        scrollX: 0,
+        scrollY: 0,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 0,
