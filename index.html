@@ -2141,9 +2141,19 @@
             svg.style.animation = 'none';
             svg.style.transform = 'rotate(-90deg)';
           });
+          // Neutralizar el wrapper giratorio que causa canvas 0x0 en móvil
           doc.querySelectorAll('.profile-avatar-wrapper').forEach(el => {
             el.style.animation = 'none';
+            el.style.background = 'none';
+            const borderColor = el.style.getPropertyValue('--avatar-border-color') || '#00c8ff';
+            el.style.setProperty('--avatar-border-color', 'transparent');
+            el.style.border = '6px solid ' + borderColor;
+            el.style.borderRadius = '50%';
           });
+          // Agregar estilo para ocultar los pseudo-elementos ::before y ::after
+          const styleEl = doc.createElement('style');
+          styleEl.textContent = '.profile-avatar-wrapper::before, .profile-avatar-wrapper::after { display: none !important; }';
+          doc.head.appendChild(styleEl);
           // Reemplazar input por span para mostrar nombre completo
           const usernameInput = doc.getElementById('username');
           if (usernameInput) {
@@ -2237,9 +2247,19 @@
             svg.style.animation = 'none';
             svg.style.transform = 'rotate(-90deg)';
           });
+          // Neutralizar el wrapper giratorio que causa canvas 0x0 en móvil
           doc.querySelectorAll('.profile-avatar-wrapper').forEach(el => {
             el.style.animation = 'none';
+            el.style.background = 'none';
+            const borderColor = el.style.getPropertyValue('--avatar-border-color') || '#00c8ff';
+            el.style.setProperty('--avatar-border-color', 'transparent');
+            el.style.border = '6px solid ' + borderColor;
+            el.style.borderRadius = '50%';
           });
+          // Agregar estilo para ocultar los pseudo-elementos ::before y ::after
+          const styleEl = doc.createElement('style');
+          styleEl.textContent = '.profile-avatar-wrapper::before, .profile-avatar-wrapper::after { display: none !important; }';
+          doc.head.appendChild(styleEl);
         }
       }).then(canvas => {
         saveBar.style.display = '';
