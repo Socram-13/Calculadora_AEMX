@@ -30,6 +30,9 @@
     color: var(--text);
     font-family: 'Rajdhani', sans-serif;
     min-height: 100vh;
+  }
+
+  html {
     overflow-x: hidden;
   }
 
@@ -2293,6 +2296,42 @@
   }
 
 
+  // ── Contador de visitas (CountAPI) ───────────────────────────────
+  async function initVisitCounter() {
+    // Crear el elemento e inyectarlo directamente en document.body
+    // usando un iframe de 0px para escapar el stacking context del body
+    const wrapper = document.createElement('div');
+    wrapper.id = 'visit-wrapper';
+    wrapper.innerHTML = `
+      <span style="font-size:13px;opacity:0.7;">👁</span>
+      <span id="visit-count-display" style="font-family:'Share Tech Mono',monospace;font-size:15px;color:#4a6a8a;letter-spacing:3px;background:#0b1626;border:1px solid #1a3a5c;border-radius:6px;padding:3px 10px;">00000000</span>
+    `;
+    Object.assign(wrapper.style, {
+      position: 'fixed',
+      bottom: '14px',
+      right: '18px',
+      zIndex: '99999',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      opacity: '0.55',
+      transition: 'opacity 0.3s',
+      cursor: 'default',
+      willChange: 'auto',
+      transform: 'none'
+    });
+    wrapper.onmouseenter = () => wrapper.style.opacity = '0.85';
+    wrapper.onmouseleave = () => wrapper.style.opacity = '0.55';
+    document.body.appendChild(wrapper);
+
+    try {
+      const res = await fetch('https://api.countapi.xyz/hit/Socram-13/GamerTag_AEMX');
+      const data = await res.json();
+      const el = document.getElementById('visit-count-display');
+      if (el && data.value) el.textContent = String(data.value).padStart(8, '0');
+    } catch(e) {}
+  }
+  initVisitCounter();
 </script>
 </body>
 </html>
