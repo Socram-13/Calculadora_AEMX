@@ -1232,7 +1232,7 @@
     <label for="avatar-input" style="display:none;" id="avatar-label"></label>
     <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
     <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
-    <div class="profile-avatar-wrapper" id="avatar-wrapper">
+    <div class="profile-avatar-wrapper" id="avatar-wrapper" onmouseenter="showAvatarButtons()" onmouseleave="hideAvatarButtons()">
       <div class="profile-avatar-placeholder" id="avatar-placeholder">
         <span class="upload-icon">👤</span>
         <span class="upload-label">Foto de<br>perfil</span>
@@ -2184,6 +2184,21 @@
     });
   }
 
+  function showAvatarButtons() {
+    const editBtn = document.getElementById('avatar-edit');
+    const colorBtn = document.getElementById('avatar-color-btn');
+    const img = document.getElementById('avatar-img');
+    if (editBtn && img && img.style.display !== 'none') editBtn.style.display = 'flex';
+    if (colorBtn) colorBtn.style.display = 'flex';
+  }
+
+  function hideAvatarButtons() {
+    const editBtn = document.getElementById('avatar-edit');
+    const colorBtn = document.getElementById('avatar-color-btn');
+    if (editBtn) editBtn.style.display = 'none';
+    if (colorBtn) colorBtn.style.display = 'none';
+  }
+
   function changeAvatarBorder(color) {
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
@@ -2202,9 +2217,9 @@
       img.src = e.target.result;
       img.style.display = 'block';
       placeholder.style.display = 'none';
-      editBtn.style.display = 'flex';
+      editBtn.style.display = 'none';
       const colorBtn = document.getElementById('avatar-color-btn');
-      if (colorBtn) colorBtn.style.display = 'flex';
+      if (colorBtn) colorBtn.style.display = 'none';
       // Save to storage
       localStorage.setItem('atlas-avatar', e.target.result);
       try { window.storage.set('atlas-avatar', e.target.result); } catch(err) {}
@@ -2260,9 +2275,9 @@
       img.src = avatar;
       img.style.display = 'block';
       placeholder.style.display = 'none';
-      editBtn.style.display = 'flex';
+      editBtn.style.display = 'none';
       const colorBtn2 = document.getElementById('avatar-color-btn');
-      if (colorBtn2) colorBtn2.style.display = 'flex';
+      if (colorBtn2) colorBtn2.style.display = 'none';
     }
 
     // Border color
