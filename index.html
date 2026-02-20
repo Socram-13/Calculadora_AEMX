@@ -2114,11 +2114,9 @@
     btn.textContent = '⏳  Generando...';
     btn.disabled = true;
 
-    const container = document.querySelector('.container');
-    // Medir ANTES de ocultar elementos para evitar dimensiones 0
-    const captureWidth = container.offsetWidth || container.scrollWidth || window.innerWidth;
-    const captureHeight = container.offsetHeight || container.scrollHeight || document.documentElement.scrollHeight;
-    const captureScale = Math.min(window.devicePixelRatio || 2, 3);
+    // Resetear zoom y scroll antes de capturar
+    window.scrollTo(0, 0);
+    document.body.style.zoom = '';
 
     const resultsCard = document.querySelector('.results-card');
     const saveBar = document.querySelector('.save-bar');
@@ -2127,26 +2125,34 @@
     saveBar.style.display = 'none';
     footerPs.forEach(p => p.style.display = 'none');
 
-    if (!captureWidth || !captureHeight) {
-      resultsCard.style.display = '';
-      saveBar.style.display = '';
-      footerPs.forEach(p => p.style.display = '');
-      btn.innerHTML = '📤 &nbsp;Compartir';
-      btn.disabled = false;
-      alert('Error: no se pudo determinar el tamaño de la página. Intenta sin zoom.');
-      return;
-    }
-
     setTimeout(() => {
+      const container = document.querySelector('.container');
+      // Calcular dimensiones reales ignorando zoom del navegador
+      const vp = window.visualViewport;
+      const zoom = vp ? vp.scale : 1;
+      const captureWidth = Math.round(container.getBoundingClientRect().width * zoom) || document.documentElement.clientWidth;
+      const captureHeight = Math.round(container.getBoundingClientRect().height * zoom) || document.documentElement.clientHeight;
+      const captureScale = Math.max(Math.min(window.devicePixelRatio || 2, 3), 1);
+
+      if (!captureWidth || !captureHeight || captureWidth < 10 || captureHeight < 10) {
+        resultsCard.style.display = '';
+        saveBar.style.display = '';
+        footerPs.forEach(p => p.style.display = '');
+        btn.innerHTML = '📤 &nbsp;Compartir';
+        btn.disabled = false;
+        alert('Por favor regresa el zoom a normal (pellizca la pantalla) e intenta de nuevo.');
+        return;
+      }
+
       html2canvas(container, {
         backgroundColor: '#060b14',
         scale: captureScale,
         width: captureWidth,
         height: captureHeight,
-        windowWidth: captureWidth,
-        windowHeight: captureHeight,
-        scrollX: 0,
-        scrollY: 0,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 0,
@@ -2244,31 +2250,35 @@
     saveBar.style.display = 'none';
     if (footerP) footerP.style.display = 'none';
 
-    const container2 = document.querySelector('.container');
-    // Medir ANTES de ocultar elementos para evitar dimensiones 0
-    const captureWidth2 = container2.offsetWidth || container2.scrollWidth || window.innerWidth;
-    const captureHeight2 = container2.offsetHeight || container2.scrollHeight || document.documentElement.scrollHeight;
-    const captureScale2 = Math.min(window.devicePixelRatio || 2, 3);
-
-    if (!captureWidth2 || !captureHeight2) {
-      saveBar.style.display = '';
-      if (footerP) footerP.style.display = '';
-      btn.innerHTML = '📸 &nbsp;Guardar PNG';
-      btn.disabled = false;
-      alert('Error: no se pudo determinar el tamaño de la página. Intenta sin zoom.');
-      return;
-    }
+    // Resetear scroll antes de capturar
+    window.scrollTo(0, 0);
 
     setTimeout(() => {
+      const container2 = document.querySelector('.container');
+      const vp2 = window.visualViewport;
+      const zoom2 = vp2 ? vp2.scale : 1;
+      const captureWidth2 = Math.round(container2.getBoundingClientRect().width * zoom2) || document.documentElement.clientWidth;
+      const captureHeight2 = Math.round(container2.getBoundingClientRect().height * zoom2) || document.documentElement.clientHeight;
+      const captureScale2 = Math.max(Math.min(window.devicePixelRatio || 2, 3), 1);
+
+      if (!captureWidth2 || !captureHeight2 || captureWidth2 < 10 || captureHeight2 < 10) {
+        saveBar.style.display = '';
+        if (footerP) footerP.style.display = '';
+        btn.innerHTML = '📸 &nbsp;Guardar PNG';
+        btn.disabled = false;
+        alert('Por favor regresa el zoom a normal (pellizca la pantalla) e intenta de nuevo.');
+        return;
+      }
+
       html2canvas(container2, {
         backgroundColor: '#060b14',
         scale: captureScale2,
         width: captureWidth2,
         height: captureHeight2,
-        windowWidth: captureWidth2,
-        windowHeight: captureHeight2,
-        scrollX: 0,
-        scrollY: 0,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 0,
