@@ -1523,7 +1523,7 @@
 
   <!-- Save bar -->
   <div class="save-bar">
-    <button class="btn-save" onclick="shareData()" id="btn-share-data">🔗 &nbsp;Compartir / Guardar</button>
+    <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
     <button class="btn-share" onclick="takeScreenshot()" id="btn-screenshot">📸 &nbsp;Guardar PNG</button>
     <div class="save-status" id="save-status">✔ Datos guardados</div>
   </div>
@@ -1915,10 +1915,7 @@
     return base + '?' + params.toString();
   }
 
-  async function shareData() {
-    const url = buildShareURL();
-
-    // Guardar en localStorage como respaldo silencioso
+  function shareData() {
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         common:     document.getElementById('common').value,
@@ -1931,29 +1928,7 @@
         explorer:   explorerActive,
       }));
     } catch(e) {}
-
-    // 1. Web Share API (móvil nativo)
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'Atlas Earth — Mi Calculadora', url });
-        showStatus('✔ ¡Compartido!');
-        return;
-      } catch(e) {
-        if (e.name === 'AbortError') return;
-      }
-    }
-
-    // 2. Clipboard API
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      try {
-        await navigator.clipboard.writeText(url);
-        showStatus('✔ Enlace copiado');
-        return;
-      } catch(e) {}
-    }
-
-    // 3. Fallback para iframes/sandbox (Google Sites): prompt visible
-    prompt('📋 Copia este enlace y guárdalo en favoritos para restaurar tus datos:', url);
+    showStatus('✔ Datos guardados');
   }
 
   // Load on startup - wrapped in async to ensure data loads before calc
