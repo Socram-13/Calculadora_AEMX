@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Atlas Earth — Calculadora de Renta</title>
+<title>Atlas Earth — GAMERTAG</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -1050,19 +1050,19 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 10px;
+    gap: 16px;
   }
 
   .donut-legend {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 10px;
   }
 
   .dl-item {
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     opacity: 0.35;
     transition: opacity 0.3s;
   }
@@ -1085,15 +1085,15 @@
 
   .dl-pct {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 15px;
+    font-size: 22px;
     font-weight: 700;
-    min-width: 38px;
+    min-width: 48px;
   }
 
   .donut-wrap {
     position: relative;
-    width: 130px;
-    height: 130px;
+    width: 180px;
+    height: 180px;
   }
 
   .donut-wrap svg {
@@ -1107,9 +1107,9 @@
     align-items: center;
     justify-content: center;
     font-family: 'Orbitron', monospace;
-    font-size: 9px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--text2);
+    color: #ef4444;
     text-align: center;
     line-height: 1.2;
   }
@@ -1142,7 +1142,7 @@
         <div class="header-title">
           <span class="atlas">ATLAS </span><span class="earth">EARTH </span><span class="mexico"><span style="color:#006847">MÉ</span><span style="color:#ffffff">XI</span><span style="color:#ce1126">CO</span></span>
         </div>
-        <div class="header-subtitle">Calculadora de Renta</div>
+        <div class="header-subtitle">GAMERTAG</div>
         <div class="header-tagline">Calcula tus ganancias pasivas</div>
       </div>
 
@@ -1184,33 +1184,17 @@
 
     <!-- Donut chart -->
     <div class="profile-chart">
-      <!-- Legend left -->
-      <div class="donut-legend">
-        <div class="dl-item">
-          <span class="dl-dot" style="background:#4ade80"></span>
-          <span class="dl-letter" style="color:#4ade80" id="dl-c">C</span>
-          <span class="dl-pct" style="color:#4ade80" id="dl-pct-c">0%</span>
-        </div>
-        <div class="dl-item">
-          <span class="dl-dot" style="background:#60a5fa"></span>
-          <span class="dl-letter" style="color:#60a5fa" id="dl-r">R</span>
-          <span class="dl-pct" style="color:#60a5fa" id="dl-pct-r">0%</span>
-        </div>
-        <div class="dl-item">
-          <span class="dl-dot" style="background:#c084fc"></span>
-          <span class="dl-letter" style="color:#c084fc" id="dl-e">E</span>
-          <span class="dl-pct" style="color:#c084fc" id="dl-pct-e">0%</span>
-        </div>
-        <div class="dl-item">
-          <span class="dl-dot" style="background:#facc15"></span>
-          <span class="dl-letter" style="color:#facc15" id="dl-l">L</span>
-          <span class="dl-pct" style="color:#facc15" id="dl-pct-l">0%</span>
-        </div>
+      <!-- % leyenda izquierda -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#4ade80;" id="donut-pct-c">0%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#60a5fa;" id="donut-pct-r">0%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#c084fc;" id="donut-pct-e">0%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#facc15;" id="donut-pct-l">0%</div>
       </div>
       <!-- Donut + CREL label -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
         <div class="donut-wrap">
-          <svg width="130" height="130" viewBox="0 0 100 100" id="donut-svg">
+          <svg width="180" height="180" viewBox="0 0 100 100" id="donut-svg">
             <circle cx="50" cy="50" r="28" fill="none" stroke="#1a3a5c" stroke-width="10"/>
           </svg>
           <div class="donut-center" id="donut-center">—</div>
@@ -1480,7 +1464,7 @@
         </tr>
         <tr style="background:rgba(251,191,36,0.04);border-top:1px solid rgba(251,191,36,0.15);">
           <td>
-            <div class="rt-period" style="color:#fbbf24"><span class="dot" style="background:#fbbf24;box-shadow:0 0 4px #fbbf24"></span>Por Evento</div>
+            <div class="rt-period" style="color:#fbbf24"><span class="dot" style="background:#fbbf24;box-shadow:0 0 4px #fbbf24"></span>SRB 50×</div>
             <div style="font-size:10px;color:#92400e;font-family:'Share Tech Mono',monospace;margin-top:3px;padding-left:14px;">32h · 50× boost</div>
           </td>
           <td class="rt-base" id="r-single-event-base">$0.0000</td>
@@ -1489,7 +1473,7 @@
         <tr style="background:rgba(251,191,36,0.07);border-top:1px solid rgba(251,191,36,0.2);">
           <td>
             <div class="rt-period" style="color:#fbbf24"><span class="dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf24"></span>Renta Total Mes</div>
-            <div style="font-size:10px;color:#92400e;font-family:'Share Tech Mono',monospace;margin-top:3px;padding-left:14px;">2×/mes · 32h · 50× boost</div>
+            <div style="font-size:10px;color:#92400e;font-family:'Share Tech Mono',monospace;margin-top:3px;padding-left:14px;">2× SRB · 32h · 50× boost</div>
           </td>
           <td class="rt-base" id="r-event-base">$0.0000</td>
           <td class="rt-boost" id="r-event" style="color:#fbbf24;text-shadow:0 0 20px rgba(251,191,36,0.6);font-size:18px;">$0.0000</td>
@@ -1516,22 +1500,11 @@
         <span class="breakdown-label" style="font-weight:700;color:var(--text)">Total mensual estimado</span>
         <span class="breakdown-value highlight" id="b-total">$0.00</span>
       </div>
-      <div class="breakdown-row">
-        <span class="breakdown-label">Valor en Atlas Bucks (25 AB/$1)</span>
-        <span class="breakdown-value" id="b-ab" style="color:var(--gold)">0 AB/mes</span>
-      </div>
-      <div class="breakdown-row">
-        <span class="breakdown-label">Valor de tus diamantes actuales</span>
-        <span class="breakdown-value" id="b-diamonds" style="color:#a5f3fc">0 AB</span>
-      </div>
-      <div class="breakdown-row">
-        <span class="breakdown-label">Valor de tus Atlas Bucks en USD</span>
-        <span class="breakdown-value" id="b-ab-usd" style="color:#86efac">$0.00</span>
-      </div>
+
 
       <!-- Evento 50x -->
       <div style="margin-top:16px;padding:14px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);border-radius:10px;">
-        <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:#fbbf24;text-transform:uppercase;margin-bottom:10px;">⚡ Evento Quincenal — Ad Boost 50×</div>
+        <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:#fbbf24;text-transform:uppercase;margin-bottom:10px;">⚡ SRB 50×</div>
         <div class="breakdown-row" style="margin-bottom:6px;">
           <span class="breakdown-label">Renta 1 evento (32h · 50×)</span>
           <span class="breakdown-value" id="b-single-event" style="color:#fbbf24;">$0.0000</span>
@@ -1552,14 +1525,7 @@
           <span class="breakdown-label" style="font-weight:700;color:#fef3c7;">Renta Total Mes</span>
           <span class="breakdown-value" style="color:#fbbf24;font-size:16px;font-weight:700;text-shadow:0 0 12px rgba(251,191,36,0.4);" id="b-event-total">$0.0000</span>
         </div>
-        <div class="breakdown-row" style="margin-top:4px;">
-          <span class="breakdown-label">Extra ganado vs. renta base</span>
-          <span class="breakdown-value" id="b-event-extra" style="color:#4ade80;">+$0.0000</span>
-        </div>
-        <div class="breakdown-row" style="margin-top:4px;">
-          <span class="breakdown-label">En Atlas Bucks (mes con eventos)</span>
-          <span class="breakdown-value" id="b-event-ab" style="color:var(--gold);">0 AB/mes</span>
-        </div>
+
       </div>
     </div>
 
@@ -1726,9 +1692,7 @@
     document.getElementById('b-ad-x').textContent      = adBoost + '×';
     document.getElementById('b-ad').textContent        = '+$' + adExtra.toFixed(4) + '/mes';
     document.getElementById('b-total').textContent     = '$' + perMonth.toFixed(4);
-    document.getElementById('b-ab').textContent        = Math.floor(perMonth * 25) + ' AB/mes';
-    document.getElementById('b-diamonds').textContent  = (diamonds * 2) + ' AB';
-    document.getElementById('b-ab-usd').textContent    = '$' + (ab / 25).toFixed(2);
+
 
     // ── Evento quincenal: 2 × 32h con Ad Boost 50× ───────────────────────────
     const EVENT_BOOST  = 50;
@@ -1745,7 +1709,6 @@
     const incomeNormal     = boostedPerHour * NORMAL_HOURS;
     const incomeAllEvts    = eventPerHour  * TOTAL_EVT_H;
     const totalWithEvents  = incomeNormal  + incomeAllEvts;
-    const extraFromEvents  = totalWithEvents - perMonth;
 
     document.getElementById('r-single-event-base').textContent = fmt(basePerSec * 3600 * EVENT_HOURS);
     document.getElementById('r-single-event').textContent      = fmt(incomeSingleEvt);
@@ -1757,8 +1720,7 @@
     document.getElementById('b-event-normal').textContent      = fmt(incomeNormal) + '/mes';
     document.getElementById('b-event-income').textContent      = fmt(incomeAllEvts);
     document.getElementById('b-event-total').textContent       = fmt(totalWithEvents);
-    document.getElementById('b-event-extra').textContent       = '+' + fmt(extraFromEvents);
-    document.getElementById('b-event-ab').textContent          = Math.floor(totalWithEvents * 25) + ' AB/mes';
+
 
     // Time to earn $1 with boost
     if (boostedPerSec > 0) {
@@ -1799,15 +1761,11 @@
 
     svg.querySelectorAll('.seg').forEach(el => el.remove());
 
-    const labels = ['dl-c','dl-r','dl-e','dl-l'];
     const vals = [c, r, e, l];
-    ['dl-c','dl-r','dl-e','dl-l'].forEach(id => {
-      document.getElementById(id).closest('.dl-item').classList.remove('has-data');
-    });
+    const pctIds = ['donut-pct-c','donut-pct-r','donut-pct-e','donut-pct-l'];
+
     // Reset pcts
-    ['dl-pct-c','dl-pct-r','dl-pct-e','dl-pct-l'].forEach(id => {
-      document.getElementById(id).textContent = '0%';
-    });
+    pctIds.forEach(id => { document.getElementById(id).textContent = '0%'; });
 
     if (total === 0) { center.textContent = '—'; return; }
     center.textContent = total;
@@ -1817,18 +1775,16 @@
     const totalGap = activeCount > 1 ? GAP_RAD * activeCount : 0;
     const available = circ - totalGap;
 
-    let angleOffset = 0; // in radians along circumference
+    let angleOffset = 0;
 
     vals.forEach((val, i) => {
       if (val === 0) return;
       const pct = val / total;
       const segLen = pct * available;
-      const midAngle = angleOffset + segLen / 2; // middle of segment in circumference units
+      const midAngle = angleOffset + segLen / 2;
 
-      // Convert midAngle to actual angle in radians (starting from -90deg = top)
       const midRad = (midAngle / circ) * 2 * Math.PI - Math.PI / 2;
 
-      // Explode: shift cx/cy outward
       const ex = cx + Math.cos(midRad) * EXPLODE;
       const ey = cy + Math.sin(midRad) * EXPLODE;
 
@@ -1841,26 +1797,16 @@
       seg.setAttribute('stroke', colors[i]);
       seg.setAttribute('stroke-width', strokeW);
       seg.setAttribute('stroke-dasharray', `${segLen} ${gap}`);
-      // dashoffset: negative means we start drawing from the offset point
       const startAngleCirc = angleOffset;
       seg.setAttribute('stroke-dashoffset', -(startAngleCirc) + (EXPLODE * 0.1));
       seg.setAttribute('class', 'seg');
-      // Add glow filter
       seg.setAttribute('filter', `drop-shadow(0 0 3px ${colors[i]})`);
       svg.appendChild(seg);
 
       angleOffset += segLen + GAP_RAD;
-      document.getElementById(labels[i]).closest('.dl-item').classList.add('has-data');
 
-      // Add % text label outside the segment
-      const labelR = radius + strokeW / 2 + 10;
-      const lx = cx + Math.cos(midRad) * labelR;
-      const ly = cy + Math.sin(midRad) * labelR;
-      const pctStr = ((val / total) * 100).toFixed(0) + '%';
-      // Update legend pct
-      const pctIds = ['dl-pct-c','dl-pct-r','dl-pct-e','dl-pct-l'];
-      const itemIds = ['dl-c','dl-r','dl-e','dl-l'];
-      document.getElementById(pctIds[i]).textContent = pctStr;
+      // Actualizar % en la leyenda del donut
+      document.getElementById(pctIds[i]).textContent = (pct * 100).toFixed(1) + '%';
     });
   }
 
