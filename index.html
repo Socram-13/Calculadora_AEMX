@@ -2057,9 +2057,11 @@
     await loadData();
     await loadProfile();
     adjustBadge();
-    // Init explorer checkbox visual
-    document.getElementById('explorer-check').classList.add('checked');
-    document.getElementById('explorer-badge').style.display = 'block';
+    // Solo activar el explorer visualmente si explorerActive es true (ya lo maneja loadData)
+    if (explorerActive) {
+      document.getElementById('explorer-check').classList.add('checked');
+      document.getElementById('explorer-badge').style.display = 'block';
+    }
   }
   init();
 
