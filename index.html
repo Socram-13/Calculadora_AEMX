@@ -153,7 +153,7 @@
 
   .header-subtitle {
     font-family: 'Orbitron', monospace;
-    font-size: clamp(11px, 2vw, 16px);
+    font-size: clamp(16px, 3vw, 24px);
     font-weight: 700;
     color: #fff;
     letter-spacing: 3px;
@@ -208,7 +208,7 @@
     .profile-name-input { min-width: 0; width: 100%; font-size: 18px; text-align: center; }
     .donut-wrap { width: 100px; height: 100px; }
     .card { padding: 10px; }
-    .card-title { font-size: 9px; letter-spacing: 2px; }
+    .card-title { font-size: 11px; letter-spacing: 2px; }
     .parcel-row { gap: 6px; }
     .parcel-pct { font-size: 13px; min-width: 38px; }
     .counter-btn { width: 28px; height: 28px; font-size: 16px; }
@@ -257,7 +257,7 @@
 
   .card-title {
     font-family: 'Orbitron', monospace;
-    font-size: 10px;
+    font-size: 13px;
     font-weight: 700;
     letter-spacing: 4px;
     text-transform: uppercase;
@@ -1151,8 +1151,8 @@
     font-family: 'Orbitron', monospace;
     font-size: 22px;
     font-weight: 900;
-    color: #00c8ff;
-    text-shadow: 0 0 12px rgba(0,200,255,0.8), 0 0 24px rgba(0,200,255,0.4);
+    color: #d4d4d4;
+    text-shadow: 0 0 12px rgba(220,220,220,0.8), 0 0 24px rgba(255,255,255,0.3);
     text-align: center;
     line-height: 1.2;
   }
@@ -1661,6 +1661,28 @@
     const ab = getVal('atlasbucks');
     const total = c + r + e + l;
     document.getElementById('total-parcels').textContent = total;
+
+    // Velocidad del donut segun total de parcelas (0 = 30s, 10000+ = 0.2s)
+    const donutSvg = document.querySelector('.donut-wrap svg');
+    if (donutSvg) {
+      let speed;
+      if      (total === 0)    speed = 60;
+      else if (total <= 25)    speed = 55;
+      else if (total <= 50)    speed = 50;
+      else if (total <= 100)   speed = 45;
+      else if (total <= 200)   speed = 35;
+      else if (total <= 350)   speed = 25;
+      else if (total <= 500)   speed = 18;
+      else if (total <= 750)   speed = 13;
+      else if (total <= 1000)  speed = 10;
+      else if (total <= 1500)  speed = 2.5;
+      else if (total <= 2000)  speed = 2;
+      else if (total <= 3000)  speed = 1.5;
+      else if (total <= 5000)  speed = 1.2;
+      else if (total <= 8000)  speed = 1;
+      else                     speed = 0.8;
+      donutSvg.style.animationDuration = speed + 's';
+    }
 
     // % per rarity
     const types = { common: c, rare: r, epic: e, legendary: l };
@@ -2316,34 +2338,25 @@
   }
   initVisitCounter();
 
-  // ── Bloquear botones si hay zoom activo ──────────────────────────
+  // ── Bloquear botones si hay zoom activo (Chrome Android) ─────────
   function checkZoomButtons() {
     const scale = window.visualViewport ? window.visualViewport.scale : 1;
-    const zoomActivo = scale < 0.99 || scale > 1.01;
+    const zoomActivo = scale > 1.05;
     const btnPng = document.getElementById('btn-screenshot');
     const btnShare = document.getElementById('btn-share-partial');
-    const tooltip = '⚠️ Regresa el zoom al 100% para usar este botón';
 
-    if (btnPng) {
-      btnPng.disabled = zoomActivo;
-      btnPng.title = zoomActivo ? tooltip : '';
-      btnPng.style.opacity = zoomActivo ? '0.4' : '';
-      btnPng.style.cursor = zoomActivo ? 'not-allowed' : '';
-    }
-    if (btnShare) {
-      btnShare.disabled = zoomActivo;
-      btnShare.title = zoomActivo ? tooltip : '';
-      btnShare.style.opacity = zoomActivo ? '0.4' : '';
-      btnShare.style.cursor = zoomActivo ? 'not-allowed' : '';
-    }
+    [btnPng, btnShare].forEach(btn => {
+      if (!btn) return;
+      btn.disabled = zoomActivo;
+      btn.style.setProperty('opacity', zoomActivo ? '0.35' : '1', 'important');
+      btn.style.setProperty('cursor', zoomActivo ? 'not-allowed' : 'pointer', 'important');
+      btn.style.setProperty('filter', zoomActivo ? 'grayscale(1)' : 'none', 'important');
+    });
   }
 
-  // Revisar al cargar y cada vez que cambie el zoom
+  // Polling cada 300ms — único método confiable en Chrome Android
   checkZoomButtons();
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('scale', checkZoomButtons);
-    window.visualViewport.addEventListener('resize', checkZoomButtons);
-  }
+  setInterval(checkZoomButtons, 300);
   // ─────────────────────────────────────────────────────────────────
 
 </script>
