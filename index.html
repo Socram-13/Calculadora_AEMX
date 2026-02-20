@@ -93,10 +93,10 @@
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 4px;
+    height: 6px;
     background: linear-gradient(90deg, #00c8ff, #4ade80, #facc15, #c084fc, #00c8ff);
     background-size: 200% 100%;
-    animation: rainbowSlide 4s linear infinite;
+    animation: rainbowSlide 6s linear infinite;
   }
 
   @keyframes rainbowSlide {
@@ -1173,13 +1173,13 @@
           id="username"
           class="profile-name-input"
           placeholder="Tu nombre aquí"
-          maxlength="24"
+          maxlength="30"
           oninput="saveUsername(); adjustBadge();"
           style="width:auto;min-width:60px;flex:0 1 auto;"
         >
         <div class="explorer-badge-inline" id="explorer-badge" style="display:none;margin-left:8px;flex-shrink:0;">🧭</div>
       </div>
-      <div class="profile-hint">✎ Haz clic para editar · Foto 1:1</div>
+      <div class="profile-hint">Haz clic para cambiar tu Foto</div>
     </div>
 
     <!-- Donut chart -->
