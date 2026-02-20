@@ -1843,9 +1843,14 @@
     document.getElementById('b-event-income').textContent      = fmt(incomeAllEvts);
     document.getElementById('b-event-total').textContent       = fmt(totalWithEvents);
 
-    // Renta anual = 13 meses (365/28) incluyendo eventos SRB cada mes
-    const monthsPerYear = 365 / 28;
-    const perYear = totalWithEvents * monthsPerYear;
+    // Renta anual: 12 meses, cada mes = horas normales + horas de evento
+    // Total horas año: 365 × 24 = 8,760h
+    // Horas de evento al año: 2 eventos × 32h × 12 meses = 768h
+    // Horas normales al año: 8,760 - 768 = 7,992h
+    const YEAR_HOURS    = 365 * 24;                             // 8,760h
+    const YEAR_EVT_H    = EVENT_HOURS * EVENTS_MONTH * 12;      // 768h
+    const YEAR_NORMAL_H = YEAR_HOURS - YEAR_EVT_H;              // 7,992h
+    const perYear = (boostedPerHour * YEAR_NORMAL_H) + (eventPerHour * YEAR_EVT_H);
     document.getElementById('r-year').textContent = fmt(perYear);
     document.getElementById('r-year-base').textContent = fmt(basePerYear);
     document.getElementById('b-year').textContent = '$' + perYear.toFixed(4);
