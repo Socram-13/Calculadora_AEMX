@@ -1131,6 +1131,12 @@
 
   .donut-wrap svg {
     transform: rotate(-90deg);
+    animation: spinDonut 20s linear infinite;
+  }
+
+  @keyframes spinDonut {
+    0%   { transform: rotate(-90deg); }
+    100% { transform: rotate(270deg); }
   }
 
   .donut-center {
@@ -1140,9 +1146,10 @@
     align-items: center;
     justify-content: center;
     font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: #ef4444;
+    font-size: 22px;
+    font-weight: 900;
+    color: #00c8ff;
+    text-shadow: 0 0 12px rgba(0,200,255,0.8), 0 0 24px rgba(0,200,255,0.4);
     text-align: center;
     line-height: 1.2;
   }
