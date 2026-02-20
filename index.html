@@ -2128,10 +2128,33 @@
         imageTimeout: 0,
         logging: false,
         onclone: (doc) => {
-          // Asegura que las imágenes del clon no bloqueen la captura
           doc.querySelectorAll('img').forEach(img => {
             if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
           });
+          doc.querySelectorAll('svg').forEach(svg => {
+            if (!svg.getAttribute('width')) svg.setAttribute('width', '180');
+            if (!svg.getAttribute('height')) svg.setAttribute('height', '180');
+            svg.style.animation = 'none';
+            svg.style.transform = 'rotate(-90deg)';
+          });
+          doc.querySelectorAll('.profile-avatar-wrapper').forEach(el => {
+            el.style.animation = 'none';
+          });
+          // Reemplazar input por span para mostrar nombre completo
+          const usernameInput = doc.getElementById('username');
+          if (usernameInput) {
+            const span = doc.createElement('span');
+            span.textContent = usernameInput.value || usernameInput.placeholder;
+            span.style.fontFamily = usernameInput.style.fontFamily || "'Orbitron', monospace";
+            span.style.fontSize = getComputedStyle(usernameInput).fontSize;
+            span.style.fontWeight = '900';
+            span.style.color = '#fff';
+            span.style.letterSpacing = '2px';
+            span.style.textTransform = 'uppercase';
+            span.style.whiteSpace = 'nowrap';
+            span.style.display = 'inline-block';
+            usernameInput.parentNode.replaceChild(span, usernameInput);
+          }
         }
       }).then(async canvas => {
         resultsCard.style.display = '';
@@ -2199,6 +2222,15 @@
         onclone: (doc) => {
           doc.querySelectorAll('img').forEach(img => {
             if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
+          });
+          doc.querySelectorAll('svg').forEach(svg => {
+            if (!svg.getAttribute('width')) svg.setAttribute('width', '180');
+            if (!svg.getAttribute('height')) svg.setAttribute('height', '180');
+            svg.style.animation = 'none';
+            svg.style.transform = 'rotate(-90deg)';
+          });
+          doc.querySelectorAll('.profile-avatar-wrapper').forEach(el => {
+            el.style.animation = 'none';
           });
         }
       }).then(canvas => {
