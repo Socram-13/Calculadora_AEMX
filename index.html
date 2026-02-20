@@ -2119,10 +2119,14 @@
     footerPs.forEach(p => p.style.display = 'none');
 
     // Pequeño delay para que el DOM se actualice antes de capturar
+    const zoom = window.outerWidth / window.innerWidth || 1;
+    const captureScale = Math.max(Math.min((window.devicePixelRatio || 2) / zoom, 3), 1);
     setTimeout(() => {
       html2canvas(document.querySelector('.container'), {
         backgroundColor: '#060b14',
-        scale: 2,
+        scale: captureScale,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 0,
@@ -2211,10 +2215,14 @@
     saveBar.style.display = 'none';
     if (footerP) footerP.style.display = 'none';
 
+    const zoom2 = window.outerWidth / window.innerWidth || 1;
+    const captureScale2 = Math.max(Math.min((window.devicePixelRatio || 2) / zoom2, 3), 1);
     setTimeout(() => {
       html2canvas(document.querySelector('.container'), {
         backgroundColor: '#060b14',
-        scale: 2,
+        scale: captureScale2,
+        windowWidth: document.documentElement.scrollWidth,
+        windowHeight: document.documentElement.scrollHeight,
         useCORS: true,
         allowTaint: true,
         imageTimeout: 0,
