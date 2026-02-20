@@ -2119,7 +2119,18 @@
 
 
 
+  function hayZoomActivo() {
+    if (!window.visualViewport) return false;
+    return window.visualViewport.scale > 1.05;
+  }
+
   function captureWithZoomReset(beforeCapture, onSuccess, onError) {
+    // Bloquear si hay zoom activo en móvil
+    if (hayZoomActivo()) {
+      alert('⚠️ Tienes zoom activo.\nPellizca la pantalla para regresar al zoom normal e intenta de nuevo.');
+      onError(new Error('zoom activo'));
+      return;
+    }
     // Guardar viewport original y forzar zoom=1
     const meta = document.querySelector('meta[name="viewport"]');
     const orig = meta ? meta.getAttribute('content') : '';
