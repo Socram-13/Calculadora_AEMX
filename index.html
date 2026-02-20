@@ -2114,6 +2114,12 @@
     btn.textContent = '⏳  Generando...';
     btn.disabled = true;
 
+    const container = document.querySelector('.container');
+    // Medir ANTES de ocultar elementos para evitar dimensiones 0
+    const captureWidth = container.offsetWidth || container.scrollWidth || window.innerWidth;
+    const captureHeight = container.offsetHeight || container.scrollHeight || document.documentElement.scrollHeight;
+    const captureScale = Math.min(window.devicePixelRatio || 2, 3);
+
     const resultsCard = document.querySelector('.results-card');
     const saveBar = document.querySelector('.save-bar');
     const footerPs = document.querySelectorAll('.container > p');
@@ -2121,11 +2127,16 @@
     saveBar.style.display = 'none';
     footerPs.forEach(p => p.style.display = 'none');
 
-    const container = document.querySelector('.container');
-    // Usar scrollWidth/scrollHeight para ignorar el zoom del viewport en móvil
-    const captureWidth = container.scrollWidth;
-    const captureHeight = container.scrollHeight;
-    const captureScale = Math.min(window.devicePixelRatio || 2, 3);
+    if (!captureWidth || !captureHeight) {
+      resultsCard.style.display = '';
+      saveBar.style.display = '';
+      footerPs.forEach(p => p.style.display = '');
+      btn.innerHTML = '📤 &nbsp;Compartir';
+      btn.disabled = false;
+      alert('Error: no se pudo determinar el tamaño de la página. Intenta sin zoom.');
+      return;
+    }
+
     setTimeout(() => {
       html2canvas(container, {
         backgroundColor: '#060b14',
@@ -2234,10 +2245,20 @@
     if (footerP) footerP.style.display = 'none';
 
     const container2 = document.querySelector('.container');
-    // Usar scrollWidth/scrollHeight para ignorar el zoom del viewport en móvil
-    const captureWidth2 = container2.scrollWidth;
-    const captureHeight2 = container2.scrollHeight;
+    // Medir ANTES de ocultar elementos para evitar dimensiones 0
+    const captureWidth2 = container2.offsetWidth || container2.scrollWidth || window.innerWidth;
+    const captureHeight2 = container2.offsetHeight || container2.scrollHeight || document.documentElement.scrollHeight;
     const captureScale2 = Math.min(window.devicePixelRatio || 2, 3);
+
+    if (!captureWidth2 || !captureHeight2) {
+      saveBar.style.display = '';
+      if (footerP) footerP.style.display = '';
+      btn.innerHTML = '📸 &nbsp;Guardar PNG';
+      btn.disabled = false;
+      alert('Error: no se pudo determinar el tamaño de la página. Intenta sin zoom.');
+      return;
+    }
+
     setTimeout(() => {
       html2canvas(container2, {
         backgroundColor: '#060b14',
