@@ -1576,7 +1576,7 @@
         <span class="breakdown-label">Boost de anuncios — <span id="b-ad-x">20×</span> (México)</span>
         <span class="breakdown-value" id="b-ad">+$0.00/mes</span>
       </div>
-      <div class="breakdown-row" style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
+      <div class="breakdown-row breakdown-separator" style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
         <span class="breakdown-label" style="font-weight:700;color:var(--text)">Total mensual estimado</span>
         <span class="breakdown-value highlight" id="b-total">$0.00</span>
       </div>
@@ -1605,7 +1605,7 @@
           <span class="breakdown-label">Renta en 2 eventos (64h · 50×)</span>
           <span class="breakdown-value" id="b-event-income" style="color:#fbbf24;">$0.0000</span>
         </div>
-        <div class="breakdown-row" style="border-top:1px solid rgba(251,191,36,0.2);padding-top:10px;margin-top:4px;">
+        <div class="breakdown-row breakdown-separator" style="border-top:1px solid rgba(251,191,36,0.2);padding-top:10px;margin-top:4px;">
           <span class="breakdown-label" style="font-weight:700;color:#fef3c7;">Renta Total Mes</span>
           <span class="breakdown-value" style="color:#fbbf24;font-size:16px;font-weight:700;text-shadow:0 0 12px rgba(251,191,36,0.4);" id="b-event-total">$0.0000</span>
         </div>
@@ -2224,6 +2224,16 @@
       avatarColorBtn.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`;
     }
 
+    // Fondo oscuro según color seleccionado
+    const [_r,_g,_b] = rgb.split(",").map(Number);
+    const darkBg = `rgb(${Math.round(_r*0.04)},${Math.round(_g*0.04)},${Math.round(_b*0.04)})`;
+    document.body.style.background = darkBg;
+    document.body.style.backgroundColor = darkBg;
+    const panelBg = `rgb(${Math.round(_r*0.06)},${Math.round(_g*0.06)},${Math.round(_b*0.06)})`;
+    const panel2Bg = `rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)})`;
+    root.style.setProperty("--panel", panelBg);
+    root.style.setProperty("--panel2", panel2Bg);
+
     // CSS variables globales
     root.style.setProperty('--glow', color);
     root.style.setProperty('--accent', color);
@@ -2243,6 +2253,12 @@
     // counter-btn: color del texto
     document.querySelectorAll('.counter-btn').forEach(btn => {
       btn.style.color = color;
+      btn.style.borderColor = `rgba(${rgb},0.5)`;
+    });
+    // Inputs de cantidades
+    document.querySelectorAll('input[type="number"]').forEach(el => {
+      el.style.background = `rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)})`;
+      el.style.borderColor = `rgba(${rgb},0.4)`;
     });
 
     // Títulos de secciones
@@ -2259,13 +2275,23 @@
     });
     document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
       el.style.borderColor = `rgba(${rgb},0.5)`;
+      el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
     });
     document.querySelectorAll('.results-card').forEach(el => {
       el.style.borderColor = color;
+      el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
       el.style.boxShadow = `0 0 40px rgba(${rgb},0.08), inset 0 0 40px rgba(${rgb},0.03)`;
     });
     document.querySelectorAll('.save-bar').forEach(el => {
       el.style.borderColor = `rgba(${rgb},0.3)`;
+    });
+    // Líneas separadoras (dividers)
+    document.querySelectorAll('.divider').forEach(el => {
+      el.style.background = `linear-gradient(90deg, transparent, rgba(${rgb},0.4), transparent)`;
+    });
+    // Líneas separadoras en resultados de renta
+    document.querySelectorAll('.breakdown-separator').forEach(el => {
+      el.style.borderTopColor = `rgba(${rgb},0.35)`;
     });
   }
 
