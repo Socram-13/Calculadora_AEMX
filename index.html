@@ -1736,17 +1736,47 @@
       }
     }
 
-    // Ad Boost automático por parcelas (México)
+    // Ad Boost automático por parcelas según país
     let adBoost, adRange;
-    if      (total <= 50)  { adBoost = 20; adRange = "1–50 parcelas"; }
-    else if (total <= 85)  { adBoost = 15; adRange = "51–85 parcelas"; }
-    else if (total <= 100) { adBoost = 12; adRange = "86–100 parcelas"; }
-    else if (total <= 140) { adBoost = 8;  adRange = "101–140 parcelas"; }
-    else if (total <= 175) { adBoost = 7;  adRange = "141–175 parcelas"; }
-    else if (total <= 225) { adBoost = 5;  adRange = "176–225 parcelas"; }
-    else if (total <= 300) { adBoost = 4;  adRange = "226–300 parcelas"; }
-    else if (total <= 400) { adBoost = 3;  adRange = "301–400 parcelas"; }
-    else                   { adBoost = 2;  adRange = "401+ parcelas"; }
+    const europaCountries = ["Spain", "France", "Germany", "Italy", "Russia"];
+    if (userCountry === "Mexico") {
+      if      (total <= 50)  { adBoost = 20; adRange = "1–50 parcelas"; }
+      else if (total <= 85)  { adBoost = 15; adRange = "51–85 parcelas"; }
+      else if (total <= 100) { adBoost = 12; adRange = "86–100 parcelas"; }
+      else if (total <= 140) { adBoost = 8;  adRange = "101–140 parcelas"; }
+      else if (total <= 175) { adBoost = 7;  adRange = "141–175 parcelas"; }
+      else if (total <= 225) { adBoost = 5;  adRange = "176–225 parcelas"; }
+      else if (total <= 300) { adBoost = 4;  adRange = "226–300 parcelas"; }
+      else if (total <= 400) { adBoost = 3;  adRange = "301–400 parcelas"; }
+      else                   { adBoost = 2;  adRange = "401+ parcelas"; }
+    } else if (europaCountries.includes(userCountry)) {
+      if      (total <= 70)   { adBoost = 20; adRange = "1–70 parcelas"; }
+      else if (total <= 100)  { adBoost = 15; adRange = "71–100 parcelas"; }
+      else if (total <= 135)  { adBoost = 10; adRange = "101–135 parcelas"; }
+      else if (total <= 170)  { adBoost = 8;  adRange = "136–170 parcelas"; }
+      else if (total <= 200)  { adBoost = 7;  adRange = "171–200 parcelas"; }
+      else if (total <= 250)  { adBoost = 6;  adRange = "201–250 parcelas"; }
+      else if (total <= 300)  { adBoost = 5;  adRange = "251–300 parcelas"; }
+      else if (total <= 350)  { adBoost = 4;  adRange = "301–350 parcelas"; }
+      else if (total <= 400)  { adBoost = 3;  adRange = "351–400 parcelas"; }
+      else                    { adBoost = 2;  adRange = "401–1000 parcelas"; }
+    } else if (userCountry === "United States") {
+      if      (total <= 150)  { adBoost = 30; adRange = "1–150 parcelas"; }
+      else if (total <= 220)  { adBoost = 20; adRange = "151–220 parcelas"; }
+      else if (total <= 290)  { adBoost = 15; adRange = "221–290 parcelas"; }
+      else if (total <= 365)  { adBoost = 12; adRange = "291–365 parcelas"; }
+      else if (total <= 435)  { adBoost = 10; adRange = "366–435 parcelas"; }
+      else if (total <= 545)  { adBoost = 8;  adRange = "436–545 parcelas"; }
+      else if (total <= 625)  { adBoost = 7;  adRange = "546–625 parcelas"; }
+      else if (total <= 730)  { adBoost = 6;  adRange = "626–730 parcelas"; }
+      else if (total <= 875)  { adBoost = 5;  adRange = "731–875 parcelas"; }
+      else if (total <= 1100) { adBoost = 4;  adRange = "876–1100 parcelas"; }
+      else if (total <= 1500) { adBoost = 3;  adRange = "1101–1500 parcelas"; }
+      else                    { adBoost = 2;  adRange = "1501–3000 parcelas"; }
+    } else {
+      adBoost = 2;
+      adRange = "Boost internacional";
+    }
     document.getElementById('adboost-display').textContent = adBoost + '×';
     document.getElementById('adboost-range').textContent = adRange;
 
@@ -2519,9 +2549,11 @@
   }
 
   // ── Ubicación por IP ─────────────────────────────────────────────
+  var userCountry = "";
   fetch("https://ipapi.co/json/")
     .then(function(res) { return res.json(); })
     .then(function(data) {
+      userCountry = data.country_name || "";
       var ciudad = data.city || "";
       var estado = data.region || "";
       var el = document.getElementById("user-location");
