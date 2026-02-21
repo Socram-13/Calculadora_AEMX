@@ -215,6 +215,30 @@
     .counter-btn { width: 28px; height: 28px; font-size: 16px; }
     .counter-val { font-size: 18px; min-width: 36px; }
     .breakdown-label, .breakdown-value { font-size: 11px; }
+
+    /* Results card móvil */
+    .results-card { padding: 12px 8px; }
+    .results-title { font-size: 11px; letter-spacing: 2px; margin-bottom: 10px; }
+    .results-table { font-size: 12px; }
+    .results-table th {
+      font-size: 8px;
+      letter-spacing: 1px;
+      padding: 6px 6px;
+    }
+    .results-table td {
+      font-size: 12px;
+      padding: 8px 6px;
+    }
+    .rt-period { font-size: 9px; letter-spacing: 1px; gap: 5px; }
+    .rt-period .dot { width: 5px; height: 5px; }
+    .rt-base { font-size: 11px; }
+    .rt-boost { font-size: 12px; }
+    .rt-boost.highlight { font-size: 14px; }
+    .boost-badge { font-size: 10px; padding: 3px 8px; margin-left: 4px; }
+    .breakdown-row { font-size: 11px; flex-wrap: wrap; gap: 2px; }
+    .tier-info { flex-wrap: wrap; gap: 6px; padding: 8px; }
+    .tier-label { font-size: 11px; }
+    .tier-value { font-size: 11px; }
   }
 
   /* Main grid */
@@ -368,6 +392,9 @@
     padding: 18px;
     margin-top: 16px;
     box-shadow: 0 0 40px rgba(0,200,255,0.08), inset 0 0 40px rgba(0,200,255,0.03);
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .results-title {
@@ -387,6 +414,8 @@
     border-collapse: collapse;
     margin-bottom: 24px;
     font-family: 'Share Tech Mono', monospace;
+    table-layout: fixed;
+    word-break: break-word;
   }
 
   .results-table thead tr {
