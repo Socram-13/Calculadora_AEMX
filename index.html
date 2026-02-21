@@ -3162,6 +3162,11 @@
       chatOpen = !chatOpen;
       document.getElementById('chat-iframe-container').classList.toggle('open', chatOpen);
       document.getElementById('chat-fab').classList.toggle('open', chatOpen);
+
+      // Ocultar/mostrar contador de visitas
+      const visitWrapper = document.getElementById('visit-wrapper');
+      if (visitWrapper) visitWrapper.style.display = chatOpen ? 'none' : '';
+
       // En móvil ocultar el botón cuando el chat está abierto
       if (window.innerWidth <= 480) {
         document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
@@ -3171,7 +3176,6 @@
       if (chatOpen) {
         const username = localStorage.getItem('atlas-username') || '';
         const avatar = localStorage.getItem('atlas-avatar') || '';
-        // Guardar avatar en sessionStorage para que el iframe lo lea
         sessionStorage.setItem('chat-avatar', avatar);
         document.getElementById('chat-frame').src = `chat-firebase.html?username=${encodeURIComponent(username)}`;
       }
