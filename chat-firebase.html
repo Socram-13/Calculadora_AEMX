@@ -324,7 +324,7 @@
 
         .message {
             display: flex;
-            gap: 12px;
+            gap: 6px;
             animation: messageSlide 0.3s ease-out;
         }
 
@@ -1072,18 +1072,18 @@
             if (e.key === 'Enter') setUsername();
         });
 
-        // Borrar mensajes con más de 1 hora
+        // Borrar mensajes con más de 10 minutos
         async function clearOldMessages() {
             const messagesRef = ref(database, 'messages');
             const snapshot = await get(messagesRef);
             if (!snapshot.exists()) return;
 
-            const oneHourAgo = Date.now() - 60 * 60 * 1000;
+            const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
             let shouldClear = false;
 
             snapshot.forEach((child) => {
                 const ts = child.val().timestamp;
-                if (ts && ts < oneHourAgo) shouldClear = true;
+                if (ts && ts < tenMinutesAgo) shouldClear = true;
             });
 
             if (shouldClear) {
@@ -1091,9 +1091,9 @@
             }
         }
 
-        // Limpiar al cargar y luego cada hora
+        // Limpiar al cargar y luego cada 10 minutos
         clearOldMessages();
-        setInterval(clearOldMessages, 60 * 60 * 1000);
+        setInterval(clearOldMessages, 10 * 60 * 1000);
 
         // Leer username desde URL y avatar desde sessionStorage
         const urlParams = new URLSearchParams(window.location.search);
