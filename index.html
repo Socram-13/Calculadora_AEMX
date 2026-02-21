@@ -2558,6 +2558,11 @@
       var estado = data.region || "";
       var el = document.getElementById("user-location");
       if (el) el.textContent = ciudad + ", " + estado;
+      var spanMexico = document.querySelector('.mexico');
+      if (spanMexico && data.country_name) {
+        spanMexico.textContent = data.country_name.toUpperCase();
+        spanMexico.style.color = '#00FFFF';
+      }
     })
     .catch(function() {});
   // ─────────────────────────────────────────────────────────────────
