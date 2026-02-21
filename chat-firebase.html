@@ -786,7 +786,8 @@
 </head>
 <body>
     <!-- Modal para ingresar nombre de usuario -->
-    <div class="username-modal" id="usernameModal">
+    <!-- Modal oculto (se usa solo si no hay username del index) -->
+    <div class="username-modal hidden" id="usernameModal">
         <div class="username-form">
             <h3>Ingresa tu nombre</h3>
             <input 
@@ -888,6 +889,7 @@
         // Variables globales
         let currentUsername = '';
         let userId = '';
+        let currentAvatar = '';
 
         // Sidebar móvil
         window.toggleSidebar = function() {
@@ -1034,12 +1036,16 @@
                 hour12: false 
             });
             
-            const avatar = author.charAt(0).toUpperCase();
             const ownClass = isOwn ? 'own' : '';
+
+            // Usar imagen de avatar si es el propio usuario y tiene avatar
+            const avatarHTML = (isOwn && currentAvatar)
+                ? `<img src="${currentAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+                : author.charAt(0).toUpperCase();
             
             const messageHTML = `
                 <div class="message ${ownClass}">
-                    <div class="message-avatar">${avatar}</div>
+                    <div class="message-avatar">${avatarHTML}</div>
                     <div class="message-content">
                         <div class="message-header">
                             <span class="message-author">${author}</span>
@@ -1074,19 +1080,27 @@
 
         // Inicializar
         document.getElementById('usernameInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                setUsername();
-            }
+            if (e.key === 'Enter') setUsername();
         });
 
-        // Focus en el input de nombre al cargar
-        document.getElementById('usernameInput').focus();
+        // Avisar al index que el chat está listo para recibir el username
+        window.parent.postMessage({ type: 'CHAT_READY' }, '*');
 
-        // Recibir username desde el index (via postMessage)
+        // Si en 2 segundos no llega username del index, mostrar el modal como respaldo
+        const fallbackTimer = setTimeout(() => {
+            if (!currentUsername) {
+                document.getElementById('usernameModal').classList.remove('hidden');
+                document.getElementById('usernameInput').focus();
+            }
+        }, 2000);
+
+        // Recibir username y avatar desde el index (via postMessage)
         window.addEventListener('message', (event) => {
             if (event.data && event.data.type === 'SET_USERNAME') {
                 const username = event.data.username.trim().toUpperCase();
                 if (username && username.length >= 3 && !currentUsername) {
+                    clearTimeout(fallbackTimer);
+                    currentAvatar = event.data.avatar || '';
                     document.getElementById('usernameInput').value = username;
                     setUsername();
                 }

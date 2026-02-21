@@ -3149,29 +3149,34 @@
 
   <script>
     let chatOpen = false;
-    let usernameSent = false;
+    let iframeReady = false;
+
+    const chatFrame = document.getElementById('chat-frame');
+
+    // El iframe avisa cuando está listo para recibir el username
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'CHAT_READY') {
+        iframeReady = true;
+        sendUsernameToChat();
+      }
+    });
+
+    function sendUsernameToChat() {
+      const username = localStorage.getItem('atlas-username') || '';
+      if (!username || !iframeReady) return;
+      const avatar = localStorage.getItem('atlas-avatar') || '';
+      chatFrame.contentWindow.postMessage({ type: 'SET_USERNAME', username, avatar }, '*');
+    }
 
     function toggleChat() {
       chatOpen = !chatOpen;
       document.getElementById('chat-iframe-container').classList.toggle('open', chatOpen);
       document.getElementById('chat-fab').classList.toggle('open', chatOpen);
 
-      // Cuando se abre por primera vez, esperar a que el iframe cargue y enviar el username
-      if (chatOpen && !usernameSent) {
-        const frame = document.getElementById('chat-frame');
-        frame.onload = () => sendUsernameToChat();
-      } else if (chatOpen && usernameSent) {
-        // Ya cargó antes, solo reenviar por si acaso
+      // Si el iframe ya está listo pero aún no se envió el username, intentar de nuevo
+      if (chatOpen && iframeReady) {
         sendUsernameToChat();
       }
-    }
-
-    function sendUsernameToChat() {
-      const username = localStorage.getItem('atlas-username') || '';
-      if (!username) return;
-      const frame = document.getElementById('chat-frame');
-      frame.contentWindow.postMessage({ type: 'SET_USERNAME', username: username }, '*');
-      usernameSent = true;
     }
 
     function updateWidgetTime() {
