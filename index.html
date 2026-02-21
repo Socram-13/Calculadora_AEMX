@@ -239,6 +239,15 @@
     .tier-info { flex-wrap: wrap; gap: 6px; padding: 8px; }
     .tier-label { font-size: 11px; }
     .tier-value { font-size: 11px; }
+
+    /* Botones inferiores: reducir tamaño para caber en una fila */
+    .save-bar { gap: 6px; }
+    .btn-save, .btn-share {
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 9px 10px;
+      border-radius: 8px;
+    }
   }
 
   /* Main grid */
@@ -662,15 +671,15 @@
 
   .btn-save {
     font-family: 'Orbitron', monospace;
-    font-size: 12px;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: #000;
     background: linear-gradient(135deg, #00c8ff, #4ade80);
     border: none;
-    border-radius: 10px;
-    padding: 12px 32px;
+    border-radius: 8px;
+    padding: 9px 20px;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
     box-shadow: 0 0 20px rgba(0,200,255,0.35);
@@ -704,15 +713,15 @@
 
   .btn-share {
     font-family: 'Orbitron', monospace;
-    font-size: 12px;
+    font-size: 9px;
     font-weight: 700;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     text-transform: uppercase;
     color: #fff;
     background: transparent;
     border: 1px solid var(--glow);
-    border-radius: 10px;
-    padding: 12px 24px;
+    border-radius: 8px;
+    padding: 9px 16px;
     cursor: pointer;
     transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
     box-shadow: 0 0 12px rgba(0,200,255,0.15);
