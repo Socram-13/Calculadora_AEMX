@@ -148,7 +148,7 @@
 
   .header-title .atlas { color: #facc15; }
   .header-title .earth { color: #facc15; }
-  .header-title .mexico { color: #facc15; }
+  .header-title .mexico { color: #7EC8E3; }
   .header-title .mexico .i { color: #ef4444; }
 
   .header-subtitle {
@@ -1212,7 +1212,7 @@
       <!-- Center: Title -->
       <div class="header-center">
         <div class="header-title">
-          <span class="atlas">ATLAS </span><span class="earth">EARTH </span><span class="mexico"><span style="color:#006847">MÉ</span><span style="color:#ffffff">XI</span><span style="color:#ce1126">CO</span></span>
+          <span class="atlas">ATLAS </span><span class="earth">EARTH </span><span class="mexico">MÉXICO</span>
         </div>
         <div class="header-subtitle">GAMERTAG</div>
         <div class="header-tagline">Calcula tus ganancias pasivas</div>
@@ -2582,23 +2582,39 @@
     var spanMexico = document.querySelector('.mexico');
     if (spanMexico && countryName) {
       spanMexico.textContent = countryName.toUpperCase();
-      spanMexico.style.color = '#00FFFF';
+      spanMexico.style.color = '#7EC8E3';
     }
   }
 
-  function ubicacionPorIP() {
-    fetch("https://ipapi.co/json/")
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        actualizarPais(data.country_name);
-        var ciudad = data.city || "";
-        var estado = data.region || "";
-        var el = document.getElementById("user-location");
-        if (el) el.textContent = ciudad + ", " + estado;
-      })
-      .catch(function() {});
+  function actualizarCiudad(ciudad, estado) {
+    var el = document.getElementById("user-location");
+    if (el && ciudad) el.textContent = ciudad + ", " + estado;
   }
 
+  function ubicacionPorIP() {
+    // Intentar con ip-api.com (sin CORS issues)
+    fetch("https://ip-api.com/json/?fields=country,regionName,city&lang=es")
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data.country) actualizarPais(data.country);
+        actualizarCiudad(data.city || "", data.regionName || "");
+      })
+      .catch(function() {
+        // Fallback a ipapi.co
+        fetch("https://ipapi.co/json/")
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            actualizarPais(data.country_name);
+            actualizarCiudad(data.city || "", data.region || "");
+          })
+          .catch(function() {});
+      });
+  }
+
+  // Siempre obtener país y ciudad por IP
+  setTimeout(ubicacionPorIP, 300);
+
+  // Mejorar ciudad/estado con GPS si está disponible
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function(pos) {
@@ -2607,21 +2623,12 @@
         fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=es")
           .then(function(res) { return res.json(); })
           .then(function(data) {
-            var ciudad = data.city || data.locality || "";
-            var estado = data.principalSubdivision || "";
-            var el = document.getElementById("user-location");
-            if (el) el.textContent = ciudad + ", " + estado;
-            fetch("https://ipapi.co/json/")
-              .then(function(r) { return r.json(); })
-              .then(function(ipData) { actualizarPais(ipData.country_name); })
-              .catch(function() {});
+            actualizarCiudad(data.city || data.locality || "", data.principalSubdivision || "");
           })
-          .catch(function() { ubicacionPorIP(); });
+          .catch(function() {});
       },
-      function() { ubicacionPorIP(); }
+      function() {}
     );
-  } else {
-    ubicacionPorIP();
   }
   // ─────────────────────────────────────────────────────────────────
 
