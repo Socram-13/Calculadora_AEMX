@@ -1220,11 +1220,11 @@
 
   @keyframes segSpinFwd {
     from { transform: rotate(0deg); }
-    to   { transform: rotate(360deg); }
+    to   { transform: rotate(-360deg); }
   }
   @keyframes segSpinRev {
     from { transform: rotate(0deg); }
-    to   { transform: rotate(-360deg); }
+    to   { transform: rotate(360deg); }
   }
 
   .donut-center {
@@ -2002,16 +2002,19 @@
     const pctIds = ['donut-pct-c','donut-pct-r','donut-pct-e','donut-pct-l'];
     const colors = ['#4ade80','#60a5fa','#c084fc','#facc15'];
 
-    // Reset pcts (preservar el span de la flecha)
-    pctIds.forEach((id) => {
-      const div = document.getElementById(id);
-      const arrow = div.querySelector('.donut-arrow');
-      if (arrow) { arrow.textContent = ''; arrow.className = 'donut-arrow'; }
-      const tn = Array.from(div.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-      if (tn) { tn.textContent = '0%'; } else { div.appendChild(document.createTextNode('0%')); }
-    });
-
-    if (total === 0) { center.textContent = '—'; return; }
+    if (total === 0) {
+      center.textContent = '—';
+      // Reset flechas a 0% con flecha abajo cuando no hay parcelas
+      const donutArrowIds0 = ["donut-arrow-c","donut-arrow-r","donut-arrow-e","donut-arrow-l"];
+      pctIds.forEach((id, i) => {
+        const div = document.getElementById(id);
+        const arrow = div.querySelector('.donut-arrow');
+        if (arrow) { arrow.textContent = '↓'; arrow.className = 'donut-arrow down'; }
+        const tn = Array.from(div.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+        if (tn) { tn.textContent = '0%'; } else { div.appendChild(document.createTextNode('0%')); }
+      });
+      return;
+    }
     center.textContent = total;
 
     const activeCount = vals.filter(v => v > 0).length;
@@ -2071,23 +2074,20 @@
       svg.appendChild(g);
 
       angleOffset = endAngle + GAP_RAD;
-
-      // Actualizar % en la leyenda del donut con flechas
-      const BASE_DONUT = [50, 30, 15, 5];
-      const donutArrowIds = ["donut-arrow-c","donut-arrow-r","donut-arrow-e","donut-arrow-l"];
-      const pctVal = parseFloat((pct * 100).toFixed(1));
-      const diff = pctVal - BASE_DONUT[i];
-      const pctDiv = document.getElementById(pctIds[i]);
-      const arrowEl = document.getElementById(donutArrowIds[i]);
-      if (arrowEl) {
-        if (diff > 0)      { arrowEl.textContent = "↑"; arrowEl.className = "donut-arrow up"; }
-        else if (diff < 0) { arrowEl.textContent = "↓"; arrowEl.className = "donut-arrow down"; }
-        else               { arrowEl.textContent = "";  arrowEl.className = "donut-arrow"; }
-      }
-      const textNode = Array.from(pctDiv.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
-      if (textNode) { textNode.textContent = pctVal.toFixed(1) + "%"; }
-      else { pctDiv.appendChild(document.createTextNode(pctVal.toFixed(1) + "%")); }
     });
+
+    // Actualizar flechas — explícito para cada rareza
+    function updateArrow(divId, arrowId, parcelas, base) {
+      const pct = parseFloat(((parcelas / total) * 100).toFixed(1));
+      const diff = pct - base;
+      const sym   = diff > 0 ? "↑" : (diff < 0 ? "↓" : "");
+      const cls   = diff > 0 ? "donut-arrow up" : (diff < 0 ? "donut-arrow down" : "donut-arrow");
+      document.getElementById(divId).innerHTML = '<span class="' + cls + '" id="' + arrowId + '">' + sym + '</span>' + pct.toFixed(1) + '%';
+    }
+    updateArrow('donut-pct-c', 'donut-arrow-c', c, 50);
+    updateArrow('donut-pct-r', 'donut-arrow-r', r, 30);
+    updateArrow('donut-pct-e', 'donut-arrow-e', e, 15);
+    updateArrow('donut-pct-l', 'donut-arrow-l', l,  5);
   }
 
 
