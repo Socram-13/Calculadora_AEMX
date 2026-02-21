@@ -523,6 +523,24 @@
     font-size: 13px;
   }
 
+  .donut-arrow {
+    font-size: 26px;
+    font-weight: 700;
+    margin-right: 3px;
+    line-height: 1;
+  }
+  .donut-arrow.up   { color: #4ade80; }
+  .donut-arrow.down { color: #ef4444; }
+
+  .rarity-arrow {
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 2px;
+    line-height: 1;
+  }
+  .rarity-arrow.up   { color: #4ade80; }
+  .rarity-arrow.down { color: #ef4444; }
+
   .breakdown-label { color: var(--text2); }
   .breakdown-value {
     font-family: 'Share Tech Mono', monospace;
@@ -1198,12 +1216,15 @@
 
   .donut-wrap svg {
     transform: rotate(-90deg);
-    animation: spinDonut 20s linear infinite;
   }
 
-  @keyframes spinDonut {
-    0%   { transform: rotate(-90deg); }
-    100% { transform: rotate(270deg); }
+  @keyframes segSpinFwd {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  @keyframes segSpinRev {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(-360deg); }
   }
 
   .donut-center {
@@ -1215,10 +1236,15 @@
     font-family: 'Orbitron', monospace;
     font-size: 22px;
     font-weight: 900;
-    color: #d4d4d4;
-    text-shadow: 0 0 12px rgba(220,220,220,0.8), 0 0 24px rgba(255,255,255,0.3);
+    color: #e2e8f0;
+    text-shadow: none;
     text-align: center;
     line-height: 1.2;
+  }
+
+  .donut-center span, #donut-center {
+    border-radius: 8px;
+    padding: 2px 8px;
   }
 
 
@@ -1324,15 +1350,15 @@
     <div class="profile-chart">
       <!-- % leyenda izquierda -->
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#4ade80;" id="donut-pct-c">0%</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#60a5fa;" id="donut-pct-r">0%</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#c084fc;" id="donut-pct-e">0%</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#facc15;" id="donut-pct-l">0%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#4ade80;" id="donut-pct-c"><span class="donut-arrow" id="donut-arrow-c"></span>0%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#60a5fa;" id="donut-pct-r"><span class="donut-arrow" id="donut-arrow-r"></span>0%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#c084fc;" id="donut-pct-e"><span class="donut-arrow" id="donut-arrow-e"></span>0%</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#facc15;" id="donut-pct-l"><span class="donut-arrow" id="donut-arrow-l"></span>0%</div>
       </div>
       <!-- Donut + CREL label -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
         <div class="donut-wrap">
-          <svg width="180" height="180" viewBox="0 0 100 100" id="donut-svg">
+          <svg width="180" height="180" viewBox="-5 -5 110 110" id="donut-svg">
             <circle cx="50" cy="50" r="28" fill="none" stroke="#1a3a5c" stroke-width="10"/>
           </svg>
           <div class="donut-center" id="donut-center">—</div>
@@ -1746,26 +1772,23 @@
     document.getElementById('total-parcels').textContent = total;
 
     // Velocidad del donut segun total de parcelas (0 = 30s, 10000+ = 0.2s)
-    const donutSvg = document.querySelector('.donut-wrap svg');
-    if (donutSvg) {
-      let speed;
-      if      (total === 0)    speed = 60;
-      else if (total <= 25)    speed = 55;
-      else if (total <= 50)    speed = 50;
-      else if (total <= 100)   speed = 45;
-      else if (total <= 200)   speed = 35;
-      else if (total <= 350)   speed = 25;
-      else if (total <= 500)   speed = 18;
-      else if (total <= 750)   speed = 13;
-      else if (total <= 1000)  speed = 10;
-      else if (total <= 1500)  speed = 2.5;
-      else if (total <= 2000)  speed = 2;
-      else if (total <= 3000)  speed = 1.5;
-      else if (total <= 5000)  speed = 1.2;
-      else if (total <= 8000)  speed = 1;
-      else                     speed = 0.8;
-      donutSvg.style.animationDuration = speed + 's';
-    }
+    let _segSpeed;
+    if      (total === 0)    _segSpeed = 60;
+    else if (total <= 25)    _segSpeed = 55;
+    else if (total <= 50)    _segSpeed = 50;
+    else if (total <= 100)   _segSpeed = 45;
+    else if (total <= 200)   _segSpeed = 35;
+    else if (total <= 350)   _segSpeed = 25;
+    else if (total <= 500)   _segSpeed = 18;
+    else if (total <= 750)   _segSpeed = 13;
+    else if (total <= 1000)  _segSpeed = 10;
+    else if (total <= 1500)  _segSpeed = 2.5;
+    else if (total <= 2000)  _segSpeed = 2;
+    else if (total <= 3000)  _segSpeed = 1.5;
+    else if (total <= 5000)  _segSpeed = 1.2;
+    else if (total <= 8000)  _segSpeed = 1;
+    else                     _segSpeed = 0.8;
+    window._donutSegSpeed = _segSpeed;
 
     // % per rarity
     const types = { common: c, rare: r, epic: e, legendary: l };
@@ -1965,60 +1988,103 @@
   function drawDonut(c, r, e, l, total) {
     const svg = document.getElementById('donut-svg');
     const center = document.getElementById('donut-center');
-    const radius = 28, cx = 50, cy = 50, strokeW = 10;
-    const circ = 2 * Math.PI * radius;
-    const GAP_DEG = 6; // degrees of gap between segments
-    const GAP_RAD = (GAP_DEG / 360) * circ;
-    const EXPLODE = 4; // px outward shift per segment
+    const cx = 50, cy = 50, strokeW = 10;
+    const GAP_DEG = 6;
+    // Radios independientes por rareza: common, rare, epic, legendary
+    // rare y legendary sobresalen más
+    const BASE_DONUT_R = [50, 30, 15, 5]; // para calcular radio dinámico
 
     svg.querySelectorAll('.seg').forEach(el => el.remove());
 
     const vals = [c, r, e, l];
     const pctIds = ['donut-pct-c','donut-pct-r','donut-pct-e','donut-pct-l'];
+    const colors = ['#4ade80','#60a5fa','#c084fc','#facc15'];
 
-    // Reset pcts
-    pctIds.forEach(id => { document.getElementById(id).textContent = '0%'; });
+    // Reset pcts (preservar el span de la flecha)
+    pctIds.forEach((id) => {
+      const div = document.getElementById(id);
+      const arrow = div.querySelector('.donut-arrow');
+      if (arrow) { arrow.textContent = ''; arrow.className = 'donut-arrow'; }
+      const tn = Array.from(div.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+      if (tn) { tn.textContent = '0%'; } else { div.appendChild(document.createTextNode('0%')); }
+    });
 
     if (total === 0) { center.textContent = '—'; return; }
     center.textContent = total;
 
-    const colors = ['#4ade80','#60a5fa','#c084fc','#facc15'];
     const activeCount = vals.filter(v => v > 0).length;
-    const totalGap = activeCount > 1 ? GAP_RAD * activeCount : 0;
-    const available = circ - totalGap;
 
-    let angleOffset = 0;
+    // Calcular ángulos usando radio base común para distribuir 360°
+    const GAP_RAD = (GAP_DEG * Math.PI) / 180;
+    const totalGap = activeCount > 1 ? GAP_RAD * activeCount : 0;
+    const available = 2 * Math.PI - totalGap;
+
+    // Helper: genera path de arco SVG
+    function arcPath(cx, cy, r, startAngle, endAngle) {
+      const x1 = cx + r * Math.cos(startAngle);
+      const y1 = cy + r * Math.sin(startAngle);
+      const x2 = cx + r * Math.cos(endAngle);
+      const y2 = cy + r * Math.sin(endAngle);
+      const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
+      return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+    }
+
+    let angleOffset = -Math.PI / 2; // empezar arriba
 
     vals.forEach((val, i) => {
       if (val === 0) return;
       const pct = val / total;
-      const segLen = pct * available;
-      const midAngle = angleOffset + segLen / 2;
+      const segAngle = pct * available;
+      const startAngle = angleOffset;
+      const endAngle = angleOffset + segAngle;
+      const midAngle = (startAngle + endAngle) / 2;
+      const pctForRadius = (val / total) * 100;
+      const isAboveBase = pctForRadius > BASE_DONUT_R[i];
+      const radius = isAboveBase ? 34 : 24;
 
-      const midRad = (midAngle / circ) * 2 * Math.PI - Math.PI / 2;
+      // Explode: desplazar el segmento hacia afuera desde el centro
+      const EXPLODE = 2;
+      const ex = cx + Math.cos(midAngle) * EXPLODE;
+      const ey = cy + Math.sin(midAngle) * EXPLODE;
 
-      const ex = cx + Math.cos(midRad) * EXPLODE;
-      const ey = cy + Math.sin(midRad) * EXPLODE;
-
-      const gap  = circ - segLen;
-      const seg = document.createElementNS('http://www.w3.org/2000/svg','circle');
-      seg.setAttribute('cx', ex);
-      seg.setAttribute('cy', ey);
-      seg.setAttribute('r', radius);
+      const seg = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      seg.setAttribute('d', arcPath(ex, ey, radius, startAngle, endAngle));
       seg.setAttribute('fill', 'none');
       seg.setAttribute('stroke', colors[i]);
       seg.setAttribute('stroke-width', strokeW);
-      seg.setAttribute('stroke-dasharray', `${segLen} ${gap}`);
-      const startAngleCirc = angleOffset;
-      seg.setAttribute('stroke-dashoffset', -(startAngleCirc) + (EXPLODE * 0.1));
-      seg.setAttribute('class', 'seg');
+      seg.setAttribute('stroke-linecap', 'round');
       seg.setAttribute('filter', `drop-shadow(0 0 3px ${colors[i]})`);
-      svg.appendChild(seg);
 
-      angleOffset += segLen + GAP_RAD;
+      // Giro individual: verde=adelante, rojo=inverso, sin flecha=sin giro
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('class', 'seg');
+      g.style.transformOrigin = '50px 50px';
+      const speed = window._donutSegSpeed || 20;
+      if (isAboveBase) {
+        g.style.animation = `segSpinFwd ${speed}s linear infinite`;
+      } else {
+        g.style.animation = `segSpinRev ${speed * 1.4}s linear infinite`;
+      }
+      g.appendChild(seg);
+      svg.appendChild(g);
 
-      // Actualizar % en la leyenda del donut
-      document.getElementById(pctIds[i]).textContent = (pct * 100).toFixed(1) + '%';
+      angleOffset = endAngle + GAP_RAD;
+
+      // Actualizar % en la leyenda del donut con flechas
+      const BASE_DONUT = [50, 30, 15, 5];
+      const donutArrowIds = ["donut-arrow-c","donut-arrow-r","donut-arrow-e","donut-arrow-l"];
+      const pctVal = parseFloat((pct * 100).toFixed(1));
+      const diff = pctVal - BASE_DONUT[i];
+      const pctDiv = document.getElementById(pctIds[i]);
+      const arrowEl = document.getElementById(donutArrowIds[i]);
+      if (arrowEl) {
+        if (diff > 0)      { arrowEl.textContent = "↑"; arrowEl.className = "donut-arrow up"; }
+        else if (diff < 0) { arrowEl.textContent = "↓"; arrowEl.className = "donut-arrow down"; }
+        else               { arrowEl.textContent = "";  arrowEl.className = "donut-arrow"; }
+      }
+      const textNode = Array.from(pctDiv.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+      if (textNode) { textNode.textContent = pctVal.toFixed(1) + "%"; }
+      else { pctDiv.appendChild(document.createTextNode(pctVal.toFixed(1) + "%")); }
     });
   }
 
@@ -2511,6 +2577,7 @@
             svg.style.animation = 'none';
             svg.style.transform = 'rotate(-90deg)';
           });
+          doc.querySelectorAll('.seg').forEach(g => { g.style.animation = 'none'; });
           const styleEl = doc.createElement('style');
           styleEl.textContent = `
             .profile-avatar-wrapper { animation: none !important; background: none !important; }
