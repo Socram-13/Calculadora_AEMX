@@ -3176,8 +3176,9 @@
       if (chatOpen) {
         const username = localStorage.getItem('atlas-username') || '';
         const avatar = localStorage.getItem('atlas-avatar') || '';
+        const color = localStorage.getItem('atlas-avatar-border') || '';
         sessionStorage.setItem('chat-avatar', avatar);
-        document.getElementById('chat-frame').src = `chat-firebase.html?username=${encodeURIComponent(username)}`;
+        document.getElementById('chat-frame').src = `chat-firebase.html?username=${encodeURIComponent(username)}&color=${encodeURIComponent(color)}`;
       }
     }
 

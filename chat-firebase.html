@@ -809,19 +809,9 @@
                         <span></span>
                     </button>
                     <div>
-                        <h2>CHAT GENERAL</h2>
-                        <div class="chat-subtitle">Atlas Earth México • Comunidad de Jugadores</div>
+                        <h2>AEMX CHAT</h2>
                     </div>
-                    <!-- Theme Selector + botón cerrar en móvil -->
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <div class="theme-selector">
-                            <div class="theme-btn green active" onclick="changeTheme('')" title="Verde"></div>
-                            <div class="theme-btn cyan" onclick="changeTheme('cyan')" title="Cyan"></div>
-                            <div class="theme-btn purple" onclick="changeTheme('purple')" title="Morado"></div>
-                            <div class="theme-btn orange" onclick="changeTheme('orange')" title="Naranja"></div>
-                        </div>
-                        <button id="close-chat-btn" onclick="window.parent.postMessage({type:'CLOSE_CHAT'},'*')" style="display:none;background:none;border:1px solid #00ff88;color:#00ff88;border-radius:4px;padding:3px 8px;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">✕</button>
-                    </div>
+                    <button id="close-chat-btn" onclick="window.parent.postMessage({type:'CLOSE_CHAT'},'*')" style="display:none;background:none;border:1px solid #00ff88;color:#00ff88;border-radius:4px;padding:3px 8px;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">✕</button>
                 </div>
             </div>
 
@@ -1099,6 +1089,13 @@
         const urlParams = new URLSearchParams(window.location.search);
         const urlUsername = (urlParams.get('username') || '').trim().toUpperCase();
         const urlAvatar = sessionStorage.getItem('chat-avatar') || '';
+        const urlColor = urlParams.get('color') || '';
+
+        // Aplicar color del usuario al tema del chat
+        if (urlColor) {
+            document.documentElement.style.setProperty('--primary-color', urlColor);
+            document.documentElement.style.setProperty('--border-color', urlColor);
+        }
 
         if (urlUsername && urlUsername.length >= 3) {
             currentAvatar = urlAvatar;
