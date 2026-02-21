@@ -2207,12 +2207,22 @@
   if (avatarColorBtn) {
     avatarColorBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      openColorPicker();
+      if (isSafariIOS()) {
+        toggleSafariColorPalette();
+      } else {
+        openColorPicker();
+      }
     });
-    avatarColorBtn.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openColorPicker();
+    // pointerup en lugar de touchend para mejor compatibilidad con Safari iOS
+    avatarColorBtn.addEventListener('pointerup', function(e) {
+      if (e.pointerType === 'touch') {
+        e.stopPropagation();
+        if (isSafariIOS()) {
+          toggleSafariColorPalette();
+        } else {
+          avatarBorderColor.click();
+        }
+      }
     });
   }
   // ─────────────────────────────────────────────────────────────────
@@ -2727,6 +2737,74 @@
   // Polling cada 300ms — único método confiable en Chrome Android
   checkZoomButtons();
   setInterval(checkZoomButtons, 300);
+  // ─────────────────────────────────────────────────────────────────
+
+  // ── Safari iOS: detección y paleta de colores alternativa ────────
+  function isSafariIOS() {
+    return /iP(hone|od|ad)/.test(navigator.userAgent) &&
+           /WebKit/.test(navigator.userAgent) &&
+           !window.MSStream;
+  }
+
+  const SAFARI_PALETTE_COLORS = [
+    '#00c8ff','#4ade80','#facc15','#f97316',
+    '#ef4444','#a855f7','#ec4899','#ffffff',
+    '#94a3b8','#1e40af','#065f46','#7f1d1d'
+  ];
+
+  function toggleSafariColorPalette() {
+    let palette = document.getElementById('safari-color-palette');
+    if (palette) {
+      palette.remove();
+      return;
+    }
+    palette = document.createElement('div');
+    palette.id = 'safari-color-palette';
+    palette.style.cssText = `
+      position: fixed;
+      z-index: 9999;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 16px;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: repeat(6, 36px);
+      gap: 10px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    `;
+    SAFARI_PALETTE_COLORS.forEach(color => {
+      const swatch = document.createElement('div');
+      swatch.style.cssText = `
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: ${color};
+        cursor: pointer;
+        border: 2px solid rgba(255,255,255,0.2);
+        transition: transform 0.15s;
+      `;
+      swatch.addEventListener('click', function(e) {
+        e.stopPropagation();
+        changeAvatarBorder(color);
+        document.getElementById('avatar-border-color').value = color;
+        palette.remove();
+      });
+      palette.appendChild(swatch);
+    });
+    document.body.appendChild(palette);
+    // Cerrar si se toca fuera
+    setTimeout(() => {
+      document.addEventListener('pointerdown', function closePalette(e) {
+        if (!palette.contains(e.target)) {
+          palette.remove();
+          document.removeEventListener('pointerdown', closePalette);
+        }
+      });
+    }, 100);
+  }
   // ─────────────────────────────────────────────────────────────────
 
 </script>
