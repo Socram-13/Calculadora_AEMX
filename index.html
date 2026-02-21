@@ -2548,23 +2548,55 @@
     );
   }
 
-  // ── Ubicación por IP ─────────────────────────────────────────────
+  // ── Ubicación ─────────────────────────────────────────────────────
   var userCountry = "";
-  fetch("https://ipapi.co/json/")
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      userCountry = data.country_name || "";
-      var ciudad = data.city || "";
-      var estado = data.region || "";
-      var el = document.getElementById("user-location");
-      if (el) el.textContent = ciudad + ", " + estado;
-      var spanMexico = document.querySelector('.mexico');
-      if (spanMexico && data.country_name) {
-        spanMexico.textContent = data.country_name.toUpperCase();
-        spanMexico.style.color = '#00FFFF';
-      }
-    })
-    .catch(function() {});
+
+  function actualizarPais(countryName) {
+    userCountry = countryName || "";
+    var spanMexico = document.querySelector('.mexico');
+    if (spanMexico && countryName) {
+      spanMexico.textContent = countryName.toUpperCase();
+      spanMexico.style.color = '#00FFFF';
+    }
+  }
+
+  function ubicacionPorIP() {
+    fetch("https://ipapi.co/json/")
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        actualizarPais(data.country_name);
+        var ciudad = data.city || "";
+        var estado = data.region || "";
+        var el = document.getElementById("user-location");
+        if (el) el.textContent = ciudad + ", " + estado;
+      })
+      .catch(function() {});
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        var lat = pos.coords.latitude;
+        var lon = pos.coords.longitude;
+        fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=es")
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            var ciudad = data.city || data.locality || "";
+            var estado = data.principalSubdivision || "";
+            var el = document.getElementById("user-location");
+            if (el) el.textContent = ciudad + ", " + estado;
+            fetch("https://ipapi.co/json/")
+              .then(function(r) { return r.json(); })
+              .then(function(ipData) { actualizarPais(ipData.country_name); })
+              .catch(function() {});
+          })
+          .catch(function() { ubicacionPorIP(); });
+      },
+      function() { ubicacionPorIP(); }
+    );
+  } else {
+    ubicacionPorIP();
+  }
   // ─────────────────────────────────────────────────────────────────
 
   // ── Contador de visitas (counterapi.dev) ─────────────────────────
