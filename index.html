@@ -3172,8 +3172,10 @@
         document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
       }
 
-      // Al abrir, cargar el iframe con el username en la URL
       if (chatOpen) {
+        // Empujar estado para interceptar el botón atrás
+        history.pushState({ chatOpen: true }, '');
+        // Cargar iframe con username
         const username = localStorage.getItem('atlas-username') || '';
         const avatar = localStorage.getItem('atlas-avatar') || '';
         const color = localStorage.getItem('atlas-avatar-border') || '';
@@ -3190,9 +3192,25 @@
     updateWidgetTime();
     setInterval(updateWidgetTime, 60000);
     window.addEventListener('message', (e) => {
-      if (e.data && e.data.type === 'CLOSE_CHAT') toggleChat();
+      if (e.data && e.data.type === 'CLOSE_CHAT') closeChatWidget();
     });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatOpen) toggleChat(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatOpen) closeChatWidget(); });
+
+    function closeChatWidget() {
+      chatOpen = false;
+      document.getElementById('chat-iframe-container').classList.remove('open');
+      document.getElementById('chat-fab').classList.remove('open');
+      const visitWrapper = document.getElementById('visit-wrapper');
+      if (visitWrapper) visitWrapper.style.display = '';
+      if (window.innerWidth <= 480) {
+        document.getElementById('chat-fab').style.display = 'flex';
+      }
+    }
+
+    // Interceptar botón "atrás" del móvil para cerrar el chat
+    window.addEventListener('popstate', () => {
+      if (chatOpen) closeChatWidget();
+    });
   </script>
   <!-- ===== FIN CHAT WIDGET ===== -->
 </body>
