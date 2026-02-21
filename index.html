@@ -3142,40 +3142,33 @@
     <div id="chat-widget-bar">
       <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       <span>ATLAS EARTH MX • CHAT</span>
-      <span id="widget-time">--:--</span>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="widget-time">--:--</span>
+        <button onclick="toggleChat()" style="background:none;border:1px solid #00ff88;color:#00ff88;border-radius:4px;padding:2px 8px;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;">✕</button>
+      </div>
     </div>
     <iframe id="chat-frame" src="chat-firebase.html" title="Chat Atlas Earth México" loading="lazy" allow="clipboard-write"></iframe>
   </div>
 
   <script>
     let chatOpen = false;
-    let iframeReady = false;
 
     const chatFrame = document.getElementById('chat-frame');
-
-    // El iframe avisa cuando está listo para recibir el username
-    window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'CHAT_READY') {
-        iframeReady = true;
-        sendUsernameToChat();
-      }
-    });
-
-    function sendUsernameToChat() {
-      const username = localStorage.getItem('atlas-username') || '';
-      if (!username || !iframeReady) return;
-      const avatar = localStorage.getItem('atlas-avatar') || '';
-      chatFrame.contentWindow.postMessage({ type: 'SET_USERNAME', username, avatar }, '*');
-    }
 
     function toggleChat() {
       chatOpen = !chatOpen;
       document.getElementById('chat-iframe-container').classList.toggle('open', chatOpen);
       document.getElementById('chat-fab').classList.toggle('open', chatOpen);
+      // En móvil ocultar el botón cuando el chat está abierto
+      if (window.innerWidth <= 480) {
+        document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
+      }
 
-      // Si el iframe ya está listo pero aún no se envió el username, intentar de nuevo
-      if (chatOpen && iframeReady) {
-        sendUsernameToChat();
+      // Al abrir, cargar el iframe con el username en la URL
+      if (chatOpen) {
+        const username = encodeURIComponent(localStorage.getItem('atlas-username') || '');
+        const avatar = encodeURIComponent(localStorage.getItem('atlas-avatar') || '');
+        document.getElementById('chat-frame').src = `chat-firebase.html?username=${username}&avatar=${avatar}`;
       }
     }
 
