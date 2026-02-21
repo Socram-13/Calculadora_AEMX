@@ -658,6 +658,7 @@
 
         /* RESPONSIVE MÓVIL */
         @media (max-width: 768px) {
+            #close-chat-btn { display: block !important; }
             body {
                 overflow: hidden;
             }
@@ -686,7 +687,7 @@
 
             /* Header del chat más compacto */
             .chat-header {
-                padding: 12px 16px;
+                padding: 8px 12px;
             }
 
             .chat-header h2 {
@@ -833,12 +834,15 @@
                         <h2>CHAT GENERAL</h2>
                         <div class="chat-subtitle">Atlas Earth México • Comunidad de Jugadores</div>
                     </div>
-                    <!-- Theme Selector -->
-                    <div class="theme-selector">
-                        <div class="theme-btn green active" onclick="changeTheme('')" title="Verde"></div>
-                        <div class="theme-btn cyan" onclick="changeTheme('cyan')" title="Cyan"></div>
-                        <div class="theme-btn purple" onclick="changeTheme('purple')" title="Morado"></div>
-                        <div class="theme-btn orange" onclick="changeTheme('orange')" title="Naranja"></div>
+                    <!-- Theme Selector + botón cerrar en móvil -->
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div class="theme-selector">
+                            <div class="theme-btn green active" onclick="changeTheme('')" title="Verde"></div>
+                            <div class="theme-btn cyan" onclick="changeTheme('cyan')" title="Cyan"></div>
+                            <div class="theme-btn purple" onclick="changeTheme('purple')" title="Morado"></div>
+                            <div class="theme-btn orange" onclick="changeTheme('orange')" title="Naranja"></div>
+                        </div>
+                        <button id="close-chat-btn" onclick="window.parent.postMessage({type:'CLOSE_CHAT'},'*')" style="display:none;background:none;border:1px solid #00ff88;color:#00ff88;border-radius:4px;padding:3px 8px;font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;cursor:pointer;">✕</button>
                     </div>
                 </div>
             </div>
@@ -1106,13 +1110,12 @@
         clearOldMessages();
         setInterval(clearOldMessages, 60 * 60 * 1000);
 
-        // Leer username y avatar desde los parámetros de la URL
+        // Leer username desde URL y avatar desde sessionStorage
         const urlParams = new URLSearchParams(window.location.search);
-        const urlUsername = urlParams.get('username') || '';
-        const urlAvatar = urlParams.get('avatar') || '';
+        const urlUsername = (urlParams.get('username') || '').trim().toUpperCase();
+        const urlAvatar = sessionStorage.getItem('chat-avatar') || '';
 
         if (urlUsername && urlUsername.length >= 3) {
-            // Entrar automáticamente con el username del index
             currentAvatar = urlAvatar;
             document.getElementById('usernameInput').value = urlUsername;
             setUsername();

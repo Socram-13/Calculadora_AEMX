@@ -1346,7 +1346,7 @@
     right: 28px;
     z-index: 9997;
     width: 380px;
-    height: 600px;
+    height: min(600px, calc(100dvh - 120px));
     border-radius: 12px;
     overflow: hidden;
     border: 2px solid #00ff88;
@@ -1392,13 +1392,19 @@
   #chat-widget-bar .dot:nth-child(3) { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
 
   @media (max-width: 480px) {
+    #chat-widget-bar { display: none; }
     #chat-iframe-container {
-      right: 0; bottom: 0; left: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      top: auto;
       width: 100%;
-      height: 85dvh;
+      height: 75dvh;
       border-radius: 20px 20px 0 0;
       transform-origin: bottom center;
-      border-left: none; border-right: none; border-bottom: none;
+      border-left: none;
+      border-right: none;
+      border-bottom: none;
     }
     #chat-fab { bottom: 20px; right: 20px; }
   }
@@ -3142,10 +3148,7 @@
     <div id="chat-widget-bar">
       <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       <span>ATLAS EARTH MX • CHAT</span>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span id="widget-time">--:--</span>
-        <button onclick="toggleChat()" style="background:none;border:1px solid #00ff88;color:#00ff88;border-radius:4px;padding:2px 8px;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;">✕</button>
-      </div>
+      <span id="widget-time">--:--</span>
     </div>
     <iframe id="chat-frame" src="chat-firebase.html" title="Chat Atlas Earth México" loading="lazy" allow="clipboard-write"></iframe>
   </div>
@@ -3166,9 +3169,11 @@
 
       // Al abrir, cargar el iframe con el username en la URL
       if (chatOpen) {
-        const username = encodeURIComponent(localStorage.getItem('atlas-username') || '');
-        const avatar = encodeURIComponent(localStorage.getItem('atlas-avatar') || '');
-        document.getElementById('chat-frame').src = `chat-firebase.html?username=${username}&avatar=${avatar}`;
+        const username = localStorage.getItem('atlas-username') || '';
+        const avatar = localStorage.getItem('atlas-avatar') || '';
+        // Guardar avatar en sessionStorage para que el iframe lo lea
+        sessionStorage.setItem('chat-avatar', avatar);
+        document.getElementById('chat-frame').src = `chat-firebase.html?username=${encodeURIComponent(username)}`;
       }
     }
 
@@ -3179,6 +3184,9 @@
     }
     updateWidgetTime();
     setInterval(updateWidgetTime, 60000);
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'CLOSE_CHAT') toggleChat();
+    });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatOpen) toggleChat(); });
   </script>
   <!-- ===== FIN CHAT WIDGET ===== -->
