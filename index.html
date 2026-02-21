@@ -800,10 +800,9 @@
     background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%);
     border: 3px solid var(--border);
     border-radius: 14px;
-    padding: 10px 16px;
+    padding: 10px 16px 10px 16px;
     margin-bottom: 16px;
     position: relative;
-    overflow: hidden;
   }
 
   .profile-section::before {
@@ -812,6 +811,29 @@
     bottom: 0; left: 0; right: 0;
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  .ppd-circle {
+    position: absolute;
+    bottom: 10px;
+    left: 12px;
+    width: 42px;
+    height: 42px;
+    background: var(--glow);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--glow);
+    box-shadow: 0 0 8px rgba(0,200,255,0.5);
+    z-index: 4;
+    line-height: 1.1;
+    text-align: center;
+    cursor: default;
   }
 
   .profile-avatar-wrapper {
@@ -1331,6 +1353,28 @@
       <div class="profile-hint">Toca el avatar para cambiar foto</div>
       <!-- color-preview oculto para mantener funcionalidad -->
       <span id="color-preview" style="display:none;"></span>
+      <!-- Fecha de inicio -->
+      <div style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);letter-spacing:1px;">
+        <span style="opacity:0.5;">JUGANDO DESDE·</span>
+        <input
+          type="date"
+          id="start-date"
+          onchange="saveStartDate()"
+          style="
+            font-family:'Share Tech Mono',monospace;
+            font-size:11px;
+            color:var(--text2);
+            letter-spacing:1px;
+            background:transparent;
+            border:none;
+            outline:none;
+            padding:0;
+            cursor:pointer;
+            color-scheme:dark;
+            width:auto;
+          "
+        >
+      </div>
       <!-- color picker movido arriba -->
       <!-- Fecha y hora en tiempo real -->
       <div style="margin-top:8px;">
@@ -1347,6 +1391,9 @@
       </div>
 
     </div>
+
+    <!-- Círculo parcelas por día -->
+    <div class="ppd-circle" id="ppd-circle">—</div>
 
     <!-- Donut chart -->
     <div class="profile-chart">
@@ -1985,12 +2032,27 @@
     }
     autoSave();
     drawDonut(c, r, e, l, total);
+
+    // Parcelas por día
+    const startDateVal = document.getElementById('start-date').value;
+    const ppdCircle = document.getElementById('ppd-circle');
+    if (ppdCircle) {
+      if (startDateVal && total > 0) {
+        const start = new Date(startDateVal);
+        const now = new Date();
+        const diasJugados = Math.max(1, Math.floor((now - start) / 86400000));
+        const ppd = (total / diasJugados).toFixed(1);
+        ppdCircle.textContent = ppd;
+      } else {
+        ppdCircle.textContent = '—';
+      }
+    }
   }
 
   function drawDonut(c, r, e, l, total) {
     const svg = document.getElementById('donut-svg');
     const center = document.getElementById('donut-center');
-    const cx = 50, cy = 50, strokeW = 10;
+    const cx = 50, cy = 50, strokeW = 5;
     const GAP_DEG = 6;
     // Radios independientes por rareza: common, rare, epic, legendary
     // rare y legendary sobresalen más
@@ -2024,14 +2086,36 @@
     const totalGap = activeCount > 1 ? GAP_RAD * activeCount : 0;
     const available = 2 * Math.PI - totalGap;
 
-    // Helper: genera path de arco SVG
+    // Helper: genera path de arco dentado (efecto engrane)
     function arcPath(cx, cy, r, startAngle, endAngle) {
-      const x1 = cx + r * Math.cos(startAngle);
-      const y1 = cy + r * Math.sin(startAngle);
-      const x2 = cx + r * Math.cos(endAngle);
-      const y2 = cy + r * Math.sin(endAngle);
-      const largeArc = (endAngle - startAngle) > Math.PI ? 1 : 0;
-      return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+      const toothHeight = 5.5;
+      const toothWidth  = 0.08;
+      const gapWidth    = 0.14;
+      const period      = toothWidth + gapWidth;
+      const arcLen      = endAngle - startAngle;
+      const numTeeth    = Math.max(1, Math.floor(arcLen / period));
+      const actualPeriod = arcLen / numTeeth;
+      const tw = actualPeriod * 0.45;
+      const rOuter = r + toothHeight;
+
+      let d = '';
+      for (let t = 0; t < numTeeth; t++) {
+        const a0 = startAngle + t * actualPeriod;
+        const a1 = a0 + (actualPeriod - tw);
+        const a2 = a1 + tw * 0.5;
+        const a3 = a0 + actualPeriod;
+
+        const p = (angle, radius) => `${cx + radius * Math.cos(angle)} ${cy + radius * Math.sin(angle)}`;
+
+        if (t === 0) d += `M ${p(a0, r)}`;
+        else         d += ` L ${p(a0, r)}`;
+
+        d += ` A ${r} ${r} 0 0 1 ${p(a1, r)}`;
+        d += ` L ${p(a1, rOuter)}`;              // subir vertical
+        d += ` L ${p(a2, rOuter)}`;              // tope plano
+        d += ` L ${p(a3, r)}`;                   // bajar vertical
+      }
+      return d;
     }
 
     let angleOffset = -Math.PI / 2; // empezar arriba
@@ -2103,6 +2187,7 @@
       diamonds:   document.getElementById('diamonds').value,
       atlasbucks: document.getElementById('atlasbucks').value,
       explorer:   explorerActive,
+      startDate:  document.getElementById('start-date').value,
     };
     localStorage.setItem('atlas-earth-calc-data', JSON.stringify(data));
   }
@@ -2116,6 +2201,7 @@
       badges:     document.getElementById('badges').value,
       diamonds:   document.getElementById('diamonds').value,
       atlasbucks: document.getElementById('atlasbucks').value,
+      startDate:  document.getElementById('start-date').value,
     };
     try {
       window.storage.set(SAVE_KEY, JSON.stringify(data)).then(() => {
@@ -2169,6 +2255,7 @@
     ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
       if (data[k] !== undefined) document.getElementById(k).value = data[k];
     });
+    if (data.startDate) document.getElementById('start-date').value = data.startDate;
     if (data.explorer === false || data.explorer === 'false') {
       explorerActive = false;
       const check = document.getElementById('explorer-check');
@@ -2207,6 +2294,7 @@
         diamonds:   document.getElementById('diamonds').value,
         atlasbucks: document.getElementById('atlasbucks').value,
         explorer:   explorerActive,
+        startDate:  document.getElementById('start-date').value,
       }));
     } catch(e) {}
     showStatus('✔ Datos guardados');
@@ -2367,6 +2455,18 @@
     const donutCenter = document.getElementById('donut-center');
     if (donutCenter) donutCenter.style.color = `rgb(${lightR},${lightG},${lightB})`;
 
+    // PPD circle: fondo 50% más oscuro, texto del color del usuario
+    const darkR = Math.round(_r2 * 0.5);
+    const darkG = Math.round(_g2 * 0.5);
+    const darkB = Math.round(_b2 * 0.5);
+    const ppdEl = document.getElementById('ppd-circle');
+    if (ppdEl) {
+      ppdEl.style.background = `rgb(${darkR},${darkG},${darkB})`;
+      ppdEl.style.color = color;
+      ppdEl.style.boxShadow = `0 0 8px rgba(${rgb},0.5)`;
+      ppdEl.style.textShadow = `0 0 8px rgba(${rgb},0.9), 2px 2px 0px rgba(0,0,0,0.6)`;
+    }
+
     // btn-save: degradado con el color
     document.querySelectorAll('.btn-save').forEach(btn => {
       btn.style.background = `linear-gradient(135deg, ${color}, #4ade80)`;
@@ -2488,6 +2588,12 @@
     try { window.storage.set('atlas-username', name); } catch(err) {}
   }
 
+  function saveStartDate() {
+    const date = document.getElementById('start-date').value;
+    localStorage.setItem('atlas-start-date', date);
+    try { window.storage.set('atlas-start-date', date); } catch(err) {}
+  }
+
   // Load avatar and username on startup
   async function loadProfile() {
     // Username - localStorage first
@@ -2534,6 +2640,16 @@
       const preview = document.getElementById('color-preview');
       if (preview) preview.style.background = borderColor;
     }
+
+    // Fecha de inicio
+    let startDate = localStorage.getItem('atlas-start-date') || '';
+    if (!startDate) {
+      try {
+        const r = await window.storage.get('atlas-start-date');
+        if (r && r.value) startDate = r.value;
+      } catch(e) {}
+    }
+    if (startDate) document.getElementById('start-date').value = startDate;
   }
 
 
