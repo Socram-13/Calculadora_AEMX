@@ -1236,8 +1236,10 @@
     font-family: 'Orbitron', monospace;
     font-size: 22px;
     font-weight: 900;
-    color: #e2e8f0;
-    text-shadow: none;
+    color: var(--glow);
+    text-shadow:
+      2px 2px 0px #0a0a14,
+      3px 3px 0px rgba(0,0,0,0.6);
     text-align: center;
     line-height: 1.2;
   }
@@ -2356,6 +2358,14 @@
     // CSS variables globales
     root.style.setProperty('--glow', color);
     root.style.setProperty('--accent', color);
+
+    // Donut center: color del usuario mezclado 50% con blanco
+    const [_r2,_g2,_b2] = rgb.split(",").map(Number);
+    const lightR = Math.round(_r2 + (255 - _r2) * 0.5);
+    const lightG = Math.round(_g2 + (255 - _g2) * 0.5);
+    const lightB = Math.round(_b2 + (255 - _b2) * 0.5);
+    const donutCenter = document.getElementById('donut-center');
+    if (donutCenter) donutCenter.style.color = `rgb(${lightR},${lightG},${lightB})`;
 
     // btn-save: degradado con el color
     document.querySelectorAll('.btn-save').forEach(btn => {
