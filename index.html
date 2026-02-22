@@ -2017,10 +2017,11 @@
 
   <script>
     function handleGoogleAuth() {
+      const s = document.getElementById('save-status');
       if (window._fbUser) {
         window._fbSignOut().then(() => {
           if (s) { s.textContent='👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
-        });
+        }).catch(err => console.warn('Sign-out error:', err));
       } else {
         window._fbSignIn().then(() => {
           if (s) { s.textContent='✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
@@ -2550,6 +2551,8 @@
   }
 
   function showStatus(msg) {
+    const el = document.getElementById('save-status');
+    if (!el) return;
     el.textContent = msg || '✔ Enlace copiado';
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2500);
@@ -2557,6 +2560,8 @@
 
   function shareData() {
     try {
+      const borderColor = document.getElementById('avatar-border-color')?.value || '';
+      if (borderColor) localStorage.setItem('atlas-avatar-border', borderColor);
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         common:     document.getElementById('common').value,
         rare:       document.getElementById('rare').value,
@@ -3182,7 +3187,8 @@
   function checkZoomButtons() {
     const scale = window.visualViewport ? window.visualViewport.scale : 1;
     const zoomActivo = scale > 1.05;
-    const btnPng = document.getElementById('btn-screenshot');
+    const btnPng   = document.getElementById('btn-screenshot');
+    const btnShare = document.getElementById('btn-share-data');
 
     [btnPng, btnShare].forEach(btn => {
       if (!btn) return;
