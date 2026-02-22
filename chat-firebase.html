@@ -713,6 +713,111 @@
             box-shadow: 0 0 30px rgba(0, 255, 136, 0.8);
         }
 
+        /* ── TICKER DE AVISOS ── */
+        .ticker-bar {
+            display: none;
+            align-items: center;
+            height: 28px;
+            background: linear-gradient(90deg, rgba(255,170,0,0.15), rgba(255,170,0,0.05));
+            border-bottom: 1px solid rgba(255,170,0,0.4);
+            overflow: hidden;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .ticker-bar.visible { display: flex; }
+
+        .ticker-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ffaa00;
+            background: rgba(255,170,0,0.2);
+            border-right: 1px solid rgba(255,170,0,0.4);
+            padding: 0 10px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            text-shadow: 0 0 8px rgba(255,170,0,0.6);
+        }
+
+        .ticker-track {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            height: 100%;
+        }
+
+        .ticker-text {
+            position: absolute;
+            white-space: nowrap;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #ffe066;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: tickerScroll 18s linear infinite;
+        }
+
+        @keyframes tickerScroll {
+            0%   { left: 100%; }
+            100% { left: -100%; }
+        }
+
+        /* ── TICKER DE AVISOS ── */
+        .ticker-bar {
+            display: none;
+            align-items: center;
+            height: 28px;
+            background: linear-gradient(90deg, rgba(255,170,0,0.15), rgba(255,170,0,0.05));
+            border-bottom: 1px solid rgba(255,170,0,0.35);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .ticker-bar.visible { display: flex; }
+        .ticker-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #ffaa00;
+            background: rgba(255,170,0,0.15);
+            border-right: 1px solid rgba(255,170,0,0.35);
+            padding: 0 10px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            flex-shrink: 0;
+            text-shadow: 0 0 8px rgba(255,170,0,0.5);
+        }
+        .ticker-track {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            height: 100%;
+        }
+        .ticker-text {
+            position: absolute;
+            white-space: nowrap;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: #ffe066;
+            top: 50%;
+            transform: translateY(-50%);
+            animation: tickerScroll 20s linear infinite;
+        }
+        @keyframes tickerScroll {
+            0%   { left: 100%; }
+            100% { left: -100%; }
+        }
+
         /* Scrollbar personalizada */
         ::-webkit-scrollbar {
             width: 4px;
@@ -956,6 +1061,14 @@
 
         <!-- MAIN CHAT -->
         <div class="chat-main">
+            <!-- Ticker de avisos -->
+            <div class="ticker-bar" id="tickerBar">
+                <div class="ticker-label">📢 AVISO</div>
+                <div class="ticker-track">
+                    <div class="ticker-text" id="tickerText"></div>
+                </div>
+            </div>
+
             <div class="chat-header">
                 <div class="chat-header-content">
                     <!-- Botón hamburguesa (solo móvil) -->
@@ -1132,6 +1245,7 @@
                 // Cargar mensajes y usuarios
                 loadMessages();
                 loadUsers();
+                loadTicker();
             } else {
                 alert('Por favor ingresa un nombre de al menos 3 caracteres');
             }
@@ -1275,6 +1389,25 @@
             if (e.key === 'Enter') setUsername();
         });
 
+        // ── Leer aviso desde Firebase ──
+        function loadTicker() {
+            const tickerRef = ref(database, 'config/aviso');
+            onValue(tickerRef, (snap) => {
+                const texto = snap.exists() ? snap.val() : '';
+                const bar  = document.getElementById('tickerBar');
+                const txt  = document.getElementById('tickerText');
+                if (texto && texto.trim()) {
+                    txt.textContent = texto.trim();
+                    bar.classList.add('visible');
+                    // Ajustar velocidad según longitud del texto
+                    const duration = Math.max(10, texto.length * 0.22) + 's';
+                    txt.style.animationDuration = duration;
+                } else {
+                    bar.classList.remove('visible');
+                }
+            });
+        }
+
         // Borrar mensajes con más de 10 minutos
         async function clearOldMessages() {
             const messagesRef = ref(database, 'messages');
@@ -1325,6 +1458,20 @@
             document.getElementById('usernameModal').classList.remove('hidden');
             document.getElementById('usernameInput').focus();
         }
+
+        // ── Ticker de avisos desde Firebase ──
+        const tickerRef = ref(database, 'config/aviso');
+        onValue(tickerRef, (snap) => {
+            const texto = snap.exists() ? snap.val() : '';
+            const bar  = document.getElementById('tickerBar');
+            const span = document.getElementById('tickerText');
+            if (texto && texto.trim()) {
+                span.textContent = texto + ' ·· ' + texto + ' ·· ' + texto;
+                bar.classList.add('visible');
+            } else {
+                bar.classList.remove('visible');
+            }
+        });
 
         } // fin initChat
     </script>
