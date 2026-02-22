@@ -527,6 +527,141 @@
             display: none;
         }
 
+        /* ── Auth overlay ── */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 14, 26, 0.97);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            backdrop-filter: blur(6px);
+        }
+        .auth-overlay.hidden { display: none; }
+
+        .auth-box {
+            background: #0f1419;
+            border: 1px solid var(--primary-color);
+            border-radius: 16px;
+            padding: 40px 36px;
+            max-width: 380px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0,255,136,0.15);
+        }
+        .auth-box h2 {
+            font-family: 'Orbitron', monospace;
+            font-size: 16px;
+            color: var(--primary-color);
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+        }
+        .auth-box p {
+            font-family: 'Rajdhani', sans-serif;
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+        }
+        .auth-btn-google {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #1a3a5c, #0b1626);
+            border: 1px solid var(--primary-color);
+            border-radius: 10px;
+            color: var(--primary-color);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        .auth-btn-google:hover {
+            background: var(--primary-color);
+            color: #060b14;
+        }
+        .auth-btn-email {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 20px;
+            background: transparent;
+            border: 1px solid var(--text-secondary);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .auth-btn-email:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .auth-error {
+            margin-top: 14px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            color: var(--danger-color);
+            letter-spacing: 1px;
+            min-height: 18px;
+        }
+        /* Email form dentro del auth-box */
+        .auth-email-form { display: none; margin-top: 20px; text-align: left; }
+        .auth-email-form.visible { display: block; }
+        .auth-email-form input {
+            width: 100%;
+            padding: 10px 14px;
+            background: #0a0e1a;
+            border: 1px solid var(--text-secondary);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .auth-email-form input:focus { border-color: var(--primary-color); }
+        .auth-email-form .auth-submit {
+            width: 100%;
+            padding: 10px;
+            background: var(--primary-color);
+            border: none;
+            border-radius: 8px;
+            color: #060b14;
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .auth-email-form .auth-submit:hover { opacity: 0.85; }
+        .auth-back {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            text-decoration: underline;
+        }
+
         .username-form {
             background: var(--bg-panel);
             border: 2px solid var(--primary-color);
@@ -765,6 +900,35 @@
 </head>
 <body>
     <!-- Modal para ingresar nombre de usuario -->
+    <!-- ── Auth overlay ── -->
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <h2>ACCESO AL CHAT</h2>
+            <p>Debes iniciar sesión para participar</p>
+
+            <button class="auth-btn-google" id="btnGoogle" onclick="authWithGoogle()">
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                CONTINUAR CON GOOGLE
+            </button>
+
+            <button class="auth-btn-email" id="btnEmail" onclick="showEmailForm()">
+                ✉️ &nbsp;CONTINUAR CON EMAIL
+            </button>
+
+            <div class="auth-email-form" id="authEmailForm">
+                <input type="email" id="authEmail" placeholder="correo@email.com" />
+                <input type="password" id="authPassword" placeholder="Contraseña" />
+                <button class="auth-submit" onclick="authWithEmail()">ENTRAR</button>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <button class="auth-back" onclick="hideEmailForm()">← Volver</button>
+                    <button class="auth-back" onclick="registerWithEmail()">Registrarse</button>
+                </div>
+            </div>
+
+            <div class="auth-error" id="authError"></div>
+        </div>
+    </div>
+
     <!-- Modal oculto (se usa solo si no hay username del index) -->
     <div class="username-modal hidden" id="usernameModal">
         <div class="username-form">
@@ -860,6 +1024,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -876,6 +1041,77 @@
         // Inicializar Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+        const auth = getAuth(app);
+
+        // ── Auth overlay logic ──
+        const authOverlay = document.getElementById('authOverlay');
+
+        function showAuthError(msg) {
+            document.getElementById('authError').textContent = msg;
+        }
+
+        window.authWithGoogle = async function() {
+            showAuthError('');
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+            } catch(e) {
+                showAuthError('Error al iniciar con Google. Intenta de nuevo.');
+            }
+        };
+
+        window.showEmailForm = function() {
+            document.getElementById('authEmailForm').classList.add('visible');
+            document.getElementById('btnGoogle').style.display = 'none';
+            document.getElementById('btnEmail').style.display = 'none';
+        };
+
+        window.hideEmailForm = function() {
+            document.getElementById('authEmailForm').classList.remove('visible');
+            document.getElementById('btnGoogle').style.display = '';
+            document.getElementById('btnEmail').style.display = '';
+            showAuthError('');
+        };
+
+        window.authWithEmail = async function() {
+            showAuthError('');
+            const email = document.getElementById('authEmail').value.trim();
+            const pass  = document.getElementById('authPassword').value;
+            if (!email || !pass) { showAuthError('Completa todos los campos.'); return; }
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch(e) {
+                showAuthError('Credenciales incorrectas.');
+            }
+        };
+
+        window.registerWithEmail = async function() {
+            showAuthError('');
+            const email = document.getElementById('authEmail').value.trim();
+            const pass  = document.getElementById('authPassword').value;
+            if (!email || !pass) { showAuthError('Completa todos los campos.'); return; }
+            if (pass.length < 6) { showAuthError('La contraseña debe tener al menos 6 caracteres.'); return; }
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+            } catch(e) {
+                if (e.code === 'auth/email-already-in-use') showAuthError('Este email ya está registrado.');
+                else showAuthError('Error al registrarse. Intenta de nuevo.');
+            }
+        };
+
+        // Escuchar cambios de sesión
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Autenticado — ocultar overlay y arrancar el chat
+                authOverlay.classList.add('hidden');
+                initChat(user);
+            } else {
+                // No autenticado — mostrar overlay
+                authOverlay.classList.remove('hidden');
+            }
+        });
+
+        function initChat(firebaseUser) {
 
         // Variables globales
         let currentUsername = '';
@@ -1089,10 +1325,9 @@
         clearOldMessages();
         setInterval(clearOldMessages, 10 * 60 * 1000);
 
-        // Leer username desde URL y avatar desde sessionStorage
+        // Leer username desde URL o desde Firebase Auth
         const urlParams = new URLSearchParams(window.location.search);
-        const urlUsername = (urlParams.get('username') || '').trim().toUpperCase();
-        const urlAvatar = sessionStorage.getItem('chat-avatar') || '';
+        const urlAvatar = sessionStorage.getItem('chat-avatar') || firebaseUser.photoURL || '';
         const urlColor = urlParams.get('color') || '';
 
         // Aplicar color del usuario al tema del chat
@@ -1101,15 +1336,23 @@
             document.documentElement.style.setProperty('--border-color', urlColor);
         }
 
-        if (urlUsername && urlUsername.length >= 3) {
+        // Intentar obtener username: URL param → displayName → parte del email
+        const urlUsername = (urlParams.get('username') || '').trim().toUpperCase();
+        const authDisplayName = (firebaseUser.displayName || '').trim().toUpperCase();
+        const authEmail = (firebaseUser.email || '').split('@')[0].trim().toUpperCase();
+        const resolvedUsername = urlUsername || authDisplayName || authEmail || '';
+
+        if (resolvedUsername && resolvedUsername.length >= 3) {
             currentAvatar = urlAvatar;
-            document.getElementById('usernameInput').value = urlUsername;
+            document.getElementById('usernameInput').value = resolvedUsername;
             setUsername();
         } else {
-            // Sin username, mostrar modal
+            // Sin username válido, mostrar modal para que lo elija
             document.getElementById('usernameModal').classList.remove('hidden');
             document.getElementById('usernameInput').focus();
         }
+
+        } // fin initChat
     </script>
 </body>
 </html>
