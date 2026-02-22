@@ -241,13 +241,6 @@
     .tier-value { font-size: 11px; }
 
     /* Botones inferiores: reducir tamaño para caber en una fila */
-    .save-bar { gap: 6px; }
-    .btn-save, .btn-share {
-      font-size: 9px;
-      letter-spacing: 1px;
-      padding: 9px 10px;
-      border-radius: 8px;
-    }
   }
 
   /* Main grid */
@@ -678,102 +671,29 @@
   }
 
   /* Save button */
-  .save-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 12px;
-    position: relative;
-  }
+  
 
-  .btn-save {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #000;
-    background: linear-gradient(135deg, #00c8ff, #4ade80);
-    border: none;
-    border-radius: 8px;
-    padding: 9px 20px;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 0 20px rgba(0,200,255,0.35);
-  }
+  
 
-  .btn-save:hover {
-    opacity: 0.9;
-    transform: translateY(-2px);
-    box-shadow: 0 0 30px rgba(0,200,255,0.5);
-  }
+  
 
-  .btn-save:active { transform: scale(0.97); }
+  
 
-  .save-status {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    color: var(--glow2);
-    opacity: 0;
-    transition: opacity 0.4s;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    position: absolute;
-    bottom: -24px;
-    left: 50%;
-    transform: translateX(-50%);
-    white-space: nowrap;
-  }
+  
 
-  .save-status.visible { opacity: 1; }
+  
 
-  .btn-share {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #fff;
-    background: transparent;
-    border: 1px solid var(--glow);
-    border-radius: 8px;
-    padding: 9px 16px;
-    cursor: pointer;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 0 12px rgba(0,200,255,0.15);
-  }
+  
 
-  .btn-share:hover {
-    background: rgba(0,200,255,0.1);
-    transform: translateY(-2px);
-    box-shadow: 0 0 24px rgba(0,200,255,0.3);
-  }
+  
 
-  .btn-share:active { transform: scale(0.97); }
+  
 
-  .share-link-box {
-    display: none;
-    margin-top: 14px;
-    background: #060b14;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    display: none;
-    align-items: center;
-    gap: 10px;
-  }
+  
 
-  .share-link-box.visible { display: flex; }
+  
 
-  .share-link-text {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--glow);
-    word-break: break-all;
-    flex: 1;
-  }
+  
 
   .btn-copy-link {
     font-family: 'Orbitron', monospace;
@@ -1286,7 +1206,7 @@
   @media print {
     @page { margin: 0; size: auto; }
     body { background: #060b14 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .save-bar { display: none !important; }
+    
     #visit-wrapper { display: none !important; }
     .container > p { display: none !important; }
     * { animation: none !important; transition: none !important; }
@@ -1995,12 +1915,7 @@
 
 
   <!-- Save bar -->
-  <div class="save-bar">
-    <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
-    <button class="btn-share" onclick="takeScreenshot()" id="btn-screenshot">📸 &nbsp;Guardar PNG</button>
-    <button class="btn-share" onclick="takePartialScreenshot()" id="btn-share-partial">📤 &nbsp;Compartir</button>
-    <div class="save-status" id="save-status">✔ Datos guardados</div>
-  </div>
+</div>
 
   <!-- ===== GOOGLE AUTH BAR ===== -->
   <div id="google-auth-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px auto 0;max-width:600px;flex-wrap:wrap;">
@@ -2019,12 +1934,10 @@
     function handleGoogleAuth() {
       if (window._fbUser) {
         window._fbSignOut().then(() => {
-          const s = document.getElementById('save-status');
           if (s) { s.textContent='👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
         });
       } else {
         window._fbSignIn().then(() => {
-          const s = document.getElementById('save-status');
           if (s) { s.textContent='✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
         }).catch(err => console.warn('Sign-in error:', err));
       }
@@ -2040,11 +1953,6 @@
     });
 
     // Hook en el botón 💾 Guardar para que también suba a Firebase
-    const _origShareData = typeof shareData === 'function' ? shareData : null;
-    window.shareData = function() {
-      if (_origShareData) _origShareData();
-      if (window._fbUser && window._fbSaveAll) window._fbSaveAll();
-    };
   </script>
 
   <p style="text-align:center;color:var(--text2);font-size:11px;margin-top:10px;letter-spacing:1px;">
@@ -2531,7 +2439,6 @@
   }
 
   function showStatus(msg) {
-    const el = document.getElementById('save-status');
     el.textContent = msg || '✔ Enlace copiado';
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2500);
@@ -2596,24 +2503,7 @@
     return base + '?' + params.toString();
   }
 
-  function shareData() {
-    try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify({
-        common:     document.getElementById('common').value,
-        rare:       document.getElementById('rare').value,
-        epic:       document.getElementById('epic').value,
-        legendary:  document.getElementById('legendary').value,
-        badges:     document.getElementById('badges').value,
-        diamonds:   document.getElementById('diamonds').value,
-        atlasbucks: document.getElementById('atlasbucks').value,
-        explorer:   explorerActive,
-        startDate:  document.getElementById('start-date').value,
-      }));
-    } catch(e) {}
-    showStatus('✔ Datos guardados');
-  }
-
-  // Load on startup - wrapped in async to ensure data loads before calc
+  
   async function init() {
     await loadData();
     await loadProfile();
@@ -2780,17 +2670,7 @@
       ppdEl.style.textShadow = `0 0 8px rgba(${rgb},0.9), 2px 2px 0px rgba(0,0,0,0.6)`;
     }
 
-    // btn-save: degradado con el color
-    document.querySelectorAll('.btn-save').forEach(btn => {
-      btn.style.background = `linear-gradient(135deg, ${color}, #4ade80)`;
-      btn.style.boxShadow = `0 0 20px rgba(${rgb},0.35)`;
-    });
 
-    // btn-share: borde y sombra con el color
-    document.querySelectorAll('.btn-share').forEach(btn => {
-      btn.style.borderColor = color;
-      btn.style.boxShadow = `0 0 12px rgba(${rgb},0.2)`;
-    });
 
     // counter-btn: color del texto
     document.querySelectorAll('.counter-btn').forEach(btn => {
@@ -2823,9 +2703,6 @@
       el.style.borderColor = color;
       el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
       el.style.boxShadow = `0 0 40px rgba(${rgb},0.08), inset 0 0 40px rgba(${rgb},0.03)`;
-    });
-    document.querySelectorAll('.save-bar').forEach(el => {
-      el.style.borderColor = `rgba(${rgb},0.3)`;
     });
     // Líneas separadoras (dividers)
     document.querySelectorAll('.divider').forEach(el => {
@@ -3040,98 +2917,7 @@
     }, 500);
   }
 
-  function takePartialScreenshot() {
-    const btn = document.getElementById('btn-share-partial');
-    btn.textContent = '⏳  Generando...';
-    btn.disabled = true;
 
-    const resultsCard = document.querySelector('.results-card');
-    const saveBar = document.querySelector('.save-bar');
-    const footerPs = document.querySelectorAll('.container > p');
-
-    captureWithZoomReset(
-      () => {
-        resultsCard.style.display = 'none';
-        saveBar.style.display = 'none';
-        footerPs.forEach(p => p.style.display = 'none');
-      },
-      async (canvas) => {
-        resultsCard.style.display = '';
-        saveBar.style.display = '';
-        footerPs.forEach(p => p.style.display = '');
-        btn.textContent = '✔ ¡Listo!';
-        btn.disabled = false;
-        setTimeout(() => { btn.innerHTML = '📤 &nbsp;Compartir'; }, 2500);
-
-        const now = new Date();
-        const filename = 'atlas-earth-perfil-' + now.toISOString().slice(0,10) + '.png';
-
-        if (navigator.canShare) {
-          try {
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-            const file = new File([blob], filename, { type: 'image/png' });
-            if (navigator.canShare({ files: [file] })) {
-              await navigator.share({ files: [file], title: 'Atlas Earth AEMX' });
-              return;
-            }
-          } catch(e) {
-            if (e.name === 'AbortError') return;
-          }
-        }
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = canvas.toDataURL('image/png');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      },
-      (err) => {
-        resultsCard.style.display = '';
-        saveBar.style.display = '';
-        footerPs.forEach(p => p.style.display = '');
-        btn.innerHTML = '📤 &nbsp;Compartir';
-        btn.disabled = false;
-        alert('Error al generar la imagen: ' + err.message);
-      }
-    );
-  }
-
-  function takeScreenshot() {
-    const btn = document.getElementById('btn-screenshot');
-    btn.textContent = '⏳  Generando...';
-    btn.disabled = true;
-
-    const saveBar = document.querySelector('.save-bar');
-    const footerP = document.querySelector('.container > p');
-
-    captureWithZoomReset(
-      () => {
-        saveBar.style.display = 'none';
-        if (footerP) footerP.style.display = 'none';
-      },
-      (canvas) => {
-        saveBar.style.display = '';
-        if (footerP) footerP.style.display = '';
-        btn.textContent = '✔ ¡Listo!';
-        btn.disabled = false;
-        setTimeout(() => { btn.innerHTML = '📸 &nbsp;Guardar PNG'; }, 2500);
-
-        const link = document.createElement('a');
-        link.download = 'atlas-earth-renta-' + new Date().toISOString().slice(0,10) + '.png';
-        link.href = canvas.toDataURL('image/png');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      },
-      (err) => {
-        saveBar.style.display = '';
-        if (footerP) footerP.style.display = '';
-        btn.innerHTML = '📸 &nbsp;Guardar PNG';
-        btn.disabled = false;
-        alert('Error al generar la imagen: ' + err.message);
-      }
-    );
-  }
 
   // ── Ubicación ─────────────────────────────────────────────────────
   var userCountry = "";
@@ -3229,7 +3015,6 @@
     const scale = window.visualViewport ? window.visualViewport.scale : 1;
     const zoomActivo = scale > 1.05;
     const btnPng = document.getElementById('btn-screenshot');
-    const btnShare = document.getElementById('btn-share-partial');
 
     [btnPng, btnShare].forEach(btn => {
       if (!btn) return;
