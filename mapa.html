@@ -377,8 +377,8 @@
       <div class="stat-label">Ciudades</div>
     </div>
     <div class="stat-card">
-      <div class="stat-num" id="statTop">—</div>
-      <div class="stat-label">Estado líder</div>
+      <div class="stat-num" id="statAemx" style="color:var(--glow2);text-shadow:0 0 12px rgba(0,255,157,0.5);">—</div>
+      <div class="stat-label">Miembros AEMX</div>
     </div>
   </div>
 
@@ -682,12 +682,12 @@
     // Stats
     const estados  = Object.keys(porEstado).length;
     const ciudades = new Set(players.map(p => p.city).filter(Boolean)).size;
-    const topEstado = Object.entries(porEstado).sort((a,b) => b[1].length - a[1].length)[0];
+    const aemx     = players.filter(p => p.username.toUpperCase().includes('AEMX')).length;
 
     document.getElementById('statJugadores').textContent = players.length;
     document.getElementById('statEstados').textContent   = estados;
     document.getElementById('statCiudades').textContent  = ciudades;
-    document.getElementById('statTop').textContent       = topEstado ? topEstado[0].split(' ')[0].toUpperCase() : '—';
+    document.getElementById('statAemx').textContent      = aemx;
 
     // Ocultar loading
     document.getElementById('mapLoading').classList.add('hidden');
