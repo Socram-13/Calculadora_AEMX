@@ -397,7 +397,8 @@
     <div class="legend-item"><div class="legend-box" style="background:rgba(0,200,255,0.15)"></div> 1 jugador</div>
     <div class="legend-item"><div class="legend-box" style="background:rgba(0,200,255,0.35)"></div> 2–4</div>
     <div class="legend-item"><div class="legend-box" style="background:rgba(0,200,255,0.55)"></div> 5–9</div>
-    <div class="legend-item"><div class="legend-box" style="background:rgba(0,255,157,0.6)"></div> 10+</div>
+    <div class="legend-item"><div class="legend-box" style="background:rgba(0,200,255,0.70)"></div> 10+</div>
+    <div class="legend-item"><div class="legend-box" style="background:rgba(0,255,157,0.65);border-color:#00ff9d;"></div> Con miembro AEMX</div>
     <div class="legend-item" style="margin-left:auto">
       <div style="width:12px;height:12px;border-radius:50%;background:var(--glow);box-shadow:0 0 6px var(--glow)"></div>
       Jugador
@@ -617,13 +618,19 @@
       if (!coords) return;
       const n = jugadores.length;
 
+      // Verde si algún jugador tiene AEMX en su nombre
+      const tieneAEMX = jugadores.some(p => p.username.toUpperCase().includes('AEMX'));
+      const fillColor  = tieneAEMX ? 'rgba(0,255,157,0.65)' : colorEstado(n);
+      const borderColor = tieneAEMX ? '#00ff9d'              : borderEstado(n);
+      const weight      = tieneAEMX ? 2.5                    : 1.5;
+
       const circle = L.circle(coords, {
         radius: 80000 + n * 15000,
-        color:      borderEstado(n),
-        fillColor:  colorEstado(n),
+        color:       borderColor,
+        fillColor:   fillColor,
         fillOpacity: 1,
-        weight: 1.5,
-        opacity: 0.9,
+        weight:      weight,
+        opacity:     0.9,
       }).addTo(map);
 
       // Tooltip hover
