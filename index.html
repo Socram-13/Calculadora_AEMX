@@ -1444,6 +1444,8 @@
         if (info) info.style.display = 'none';
       }
     }
+    // Exponer al scope global (necesario porque este script es type="module")
+    window._renderAuthUI = renderAuthUI;
 
     // ── Cargar datos desde Firebase ──
     async function syncFromFirebase(uid) {
@@ -2018,14 +2020,27 @@
   <script>
     function handleGoogleAuth() {
       const s = document.getElementById('save-status');
+
+      // Guard: Firebase aún no ha cargado
+      if (!window._fbSignOut || !window._fbSignIn) {
+        console.warn('Firebase aún no está listo');
+        return;
+      }
+
       if (window._fbUser) {
-        window._fbSignOut().then(() => {
-          if (s) { s.textContent='👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
-        }).catch(err => console.warn('Sign-out error:', err));
+        window._fbSignOut()
+          .then(() => {
+            window._fbUser = null;
+            if (window._renderAuthUI) window._renderAuthUI(null);
+            if (s) { s.textContent = '👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
+          })
+          .catch(err => console.warn('Sign-out error:', err));
       } else {
-        window._fbSignIn().then(() => {
-          if (s) { s.textContent='✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
-        }).catch(err => console.warn('Sign-in error:', err));
+        window._fbSignIn()
+          .then(() => {
+            if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
+          })
+          .catch(err => console.warn('Sign-in error:', err));
       }
     }
 
