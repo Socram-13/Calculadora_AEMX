@@ -2000,7 +2000,6 @@
     <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
     <div class="save-status" id="save-status">✔ Datos guardados</div>
   </div>
-</div>
 
   <!-- ===== GOOGLE AUTH BAR ===== -->
   <div id="google-auth-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px auto 0;max-width:600px;flex-wrap:wrap;">
@@ -2014,33 +2013,24 @@
     <span style="font-size:11px;color:var(--text2);letter-spacing:1px;">Sincroniza tus datos en la nube</span>
   </div>
   <!-- ===== FIN GOOGLE AUTH BAR ===== -->
+</div><!-- /.container -->
 
   <script>
     function handleGoogleAuth() {
-      const s = document.getElementById('save-status');
-      const btn = document.getElementById('google-auth-btn');
+      const s   = document.getElementById('save-status');
+      const btn  = document.getElementById('google-auth-btn');
       const info = document.getElementById('google-user-info');
-
-      if (!window._fbSignOut || !window._fbSignIn) {
-        console.warn('Firebase no está listo todavía');
-        return;
-      }
-
+      if (!window._fbSignOut || !window._fbSignIn) return;
       if (window._fbUser) {
-        // Deshabilitar botón mientras se procesa
         if (btn) { btn.disabled = true; btn.textContent = 'Cerrando...'; }
         window._fbSignOut()
           .then(() => {
             window._fbUser = null;
-            // Actualizar UI del botón manualmente (no depender de onAuthStateChanged)
             if (btn) { btn.disabled = false; btn.textContent = '🔑 Iniciar con Google'; btn.title = ''; }
             if (info) info.style.display = 'none';
             if (s) { s.textContent = '👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
           })
-          .catch(err => {
-            console.warn('Sign-out error:', err);
-            if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; }
-          });
+          .catch(err => { console.warn('Sign-out error:', err); if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; } });
       } else {
         window._fbSignIn()
           .then(() => {
