@@ -1411,6 +1411,137 @@
   /* ===== FIN CHAT WIDGET ===== */
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- ===== FIREBASE SDK ===== -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged }
+      from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getDatabase, ref, set, get, onValue }
+      from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
+      authDomain: "aemx-chat.firebaseapp.com",
+      databaseURL: "https://aemx-chat-default-rtdb.firebaseio.com",
+      projectId: "aemx-chat",
+      storageBucket: "aemx-chat.appspot.com",
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+    const provider = new GoogleAuthProvider();
+
+    // ── Exponer al scope global para que el resto del código los use ──
+    window._fbAuth     = auth;
+    window._fbDb       = db;
+    window._fbRef      = ref;
+    window._fbSet      = set;
+    window._fbGet      = get;
+    window._fbOnValue  = onValue;
+    window._fbSignIn   = () => signInWithPopup(auth, provider);
+    window._fbSignOut  = () => signOut(auth);
+
+    // ── Escuchar cambios de sesión ──
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window._fbUser = user;
+        renderAuthUI(user);
+        syncFromFirebase(user.uid);
+      } else {
+        window._fbUser = null;
+        renderAuthUI(null);
+      }
+    });
+
+    // ── Renderizar botón según estado ──
+    function renderAuthUI(user) {
+      const btn = document.getElementById('google-auth-btn');
+      const info = document.getElementById('google-user-info');
+      if (!btn) return;
+      if (user) {
+        btn.textContent = 'Cerrar sesión';
+        btn.title = `Sesión: ${user.displayName}`;
+        if (info) {
+          info.innerHTML = `<img src="${user.photoURL}" style="width:22px;height:22px;border-radius:50%;vertical-align:middle;margin-right:6px;">${user.displayName.split(' ')[0]}`;
+          info.style.display = 'flex';
+        }
+      } else {
+        btn.textContent = '🔑 Iniciar con Google';
+        btn.title = '';
+        if (info) info.style.display = 'none';
+      }
+    }
+
+    // ── Cargar datos desde Firebase ──
+    async function syncFromFirebase(uid) {
+      try {
+        const snap = await get(ref(db, `users/${uid}`));
+        if (!snap.exists()) return;
+        const d = snap.val();
+
+        // Perfil
+        if (d.username) { document.getElementById('username').value = d.username; if(window.adjustBadge) window.adjustBadge(); }
+        if (d.avatar) {
+          const img = document.getElementById('avatar-img');
+          const ph  = document.getElementById('avatar-placeholder');
+          const eb  = document.getElementById('avatar-edit');
+          img.src = d.avatar; img.style.display='block';
+          if(ph) ph.style.display='none';
+          if(eb) eb.style.display='none';
+          localStorage.setItem('atlas-avatar', d.avatar);
+        }
+        if (d.borderColor) {
+          if(window.applyThemeColor) window.applyThemeColor(d.borderColor);
+          document.getElementById('avatar-border-color').value = d.borderColor;
+          const prev = document.getElementById('color-preview');
+          if(prev) prev.style.background = d.borderColor;
+          localStorage.setItem('atlas-avatar-border', d.borderColor);
+        }
+        if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
+
+        // Calculadora
+        ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
+          if (d[k] !== undefined) { document.getElementById(k).value = d[k]; }
+        });
+
+        if(window.calc) window.calc();
+      } catch(e) { console.warn('Firebase sync error:', e); }
+    }
+
+    // ── Guardar todos los datos en Firebase ──
+    window._fbSaveAll = async function() {
+      const user = window._fbUser;
+      if (!user) return;
+      const data = {
+        username:    document.getElementById('username')?.value    || '',
+        avatar:      localStorage.getItem('atlas-avatar')          || '',
+        borderColor: localStorage.getItem('atlas-avatar-border')   || '',
+        startDate:   document.getElementById('start-date')?.value  || '',
+        common:      document.getElementById('common')?.value      || 0,
+        rare:        document.getElementById('rare')?.value        || 0,
+        epic:        document.getElementById('epic')?.value        || 0,
+        legendary:   document.getElementById('legendary')?.value   || 0,
+        badges:      document.getElementById('badges')?.value      || 0,
+        diamonds:    document.getElementById('diamonds')?.value    || 0,
+        atlasbucks:  document.getElementById('atlasbucks')?.value  || 0,
+        updatedAt:   Date.now(),
+      };
+      try {
+        await set(ref(db, `users/${user.uid}`), data);
+      } catch(e) { console.warn('Firebase save error:', e); }
+    };
+
+    // ── Autoguardar cada vez que el usuario cambia un input ──
+    document.addEventListener('DOMContentLoaded', () => {
+      ['common','rare','epic','legendary','badges','diamonds','atlasbucks','start-date','username'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', () => { if(window._fbUser) window._fbSaveAll(); });
+      });
+    });
+  </script>
+  <!-- ===== FIN FIREBASE SDK ===== -->
 </head>
 <body>
 <div class="container">
@@ -1870,6 +2001,51 @@
     <button class="btn-share" onclick="takePartialScreenshot()" id="btn-share-partial">📤 &nbsp;Compartir</button>
     <div class="save-status" id="save-status">✔ Datos guardados</div>
   </div>
+
+  <!-- ===== GOOGLE AUTH BAR ===== -->
+  <div id="google-auth-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px auto 0;max-width:600px;flex-wrap:wrap;">
+    <span id="google-user-info" style="display:none;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--glow);letter-spacing:1px;"></span>
+    <button id="google-auth-btn" onclick="handleGoogleAuth()"
+      style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:7px 16px;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#1a3a5c,#0b1626);border:1px solid var(--glow);color:var(--glow);transition:all 0.2s;white-space:nowrap;"
+      onmouseover="this.style.background='var(--glow)';this.style.color='#060b14'"
+      onmouseout="this.style.background='linear-gradient(135deg,#1a3a5c,#0b1626)';this.style.color='var(--glow)'">
+      🔑 Iniciar con Google
+    </button>
+    <span style="font-size:11px;color:var(--text2);letter-spacing:1px;">Sincroniza tus datos en la nube</span>
+  </div>
+  <!-- ===== FIN GOOGLE AUTH BAR ===== -->
+
+  <script>
+    function handleGoogleAuth() {
+      if (window._fbUser) {
+        window._fbSignOut().then(() => {
+          const s = document.getElementById('save-status');
+          if (s) { s.textContent='👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
+        });
+      } else {
+        window._fbSignIn().then(() => {
+          const s = document.getElementById('save-status');
+          if (s) { s.textContent='✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
+        }).catch(err => console.warn('Sign-in error:', err));
+      }
+    }
+
+    // Parchamos saveData para también guardar en Firebase
+    document.addEventListener('DOMContentLoaded', function() {
+      // Autoguardado en Firebase al cambiar inputs de calculadora
+      ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', () => { if(window._fbUser && window._fbSaveAll) setTimeout(window._fbSaveAll, 800); });
+      });
+    });
+
+    // Hook en el botón 💾 Guardar para que también suba a Firebase
+    const _origShareData = typeof shareData === 'function' ? shareData : null;
+    window.shareData = function() {
+      if (_origShareData) _origShareData();
+      if (window._fbUser && window._fbSaveAll) window._fbSaveAll();
+    };
+  </script>
 
   <p style="text-align:center;color:var(--text2);font-size:11px;margin-top:10px;letter-spacing:1px;">
     Tasas oficiales de Atlas Earth • Los cálculos son estimados • El ad boost asume 24/7

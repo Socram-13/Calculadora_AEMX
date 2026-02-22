@@ -916,7 +916,7 @@
                 document.getElementById('messageInput').focus();
                 
                 // Registrar usuario online
-                const userRef = ref(database, 'users/' + userId);
+                const userRef = ref(database, 'chat_presence/' + userId);
                 set(userRef, {
                     username: currentUsername,
                     avatar: currentAvatar || '',
@@ -965,7 +965,7 @@
 
         // Cargar usuarios online
         function loadUsers() {
-            const usersRef = ref(database, 'users');
+            const usersRef = ref(database, 'chat_presence');
             
             onValue(usersRef, (snapshot) => {
                 const usersList = document.getElementById('usersList');
