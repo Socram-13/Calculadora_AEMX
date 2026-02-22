@@ -3038,7 +3038,21 @@
     // Re-calcular con el país ya disponible
     if (typeof calc === 'function') calc();
     // Guardar país en Firebase ahora que está disponible
-    if (window._fbUser && window._fbSaveAll) setTimeout(window._fbSaveAll, 300);
+    if (window._fbUser && window._fbSaveAll) {
+      setTimeout(window._fbSaveAll, 500);
+    } else {
+      // Reintentar hasta que _fbSaveAll esté lista
+      var retries = 0;
+      var retryInterval = setInterval(function() {
+        retries++;
+        if (window._fbUser && window._fbSaveAll) {
+          clearInterval(retryInterval);
+          window._fbSaveAll();
+        } else if (retries >= 20) {
+          clearInterval(retryInterval);
+        }
+      }, 500);
+    }
   }
 
   function actualizarCiudad(ciudad, estado) {
