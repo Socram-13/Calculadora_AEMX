@@ -1475,6 +1475,15 @@
           localStorage.setItem('atlas-avatar-border', d.borderColor);
         }
         if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
+        // Mostrar país guardado en Firebase
+        if (d.country) {
+          userCountry = d.country;
+          window.userCountry = d.country;
+          const spanMx = document.querySelector('.mexico');
+          if (spanMx) { spanMx.textContent = d.country.toUpperCase(); spanMx.style.color = '#7EC8E3'; }
+          const elLoc = document.getElementById('user-location');
+          if (elLoc) elLoc.textContent = (d.city || d.country).toUpperCase();
+        }
 
         // Calculadora
         ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
@@ -1492,13 +1501,11 @@
     window._fbSaveAll = async function() {
       const user = window._fbUser;
       if (!user) return;
-      const newCountry = window.userCountry || userCountry || '';
       const data = {
         username:    document.getElementById('username')?.value    || '',
         avatar:      localStorage.getItem('atlas-avatar')          || '',
         borderColor: localStorage.getItem('atlas-avatar-border')   || '',
         startDate:   document.getElementById('start-date')?.value  || '',
-        country:     newCountry,
         common:      document.getElementById('common')?.value      || 0,
         rare:        document.getElementById('rare')?.value        || 0,
         epic:        document.getElementById('epic')?.value        || 0,
@@ -1509,29 +1516,35 @@
         updatedAt:   Date.now(),
       };
       try {
-        // Detectar cambio de país
-        if (newCountry) {
-          const snap = await get(ref(db, `users/${user.uid}/country`));
-          const prevCountry = snap.exists() ? snap.val() : null;
-          if (prevCountry && prevCountry !== newCountry) {
-            // Guardar entrada en historial de cambios
-            const historyRef = ref(db, `users/${user.uid}/countryHistory`);
-            const histSnap = await get(historyRef);
-            const history = histSnap.exists() ? histSnap.val() : [];
-            history.push({
-              from: prevCountry,
-              to:   newCountry,
-              date: Date.now(),
-            });
-            data.countryHistory = history;
-          } else if (snap.exists()) {
-            // Preservar historial existente
-            const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
-            if (histSnap.exists()) data.countryHistory = histSnap.val();
-          }
+        // Siempre preservar country, city y countryHistory — nunca sobreescribir
+        const snap = await get(ref(db, `users/${user.uid}`));
+        if (snap.exists()) {
+          const prev = snap.val();
+          if (prev.country)        data.country        = prev.country;
+          if (prev.city)           data.city           = prev.city;
+          if (prev.countryHistory) data.countryHistory = prev.countryHistory;
         }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
+    };
+
+    // Guarda país SOLO si hay valor nuevo y es diferente al guardado
+    window._fbSaveCountry = async function(newCountry) {
+      const user = window._fbUser;
+      if (!user || !newCountry) return;
+      try {
+        const snap = await get(ref(db, `users/${user.uid}/country`));
+        const prev = snap.exists() ? snap.val() : null;
+        if (prev === newCountry) return; // sin cambio
+        const updates = { country: newCountry };
+        if (prev) {
+          const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
+          const history  = histSnap.exists() ? histSnap.val() : [];
+          history.push({ from: prev, to: newCountry, date: Date.now() });
+          updates.countryHistory = history;
+        }
+        await update(ref(db, `users/${user.uid}`), updates);
+      } catch(e) { console.warn('Firebase country error:', e); }
     };
 
     // ── Autoguardar cada vez que el usuario cambia un input ──
@@ -3081,36 +3094,41 @@
   }
 
   function actualizarPais(countryName) {
-    userCountry = normalizarPais(countryName) || "";
-    window.userCountry = userCountry;
+    var pais = normalizarPais(countryName) || "";
+    if (!pais) return; // detección fallida — no hacer nada
+    userCountry = pais;
+    window.userCountry = pais;
     var spanMexico = document.querySelector('.mexico');
-    if (spanMexico && countryName) {
-      spanMexico.textContent = userCountry.toUpperCase();
-      spanMexico.style.color = '#7EC8E3';
-    }
-    // Re-calcular con el país ya disponible
+    if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; }
     if (typeof calc === 'function') calc();
-    // Guardar país en Firebase ahora que está disponible
-    if (window._fbUser && window._fbSaveAll) {
-      setTimeout(window._fbSaveAll, 500);
-    } else {
-      // Reintentar hasta que _fbSaveAll esté lista
-      var retries = 0;
-      var retryInterval = setInterval(function() {
-        retries++;
-        if (window._fbUser && window._fbSaveAll) {
-          clearInterval(retryInterval);
-          window._fbSaveAll();
-        } else if (retries >= 20) {
-          clearInterval(retryInterval);
-        }
-      }, 500);
-    }
+    // Guardar en Firebase solo si hay valor y cambió — esperar a que Firebase esté listo
+    var intentos = 0;
+    var retry = setInterval(function() {
+      intentos++;
+      if (window._fbSaveCountry) { clearInterval(retry); window._fbSaveCountry(pais); }
+      else if (intentos >= 20)   { clearInterval(retry); }
+    }, 500);
   }
 
   function actualizarCiudad(ciudad, estado) {
+    if (!ciudad) return;
+    var texto = ciudad + (estado ? ", " + estado : "");
     var el = document.getElementById("user-location");
-    if (el && ciudad) el.textContent = ciudad + ", " + estado;
+    if (el) el.textContent = texto.toUpperCase();
+    // Guardar city en Firebase solo si cambia
+    var intentos = 0;
+    var retry = setInterval(function() {
+      intentos++;
+      if (window._fbUser && window._fbSaveCountry) {
+        clearInterval(retry);
+        get(ref(db, 'users/' + window._fbUser.uid + '/city'))
+          .then(function(snap) {
+            if (!snap.exists() || snap.val() !== texto) {
+              update(ref(db, 'users/' + window._fbUser.uid), { city: texto });
+            }
+          }).catch(function() {});
+      } else if (intentos >= 20) { clearInterval(retry); }
+    }, 500);
   }
 
   function ubicacionPorIP() {
