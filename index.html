@@ -2158,7 +2158,7 @@
       else if (total <= 1500) { adBoost = 3;  adRange = "1101–1500 parcelas"; }
       else                    { adBoost = 2;  adRange = "1501–3000 parcelas"; }
     } else {
-      // Default: México y cualquier otro país no identificado
+      // México y cualquier otro país no identificado
       if      (total <= 50)  { adBoost = 20; adRange = "1–50 parcelas"; }
       else if (total <= 85)  { adBoost = 15; adRange = "51–85 parcelas"; }
       else if (total <= 100) { adBoost = 12; adRange = "86–100 parcelas"; }
@@ -3006,13 +3006,36 @@
   // ── Ubicación ─────────────────────────────────────────────────────
   var userCountry = "";
 
+  // Mapa de nombres en español/variantes → nombre normalizado
+  var COUNTRY_MAP = {
+    // México
+    "méxico": "Mexico", "mexico": "Mexico",
+    // Estados Unidos
+    "estados unidos": "United States", "united states": "United States",
+    "us": "United States", "usa": "United States",
+    // Europa
+    "españa": "Spain", "spain": "Spain",
+    "francia": "France", "france": "France",
+    "alemania": "Germany", "germany": "Germany",
+    "italia": "Italy", "italy": "Italy",
+    "rusia": "Russia", "russia": "Russia",
+  };
+
+  function normalizarPais(name) {
+    if (!name) return "";
+    var lower = name.toLowerCase().trim();
+    return COUNTRY_MAP[lower] || name;
+  }
+
   function actualizarPais(countryName) {
-    userCountry = countryName || "";
+    userCountry = normalizarPais(countryName) || "";
     var spanMexico = document.querySelector('.mexico');
     if (spanMexico && countryName) {
-      spanMexico.textContent = countryName.toUpperCase();
+      spanMexico.textContent = userCountry.toUpperCase();
       spanMexico.style.color = '#7EC8E3';
     }
+    // Re-calcular con el país ya disponible
+    if (typeof calc === 'function') calc();
   }
 
   function actualizarCiudad(ciudad, estado) {
