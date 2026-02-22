@@ -207,7 +207,8 @@
     .profile-avatar, .profile-avatar-placeholder { width: 90px; height: 90px; }
     .profile-info { width: 100%; text-align: center; }
     .profile-name-input { min-width: 0; width: 100%; font-size: 18px; text-align: center; }
-    .donut-wrap { width: 100px; height: 100px; }
+    .donut-wrap { width: 90px; height: 90px; overflow: hidden; }
+    .donut-wrap svg { width: 100% !important; height: 100% !important; }
     .card { padding: 10px; }
     .card-title { font-size: 11px; letter-spacing: 2px; }
     .parcel-row { gap: 6px; }
@@ -773,6 +774,8 @@
     padding: 10px 16px 10px 16px;
     margin-bottom: 16px;
     position: relative;
+    overflow: hidden;
+    min-width: 0;
   }
 
   .profile-section::before {
@@ -1160,7 +1163,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 16px;
+    gap: 8px;
   }
 
   .donut-legend {
@@ -1202,8 +1205,10 @@
 
   .donut-wrap {
     position: relative;
-    width: 180px;
-    height: 180px;
+    width: 130px;
+    height: 130px;
+    flex-shrink: 0;
+    overflow: hidden;
   }
 
   .donut-wrap svg {
@@ -1475,10 +1480,8 @@
           localStorage.setItem('atlas-avatar-border', d.borderColor);
         }
         if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
-        // Mostrar país guardado en Firebase
         if (d.country) {
-          userCountry = d.country;
-          window.userCountry = d.country;
+          userCountry = d.country; window.userCountry = d.country;
           const spanMx = document.querySelector('.mexico');
           if (spanMx) { spanMx.textContent = d.country.toUpperCase(); spanMx.style.color = '#7EC8E3'; }
           const elLoc = document.getElementById('user-location');
@@ -1516,7 +1519,6 @@
         updatedAt:   Date.now(),
       };
       try {
-        // Siempre preservar country, city y countryHistory — nunca sobreescribir
         const snap = await get(ref(db, `users/${user.uid}`));
         if (snap.exists()) {
           const prev = snap.val();
@@ -1528,14 +1530,13 @@
       } catch(e) { console.warn('Firebase save error:', e); }
     };
 
-    // Guarda país SOLO si hay valor nuevo y es diferente al guardado
     window._fbSaveCountry = async function(newCountry) {
       const user = window._fbUser;
       if (!user || !newCountry) return;
       try {
         const snap = await get(ref(db, `users/${user.uid}/country`));
         const prev = snap.exists() ? snap.val() : null;
-        if (prev === newCountry) return; // sin cambio
+        if (prev === newCountry) return;
         const updates = { country: newCountry };
         if (prev) {
           const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
@@ -1670,7 +1671,7 @@
       <!-- Donut + CREL label -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
         <div class="donut-wrap">
-          <svg width="180" height="180" viewBox="-5 -5 110 110" id="donut-svg">
+          <svg width="100%" height="100%" viewBox="-5 -5 110 110" id="donut-svg">
             <circle cx="50" cy="50" r="28" fill="none" stroke="#1a3a5c" stroke-width="10"/>
           </svg>
           <div class="donut-center" id="donut-center">—</div>
@@ -3095,13 +3096,11 @@
 
   function actualizarPais(countryName) {
     var pais = normalizarPais(countryName) || "";
-    if (!pais) return; // detección fallida — no hacer nada
-    userCountry = pais;
-    window.userCountry = pais;
+    if (!pais) return;
+    userCountry = pais; window.userCountry = pais;
     var spanMexico = document.querySelector('.mexico');
     if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; }
     if (typeof calc === 'function') calc();
-    // Guardar en Firebase solo si hay valor y cambió — esperar a que Firebase esté listo
     var intentos = 0;
     var retry = setInterval(function() {
       intentos++;
@@ -3115,7 +3114,6 @@
     var texto = ciudad + (estado ? ", " + estado : "");
     var el = document.getElementById("user-location");
     if (el) el.textContent = texto.toUpperCase();
-    // Guardar city en Firebase solo si cambia
     var intentos = 0;
     var retry = setInterval(function() {
       intentos++;
@@ -3123,31 +3121,35 @@
         clearInterval(retry);
         get(ref(db, 'users/' + window._fbUser.uid + '/city'))
           .then(function(snap) {
-            if (!snap.exists() || snap.val() !== texto) {
+            if (!snap.exists() || snap.val() !== texto)
               update(ref(db, 'users/' + window._fbUser.uid), { city: texto });
-            }
           }).catch(function() {});
       } else if (intentos >= 20) { clearInterval(retry); }
     }, 500);
   }
 
-  function ubicacionPorIP() {
-    fetch("https://freeipapi.com/api/json")
-      .then(function(res) { return res.json(); })
-      .then(function(data) {
-        if (data.countryName) actualizarPais(data.countryName);
-        if (data.cityName && data.regionName) actualizarCiudad(data.cityName, data.regionName);
-      })
-      .catch(function() {
-        // Fallback a ipapi.co
-        fetch("https://ipapi.co/json/")
-          .then(function(res) { return res.json(); })
-          .then(function(data) {
-            if (data.country_name) actualizarPais(data.country_name);
-            if (data.city && data.region) actualizarCiudad(data.city, data.region);
-          })
-          .catch(function() {});
-      });
+  async function ubicacionPorIP() {
+    var elLoc = document.getElementById("user-location");
+    if (elLoc && elLoc.textContent === "—") elLoc.textContent = "...";
+    try {
+      var r1 = await fetch("https://freeipapi.com/api/json");
+      var d1 = await r1.json();
+      if (d1.countryName) actualizarPais(d1.countryName);
+      if (d1.cityName && d1.regionName) { actualizarCiudad(d1.cityName, d1.regionName); return; }
+    } catch(e) {}
+    try {
+      var r2 = await fetch("https://ipapi.co/json/");
+      var d2 = await r2.json();
+      if (d2.country_name) actualizarPais(d2.country_name);
+      if (d2.city && d2.region) { actualizarCiudad(d2.city, d2.region); return; }
+    } catch(e) {}
+    try {
+      var r3 = await fetch("https://ipwho.is/");
+      var d3 = await r3.json();
+      if (d3.country) actualizarPais(d3.country);
+      if (d3.city && d3.region) { actualizarCiudad(d3.city, d3.region); return; }
+    } catch(e) {}
+    if (elLoc && elLoc.textContent === "...") elLoc.textContent = "—";
   }
 
   // Siempre obtener país y ciudad por IP
@@ -3162,9 +3164,22 @@
         fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=es")
           .then(function(res) { return res.json(); })
           .then(function(data) {
-            actualizarCiudad(data.city || data.locality || "", data.principalSubdivision || "");
+            var ciudad = data.city || data.locality || "";
+            var estado = data.principalSubdivision || "";
+            if (ciudad) actualizarCiudad(ciudad, estado);
+            if (data.countryName) actualizarPais(data.countryName);
           })
-          .catch(function() {});
+          .catch(function() {
+            fetch("https://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json&accept-language=es")
+              .then(function(r) { return r.json(); })
+              .then(function(d) {
+                var ciudad = d.address && (d.address.city || d.address.town || d.address.village || "");
+                var estado = d.address && (d.address.state || "");
+                var pais   = d.address && (d.address.country || "");
+                if (ciudad) actualizarCiudad(ciudad, estado);
+                if (pais)   actualizarPais(pais);
+              }).catch(function() {});
+          });
       },
       function() {}
     );
