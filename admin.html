@@ -499,6 +499,51 @@
     }
     .btn-ban:hover { background: var(--danger); color: #fff; box-shadow: 0 0 14px rgba(255,68,102,0.4); }
 
+    /* Country change badge */
+    .country-changed {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--warning);
+      background: rgba(255,170,0,0.1);
+      border: 1px solid rgba(255,170,0,0.4);
+      border-radius: 6px;
+      padding: 2px 7px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .country-history-tooltip {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      background: var(--panel2);
+      border: 1px solid var(--warning);
+      border-radius: 8px;
+      padding: 10px 14px;
+      min-width: 220px;
+      z-index: 100;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+
+    .country-changed:hover .country-history-tooltip { display: block; }
+
+    .history-entry {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border);
+      line-height: 1.6;
+    }
+    .history-entry:last-child { border-bottom: none; }
+    .history-entry .from { color: var(--danger); }
+    .history-entry .to   { color: var(--success); }
+    .history-entry .date { color: var(--text2); font-size: 9px; }
+
     .btn-unban {
       color: var(--success);
       border-color: rgba(0,255,157,0.5);
@@ -818,8 +863,9 @@
             borderColor:d.borderColor|| '',
             country:    d.country    || '',
             total:      common + rare + epic + legendary,
-            bannedChat:      !!d.bannedChat,
+            bannedChat:        !!d.bannedChat,
             bannedLeaderboard: !!d.bannedLeaderboard,
+            countryHistory:    Array.isArray(d.countryHistory) ? d.countryHistory : [],
           });
         });
         allUsers.sort((a, b) => b.total - a.total);
@@ -900,7 +946,22 @@
                 </div>
               </div>
             </td>
-            <td class="country-cell">${u.country || '—'}</td>
+            <td class="country-cell">
+              ${u.country || '—'}
+              ${u.countryHistory.length > 0 ? `
+                <div class="country-changed">
+                  ⚠️ ${u.countryHistory.length} cambio${u.countryHistory.length > 1 ? 's' : ''}
+                  <div class="country-history-tooltip">
+                    ${u.countryHistory.map(h => `
+                      <div class="history-entry">
+                        <span class="from">${h.from}</span> → <span class="to">${h.to}</span><br>
+                        <span class="date">${new Date(h.date).toLocaleString('es-MX')}</span>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </td>
             <td class="parcelas-cell">${u.total.toLocaleString()}</td>
             <td>${statusBadges.join(' ')}</td>
             <td><div class="actions-cell">${actionBtns.join('')}</div></td>

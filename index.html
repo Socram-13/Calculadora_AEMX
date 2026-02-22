@@ -1387,7 +1387,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, get, onValue }
+    import { getDatabase, ref, set, get, update, onValue }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -1492,12 +1492,13 @@
     window._fbSaveAll = async function() {
       const user = window._fbUser;
       if (!user) return;
+      const newCountry = window.userCountry || userCountry || '';
       const data = {
         username:    document.getElementById('username')?.value    || '',
         avatar:      localStorage.getItem('atlas-avatar')          || '',
         borderColor: localStorage.getItem('atlas-avatar-border')   || '',
         startDate:   document.getElementById('start-date')?.value  || '',
-        country:     window.userCountry || userCountry || '',
+        country:     newCountry,
         common:      document.getElementById('common')?.value      || 0,
         rare:        document.getElementById('rare')?.value        || 0,
         epic:        document.getElementById('epic')?.value        || 0,
@@ -1508,6 +1509,27 @@
         updatedAt:   Date.now(),
       };
       try {
+        // Detectar cambio de país
+        if (newCountry) {
+          const snap = await get(ref(db, `users/${user.uid}/country`));
+          const prevCountry = snap.exists() ? snap.val() : null;
+          if (prevCountry && prevCountry !== newCountry) {
+            // Guardar entrada en historial de cambios
+            const historyRef = ref(db, `users/${user.uid}/countryHistory`);
+            const histSnap = await get(historyRef);
+            const history = histSnap.exists() ? histSnap.val() : [];
+            history.push({
+              from: prevCountry,
+              to:   newCountry,
+              date: Date.now(),
+            });
+            data.countryHistory = history;
+          } else if (snap.exists()) {
+            // Preservar historial existente
+            const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
+            if (histSnap.exists()) data.countryHistory = histSnap.val();
+          }
+        }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
     };
