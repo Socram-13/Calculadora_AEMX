@@ -1357,18 +1357,24 @@
             });
         }
 
-        // Borrar mensajes con más de 10 minutos
+        // Borrar mensajes según TTL configurado en admin
+        let chatTTL = 24; // horas por defecto
+        onValue(ref(database, 'config/chatTTL'), (snap) => {
+            if (snap.exists()) chatTTL = snap.val(); // 0 = apagado
+        });
+
         async function clearOldMessages() {
+            if (chatTTL === 0) return; // autoborrado apagado
             const messagesRef = ref(database, 'messages');
             const snapshot = await get(messagesRef);
             if (!snapshot.exists()) return;
 
-            const tenMinutesAgo = Date.now() - 2 * 60 * 60 * 1000;
+            const cutoff = Date.now() - chatTTL * 60 * 60 * 1000;
             let shouldClear = false;
 
             snapshot.forEach((child) => {
                 const ts = child.val().timestamp;
-                if (ts && ts < tenMinutesAgo) shouldClear = true;
+                if (ts && ts < cutoff) shouldClear = true;
             });
 
             if (shouldClear) {
@@ -1376,9 +1382,9 @@
             }
         }
 
-        // Limpiar al cargar y luego cada 10 minutos
+        // Limpiar al cargar y luego cada hora
         clearOldMessages();
-        setInterval(clearOldMessages, 2 * 60 * 60 * 1000);
+        setInterval(clearOldMessages, 60 * 60 * 1000);
 
         // Leer username desde URL o desde Firebase Auth
         const urlParams = new URLSearchParams(window.location.search);
