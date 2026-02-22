@@ -597,8 +597,8 @@
     <!-- Header -->
     <header>
       <div class="header-left">
-        <h1>🏆 TABLA DE LIDERES</h1>
-        <div class="subtitle">ATLAS EARTH AEMX · RANKING DE PARCELAS</div>
+        <h1>🏆 LEADERBOARD</h1>
+        <div class="subtitle">ATLAS EARTH MÉXICO · RANKING DE PARCELAS</div>
       </div>
       <div class="user-info" id="userInfo" style="display:none">
         <img class="user-avatar-small" id="userAvatarHeader" src="" alt="" onerror="this.style.display='none'">
@@ -716,6 +716,7 @@
         snapshot.forEach((child) => {
           const d = child.val();
           if (!d.username) return; // saltar entradas sin nombre
+          if (d.country && d.country !== 'Mexico') return; // solo México
           const common    = parseInt(d.common)    || 0;
           const rare      = parseInt(d.rare)      || 0;
           const epic      = parseInt(d.epic)      || 0;
