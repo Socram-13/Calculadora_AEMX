@@ -760,59 +760,9 @@
             color: #ffe066;
             top: 50%;
             transform: translateY(-50%);
-            animation: tickerScroll 18s linear infinite;
+            animation: tickerScroll 30s linear infinite;
         }
 
-        @keyframes tickerScroll {
-            0%   { left: 100%; }
-            100% { left: -100%; }
-        }
-
-        /* ── TICKER DE AVISOS ── */
-        .ticker-bar {
-            display: none;
-            align-items: center;
-            height: 28px;
-            background: linear-gradient(90deg, rgba(255,170,0,0.15), rgba(255,170,0,0.05));
-            border-bottom: 1px solid rgba(255,170,0,0.35);
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-        .ticker-bar.visible { display: flex; }
-        .ticker-label {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 8px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            color: #ffaa00;
-            background: rgba(255,170,0,0.15);
-            border-right: 1px solid rgba(255,170,0,0.35);
-            padding: 0 10px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            white-space: nowrap;
-            flex-shrink: 0;
-            text-shadow: 0 0 8px rgba(255,170,0,0.5);
-        }
-        .ticker-track {
-            flex: 1;
-            overflow: hidden;
-            position: relative;
-            height: 100%;
-        }
-        .ticker-text {
-            position: absolute;
-            white-space: nowrap;
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            color: #ffe066;
-            top: 50%;
-            transform: translateY(-50%);
-            animation: tickerScroll 20s linear infinite;
-        }
         @keyframes tickerScroll {
             0%   { left: 100%; }
             100% { left: -100%; }
@@ -1399,8 +1349,7 @@
                 if (texto && texto.trim()) {
                     txt.textContent = texto.trim();
                     bar.classList.add('visible');
-                    // Ajustar velocidad según longitud del texto
-                    const duration = Math.max(10, texto.length * 0.22) + 's';
+                    const duration = Math.max(20, texto.length * 0.5) + 's';
                     txt.style.animationDuration = duration;
                 } else {
                     bar.classList.remove('visible');
@@ -1460,18 +1409,7 @@
         }
 
         // ── Ticker de avisos desde Firebase ──
-        const tickerRef = ref(database, 'config/aviso');
-        onValue(tickerRef, (snap) => {
-            const texto = snap.exists() ? snap.val() : '';
-            const bar  = document.getElementById('tickerBar');
-            const span = document.getElementById('tickerText');
-            if (texto && texto.trim()) {
-                span.textContent = texto + ' ·· ' + texto + ' ·· ' + texto;
-                bar.classList.add('visible');
-            } else {
-                bar.classList.remove('visible');
-            }
-        });
+        loadTicker();
 
         } // fin initChat
     </script>
