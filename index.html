@@ -1444,8 +1444,6 @@
         if (info) info.style.display = 'none';
       }
     }
-    // Exponer al scope global (necesario porque este script es type="module")
-    window._renderAuthUI = renderAuthUI;
 
     // ── Cargar datos desde Firebase ──
     async function syncFromFirebase(uid) {
@@ -2020,21 +2018,29 @@
   <script>
     function handleGoogleAuth() {
       const s = document.getElementById('save-status');
+      const btn = document.getElementById('google-auth-btn');
+      const info = document.getElementById('google-user-info');
 
-      // Guard: Firebase aún no ha cargado
       if (!window._fbSignOut || !window._fbSignIn) {
-        console.warn('Firebase aún no está listo');
+        console.warn('Firebase no está listo todavía');
         return;
       }
 
       if (window._fbUser) {
+        // Deshabilitar botón mientras se procesa
+        if (btn) { btn.disabled = true; btn.textContent = 'Cerrando...'; }
         window._fbSignOut()
           .then(() => {
             window._fbUser = null;
-            if (window._renderAuthUI) window._renderAuthUI(null);
+            // Actualizar UI del botón manualmente (no depender de onAuthStateChanged)
+            if (btn) { btn.disabled = false; btn.textContent = '🔑 Iniciar con Google'; btn.title = ''; }
+            if (info) info.style.display = 'none';
             if (s) { s.textContent = '👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
           })
-          .catch(err => console.warn('Sign-out error:', err));
+          .catch(err => {
+            console.warn('Sign-out error:', err);
+            if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; }
+          });
       } else {
         window._fbSignIn()
           .then(() => {
