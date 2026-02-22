@@ -2910,6 +2910,7 @@
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
     try { window.storage.set('atlas-avatar-border', color); } catch(e) {}
+    if (window._fbUser && window._fbSaveAll) window._fbSaveAll();
   }
 
   // Avatar upload
