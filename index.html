@@ -2000,6 +2000,7 @@
     <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
     <div class="save-status" id="save-status">✔ Datos guardados</div>
   </div>
+</div>
 
   <!-- ===== GOOGLE AUTH BAR ===== -->
   <div id="google-auth-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px auto 0;max-width:600px;flex-wrap:wrap;">
@@ -2013,30 +2014,17 @@
     <span style="font-size:11px;color:var(--text2);letter-spacing:1px;">Sincroniza tus datos en la nube</span>
   </div>
   <!-- ===== FIN GOOGLE AUTH BAR ===== -->
-</div><!-- /.container -->
 
   <script>
     function handleGoogleAuth() {
-      const s   = document.getElementById('save-status');
-      const btn  = document.getElementById('google-auth-btn');
-      const info = document.getElementById('google-user-info');
-      if (!window._fbSignOut || !window._fbSignIn) return;
       if (window._fbUser) {
-        if (btn) { btn.disabled = true; btn.textContent = 'Cerrando...'; }
-        window._fbSignOut()
-          .then(() => {
-            window._fbUser = null;
-            if (btn) { btn.disabled = false; btn.textContent = '🔑 Iniciar con Google'; btn.title = ''; }
-            if (info) info.style.display = 'none';
-            if (s) { s.textContent = '👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
-          })
-          .catch(err => { console.warn('Sign-out error:', err); if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; } });
+        window._fbSignOut().then(() => {
+          if (s) { s.textContent='👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
+        });
       } else {
-        window._fbSignIn()
-          .then(() => {
-            if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
-          })
-          .catch(err => console.warn('Sign-in error:', err));
+        window._fbSignIn().then(() => {
+          if (s) { s.textContent='✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
+        }).catch(err => console.warn('Sign-in error:', err));
       }
     }
 
@@ -2562,8 +2550,6 @@
   }
 
   function showStatus(msg) {
-    const el = document.getElementById('save-status');
-    if (!el) return;
     el.textContent = msg || '✔ Enlace copiado';
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2500);
@@ -2571,8 +2557,6 @@
 
   function shareData() {
     try {
-      const borderColor = document.getElementById('avatar-border-color')?.value || '';
-      if (borderColor) localStorage.setItem('atlas-avatar-border', borderColor);
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         common:     document.getElementById('common').value,
         rare:       document.getElementById('rare').value,
@@ -2877,6 +2861,11 @@
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
     try { window.storage.set('atlas-avatar-border', color); } catch(e) {}
+    // Autoguardar en Firebase si hay sesión activa
+    if (window._fbUser && window._fbSaveAll) {
+      clearTimeout(window._colorSaveTimer);
+      window._colorSaveTimer = setTimeout(window._fbSaveAll, 800);
+    }
   }
 
   // Avatar upload
@@ -3198,8 +3187,7 @@
   function checkZoomButtons() {
     const scale = window.visualViewport ? window.visualViewport.scale : 1;
     const zoomActivo = scale > 1.05;
-    const btnPng   = document.getElementById('btn-screenshot');
-    const btnShare = document.getElementById('btn-share-data');
+    const btnPng = document.getElementById('btn-screenshot');
 
     [btnPng, btnShare].forEach(btn => {
       if (!btn) return;
