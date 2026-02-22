@@ -1473,11 +1473,28 @@
           localStorage.setItem('atlas-avatar', d.avatar);
         }
         if (d.borderColor) {
-          if(window.applyThemeColor) window.applyThemeColor(d.borderColor);
+          localStorage.setItem('atlas-avatar-border', d.borderColor);
           document.getElementById('avatar-border-color').value = d.borderColor;
           const prev = document.getElementById('color-preview');
           if(prev) prev.style.background = d.borderColor;
-          localStorage.setItem('atlas-avatar-border', d.borderColor);
+          // applyThemeColor puede no estar lista aún (módulo corre antes que los scripts del body)
+          const applyBorder = (color) => {
+            if (window.applyThemeColor) {
+              window.applyThemeColor(color);
+            } else {
+              let tries = 0;
+              const interval = setInterval(() => {
+                tries++;
+                if (window.applyThemeColor) {
+                  window.applyThemeColor(color);
+                  clearInterval(interval);
+                } else if (tries > 30) {
+                  clearInterval(interval);
+                }
+              }, 100);
+            }
+          };
+          applyBorder(d.borderColor);
         }
         if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
         if (d.country) {
@@ -2863,6 +2880,8 @@
       el.style.borderTopColor = `rgba(${rgb},0.35)`;
     });
   }
+  // Exponer en window para que el módulo Firebase pueda accederla
+  window.applyThemeColor = applyThemeColor;
 
   function showAvatarButtons() {
     const editBtn = document.getElementById('avatar-edit');
