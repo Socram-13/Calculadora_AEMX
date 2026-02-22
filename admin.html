@@ -1059,19 +1059,9 @@
       border: 1px solid rgba(255,170,0,0.4);
       border-radius: 12px;
       overflow: hidden;
+      border-top: 2px solid #ffaa00;
     }
-    .aviso-card::before {
-      content: '';
-      display: block;
-      height: 2px;
-      background: linear-gradient(90deg, #ffaa00, #ffdd00, #ffaa00);
-      background-size: 200% 100%;
-      animation: shimmer 2s linear infinite;
-    }
-    @keyframes shimmer {
-      0%   { background-position: 0% 0; }
-      100% { background-position: 200% 0; }
-    }
+    .aviso-card::before { display: none; }
     .aviso-header {
       display: flex;
       align-items: center;
@@ -1266,19 +1256,18 @@
 
     <!-- Panel de avisos -->
     <div class="aviso-card" style="margin-bottom:16px;">
-      <div class="aviso-header">
-        <span class="aviso-title">📢 AVISO DEL CHAT</span>
-      </div>
-      <div class="aviso-body">
+      <div class="aviso-body" style="align-items:center;">
+        <span class="aviso-title" style="flex-shrink:0;">📢 AVISO DEL CHAT</span>
         <textarea
           id="avisoInput"
           class="aviso-input"
-          rows="2"
+          rows="1"
           placeholder="Escribe un aviso para mostrar en el chat..."
           onkeydown="if(event.ctrlKey&&event.key==='Enter')saveAviso()"
+          style="height:38px;line-height:1.4;resize:none;"
         ></textarea>
-        <div class="aviso-preview" id="avisoPreview">(sin aviso activo)</div>
-        <div class="aviso-actions">
+        <div class="aviso-preview" id="avisoPreview"></div>
+        <div class="aviso-actions" style="flex-direction:row;">
           <button class="btn-aviso-publish" onclick="saveAviso()">⚡ PUBLICAR</button>
           <button class="btn-aviso-clear" id="avisoClear" onclick="clearAviso()">✕ BORRAR</button>
         </div>
