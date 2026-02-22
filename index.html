@@ -1497,7 +1497,7 @@
         avatar:      localStorage.getItem('atlas-avatar')          || '',
         borderColor: localStorage.getItem('atlas-avatar-border')   || '',
         startDate:   document.getElementById('start-date')?.value  || '',
-        country:     userCountry || '',
+        country:     window.userCountry || userCountry || '',
         common:      document.getElementById('common')?.value      || 0,
         rare:        document.getElementById('rare')?.value        || 0,
         epic:        document.getElementById('epic')?.value        || 0,
@@ -2017,9 +2017,30 @@
 
     // Hook en el botón 💾 Guardar para que también suba a Firebase
     const _origShareData = typeof shareData === 'function' ? shareData : null;
-    window.shareData = function() {
+    window.shareData = async function() {
       if (_origShareData) _origShareData();
-      if (window._fbUser && window._fbSaveAll) window._fbSaveAll();
+      if (!window._fbUser || !window._fbSaveAll) return;
+
+      // Si no hay país detectado, intentar obtenerlo ahora
+      if (!window.userCountry) {
+        try {
+          const res  = await fetch('https://ip-api.com/json/?fields=country&lang=es');
+          const data = await res.json();
+          if (data.country && typeof normalizarPais === 'function') {
+            window.userCountry = normalizarPais(data.country);
+          }
+        } catch(e) {
+          try {
+            const res2  = await fetch('https://ipapi.co/json/');
+            const data2 = await res2.json();
+            if (data2.country_name && typeof normalizarPais === 'function') {
+              window.userCountry = normalizarPais(data2.country_name);
+            }
+          } catch(e2) {}
+        }
+      }
+
+      window._fbSaveAll();
     };
   </script>
 
@@ -3006,6 +3027,7 @@
 
   // ── Ubicación ─────────────────────────────────────────────────────
   var userCountry = "";
+  window.userCountry = "";
 
   // Mapa de nombres en español/variantes → nombre normalizado
   var COUNTRY_MAP = {
@@ -3030,6 +3052,7 @@
 
   function actualizarPais(countryName) {
     userCountry = normalizarPais(countryName) || "";
+    window.userCountry = userCountry;
     var spanMexico = document.querySelector('.mexico');
     if (spanMexico && countryName) {
       spanMexico.textContent = userCountry.toUpperCase();
