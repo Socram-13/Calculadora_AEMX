@@ -260,6 +260,20 @@
       font-size: 22px;
       font-weight: 700;
       color: var(--glow);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    /* El líder puede tener nombre largo — ajuste especial */
+    #statTop {
+      font-size: clamp(11px, 3.5vw, 22px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      display: block;
     }
 
     .stat-label {
