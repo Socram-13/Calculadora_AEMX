@@ -592,7 +592,7 @@
   // ── Capas ──
   let estadoLayers = {};   // estado → L.circle
   let playerMarkers = [];
-  let networkLines  = [];  // líneas de red
+  let networkLines  = [];  // líneas de ruta
 
   function limpiarMapa() {
     Object.values(estadoLayers).forEach(l => map.removeLayer(l));
@@ -604,37 +604,43 @@
   }
 
   function renderRed(players) {
-    // Solo jugadores con coords
     const con = players.filter(p => p.coords);
     if (con.length < 2) return;
 
-    const maxTotal = Math.max(...con.map(p => p.total), 1);
+    // Ordenar de norte a sur (latitud descendente)
+    const ordenados = [...con].sort((a, b) => b.coords[0] - a.coords[0]);
 
-    // Dibujar línea entre cada par
-    for (let i = 0; i < con.length; i++) {
-      for (let j = i + 1; j < con.length; j++) {
-        const a = con[i], b = con[j];
+    // Trazar ruta encadenada
+    for (let i = 0; i < ordenados.length - 1; i++) {
+      const a = ordenados[i];
+      const b = ordenados[i + 1];
 
-        // Opacidad basada en la suma de parcelas de ambos jugadores
-        const peso     = (a.total + b.total) / (maxTotal * 2);
-        const opacity  = 0.04 + peso * 0.28;   // rango 0.04 – 0.32
-        const weight   = 0.5 + peso * 2;        // rango 0.5 – 2.5px
+      // Progreso en la ruta (0 = norte, 1 = sur) → color cambia de cian a púrpura
+      const t = i / (ordenados.length - 1);
+      const r = Math.round(0   + t * 192);
+      const g = Math.round(200 - t * 68);
+      const bC= Math.round(255 - t * 123);
+      const color = `rgb(${r},${g},${bC})`;
 
-        // Color: cian base, más verde cuanto más parcelas
-        const r = Math.round(0   + peso * 0);
-        const g = Math.round(200 + peso * 55);
-        const bC= Math.round(255 - peso * 58);
-        const color = `rgb(${r},${g},${bC})`;
+      const line = L.polyline([a.coords, b.coords], {
+        color,
+        weight:    2,
+        opacity:   0.55,
+        dashArray: '6, 8',     // línea punteada estilo ruta
+        interactive: false,
+      }).addTo(map);
 
-        const line = L.polyline([a.coords, b.coords], {
-          color,
-          weight,
-          opacity,
-          interactive: false,   // no intercepta clicks
-        }).addTo(map);
+      networkLines.push(line);
 
-        networkLines.push(line);
-      }
+      // Número de orden sobre el segmento
+      const midLat = (a.coords[0] + b.coords[0]) / 2;
+      const midLng = (a.coords[1] + b.coords[1]) / 2;
+      const label = L.divIcon({
+        html: `<div style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;color:${color};text-shadow:0 0 4px #000,0 0 8px #000;pointer-events:none;">${i + 1}</div>`,
+        className: '', iconSize: [16, 16], iconAnchor: [8, 8],
+      });
+      const labelMarker = L.marker([midLat, midLng], { icon: label, interactive: false }).addTo(map);
+      networkLines.push(labelMarker);
     }
   }
 
