@@ -1418,7 +1418,8 @@
       if (user) {
         window._fbUser = user;
         renderAuthUI(user);
-        syncFromFirebase(user.uid);
+        // Esperar a que todos los scripts estén listos antes de sincronizar
+        setTimeout(() => syncFromFirebase(user.uid), 300);
       } else {
         window._fbUser = null;
         renderAuthUI(null);
@@ -1448,7 +1449,11 @@
     async function syncFromFirebase(uid) {
       try {
         const snap = await get(ref(db, `users/${uid}`));
-        if (!snap.exists()) return;
+        if (!snap.exists()) {
+          // No hay datos en Firebase — guardar lo que haya en local
+          if (window._fbSaveAll) setTimeout(window._fbSaveAll, 500);
+          return;
+        }
         const d = snap.val();
 
         // Perfil
@@ -1477,6 +1482,9 @@
         });
 
         if(window.calc) window.calc();
+
+        // Sincronización completa — resubir a Firebase para mantener fresco
+        setTimeout(() => { if(window._fbSaveAll) window._fbSaveAll(); }, 800);
       } catch(e) { console.warn('Firebase sync error:', e); }
     }
 
