@@ -698,6 +698,104 @@
       thead th { padding: 8px 12px; }
       .player-email { display: none; }
     }
+
+    /* ===== CHAT WIDGET ===== */
+    #chat-fab {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      z-index: 9998;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00ff88, #00ffff);
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0,255,136,0.6), 0 4px 15px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    #chat-fab:hover { transform: scale(1.1); box-shadow: 0 0 35px rgba(0,255,136,0.9), 0 6px 20px rgba(0,0,0,0.5); }
+    #chat-fab:active { transform: scale(0.95); }
+    #chat-fab svg { width: 28px; height: 28px; fill: #0a0e1a; }
+    #chat-fab.open svg.icon-chat { display: none; }
+    #chat-fab.open svg.icon-close { display: block !important; }
+    #chat-fab::before {
+      content: 'CHAT';
+      position: absolute;
+      right: 70px;
+      background: #0f1419;
+      border: 1px solid #00ff88;
+      color: #00ff88;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      box-shadow: 0 0 10px rgba(0,255,136,0.3);
+    }
+    #chat-fab:hover::before { opacity: 1; }
+    #chat-fab.open::before { content: 'CERRAR'; }
+
+    #chat-iframe-container {
+      position: fixed;
+      bottom: 100px;
+      right: 28px;
+      z-index: 9997;
+      width: 380px;
+      height: min(600px, calc(100dvh - 120px));
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #00ff88;
+      box-shadow: 0 0 40px rgba(0,255,136,0.4), 0 20px 60px rgba(0,0,0,0.6);
+      transform: scale(0.85) translateY(20px);
+      transform-origin: bottom right;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s ease;
+    }
+    #chat-iframe-container.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: all; }
+    #chat-iframe-container iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    #chat-widget-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 36px;
+      background: linear-gradient(90deg, rgba(0,255,136,0.15), rgba(0,255,255,0.1));
+      border-bottom: 1px solid rgba(0,255,136,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      z-index: 1;
+      pointer-events: none;
+    }
+    #chat-widget-bar span { font-family: 'Orbitron', sans-serif; font-size: 9px; font-weight: 700; color: #00ff88; letter-spacing: 2px; text-shadow: 0 0 8px #00ff88; }
+    #chat-widget-bar .dots { display: flex; gap: 5px; }
+    #chat-widget-bar .dot { width: 8px; height: 8px; border-radius: 50%; }
+    #chat-widget-bar .dot:nth-child(1) { background: #ff5f57; }
+    #chat-widget-bar .dot:nth-child(2) { background: #ffbd2e; }
+    #chat-widget-bar .dot:nth-child(3) { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+
+    @media (max-width: 480px) {
+      #chat-widget-bar { display: none; }
+      #chat-iframe-container {
+        right: 0; bottom: 0; left: 0; top: auto;
+        width: 100%; height: 75dvh;
+        border-radius: 20px 20px 0 0;
+        transform-origin: bottom center;
+        border-left: none; border-right: none; border-bottom: none;
+      }
+      #chat-fab { bottom: 20px; right: 20px; }
+    }
+    /* ===== FIN CHAT WIDGET ===== */
   </style>
 </head>
 <body>
@@ -1119,5 +1217,67 @@
       toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
     }
   </script>
+  <!-- ===== CHAT WIDGET ===== -->
+  <button id="chat-fab" onclick="toggleChat()" aria-label="Abrir chat">
+    <svg class="icon-chat" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
+    <svg class="icon-close" style="display:none" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+  </button>
+
+  <div id="chat-iframe-container">
+    <div id="chat-widget-bar">
+      <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+      <span id="widget-time">--:--</span>
+    </div>
+    <iframe id="chat-frame" src="about:blank" title="Chat Atlas Earth México" loading="lazy" allow="clipboard-write"></iframe>
+  </div>
+
+  <script>
+    let chatOpen = false;
+
+    function toggleChat() {
+      chatOpen = !chatOpen;
+      document.getElementById('chat-iframe-container').classList.toggle('open', chatOpen);
+      document.getElementById('chat-fab').classList.toggle('open', chatOpen);
+
+      if (window.innerWidth <= 480) {
+        document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
+      }
+
+      if (chatOpen) {
+        history.pushState({ chatOpen: true }, '');
+        // Admin no tiene username/avatar en localStorage del mismo modo,
+        // pero si los tiene los pasa igual
+        const username = localStorage.getItem('atlas-username') || 'ADMIN';
+        const color    = localStorage.getItem('atlas-avatar-border') || '#ff4466';
+        document.getElementById('chat-frame').src =
+          `chat-firebase.html?username=${encodeURIComponent(username)}&color=${encodeURIComponent(color)}`;
+      }
+    }
+
+    function updateWidgetTime() {
+      const now = new Date();
+      document.getElementById('widget-time').textContent =
+        String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    }
+    updateWidgetTime();
+    setInterval(updateWidgetTime, 60000);
+
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'CLOSE_CHAT') closeChatWidget();
+    });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatOpen) closeChatWidget(); });
+
+    function closeChatWidget() {
+      chatOpen = false;
+      document.getElementById('chat-iframe-container').classList.remove('open');
+      document.getElementById('chat-fab').classList.remove('open');
+      if (window.innerWidth <= 480) {
+        document.getElementById('chat-fab').style.display = 'flex';
+      }
+    }
+
+    window.addEventListener('popstate', () => { if (chatOpen) closeChatWidget(); });
+  </script>
+  <!-- ===== FIN CHAT WIDGET ===== -->
 </body>
 </html>
