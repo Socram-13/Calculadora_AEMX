@@ -1255,6 +1255,27 @@
       </div>
     </header>
 
+    <!-- Panel de avisos -->
+    <div class="aviso-card" style="margin-bottom:16px;">
+      <div class="aviso-header">
+        <span class="aviso-title">📢 AVISO DEL CHAT</span>
+      </div>
+      <div class="aviso-body">
+        <textarea
+          id="avisoInput"
+          class="aviso-input"
+          rows="2"
+          placeholder="Escribe un aviso para mostrar en el chat..."
+          onkeydown="if(event.ctrlKey&&event.key==='Enter')saveAviso()"
+        ></textarea>
+        <div class="aviso-preview" id="avisoPreview">(sin aviso activo)</div>
+        <div class="aviso-actions">
+          <button class="btn-aviso-publish" onclick="saveAviso()">⚡ PUBLICAR</button>
+          <button class="btn-aviso-clear" id="avisoClear" onclick="clearAviso()">✕ BORRAR</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Stats -->
     <div class="stats-bar">
       <div class="stat-card total">
@@ -1298,27 +1319,6 @@
             <div class="map-mini-stat">
               <div class="num" id="miniStatAemx" style="color:var(--glow2)">—</div>
               <div class="lbl">Miembros AEMX</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Panel de avisos -->
-        <div class="aviso-card">
-          <div class="aviso-header">
-            <span class="aviso-title">📢 AVISO DEL CHAT</span>
-          </div>
-          <div class="aviso-body">
-            <textarea
-              id="avisoInput"
-              class="aviso-input"
-              rows="2"
-              placeholder="Escribe un aviso para mostrar en el chat..."
-              onkeydown="if(event.ctrlKey&&event.key==='Enter')saveAviso()"
-            ></textarea>
-            <div class="aviso-preview" id="avisoPreview">(sin aviso activo)</div>
-            <div class="aviso-actions">
-              <button class="btn-aviso-publish" onclick="saveAviso()">⚡ PUBLICAR</button>
-              <button class="btn-aviso-clear" id="avisoClear" onclick="clearAviso()">✕ BORRAR</button>
             </div>
           </div>
         </div>
