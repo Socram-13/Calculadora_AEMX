@@ -194,7 +194,7 @@
   }
 
   @media (max-width: 480px) {
-    .container { padding: 8px 8px 40px; }
+    .container { padding: 8px 8px 100px; } /* espacio para el chat FAB */
     .header-bar { padding: 10px 10px; gap: 6px; }
     .aemx-logo-img, .atlas-logo-img { width: 44px; height: 44px; }
     .header-tagline { display: none; }
@@ -1410,7 +1410,6 @@
     window._fbSet      = set;
     window._fbGet      = get;
     window._fbOnValue  = onValue;
-    window._fbUpdate   = update;
     window._fbSignIn   = () => signInWithPopup(auth, provider);
     window._fbSignOut  = () => signOut(auth);
 
@@ -1476,12 +1475,6 @@
           localStorage.setItem('atlas-avatar-border', d.borderColor);
         }
         if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
-        // Mostrar ubicación guardada en Firebase
-        if (d.country || d.city) {
-          if (d.country) { userCountry = d.country; window.userCountry = d.country; const spanMx = document.querySelector('.mexico'); if (spanMx) { spanMx.textContent = d.country.toUpperCase(); spanMx.style.color = '#7EC8E3'; } }
-          const elLoc = document.getElementById('user-location');
-          if (elLoc) elLoc.textContent = (d.city || d.country || '').toUpperCase();
-        }
 
         // Calculadora
         ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
@@ -1499,11 +1492,13 @@
     window._fbSaveAll = async function() {
       const user = window._fbUser;
       if (!user) return;
+      const newCountry = window.userCountry || userCountry || '';
       const data = {
         username:    document.getElementById('username')?.value    || '',
         avatar:      localStorage.getItem('atlas-avatar')          || '',
         borderColor: localStorage.getItem('atlas-avatar-border')   || '',
         startDate:   document.getElementById('start-date')?.value  || '',
+        country:     newCountry,
         common:      document.getElementById('common')?.value      || 0,
         rare:        document.getElementById('rare')?.value        || 0,
         epic:        document.getElementById('epic')?.value        || 0,
@@ -1514,35 +1509,29 @@
         updatedAt:   Date.now(),
       };
       try {
-        // Preservar country, city y countryHistory sin sobreescribir
-        const snap = await get(ref(db, `users/${user.uid}`));
-        if (snap.exists()) {
-          const prev = snap.val();
-          if (prev.country)        data.country        = prev.country;
-          if (prev.city)           data.city           = prev.city;
-          if (prev.countryHistory) data.countryHistory = prev.countryHistory;
+        // Detectar cambio de país
+        if (newCountry) {
+          const snap = await get(ref(db, `users/${user.uid}/country`));
+          const prevCountry = snap.exists() ? snap.val() : null;
+          if (prevCountry && prevCountry !== newCountry) {
+            // Guardar entrada en historial de cambios
+            const historyRef = ref(db, `users/${user.uid}/countryHistory`);
+            const histSnap = await get(historyRef);
+            const history = histSnap.exists() ? histSnap.val() : [];
+            history.push({
+              from: prevCountry,
+              to:   newCountry,
+              date: Date.now(),
+            });
+            data.countryHistory = history;
+          } else if (snap.exists()) {
+            // Preservar historial existente
+            const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
+            if (histSnap.exists()) data.countryHistory = histSnap.val();
+          }
         }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
-    };
-
-    // Guarda país en Firebase SOLO si hay valor y es diferente
-    window._fbSaveCountry = async function(newCountry) {
-      const user = window._fbUser;
-      if (!user || !newCountry) return;
-      try {
-        const snap = await get(ref(db, `users/${user.uid}/country`));
-        const prev = snap.exists() ? snap.val() : null;
-        if (prev === newCountry) return;
-        const updates = { country: newCountry };
-        if (prev) {
-          const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
-          const history  = histSnap.exists() ? histSnap.val() : [];
-          history.push({ from: prev, to: newCountry, date: Date.now() });
-          updates.countryHistory = history;
-        }
-        await update(ref(db, `users/${user.uid}`), updates);
-      } catch(e) { console.warn('Firebase country error:', e); }
     };
 
     // ── Autoguardar cada vez que el usuario cambia un input ──
@@ -2011,6 +2000,7 @@
     <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
     <div class="save-status" id="save-status">✔ Datos guardados</div>
   </div>
+</div>
 
   <!-- ===== GOOGLE AUTH BAR ===== -->
   <div id="google-auth-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px auto 0;max-width:600px;flex-wrap:wrap;">
@@ -2024,28 +2014,17 @@
     <span style="font-size:11px;color:var(--text2);letter-spacing:1px;">Sincroniza tus datos en la nube</span>
   </div>
   <!-- ===== FIN GOOGLE AUTH BAR ===== -->
-</div><!-- /.container -->
 
   <script>
     function handleGoogleAuth() {
-      const s = document.getElementById('save-status');
-      const btn = document.getElementById('google-auth-btn');
-      const info = document.getElementById('google-user-info');
-      if (!window._fbSignOut || !window._fbSignIn) return;
       if (window._fbUser) {
-        if (btn) { btn.disabled = true; btn.textContent = 'Cerrando...'; }
-        window._fbSignOut()
-          .then(() => {
-            window._fbUser = null;
-            if (btn) { btn.disabled = false; btn.textContent = '🔑 Iniciar con Google'; btn.title = ''; }
-            if (info) info.style.display = 'none';
-            if (s) { s.textContent = '👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
-          })
-          .catch(err => { console.warn(err); if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; } });
+        window._fbSignOut().then(() => {
+          if (s) { s.textContent='👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
+        });
       } else {
-        window._fbSignIn()
-          .then(() => { if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); } })
-          .catch(err => console.warn('Sign-in error:', err));
+        window._fbSignIn().then(() => {
+          if (s) { s.textContent='✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
+        }).catch(err => console.warn('Sign-in error:', err));
       }
     }
 
@@ -2571,8 +2550,6 @@
   }
 
   function showStatus(msg) {
-    const el = document.getElementById('save-status');
-    if (!el) return;
     el.textContent = msg || '✔ Enlace copiado';
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2500);
@@ -2580,8 +2557,6 @@
 
   function shareData() {
     try {
-      const borderColor = document.getElementById('avatar-border-color')?.value || '';
-      if (borderColor) localStorage.setItem('atlas-avatar-border', borderColor);
       localStorage.setItem(SAVE_KEY, JSON.stringify({
         common:     document.getElementById('common').value,
         rare:       document.getElementById('rare').value,
@@ -2886,10 +2861,6 @@
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
     try { window.storage.set('atlas-avatar-border', color); } catch(e) {}
-    if (window._fbUser && window._fbSaveAll) {
-      clearTimeout(window._colorSaveTimer);
-      window._colorSaveTimer = setTimeout(window._fbSaveAll, 800);
-    }
   }
 
   // Avatar upload
@@ -3102,40 +3073,36 @@
   }
 
   function actualizarPais(countryName) {
-    var pais = normalizarPais(countryName) || "";
-    if (!pais) return;
-    userCountry = pais; window.userCountry = pais;
+    userCountry = normalizarPais(countryName) || "";
+    window.userCountry = userCountry;
     var spanMexico = document.querySelector('.mexico');
-    if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; }
+    if (spanMexico && countryName) {
+      spanMexico.textContent = userCountry.toUpperCase();
+      spanMexico.style.color = '#7EC8E3';
+    }
+    // Re-calcular con el país ya disponible
     if (typeof calc === 'function') calc();
-    var intentos = 0;
-    var retry = setInterval(function() {
-      intentos++;
-      if (window._fbSaveCountry) { clearInterval(retry); window._fbSaveCountry(pais); }
-      else if (intentos >= 20)   { clearInterval(retry); }
-    }, 500);
+    // Guardar país en Firebase ahora que está disponible
+    if (window._fbUser && window._fbSaveAll) {
+      setTimeout(window._fbSaveAll, 500);
+    } else {
+      // Reintentar hasta que _fbSaveAll esté lista
+      var retries = 0;
+      var retryInterval = setInterval(function() {
+        retries++;
+        if (window._fbUser && window._fbSaveAll) {
+          clearInterval(retryInterval);
+          window._fbSaveAll();
+        } else if (retries >= 20) {
+          clearInterval(retryInterval);
+        }
+      }, 500);
+    }
   }
 
   function actualizarCiudad(ciudad, estado) {
-    if (!ciudad) return;
     var el = document.getElementById("user-location");
-    var texto = ciudad + (estado ? ", " + estado : "");
-    if (el) el.textContent = texto.toUpperCase();
-    // Guardar en Firebase solo si cambia
-    var intentos = 0;
-    var retry = setInterval(function() {
-      intentos++;
-      if (window._fbUser && window._fbRef && window._fbDb) {
-        clearInterval(retry);
-        var dbRef = window._fbRef(window._fbDb, 'users/' + window._fbUser.uid + '/city');
-        window._fbGet(dbRef).then(function(snap) {
-          if (!snap.exists() || snap.val() !== texto) {
-            var upd = {}; upd['city'] = texto;
-            window._fbUpdate(window._fbRef(window._fbDb, 'users/' + window._fbUser.uid), upd);
-          }
-        }).catch(function() {});
-      } else if (intentos >= 20) { clearInterval(retry); }
-    }, 500);
+    if (el && ciudad) el.textContent = ciudad + ", " + estado;
   }
 
   function ubicacionPorIP() {
@@ -3215,8 +3182,7 @@
   function checkZoomButtons() {
     const scale = window.visualViewport ? window.visualViewport.scale : 1;
     const zoomActivo = scale > 1.05;
-    const btnPng   = document.getElementById('btn-screenshot');
-    const btnShare = document.getElementById('btn-share-data');
+    const btnPng = document.getElementById('btn-screenshot');
 
     [btnPng, btnShare].forEach(btn => {
       if (!btn) return;
