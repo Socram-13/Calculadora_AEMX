@@ -1410,6 +1410,7 @@
     window._fbSet      = set;
     window._fbGet      = get;
     window._fbOnValue  = onValue;
+    window._fbUpdate   = update;
     window._fbSignIn   = () => signInWithPopup(auth, provider);
     window._fbSignOut  = () => signOut(auth);
 
@@ -1475,14 +1476,11 @@
           localStorage.setItem('atlas-avatar-border', d.borderColor);
         }
         if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
-        // Mostrar país guardado en Firebase
-        if (d.country) {
-          userCountry = d.country;
-          window.userCountry = d.country;
-          const spanMx = document.querySelector('.mexico');
-          if (spanMx) { spanMx.textContent = d.country.toUpperCase(); spanMx.style.color = '#7EC8E3'; }
+        // Mostrar ubicación guardada en Firebase
+        if (d.country || d.city) {
+          if (d.country) { userCountry = d.country; window.userCountry = d.country; const spanMx = document.querySelector('.mexico'); if (spanMx) { spanMx.textContent = d.country.toUpperCase(); spanMx.style.color = '#7EC8E3'; } }
           const elLoc = document.getElementById('user-location');
-          if (elLoc) elLoc.textContent = d.country.toUpperCase();
+          if (elLoc) elLoc.textContent = (d.city || d.country || '').toUpperCase();
         }
 
         // Calculadora
@@ -1516,25 +1514,26 @@
         updatedAt:   Date.now(),
       };
       try {
-        // Preservar country y countryHistory sin tocarlos
+        // Preservar country, city y countryHistory sin sobreescribir
         const snap = await get(ref(db, `users/${user.uid}`));
         if (snap.exists()) {
           const prev = snap.val();
           if (prev.country)        data.country        = prev.country;
+          if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
         }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
     };
 
-    // Guarda el país en Firebase SOLO si hay valor y es diferente al actual
+    // Guarda país en Firebase SOLO si hay valor y es diferente
     window._fbSaveCountry = async function(newCountry) {
       const user = window._fbUser;
       if (!user || !newCountry) return;
       try {
         const snap = await get(ref(db, `users/${user.uid}/country`));
         const prev = snap.exists() ? snap.val() : null;
-        if (prev === newCountry) return; // sin cambio, no hacer nada
+        if (prev === newCountry) return;
         const updates = { country: newCountry };
         if (prev) {
           const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
@@ -2029,8 +2028,8 @@
 
   <script>
     function handleGoogleAuth() {
-      const s   = document.getElementById('save-status');
-      const btn  = document.getElementById('google-auth-btn');
+      const s = document.getElementById('save-status');
+      const btn = document.getElementById('google-auth-btn');
       const info = document.getElementById('google-user-info');
       if (!window._fbSignOut || !window._fbSignIn) return;
       if (window._fbUser) {
@@ -2042,12 +2041,10 @@
             if (info) info.style.display = 'none';
             if (s) { s.textContent = '👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
           })
-          .catch(err => { console.warn(err); if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; }});
+          .catch(err => { console.warn(err); if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; } });
       } else {
         window._fbSignIn()
-          .then(() => {
-            if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
-          })
+          .then(() => { if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); } })
           .catch(err => console.warn('Sign-in error:', err));
       }
     }
@@ -3106,30 +3103,39 @@
 
   function actualizarPais(countryName) {
     var pais = normalizarPais(countryName) || "";
-    if (!pais) return; // detección fallida, no hacer nada
-    userCountry = pais;
-    window.userCountry = pais;
+    if (!pais) return;
+    userCountry = pais; window.userCountry = pais;
     var spanMexico = document.querySelector('.mexico');
     if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; }
-    var elLoc = document.getElementById('user-location');
-    if (elLoc) elLoc.textContent = pais.toUpperCase();
     if (typeof calc === 'function') calc();
-    // Guardar en Firebase solo si cambia — reintentar hasta que Firebase esté listo
     var intentos = 0;
     var retry = setInterval(function() {
       intentos++;
-      if (window._fbSaveCountry) {
-        clearInterval(retry);
-        window._fbSaveCountry(pais);
-      } else if (intentos >= 20) {
-        clearInterval(retry);
-      }
+      if (window._fbSaveCountry) { clearInterval(retry); window._fbSaveCountry(pais); }
+      else if (intentos >= 20)   { clearInterval(retry); }
     }, 500);
   }
 
   function actualizarCiudad(ciudad, estado) {
+    if (!ciudad) return;
     var el = document.getElementById("user-location");
-    if (el && ciudad) el.textContent = ciudad + ", " + estado;
+    var texto = ciudad + (estado ? ", " + estado : "");
+    if (el) el.textContent = texto.toUpperCase();
+    // Guardar en Firebase solo si cambia
+    var intentos = 0;
+    var retry = setInterval(function() {
+      intentos++;
+      if (window._fbUser && window._fbRef && window._fbDb) {
+        clearInterval(retry);
+        var dbRef = window._fbRef(window._fbDb, 'users/' + window._fbUser.uid + '/city');
+        window._fbGet(dbRef).then(function(snap) {
+          if (!snap.exists() || snap.val() !== texto) {
+            var upd = {}; upd['city'] = texto;
+            window._fbUpdate(window._fbRef(window._fbDb, 'users/' + window._fbUser.uid), upd);
+          }
+        }).catch(function() {});
+      } else if (intentos >= 20) { clearInterval(retry); }
+    }, 500);
   }
 
   function ubicacionPorIP() {
