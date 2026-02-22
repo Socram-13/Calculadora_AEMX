@@ -1271,19 +1271,6 @@
       </div>
     </div>
 
-    <!-- Panel de avisos -->
-    <div class="aviso-card">
-      <div class="aviso-header">
-        <span class="aviso-title">📢 AVISO DEL CHAT</span>
-        <span class="aviso-live" id="avisoStatus">sin aviso activo</span>
-      </div>
-      <div class="aviso-body">
-        <input class="aviso-input" type="text" id="avisoInput" placeholder="Escribe un aviso para mostrar en el chat..." maxlength="200">
-        <button class="aviso-btn" onclick="publicarAviso()">PUBLICAR</button>
-        <button class="aviso-btn clear" onclick="borrarAviso()">✕</button>
-      </div>
-    </div>
-
     <!-- Two-column body -->
     <div class="admin-body">
 
@@ -1341,15 +1328,6 @@
       <!-- RIGHT: Tabla usuarios -->
       <div class="table-col">
 
-        <!-- Aviso ticker -->
-        <div class="aviso-card">
-          <span class="aviso-label">📢 AVISO CHAT</span>
-          <input class="aviso-input" id="avisoInput" type="text" maxlength="200"
-            placeholder="Escribe un aviso para mostrar en el chat..." />
-          <button class="aviso-btn aviso-btn-pub" onclick="publicarAviso()">PUBLICAR</button>
-          <button class="aviso-btn aviso-btn-clear" onclick="borrarAviso()">✕ BORRAR</button>
-          <span class="aviso-status" id="avisoStatus">✔ Publicado</span>
-        </div>
         <!-- Filters + search -->
         <div class="filters">
           <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">TODOS</button>
@@ -1592,34 +1570,6 @@
       }
     });
 
-    // ── Aviso ticker ──
-    window.publicarAviso = async function() {
-      const texto = document.getElementById('avisoInput').value.trim();
-      if (!texto) return;
-      try {
-        await set(ref(db, 'config/aviso'), texto);
-        const s = document.getElementById('avisoStatus');
-        s.textContent = '✔ Publicado'; s.classList.add('visible');
-        setTimeout(() => s.classList.remove('visible'), 2500);
-      } catch(e) { showToast('Error al publicar aviso', true); }
-    };
-
-    window.borrarAviso = async function() {
-      try {
-        await set(ref(db, 'config/aviso'), '');
-        document.getElementById('avisoInput').value = '';
-        const s = document.getElementById('avisoStatus');
-        s.textContent = '✔ Borrado'; s.classList.add('visible');
-        setTimeout(() => s.classList.remove('visible'), 2500);
-      } catch(e) { showToast('Error al borrar aviso', true); }
-    };
-
-    // Cargar aviso actual al abrir el panel
-    onValue(ref(db, 'config/aviso'), (snap) => {
-      const v = snap.exists() ? snap.val() : '';
-      document.getElementById('avisoInput').value = v;
-    });
-
     // ── Avisos ──
     window.saveAviso = async function() {
       const texto = document.getElementById('avisoInput').value.trim();
@@ -1632,30 +1582,6 @@
     window.clearAviso = async function() {
       document.getElementById('avisoInput').value = '';
       await window.saveAviso();
-    };
-
-    // ── Avisos del chat ──
-    const avisoRef = ref(db, 'config/aviso');
-
-    onValue(avisoRef, (snap) => {
-      const texto = snap.exists() ? snap.val() : '';
-      document.getElementById('avisoInput').value = texto;
-      document.getElementById('avisoStatus').textContent = texto
-        ? `✓ activo · ${texto.length} chars`
-        : 'sin aviso activo';
-    });
-
-    window.publicarAviso = async function() {
-      const texto = document.getElementById('avisoInput').value.trim();
-      if (!texto) return;
-      await set(avisoRef, texto);
-      showToast('Aviso publicado en el chat');
-    };
-
-    window.borrarAviso = async function() {
-      await set(avisoRef, '');
-      document.getElementById('avisoInput').value = '';
-      showToast('Aviso eliminado');
     };
 
     // ── Data ──
