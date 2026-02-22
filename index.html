@@ -1492,13 +1492,11 @@
     window._fbSaveAll = async function() {
       const user = window._fbUser;
       if (!user) return;
-      const newCountry = window.userCountry || userCountry || '';
       const data = {
         username:    document.getElementById('username')?.value    || '',
         avatar:      localStorage.getItem('atlas-avatar')          || '',
         borderColor: localStorage.getItem('atlas-avatar-border')   || '',
         startDate:   document.getElementById('start-date')?.value  || '',
-        country:     newCountry,
         common:      document.getElementById('common')?.value      || 0,
         rare:        document.getElementById('rare')?.value        || 0,
         epic:        document.getElementById('epic')?.value        || 0,
@@ -1509,29 +1507,35 @@
         updatedAt:   Date.now(),
       };
       try {
-        // Detectar cambio de país
-        if (newCountry) {
-          const snap = await get(ref(db, `users/${user.uid}/country`));
-          const prevCountry = snap.exists() ? snap.val() : null;
-          if (prevCountry && prevCountry !== newCountry) {
-            // Guardar entrada en historial de cambios
-            const historyRef = ref(db, `users/${user.uid}/countryHistory`);
-            const histSnap = await get(historyRef);
-            const history = histSnap.exists() ? histSnap.val() : [];
-            history.push({
-              from: prevCountry,
-              to:   newCountry,
-              date: Date.now(),
-            });
-            data.countryHistory = history;
-          } else if (snap.exists()) {
-            // Preservar historial existente
-            const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
-            if (histSnap.exists()) data.countryHistory = histSnap.val();
-          }
+        // Preservar country y countryHistory — nunca sobreescribir con set()
+        const snap = await get(ref(db, `users/${user.uid}`));
+        if (snap.exists()) {
+          const prev = snap.val();
+          if (prev.country)        data.country        = prev.country;
+          if (prev.countryHistory) data.countryHistory = prev.countryHistory;
         }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
+    };
+
+    // ── Guardar país por separado — solo si hay valor y es diferente al guardado ──
+    window._fbSaveCountry = async function(newCountry) {
+      const user = window._fbUser;
+      if (!user || !newCountry) return; // nunca guardar vacío
+      try {
+        const snap = await get(ref(db, `users/${user.uid}/country`));
+        const prevCountry = snap.exists() ? snap.val() : null;
+        if (prevCountry === newCountry) return; // sin cambios, no hacer nada
+        // Es un país nuevo — guardar y registrar en historial
+        const updates = { country: newCountry };
+        if (prevCountry) {
+          const histSnap = await get(ref(db, `users/${user.uid}/countryHistory`));
+          const history  = histSnap.exists() ? histSnap.val() : [];
+          history.push({ from: prevCountry, to: newCountry, date: Date.now() });
+          updates.countryHistory = history;
+        }
+        await update(ref(db, `users/${user.uid}`), updates);
+      } catch(e) { console.warn('Firebase country save error:', e); }
     };
 
     // ── Autoguardar cada vez que el usuario cambia un input ──
@@ -2861,11 +2865,6 @@
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
     try { window.storage.set('atlas-avatar-border', color); } catch(e) {}
-    // Autoguardar en Firebase si hay sesión activa
-    if (window._fbUser && window._fbSaveAll) {
-      clearTimeout(window._colorSaveTimer);
-      window._colorSaveTimer = setTimeout(window._fbSaveAll, 800);
-    }
   }
 
   // Avatar upload
@@ -3078,31 +3077,28 @@
   }
 
   function actualizarPais(countryName) {
-    userCountry = normalizarPais(countryName) || "";
-    window.userCountry = userCountry;
+    var pais = normalizarPais(countryName) || "";
+    if (!pais) return; // no hacer nada si la detección falló
+    userCountry = pais;
+    window.userCountry = pais;
     var spanMexico = document.querySelector('.mexico');
-    if (spanMexico && countryName) {
-      spanMexico.textContent = userCountry.toUpperCase();
+    if (spanMexico) {
+      spanMexico.textContent = pais.toUpperCase();
       spanMexico.style.color = '#7EC8E3';
     }
-    // Re-calcular con el país ya disponible
+    // Re-calcular con el país disponible
     if (typeof calc === 'function') calc();
-    // Guardar país en Firebase ahora que está disponible
-    if (window._fbUser && window._fbSaveAll) {
-      setTimeout(window._fbSaveAll, 500);
-    } else {
-      // Reintentar hasta que _fbSaveAll esté lista
-      var retries = 0;
-      var retryInterval = setInterval(function() {
-        retries++;
-        if (window._fbUser && window._fbSaveAll) {
-          clearInterval(retryInterval);
-          window._fbSaveAll();
-        } else if (retries >= 20) {
-          clearInterval(retryInterval);
-        }
-      }, 500);
-    }
+    // Guardar en Firebase solo si hay sesión y el valor es distinto al guardado
+    var intentos = 0;
+    var retry = setInterval(function() {
+      intentos++;
+      if (window._fbUser && window._fbSaveCountry) {
+        clearInterval(retry);
+        window._fbSaveCountry(pais);
+      } else if (intentos >= 20) {
+        clearInterval(retry);
+      }
+    }, 500);
   }
 
   function actualizarCiudad(ciudad, estado) {
