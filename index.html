@@ -1547,6 +1547,14 @@
       } catch(e) { console.warn('Firebase save error:', e); }
     };
 
+    window._fbSaveCity = async function(cityText) {
+      const user = window._fbUser;
+      if (!user || !cityText) return;
+      try {
+        await update(ref(db, `users/${user.uid}`), { city: cityText });
+      } catch(e) { console.warn('Firebase city error:', e); }
+    };
+
     window._fbSaveCountry = async function(newCountry) {
       const user = window._fbUser;
       if (!user || !newCountry) return;
@@ -3136,13 +3144,9 @@
     var intentos = 0;
     var retry = setInterval(function() {
       intentos++;
-      if (window._fbUser && window._fbSaveCountry) {
+      if (window._fbSaveCity) {
         clearInterval(retry);
-        get(ref(db, 'users/' + window._fbUser.uid + '/city'))
-          .then(function(snap) {
-            if (!snap.exists() || snap.val() !== texto)
-              update(ref(db, 'users/' + window._fbUser.uid), { city: texto });
-          }).catch(function() {});
+        window._fbSaveCity(texto);
       } else if (intentos >= 20) { clearInterval(retry); }
     }, 500);
   }

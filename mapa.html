@@ -671,7 +671,7 @@
             <div>
               <div class="popup-name">${p.username}</div>
               <div class="popup-total">${p.total.toLocaleString()} parcelas</div>
-              <div class="popup-total" style="margin-top:2px;">📍 ${p.city || '—'}</div>
+              <div class="popup-total" style="margin-top:2px;">📍 ${p.city || '<span style="color:#6b8ab0;font-style:italic;">Sin ciudad registrada</span>'}</div>
             </div>
           </div>
         </div>
@@ -698,8 +698,13 @@
   // hacemos una geocodificación batch con Nominatim la primera vez.
   const CITY_COORDS_CACHE = {};
 
-  async function geocodeCity(city) {
-    if (!city) return null;
+  async function geocodeCity(city, sinCiudad) {
+    // Jugador sin ciudad: posición aleatoria alrededor del centro de México
+    if (sinCiudad || !city) {
+      const base = [23.6345, -102.5528];
+      const jitter = [(Math.random()-0.5)*8, (Math.random()-0.5)*8];
+      return [base[0]+jitter[0], base[1]+jitter[1]];
+    }
     const key = city.toLowerCase().trim();
     if (CITY_COORDS_CACHE[key]) return CITY_COORDS_CACHE[key];
     try {
@@ -742,13 +747,14 @@
         const epic      = parseInt(d.epic)      || 0;
         const legendary = parseInt(d.legendary) || 0;
         raw.push({
-          uid: child.key,
+          uid:         child.key,
           username:    d.username,
           avatar:      d.avatar      || '',
           borderColor: d.borderColor || '',
           city:        d.city        || '',
           total:       common + rare + epic + legendary,
           isYou:       child.key === currentUid,
+          sinCiudad:   !d.city,
         });
       });
 
@@ -756,7 +762,7 @@
       const batch = 5;
       for (let i = 0; i < raw.length; i += batch) {
         await Promise.all(raw.slice(i, i + batch).map(async p => {
-          p.coords = await geocodeCity(p.city);
+          p.coords = await geocodeCity(p.city, p.sinCiudad);
         }));
         // Pequeña pausa entre batches para respetar rate limit de Nominatim
         if (i + batch < raw.length) await new Promise(r => setTimeout(r, 300));
