@@ -1087,9 +1087,9 @@
       letter-spacing: 3px;
       color: #ffaa00;
     }
-    .aviso-body { padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .aviso-body { padding: 12px 14px; display: flex; flex-direction: row; align-items: flex-start; gap: 10px; }
     .aviso-input {
-      width: 100%;
+      flex: 1;
       background: var(--panel2);
       border: 1px solid rgba(255,170,0,0.3);
       border-radius: 8px;
@@ -1100,10 +1100,19 @@
       outline: none;
       resize: none;
       transition: border-color 0.2s;
+      min-width: 0;
     }
     .aviso-input:focus { border-color: #ffaa00; box-shadow: 0 0 8px rgba(255,170,0,0.2); }
     .aviso-input::placeholder { color: var(--text2); }
-    .aviso-actions { display: flex; gap: 8px; }
+    .aviso-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .aviso-preview {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: rgba(255,220,100,0.5);
+      letter-spacing: 1px;
+      font-style: italic;
+      display: none;
+    }
     .btn-aviso-publish {
       flex: 1;
       background: linear-gradient(135deg, rgba(255,170,0,0.25), rgba(255,220,0,0.15));
