@@ -558,6 +558,13 @@
     }
     .btn-ban-chat:hover { background: var(--warning); color: #060b14; }
 
+    .btn-edit-country {
+      color: #a78bfa;
+      border-color: rgba(167,139,250,0.5);
+      background: rgba(167,139,250,0.08);
+    }
+    .btn-edit-country:hover { background: #a78bfa; color: #fff; box-shadow: 0 0 14px rgba(167,139,250,0.4); }
+
     /* ── Toast ── */
     .toast {
       position: fixed;
@@ -715,6 +722,24 @@
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeModal()">CANCELAR</button>
         <button class="btn-confirm" id="modalConfirmBtn">CONFIRMAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Country Modal -->
+  <div class="modal-overlay" id="countryModal">
+    <div class="modal-box">
+      <h3>✎ EDITAR PAÍS</h3>
+      <p id="countryModalUser" style="margin-bottom:14px;"></p>
+      <input
+        id="countryInput"
+        type="text"
+        placeholder="Ej: Mexico, United States..."
+        style="width:100%;background:var(--panel2);border:1px solid #a78bfa;border-radius:8px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:13px;padding:9px 14px;outline:none;margin-bottom:18px;letter-spacing:1px;"
+      >
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeCountryModal()">CANCELAR</button>
+        <button class="btn-confirm" style="background:#a78bfa;" onclick="saveCountry()">GUARDAR</button>
       </div>
     </div>
   </div>
@@ -925,6 +950,7 @@
         if (!anyBanned)   statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
 
         const actionBtns = [];
+        actionBtns.push(`<button class="btn-action btn-edit-country" onclick="editCountry('${u.uid}','${u.username}','${u.country}')">✎ PAÍS</button>`);
         if (isBannedChat) {
           actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanChat','${u.uid}','${u.username}')">✓ CHAT</button>`);
         } else {
@@ -1031,6 +1057,40 @@
         showToast('Error al actualizar', true);
       }
     }
+
+    // ── Edit Country ──
+    let editingUid = null;
+
+    window.editCountry = function(uid, username, currentCountry) {
+      editingUid = uid;
+      document.getElementById('countryModalUser').innerHTML = `Usuario: <strong>${username}</strong> · País actual: <strong>${currentCountry || '—'}</strong>`;
+      document.getElementById('countryInput').value = currentCountry || '';
+      document.getElementById('countryModal').classList.add('visible');
+      setTimeout(() => document.getElementById('countryInput').focus(), 100);
+    };
+
+    window.closeCountryModal = function() {
+      document.getElementById('countryModal').classList.remove('visible');
+      editingUid = null;
+    };
+
+    window.saveCountry = async function() {
+      if (!editingUid) return;
+      const newCountry = document.getElementById('countryInput').value.trim();
+      try {
+        await update(ref(db, `users/${editingUid}`), { country: newCountry });
+        closeCountryModal();
+        showToast(`País actualizado a "${newCountry}"`);
+      } catch(e) {
+        showToast('Error al actualizar país', true);
+      }
+    };
+
+    // Enter key in country input
+    document.getElementById('countryInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') window.saveCountry();
+      if (e.key === 'Escape') window.closeCountryModal();
+    });
 
     // ── Toast ──
     let toastTimer;
