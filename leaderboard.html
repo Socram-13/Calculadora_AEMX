@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LEADERBOARD · ATLAS EARTH AEMX</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #060b14;
+      --panel:     #0b1626;
+      --panel2:    #0f1e35;
+      --border:    #1a3a5c;
+      --glow:      #00c8ff;
+      --glow2:     #00ff9d;
+      --gold:      #ffd700;
+      --silver:    #c0c8d8;
+      --bronze:    #cd7f32;
+      --epic:      #c084fc;
+      --rare:      #60a5fa;
+      --common:    #4ade80;
+      --legendary: #facc15;
+      --text:      #cce4ff;
+      --text2:     #6b8ab0;
+      --accent:    #00c8ff;
+      --danger:    #ff4466;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      animation: gridMove 20s linear infinite;
+    }
+
+    @keyframes gridMove {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(40px); }
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(0,200,255,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(0,255,157,0.04) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Auth overlay ── */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 11, 20, 0.97);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(8px);
+    }
+    .auth-overlay.hidden { display: none; }
+
+    .auth-box {
+      background: var(--panel);
+      border: 1px solid var(--glow);
+      border-radius: 16px;
+      padding: 44px 40px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(0,200,255,0.12);
+      animation: fadeUp 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-box .logo-icon {
+      font-size: 36px;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .auth-box h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      color: var(--glow);
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+
+    .auth-box p {
+      font-family: 'Rajdhani', sans-serif;
+      color: var(--text2);
+      font-size: 13px;
+      margin-bottom: 28px;
+      letter-spacing: 1px;
+    }
+
+    .auth-btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #1a3a5c, #0b1626);
+      border: 1px solid var(--glow);
+      border-radius: 10px;
+      color: var(--glow);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-btn-google:hover {
+      background: var(--glow);
+      color: #060b14;
+      box-shadow: 0 0 24px rgba(0,200,255,0.4);
+    }
+
+    .auth-error {
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--danger);
+      letter-spacing: 1px;
+      min-height: 18px;
+    }
+
+    /* ── Layout ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(18px, 4vw, 26px);
+      font-weight: 900;
+      letter-spacing: 4px;
+      background: linear-gradient(135deg, var(--glow), var(--glow2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-left .subtitle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+      letter-spacing: 1px;
+    }
+
+    .user-avatar-small {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      object-fit: cover;
+    }
+
+    .btn-signout {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-signout:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+
+    .stat-card.total::before  { background: linear-gradient(90deg, var(--glow), var(--glow2)); }
+    .stat-card.players::before { background: var(--epic); }
+
+    .stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--glow);
+    }
+
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    /* ── Podium ── */
+    .podium {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 36px;
+      padding: 0 8px;
+    }
+
+    .podium-item {
+      flex: 1;
+      max-width: 200px;
+      text-align: center;
+      animation: riseUp 0.6s ease both;
+    }
+
+    .podium-item:nth-child(1) { animation-delay: 0.2s; }
+    .podium-item:nth-child(2) { animation-delay: 0s; }
+    .podium-item:nth-child(3) { animation-delay: 0.35s; }
+
+    @keyframes riseUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .podium-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      color: #060b14;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .podium-item.first  .podium-avatar { width: 72px; height: 72px; border: 3px solid var(--gold);   box-shadow: 0 0 24px rgba(255,215,0,0.5); }
+    .podium-item.second .podium-avatar { border: 2px solid var(--silver); box-shadow: 0 0 16px rgba(192,200,216,0.3); }
+    .podium-item.third  .podium-avatar { border: 2px solid var(--bronze); box-shadow: 0 0 16px rgba(205,127,50,0.3); }
+
+    .podium-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    .podium-crown {
+      font-size: 20px;
+      display: block;
+      margin-bottom: 4px;
+      animation: bounce 1.5s ease infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-5px); }
+    }
+
+    .podium-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .podium-total {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .podium-item.first  .podium-total { color: var(--gold); }
+    .podium-item.second .podium-total { color: var(--silver); }
+    .podium-item.third  .podium-total { color: var(--bronze); }
+
+    .podium-block {
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 900;
+    }
+
+    .podium-item.first  .podium-block { height: 80px;  background: linear-gradient(180deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05)); border: 1px solid rgba(255,215,0,0.4); color: var(--gold); }
+    .podium-item.second .podium-block { height: 56px;  background: linear-gradient(180deg, rgba(192,200,216,0.15), rgba(192,200,216,0.03)); border: 1px solid rgba(192,200,216,0.3); color: var(--silver); }
+    .podium-item.third  .podium-block { height: 40px;  background: linear-gradient(180deg, rgba(205,127,50,0.15), rgba(205,127,50,0.03)); border: 1px solid rgba(205,127,50,0.3); color: var(--bronze); }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .table-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      color: var(--glow);
+      letter-spacing: 3px;
+    }
+
+    .live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--glow2);
+      letter-spacing: 1px;
+    }
+
+    .live-dot::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--glow2);
+      box-shadow: 0 0 8px var(--glow2);
+      animation: pulse 1.5s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text2);
+      text-align: left;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+
+    thead th.right { text-align: right; }
+    thead th.center { text-align: center; }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(26,58,92,0.5);
+      transition: background 0.15s;
+      animation: fadeIn 0.4s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-8px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(0,200,255,0.04); }
+
+    tbody td {
+      padding: 12px 20px;
+      vertical-align: middle;
+    }
+
+    .rank-cell {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text2);
+      width: 48px;
+    }
+
+    .rank-1 { color: var(--gold); }
+    .rank-2 { color: var(--silver); }
+    .rank-3 { color: var(--bronze); }
+
+    .player-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #060b14;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    .player-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+
+    .you-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--glow);
+      border: 1px solid var(--glow);
+      border-radius: 4px;
+      padding: 1px 5px;
+      letter-spacing: 1px;
+    }
+
+    .pill {
+      display: inline-block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .pill-common     { color: var(--common);     background: rgba(74,222,128,0.1); }
+    .pill-rare       { color: var(--rare);       background: rgba(96,165,250,0.1); }
+    .pill-epic       { color: var(--epic);       background: rgba(192,132,252,0.1); }
+    .pill-legendary  { color: var(--legendary);  background: rgba(250,204,21,0.1); }
+
+    .total-cell {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--glow);
+      text-align: right;
+    }
+
+    .breakdown-cell {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    /* ── Empty / loading ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 2px;
+    }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--glow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .podium { gap: 8px; }
+      .podium-avatar { width: 48px; height: 48px; }
+      .podium-item.first .podium-avatar { width: 60px; height: 60px; }
+      .podium-crown { font-size: 16px; }
+      .breakdown-cell { display: none; }
+      thead th.hide-mobile { display: none; }
+      tbody td.hide-mobile { display: none; }
+      table { font-size: 13px; }
+      tbody td { padding: 10px 12px; }
+      thead th { padding: 8px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-box">
+      <span class="logo-icon">🏆</span>
+      <h2>LEADERBOARD</h2>
+      <p>Inicia sesión para ver el ranking</p>
+      <button class="auth-btn-google" onclick="authWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        CONTINUAR CON GOOGLE
+      </button>
+      <div class="auth-error" id="authError"></div>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <div class="header-left">
+        <h1>🏆 LEADERBOARD</h1>
+        <div class="subtitle">ATLAS EARTH MÉXICO · RANKING DE PARCELAS</div>
+      </div>
+      <div class="user-info" id="userInfo" style="display:none">
+        <img class="user-avatar-small" id="userAvatarHeader" src="" alt="" onerror="this.style.display='none'">
+        <span id="userNameHeader"></span>
+        <button class="btn-signout" onclick="signOutUser()">SALIR</button>
+      </div>
+    </header>
+
+    <!-- Stats bar -->
+    <div class="stats-bar">
+      <div class="stat-card total">
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-label">PARCELAS TOTALES</div>
+      </div>
+      <div class="stat-card players">
+        <div class="stat-value" id="statPlayers">—</div>
+        <div class="stat-label">JUGADORES</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statTop" style="color:var(--gold)">—</div>
+        <div class="stat-label">LÍDER</div>
+      </div>
+    </div>
+
+    <!-- Podium (top 3) -->
+    <div class="podium" id="podium"></div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">RANKING COMPLETO</span>
+        <span class="live-dot">EN VIVO</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>JUGADOR</th>
+            <th class="right">TOTAL</th>
+            <th class="right hide-mobile">COMMON</th>
+            <th class="right hide-mobile">RARE</th>
+            <th class="right hide-mobile">EPIC</th>
+            <th class="right hide-mobile">LEGENDARY</th>
+          </tr>
+        </thead>
+        <tbody id="rankingBody">
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <div class="spinner"></div>
+                CARGANDO DATOS...
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp }                            from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
+                                                        from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getDatabase, ref, onValue }                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey:      "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
+      authDomain:  "aemx-chat.firebaseapp.com",
+      databaseURL: "https://aemx-chat-default-rtdb.firebaseio.com",
+      projectId:   "aemx-chat",
+      storageBucket: "aemx-chat.appspot.com",
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    // ── Auth ──
+    window.authWithGoogle = async function() {
+      document.getElementById('authError').textContent = '';
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch(e) {
+        document.getElementById('authError').textContent = 'Error al iniciar sesión. Intenta de nuevo.';
+      }
+    };
+
+    window.signOutUser = async function() {
+      await signOut(auth);
+    };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById('authOverlay').classList.add('hidden');
+        // Mostrar info del usuario en header
+        const info = document.getElementById('userInfo');
+        info.style.display = 'flex';
+        document.getElementById('userNameHeader').textContent = user.displayName || user.email;
+        const avatarEl = document.getElementById('userAvatarHeader');
+        if (user.photoURL) { avatarEl.src = user.photoURL; } else { avatarEl.style.display = 'none'; }
+        // Cargar ranking
+        loadRanking(user.uid);
+      } else {
+        document.getElementById('authOverlay').classList.remove('hidden');
+        document.getElementById('userInfo').style.display = 'none';
+      }
+    });
+
+    // ── Ranking ──
+    function loadRanking(currentUid) {
+      const usersRef = ref(db, 'users');
+      onValue(usersRef, (snapshot) => {
+        const players = [];
+        snapshot.forEach((child) => {
+          const d = child.val();
+          if (!d.username) return; // saltar entradas sin nombre
+          const common    = parseInt(d.common)    || 0;
+          const rare      = parseInt(d.rare)      || 0;
+          const epic      = parseInt(d.epic)      || 0;
+          const legendary = parseInt(d.legendary) || 0;
+          const total = common + rare + epic + legendary;
+          players.push({
+            uid: child.key,
+            username:  d.username,
+            avatar:    d.avatar    || '',
+            borderColor: d.borderColor || '',
+            common, rare, epic, legendary, total,
+            isYou: child.key === currentUid,
+          });
+        });
+
+        // Ordenar por total desc
+        players.sort((a, b) => b.total - a.total);
+
+        updateStats(players);
+        renderPodium(players.slice(0, 3));
+        renderTable(players);
+      });
+    }
+
+    function updateStats(players) {
+      const totalParcelas = players.reduce((s, p) => s + p.total, 0);
+      document.getElementById('statTotal').textContent   = totalParcelas.toLocaleString();
+      document.getElementById('statPlayers').textContent = players.length;
+      document.getElementById('statTop').textContent     = players[0]?.username || '—';
+    }
+
+    // ── Avatar helper ──
+    function avatarHTML(player, size = 36) {
+      const letter = (player.username || '?').charAt(0).toUpperCase();
+      const colors = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#4ade80','#f472b6'];
+      const bg = colors[letter.charCodeAt(0) % colors.length];
+      if (player.avatar && player.avatar.startsWith('data:image')) {
+        return `<div class="avatar" style="width:${size}px;height:${size}px;border-color:${player.borderColor||'var(--border)'}"><img src="${player.avatar}" alt="${letter}"></div>`;
+      }
+      return `<div class="avatar" style="width:${size}px;height:${size}px;background:${bg};border-color:${player.borderColor||bg}">${letter}</div>`;
+    }
+
+    // ── Podium ──
+    const podiumClasses = ['second', 'first', 'third'];
+    const podiumOrder   = [1, 0, 2]; // mostrar: 2°, 1°, 3°
+    const crowns        = ['🥈', '👑', '🥉'];
+
+    function renderPodium(top3) {
+      const el = document.getElementById('podium');
+      if (top3.length === 0) { el.innerHTML = ''; return; }
+
+      el.innerHTML = podiumOrder.map((idx) => {
+        const p = top3[idx];
+        if (!p) return '';
+        const cls   = podiumClasses[idx];
+        const crown = crowns[idx];
+        const avSize = idx === 1 ? 72 : 60;
+        return `
+          <div class="podium-item ${cls}">
+            <span class="podium-crown">${crown}</span>
+            ${avatarHTML(p, avSize).replace('class="avatar"', `class="podium-avatar"`)}
+            <div class="podium-name">${p.username}</div>
+            <div class="podium-total">${p.total.toLocaleString()} parcelas</div>
+            <div class="podium-block">${idx + 1}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── Table ──
+    function renderTable(players) {
+      const tbody = document.getElementById('rankingBody');
+      if (players.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">SIN DATOS AÚN</div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = players.map((p, i) => {
+        const rank = i + 1;
+        const rankClass = rank <= 3 ? `rank-${rank}` : '';
+        const youBadge  = p.isYou ? `<span class="you-badge">TÚ</span>` : '';
+        const delay     = Math.min(i * 0.04, 0.6);
+        return `
+          <tr style="animation-delay:${delay}s">
+            <td class="rank-cell ${rankClass}">${rank}</td>
+            <td>
+              <div class="player-cell">
+                ${avatarHTML(p, 36)}
+                <div>
+                  <div class="player-name">${p.username} ${youBadge}</div>
+                </div>
+              </div>
+            </td>
+            <td class="total-cell">${p.total.toLocaleString()}</td>
+            <td class="hide-mobile" style="text-align:right"><span class="pill pill-common">${p.common.toLocaleString()}</span></td>
+            <td class="hide-mobile" style="text-align:right"><span class="pill pill-rare">${p.rare.toLocaleString()}</span></td>
+            <td class="hide-mobile" style="text-align:right"><span class="pill pill-epic">${p.epic.toLocaleString()}</span></td>
+            <td class="hide-mobile" style="text-align:right"><span class="pill pill-legendary">${p.legendary.toLocaleString()}</span></td>
+          </tr>
+        `;
+      }).join('');
+    }
+  </script>
+</body>
+</html>
