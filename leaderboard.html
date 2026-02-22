@@ -680,7 +680,7 @@
     import { initializeApp }                            from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                                         from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getDatabase, ref, onValue }                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+    import { getDatabase, ref, onValue, get, update }                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
     const firebaseConfig = {
       apiKey:      "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
@@ -717,6 +717,8 @@
         document.getElementById('userNameHeader').textContent = user.displayName || user.email;
         const avatarEl = document.getElementById('userAvatarHeader');
         if (user.photoURL) { avatarEl.src = user.photoURL; } else { avatarEl.style.display = 'none'; }
+        // Detectar y guardar país si está vacío
+        detectarYGuardarPais(user.uid);
         // Cargar ranking
         loadRanking(user.uid);
       } else {
@@ -837,6 +839,48 @@
           </tr>
         `;
       }).join('');
+    }
+
+    // ── Detección de país por IP ──
+    const COUNTRY_MAP = {
+      "méxico": "Mexico", "mexico": "Mexico",
+      "estados unidos": "United States", "united states": "United States",
+      "us": "United States", "usa": "United States",
+      "españa": "Spain", "spain": "Spain",
+      "francia": "France", "france": "France",
+      "alemania": "Germany", "germany": "Germany",
+      "italia": "Italy", "italy": "Italy",
+      "rusia": "Russia", "russia": "Russia",
+    };
+
+    function normalizarPais(name) {
+      if (!name) return '';
+      return COUNTRY_MAP[name.toLowerCase().trim()] || name;
+    }
+
+    async function detectarYGuardarPais(uid) {
+      try {
+        // Solo actualizar si está vacío en Firebase
+        const snap = await get(ref(db, `users/${uid}/country`));
+        if (snap.exists() && snap.val()) return; // ya tiene país, no sobreescribir
+      } catch(e) {}
+
+      const guardar = async (countryName) => {
+        const country = normalizarPais(countryName);
+        if (!country) return;
+        try { await update(ref(db, `users/${uid}`), { country }); } catch(e) {}
+      };
+
+      try {
+        const res  = await fetch('https://freeipapi.com/api/json');
+        const data = await res.json();
+        if (data.countryName) { await guardar(data.countryName); return; }
+      } catch(e) {}
+      try {
+        const res2  = await fetch('https://ipapi.co/json/');
+        const data2 = await res2.json();
+        if (data2.country_name) { await guardar(data2.country_name); }
+      } catch(e) {}
     }
   </script>
 </body>
