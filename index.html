@@ -3037,6 +3037,8 @@
     }
     // Re-calcular con el país ya disponible
     if (typeof calc === 'function') calc();
+    // Guardar país en Firebase ahora que está disponible
+    if (window._fbUser && window._fbSaveAll) setTimeout(window._fbSaveAll, 300);
   }
 
   function actualizarCiudad(ciudad, estado) {
