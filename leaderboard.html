@@ -731,7 +731,7 @@
         snapshot.forEach((child) => {
           const d = child.val();
           if (!d.username) return;
-          if (d.country && d.country !== 'Mexico') return;
+          if (d.country !== 'Mexico') return; // solo México
           if (d.bannedLeaderboard) return; // bloqueado del ranking
           const common    = parseInt(d.common)    || 0;
           const rare      = parseInt(d.rare)      || 0;
