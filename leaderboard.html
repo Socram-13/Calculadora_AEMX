@@ -759,27 +759,28 @@
     }
 
     // ── Podium ──
-    const podiumClasses = ['second', 'first', 'third'];
-    const podiumOrder   = [1, 0, 2]; // mostrar: 2°, 1°, 3°
-    const crowns        = ['🥈', '👑', '🥉'];
+    // Orden visual del podio: mostrar 2°, 1°, 3° (el primero en el centro)
+    const podiumDisplay = [
+      { dataIdx: 1, cls: 'second', crown: '🥈', blockNum: 2 },
+      { dataIdx: 0, cls: 'first',  crown: '👑', blockNum: 1 },
+      { dataIdx: 2, cls: 'third',  crown: '🥉', blockNum: 3 },
+    ];
 
     function renderPodium(top3) {
       const el = document.getElementById('podium');
       if (top3.length === 0) { el.innerHTML = ''; return; }
 
-      el.innerHTML = podiumOrder.map((idx) => {
-        const p = top3[idx];
+      el.innerHTML = podiumDisplay.map(({ dataIdx, cls, crown, blockNum }) => {
+        const p = top3[dataIdx];
         if (!p) return '';
-        const cls   = podiumClasses[idx];
-        const crown = crowns[idx];
-        const avSize = idx === 1 ? 72 : 60;
+        const avSize = cls === 'first' ? 72 : 60;
         return `
           <div class="podium-item ${cls}">
             <span class="podium-crown">${crown}</span>
             ${avatarHTML(p, avSize).replace('class="avatar"', `class="podium-avatar"`)}
             <div class="podium-name">${p.username}</div>
             <div class="podium-total">${p.total.toLocaleString()} parcelas</div>
-            <div class="podium-block">${idx + 1}</div>
+            <div class="podium-block">${blockNum}</div>
           </div>
         `;
       }).join('');
