@@ -194,7 +194,7 @@
   }
 
   @media (max-width: 480px) {
-    .container { padding: 8px 8px 100px; } /* espacio para el chat FAB */
+    .container { padding: 8px 8px 100px; }
     .header-bar { padding: 10px 10px; gap: 6px; }
     .aemx-logo-img, .atlas-logo-img { width: 44px; height: 44px; }
     .header-tagline { display: none; }
@@ -1995,36 +1995,42 @@
   </div>
 
 
-  <!-- Save bar -->
-  <div class="save-bar">
+  <!-- Save bar + Auth bar alineados -->
+  <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
     <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
+    <div id="google-auth-bar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <span id="google-user-info" style="display:none;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--glow);letter-spacing:1px;"></span>
+      <button id="google-auth-btn" onclick="handleGoogleAuth()"
+        style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:7px 16px;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#1a3a5c,#0b1626);border:1px solid var(--glow);color:var(--glow);transition:all 0.2s;white-space:nowrap;"
+        onmouseover="this.style.background='var(--glow)';this.style.color='#060b14'"
+        onmouseout="this.style.background='linear-gradient(135deg,#1a3a5c,#0b1626)';this.style.color='var(--glow)'">
+        🔑 Iniciar con Google
+      </button>
+    </div>
     <div class="save-status" id="save-status">✔ Datos guardados</div>
   </div>
 </div>
 
-  <!-- ===== GOOGLE AUTH BAR ===== -->
-  <div id="google-auth-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px auto 0;max-width:600px;flex-wrap:wrap;">
-    <span id="google-user-info" style="display:none;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--glow);letter-spacing:1px;"></span>
-    <button id="google-auth-btn" onclick="handleGoogleAuth()"
-      style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:7px 16px;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#1a3a5c,#0b1626);border:1px solid var(--glow);color:var(--glow);transition:all 0.2s;white-space:nowrap;"
-      onmouseover="this.style.background='var(--glow)';this.style.color='#060b14'"
-      onmouseout="this.style.background='linear-gradient(135deg,#1a3a5c,#0b1626)';this.style.color='var(--glow)'">
-      🔑 Iniciar con Google
-    </button>
-    <span style="font-size:11px;color:var(--text2);letter-spacing:1px;">Sincroniza tus datos en la nube</span>
-  </div>
-  <!-- ===== FIN GOOGLE AUTH BAR ===== -->
-
   <script>
     function handleGoogleAuth() {
+      const s    = document.getElementById('save-status');
+      const btn  = document.getElementById('google-auth-btn');
+      const info = document.getElementById('google-user-info');
+      if (!window._fbSignOut || !window._fbSignIn) return;
       if (window._fbUser) {
-        window._fbSignOut().then(() => {
-          if (s) { s.textContent='👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
-        });
+        if (btn) { btn.disabled = true; btn.textContent = 'Cerrando...'; }
+        window._fbSignOut()
+          .then(() => {
+            window._fbUser = null;
+            if (btn) { btn.disabled = false; btn.textContent = '🔑 Iniciar con Google'; btn.title = ''; }
+            if (info) info.style.display = 'none';
+            if (s) { s.textContent = '👋 Sesión cerrada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
+          })
+          .catch(err => { console.warn(err); if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; } });
       } else {
-        window._fbSignIn().then(() => {
-          if (s) { s.textContent='✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(()=>s.classList.remove('visible'),2500); }
-        }).catch(err => console.warn('Sign-in error:', err));
+        window._fbSignIn()
+          .then(() => { if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); } })
+          .catch(err => console.warn('Sign-in error:', err));
       }
     }
 
@@ -2550,6 +2556,8 @@
   }
 
   function showStatus(msg) {
+    const el = document.getElementById('save-status');
+    if (!el) return;
     el.textContent = msg || '✔ Enlace copiado';
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2500);
@@ -3182,7 +3190,8 @@
   function checkZoomButtons() {
     const scale = window.visualViewport ? window.visualViewport.scale : 1;
     const zoomActivo = scale > 1.05;
-    const btnPng = document.getElementById('btn-screenshot');
+    const btnPng   = document.getElementById('btn-screenshot');
+    const btnShare = document.getElementById('btn-share-data');
 
     [btnPng, btnShare].forEach(btn => {
       if (!btn) return;
