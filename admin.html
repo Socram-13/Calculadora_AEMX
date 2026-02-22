@@ -260,6 +260,21 @@
     }
     .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
 
+    .btn-mapa {
+      background: none;
+      border: 1px solid var(--glow);
+      border-radius: 6px;
+      color: var(--glow);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-mapa:hover { background: rgba(0,200,255,0.1); box-shadow: 0 0 10px rgba(0,200,255,0.3); }
+
     /* ── Stats ── */
     .stats-bar {
       display: grid;
@@ -756,6 +771,7 @@
       <div class="header-right" id="headerRight" style="display:none">
         <span class="admin-badge">ADMIN</span>
         <span id="adminEmail"></span>
+        <a href="mapa.html" class="btn-mapa">🗺️ MAPA</a>
         <button class="btn-signout" onclick="signOutUser()">SALIR</button>
       </div>
     </header>
@@ -817,7 +833,7 @@
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getDatabase, ref, onValue, update, get }
+    import { getDatabase, ref, onValue, update }
                                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
     const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
@@ -858,7 +874,6 @@
         document.getElementById('headerRight').style.display = 'flex';
         document.getElementById('adminEmail').textContent = user.displayName || user.email;
         loadUsers();
-        detectarYGuardarPais(user.uid);
       } else {
         document.getElementById('authOverlay').classList.remove('hidden');
         document.getElementById('accessDenied').classList.remove('visible');
@@ -1102,47 +1117,6 @@
       el.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
-    }
-
-    // ── Detección de país por IP ──
-    const COUNTRY_MAP = {
-      "méxico": "Mexico", "mexico": "Mexico",
-      "estados unidos": "United States", "united states": "United States",
-      "us": "United States", "usa": "United States",
-      "españa": "Spain", "spain": "Spain",
-      "francia": "France", "france": "France",
-      "alemania": "Germany", "germany": "Germany",
-      "italia": "Italy", "italy": "Italy",
-      "rusia": "Russia", "russia": "Russia",
-    };
-
-    function normalizarPais(name) {
-      if (!name) return '';
-      return COUNTRY_MAP[name.toLowerCase().trim()] || name;
-    }
-
-    async function detectarYGuardarPais(uid) {
-      try {
-        const snap = await get(ref(db, `users/${uid}/country`));
-        if (snap.exists() && snap.val()) return; // ya tiene país
-      } catch(e) {}
-
-      const guardar = async (countryName) => {
-        const country = normalizarPais(countryName);
-        if (!country) return;
-        try { await update(ref(db, `users/${uid}`), { country }); } catch(e) {}
-      };
-
-      try {
-        const res  = await fetch('https://freeipapi.com/api/json');
-        const data = await res.json();
-        if (data.countryName) { await guardar(data.countryName); return; }
-      } catch(e) {}
-      try {
-        const res2  = await fetch('https://ipapi.co/json/');
-        const data2 = await res2.json();
-        if (data2.country_name) { await guardar(data2.country_name); }
-      } catch(e) {}
     }
   </script>
 </body>

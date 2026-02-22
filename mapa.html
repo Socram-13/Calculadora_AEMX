@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="imagen_1.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAPA · ATLAS EARTH AEMX</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <style>
+    :root {
+      --bg:        #060b14;
+      --panel:     #0b1626;
+      --panel2:    #0f1e35;
+      --border:    #1a3a5c;
+      --glow:      #00c8ff;
+      --glow2:     #00ff9d;
+      --gold:      #ffd700;
+      --epic:      #c084fc;
+      --rare:      #60a5fa;
+      --common:    #4ade80;
+      --legendary: #facc15;
+      --text:      #cce4ff;
+      --text2:     #6b8ab0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes gridMove {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(40px); }
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(0,200,255,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(0,255,157,0.04) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 12px 16px 40px;
+    }
+
+    /* ── HEADER ── */
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%);
+      border: 3px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 20px;
+      margin-bottom: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header-bar::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00c8ff, #4ade80, #facc15, #c084fc, #00c8ff);
+      background-size: 200% 100%;
+      animation: rainbowSlide 6s linear infinite;
+    }
+    @keyframes rainbowSlide {
+      0%   { background-position: 0% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .header-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(14px, 3vw, 24px);
+      font-weight: 900;
+      letter-spacing: 3px;
+      color: var(--glow);
+      text-shadow: 0 0 20px rgba(0,200,255,0.5);
+    }
+    .header-title span { color: var(--legendary); }
+    .header-nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .nav-btn {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover { border-color: var(--glow); color: var(--glow); }
+    .nav-btn.active { border-color: var(--glow); color: var(--glow); background: rgba(0,200,255,0.08); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 18px;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .stat-card:hover { border-color: var(--glow); }
+    .stat-num {
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 900;
+      color: var(--glow);
+      text-shadow: 0 0 12px rgba(0,200,255,0.4);
+    }
+    .stat-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text2);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── MAP CONTAINER ── */
+    .map-wrap {
+      background: var(--panel);
+      border: 3px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    .map-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--glow), transparent);
+      z-index: 10;
+    }
+    #map {
+      height: 580px;
+      width: 100%;
+      background: #060b14 !important;
+    }
+
+    /* ── Leaflet overrides ── */
+    .leaflet-container {
+      background: #060b14 !important;
+      font-family: 'Rajdhani', sans-serif;
+    }
+    .leaflet-control-zoom a {
+      background: var(--panel) !important;
+      color: var(--glow) !important;
+      border-color: var(--border) !important;
+      font-weight: 700;
+    }
+    .leaflet-control-zoom a:hover {
+      background: var(--panel2) !important;
+      color: #fff !important;
+    }
+    .leaflet-control-attribution {
+      background: rgba(6,11,20,0.8) !important;
+      color: var(--text2) !important;
+      font-size: 9px;
+    }
+    .leaflet-control-attribution a { color: var(--glow) !important; }
+
+    /* ── Popup custom ── */
+    .leaflet-popup-content-wrapper {
+      background: var(--panel) !important;
+      border: 1px solid var(--glow) !important;
+      border-radius: 10px !important;
+      box-shadow: 0 0 20px rgba(0,200,255,0.3) !important;
+      color: var(--text) !important;
+      font-family: 'Rajdhani', sans-serif !important;
+    }
+    .leaflet-popup-tip { background: var(--panel) !important; }
+    .leaflet-popup-close-button { color: var(--text2) !important; font-size: 16px !important; }
+    .leaflet-popup-close-button:hover { color: var(--glow) !important; }
+
+    .popup-player {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 0;
+    }
+    .popup-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 2px solid var(--glow);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 15px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .popup-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .popup-name {
+      font-family: 'Orbitron', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--glow);
+    }
+    .popup-total {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+    }
+    .popup-state-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--legendary);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+    .popup-count {
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1px;
+    }
+
+    /* ── LEYENDA ── */
+    .legend {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .legend-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--text2);
+      text-transform: uppercase;
+      margin-right: 4px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text);
+    }
+    .legend-box {
+      width: 16px; height: 16px;
+      border-radius: 3px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+
+
+    /* ── TOOLTIP estado ── */
+    .leaflet-tooltip {
+      background: var(--panel) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text2) !important;
+      font-family: 'Orbitron', monospace !important;
+      font-size: 9px !important;
+      letter-spacing: 2px !important;
+      border-radius: 6px !important;
+      box-shadow: 0 0 10px rgba(0,200,255,0.2) !important;
+    }
+
+    /* ── loading ── */
+    .map-loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 5;
+      background: rgba(6,11,20,0.7);
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+    .map-loading.hidden { opacity: 0; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--glow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: var(--glow);
+    }
+
+    @media (max-width: 600px) {
+      #map { height: 420px; }
+      .stats-bar { gap: 6px; }
+      .stat-num { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Sin auth overlay — acceso solo desde admin.html -->
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="header-bar">
+      <div class="header-title">🗺️ MAPA <span>AEMX</span></div>
+      <nav class="header-nav">
+        <a href="index.html"       class="nav-btn">CALCULADORA</a>
+        <a href="leaderboard.html" class="nav-btn">RANKING</a>
+        <a href="admin.html"       class="nav-btn">⚙️ ADMIN</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-num" id="statJugadores">—</div>
+      <div class="stat-label">Jugadores</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statEstados">—</div>
+      <div class="stat-label">Estados</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statCiudades">—</div>
+      <div class="stat-label">Ciudades</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="statTop">—</div>
+      <div class="stat-label">Estado líder</div>
+    </div>
+  </div>
+
+  <!-- Mapa -->
+  <div class="map-wrap">
+    <div class="map-loading" id="mapLoading">
+      <div class="spinner"></div>
+      <div class="loading-text">CARGANDO MAPA...</div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <!-- Leyenda -->
+  <div class="legend">
+    <span class="legend-title">Jugadores por estado</span>
+    <div class="legend-item"><div class="legend-box" style="background:rgba(0,200,255,0.15)"></div> 1 jugador</div>
+    <div class="legend-item"><div class="legend-box" style="background:rgba(0,200,255,0.35)"></div> 2–4</div>
+    <div class="legend-item"><div class="legend-box" style="background:rgba(0,200,255,0.55)"></div> 5–9</div>
+    <div class="legend-item"><div class="legend-box" style="background:rgba(0,255,157,0.6)"></div> 10+</div>
+    <div class="legend-item" style="margin-left:auto">
+      <div style="width:12px;height:12px;border-radius:50%;background:var(--glow);box-shadow:0 0 6px var(--glow)"></div>
+      Jugador
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script type="module">
+  import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
+                             from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+  import { getDatabase, ref, onValue }
+                             from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+  const firebaseConfig = {
+    apiKey:        'AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk',
+    authDomain:    'aemx-chat.firebaseapp.com',
+    databaseURL:   'https://aemx-chat-default-rtdb.firebaseio.com',
+    projectId:     'aemx-chat',
+    storageBucket: 'aemx-chat.appspot.com',
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getDatabase(app);
+
+  // ── Mapa Leaflet ──
+  const map = L.map('map', {
+    center: [23.6345, -102.5528],
+    zoom: 5,
+    zoomControl: true,
+    attributionControl: true,
+    minZoom: 4,
+    maxZoom: 10,
+  });
+
+  // Tile oscuro
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+
+  // ── Mapa ciudad → estado (para jugadores sin estado exacto) ──
+  const CIUDAD_ESTADO = {
+    'ciudad de méxico':'Ciudad de México','cdmx':'Ciudad de México',
+    'guadalajara':'Jalisco','zapopan':'Jalisco','tlaquepaque':'Jalisco',
+    'monterrey':'Nuevo León','san nicolás':'Nuevo León','apodaca':'Nuevo León','escobedo':'Nuevo León',
+    'puebla':'Puebla','cholula':'Puebla',
+    'tijuana':'Baja California','mexicali':'Baja California','ensenada':'Baja California',
+    'toluca':'Estado de México','ecatepec':'Estado de México','naucalpan':'Estado de México','nezahualcóyotl':'Estado de México',
+    'león':'Guanajuato','guanajuato':'Guanajuato','irapuato':'Guanajuato',
+    'chihuahua':'Chihuahua','juárez':'Chihuahua','ciudad juárez':'Chihuahua',
+    'mérida':'Yucatán','valladolid':'Yucatán',
+    'hermosillo':'Sonora','nogales':'Sonora','obregón':'Sonora',
+    'culiacán':'Sinaloa','mazatlán':'Sinaloa','los mochis':'Sinaloa',
+    'acapulco':'Guerrero','chilpancingo':'Guerrero',
+    'cancún':'Quintana Roo','playa del carmen':'Quintana Roo','tulum':'Quintana Roo','chetumal':'Quintana Roo',
+    'veracruz':'Veracruz','xalapa':'Veracruz','coatzacoalcos':'Veracruz',
+    'oaxaca':'Oaxaca','salina cruz':'Oaxaca',
+    'morelia':'Michoacán','uruapan':'Michoacán','zamora':'Michoacán',
+    'aguascalientes':'Aguascalientes',
+    'san luis potosí':'San Luis Potosí',
+    'saltillo':'Coahuila','torreón':'Coahuila','monclova':'Coahuila',
+    'durango':'Durango',
+    'tepic':'Nayarit',
+    'colima':'Colima','manzanillo':'Colima',
+    'tuxtla gutiérrez':'Chiapas','san cristóbal':'Chiapas','tapachula':'Chiapas',
+    'villahermosa':'Tabasco','cárdenas':'Tabasco',
+    'campeche':'Campeche',
+    'matehuala':'San Luis Potosí','ciudad valles':'San Luis Potosí',
+    'zacatecas':'Zacatecas','fresnillo':'Zacatecas',
+    'pachuca':'Hidalgo','tula':'Hidalgo',
+    'querétaro':'Querétaro',
+    'cuernavaca':'Morelos','jiutepec':'Morelos',
+    'tlaxcala':'Tlaxcala','apizaco':'Tlaxcala',
+    'chilpancingo':'Guerrero',
+    'la paz':'Baja California Sur','los cabos':'Baja California Sur','cabo san lucas':'Baja California Sur',
+    'cd. obregón':'Sonora','ciudad obregón':'Sonora',
+    'tampico':'Tamaulipas','matamoros':'Tamaulipas','reynosa':'Tamaulipas','nuevo laredo':'Tamaulipas',
+  };
+
+  // Coordenadas de capitales de estados para colorear el centroide
+  const ESTADO_COORDS = {
+    'Aguascalientes':      [21.8853, -102.2916],
+    'Baja California':     [30.8406, -115.2838],
+    'Baja California Sur': [26.0444, -111.6661],
+    'Campeche':            [19.8301, -90.5349],
+    'Chiapas':             [16.7569, -93.1292],
+    'Chihuahua':           [28.6353, -106.0889],
+    'Ciudad de México':    [19.4326, -99.1332],
+    'Coahuila':            [27.0587, -101.7068],
+    'Colima':              [19.2452, -103.7241],
+    'Durango':             [24.0277, -104.6532],
+    'Estado de México':    [19.2826, -99.6557],
+    'Guanajuato':          [21.0190, -101.2574],
+    'Guerrero':            [17.4392, -100.0000],
+    'Hidalgo':             [20.0911, -98.7624],
+    'Jalisco':             [20.6597, -103.3496],
+    'Michoacán':           [19.7008, -101.1844],
+    'Morelos':             [18.6813, -99.1013],
+    'Nayarit':             [21.7514, -104.8455],
+    'Nuevo León':          [25.5922, -99.9962],
+    'Oaxaca':              [17.0732, -96.7266],
+    'Puebla':              [19.0414, -98.2063],
+    'Querétaro':           [20.5888, -100.3899],
+    'Quintana Roo':        [19.1817, -88.4791],
+    'San Luis Potosí':     [22.1565, -100.9855],
+    'Sinaloa':             [25.1721, -107.4795],
+    'Sonora':              [29.0729, -110.9559],
+    'Tabasco':             [17.8409, -92.6189],
+    'Tamaulipas':          [24.2669, -98.8363],
+    'Tlaxcala':            [19.3182, -98.2375],
+    'Veracruz':            [19.1738, -96.1342],
+    'Yucatán':             [20.9674, -89.5926],
+    'Zacatecas':           [22.7709, -102.5832],
+  };
+
+  // Color según cantidad de jugadores
+  function colorEstado(n) {
+    if (n >= 10) return 'rgba(0,255,157,0.60)';
+    if (n >= 5)  return 'rgba(0,200,255,0.55)';
+    if (n >= 2)  return 'rgba(0,200,255,0.35)';
+    return                'rgba(0,200,255,0.15)';
+  }
+  function borderEstado(n) {
+    if (n >= 10) return '#00ff9d';
+    if (n >= 5)  return '#00c8ff';
+    if (n >= 2)  return '#1a6a9c';
+    return                '#1a3a5c';
+  }
+
+  // Avatar HTML
+  function avatarHTML(p, size = 32) {
+    const letter = (p.username || '?').charAt(0).toUpperCase();
+    const colors = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#4ade80','#f472b6'];
+    const bg = colors[letter.charCodeAt(0) % colors.length];
+    const border = p.borderColor || bg;
+    if (p.avatar && p.avatar.startsWith('data:image')) {
+      return `<div class="popup-avatar" style="border-color:${border};width:${size}px;height:${size}px"><img src="${p.avatar}"></div>`;
+    }
+    return `<div class="popup-avatar" style="background:${bg};border-color:${border};width:${size}px;height:${size}px">${letter}</div>`;
+  }
+
+  // Extraer estado de city string "Ciudad, Estado"
+  function extractEstado(city) {
+    if (!city) return null;
+    const parts = city.split(',');
+    if (parts.length >= 2) return parts[parts.length - 1].trim();
+    // Intentar mapeo directo por ciudad
+    const lower = city.toLowerCase().trim();
+    return CIUDAD_ESTADO[lower] || null;
+  }
+
+  // Icono marcador personalizado
+  function makeMarker(p) {
+    const letter = (p.username || '?').charAt(0).toUpperCase();
+    const colors = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#4ade80','#f472b6'];
+    const bg = p.borderColor || colors[letter.charCodeAt(0) % colors.length];
+
+    let inner = '';
+    if (p.avatar && p.avatar.startsWith('data:image')) {
+      inner = `<img src="${p.avatar}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+    } else {
+      inner = `<span style="font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#060b14;">${letter}</span>`;
+    }
+
+    const html = `
+      <div style="
+        width:36px;height:36px;border-radius:50%;
+        background:${bg};
+        border:2px solid #fff;
+        box-shadow:0 0 10px ${bg},0 0 20px ${bg}88;
+        display:flex;align-items:center;justify-content:center;
+        cursor:pointer;overflow:hidden;
+      ">${inner}</div>
+      <div style="
+        width:0;height:0;
+        border-left:6px solid transparent;
+        border-right:6px solid transparent;
+        border-top:8px solid ${bg};
+        margin:-1px auto 0;
+        filter:drop-shadow(0 2px 4px ${bg}88);
+      "></div>
+    `;
+    return L.divIcon({ html, className: '', iconSize: [36, 44], iconAnchor: [18, 44], popupAnchor: [0, -46] });
+  }
+
+  // ── Capas ──
+  let estadoLayers = {};   // estado → L.circle
+  let playerMarkers = [];
+
+  function limpiarMapa() {
+    Object.values(estadoLayers).forEach(l => map.removeLayer(l));
+    estadoLayers = {};
+    playerMarkers.forEach(m => map.removeLayer(m));
+    playerMarkers = [];
+  }
+
+  function renderMapa(players) {
+    limpiarMapa();
+
+    // Agrupar por estado
+    const porEstado = {};
+    players.forEach(p => {
+      const estado = extractEstado(p.city);
+      if (!estado) return;
+      if (!porEstado[estado]) porEstado[estado] = [];
+      porEstado[estado].push(p);
+    });
+
+    // ── Círculos por estado ──
+    Object.entries(porEstado).forEach(([estado, jugadores]) => {
+      const coords = ESTADO_COORDS[estado];
+      if (!coords) return;
+      const n = jugadores.length;
+
+      const circle = L.circle(coords, {
+        radius: 80000 + n * 15000,
+        color:      borderEstado(n),
+        fillColor:  colorEstado(n),
+        fillOpacity: 1,
+        weight: 1.5,
+        opacity: 0.9,
+      }).addTo(map);
+
+      // Tooltip hover
+      circle.bindTooltip(`${estado.toUpperCase()} · ${n} jugador${n > 1 ? 'es' : ''}`, {
+        permanent: false, direction: 'top', offset: [0, -10],
+      });
+
+      // Popup click
+      const rows = jugadores.map(p => `
+        <div class="popup-player">
+          ${avatarHTML(p, 32)}
+          <div>
+            <div class="popup-name">${p.username}</div>
+            <div class="popup-total">${p.total.toLocaleString()} parcelas · ${p.city || estado}</div>
+          </div>
+        </div>
+      `).join('');
+
+      circle.bindPopup(`
+        <div style="min-width:200px;max-width:280px;">
+          <div class="popup-state-title">📍 ${estado.toUpperCase()}</div>
+          <div class="popup-count">${n} JUGADOR${n > 1 ? 'ES' : ''}</div>
+          <div style="margin-top:10px;">${rows}</div>
+        </div>
+      `);
+
+      estadoLayers[estado] = circle;
+    });
+
+    // ── Marcadores individuales ──
+    players.forEach(p => {
+      if (!p.coords) return;
+      const marker = L.marker(p.coords, { icon: makeMarker(p) }).addTo(map);
+      marker.bindPopup(`
+        <div style="min-width:180px;">
+          <div class="popup-player">
+            ${avatarHTML(p, 40)}
+            <div>
+              <div class="popup-name">${p.username}</div>
+              <div class="popup-total">${p.total.toLocaleString()} parcelas</div>
+              <div class="popup-total" style="margin-top:2px;">📍 ${p.city || '—'}</div>
+            </div>
+          </div>
+        </div>
+      `);
+      playerMarkers.push(marker);
+    });
+
+    // Stats
+    const estados  = Object.keys(porEstado).length;
+    const ciudades = new Set(players.map(p => p.city).filter(Boolean)).size;
+    const topEstado = Object.entries(porEstado).sort((a,b) => b[1].length - a[1].length)[0];
+
+    document.getElementById('statJugadores').textContent = players.length;
+    document.getElementById('statEstados').textContent   = estados;
+    document.getElementById('statCiudades').textContent  = ciudades;
+    document.getElementById('statTop').textContent       = topEstado ? topEstado[0].split(' ')[0].toUpperCase() : '—';
+
+    // Ocultar loading
+    document.getElementById('mapLoading').classList.add('hidden');
+  }
+
+  // ── Geocodificación simple ciudad → coords ──
+  // Usamos las coordenadas del estado como fallback; para coords exactas de ciudad
+  // hacemos una geocodificación batch con Nominatim la primera vez.
+  const CITY_COORDS_CACHE = {};
+
+  async function geocodeCity(city) {
+    if (!city) return null;
+    const key = city.toLowerCase().trim();
+    if (CITY_COORDS_CACHE[key]) return CITY_COORDS_CACHE[key];
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ', Mexico')}&format=json&limit=1&accept-language=es`;
+      const res  = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      const data = await res.json();
+      if (data[0]) {
+        const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        CITY_COORDS_CACHE[key] = coords;
+        return coords;
+      }
+    } catch(e) {}
+    // Fallback a coordenadas del estado
+    const estado = extractEstado(city);
+    if (estado && ESTADO_COORDS[estado]) {
+      // Agregar pequeña variación para no apilar marcadores
+      const base = ESTADO_COORDS[estado];
+      const jitter = [(Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5];
+      const coords = [base[0]+jitter[0], base[1]+jitter[1]];
+      CITY_COORDS_CACHE[key] = coords;
+      return coords;
+    }
+    return null;
+  }
+
+  // ── Cargar jugadores ──
+  async function loadPlayers(currentUid) {
+    const usersRef = ref(db, 'users');
+    onValue(usersRef, async (snapshot) => {
+      document.getElementById('mapLoading').classList.remove('hidden');
+
+      const raw = [];
+      snapshot.forEach(child => {
+        const d = child.val();
+        if (!d.username) return;
+        if (d.country !== 'Mexico') return;
+        if (d.bannedLeaderboard) return;
+        const common    = parseInt(d.common)    || 0;
+        const rare      = parseInt(d.rare)      || 0;
+        const epic      = parseInt(d.epic)      || 0;
+        const legendary = parseInt(d.legendary) || 0;
+        raw.push({
+          uid: child.key,
+          username:    d.username,
+          avatar:      d.avatar      || '',
+          borderColor: d.borderColor || '',
+          city:        d.city        || '',
+          total:       common + rare + epic + legendary,
+          isYou:       child.key === currentUid,
+        });
+      });
+
+      // Geocodificar en paralelo (máx 5 a la vez para no saturar Nominatim)
+      const batch = 5;
+      for (let i = 0; i < raw.length; i += batch) {
+        await Promise.all(raw.slice(i, i + batch).map(async p => {
+          p.coords = await geocodeCity(p.city);
+        }));
+        // Pequeña pausa entre batches para respetar rate limit de Nominatim
+        if (i + batch < raw.length) await new Promise(r => setTimeout(r, 300));
+      }
+
+      renderMapa(raw);
+    });
+  }
+
+  // ── Auth — solo acceso desde admin ──
+  const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
+
+  onAuthStateChanged(auth, user => {
+    if (user && user.email === ADMIN_EMAIL) {
+      loadPlayers(user.uid);
+    } else if (user && user.email !== ADMIN_EMAIL) {
+      // Sesión activa pero no es admin
+      window.location.href = 'admin.html';
+    } else {
+      // Sin sesión — redirigir a admin
+      window.location.href = 'admin.html';
+    }
+  });
+
+</script>
+</body>
+</html>
