@@ -242,19 +242,6 @@
       padding: 12px 14px;
       align-items: center;
     }
-    .aviso-input {
-      flex: 1;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,170,0,0.35);
-      border-radius: 8px;
-      color: #ffe066;
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 13px;
-      letter-spacing: 0.5px;
-      padding: 8px 12px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
     .aviso-input:focus { border-color: #ffaa00; box-shadow: 0 0 8px rgba(255,170,0,0.3); }
     .aviso-input::placeholder { color: rgba(255,170,0,0.35); font-size: 11px; letter-spacing: 1px; }
     .aviso-btn {
@@ -1011,19 +998,6 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .aviso-input {
-      flex: 1;
-      min-width: 180px;
-      background: var(--panel2);
-      border: 1px solid rgba(255,170,0,0.3);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: 'Rajdhani', sans-serif;
-      font-size: 13px;
-      padding: 7px 12px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
     .aviso-input:focus { border-color: var(--warning); }
     .aviso-input::placeholder { color: var(--text2); font-size: 12px; }
     .aviso-btn {
@@ -1079,9 +1053,8 @@
     }
     .aviso-body { padding: 12px 14px; display: flex; flex-direction: row; align-items: flex-start; gap: 10px; }
     .aviso-input {
-      flex: 1;
-      min-width: 0;
-      width: 0;
+      flex: 1 1 auto;
+      min-width: 200px;
       background: var(--panel2);
       border: 1px solid rgba(255,170,0,0.3);
       border-radius: 8px;
@@ -1252,7 +1225,7 @@
           rows="1"
           placeholder="Escribe un aviso para mostrar en el chat..."
           onkeydown="if(event.ctrlKey&&event.key==='Enter')saveAviso()"
-          style="flex:1;width:0;min-width:0;height:38px;line-height:1.4;resize:none;"
+          style="flex:1;height:38px;line-height:1.4;resize:none;"
         ></textarea>
         <div class="aviso-preview" id="avisoPreview"></div>
         <div class="aviso-actions" style="flex-direction:row;flex-shrink:0;">
