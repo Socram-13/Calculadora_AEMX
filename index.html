@@ -2024,10 +2024,10 @@
       // Si no hay país detectado, intentar obtenerlo ahora
       if (!window.userCountry) {
         try {
-          const res  = await fetch('https://ip-api.com/json/?fields=country&lang=es');
+          const res  = await fetch('https://freeipapi.com/api/json');
           const data = await res.json();
-          if (data.country && typeof normalizarPais === 'function') {
-            window.userCountry = normalizarPais(data.country);
+          if (data.countryName && typeof normalizarPais === 'function') {
+            window.userCountry = normalizarPais(data.countryName);
           }
         } catch(e) {
           try {
@@ -3084,20 +3084,19 @@
   }
 
   function ubicacionPorIP() {
-    // Intentar con ip-api.com (sin CORS issues)
-    fetch("https://ip-api.com/json/?fields=country,regionName,city&lang=es")
+    fetch("https://freeipapi.com/api/json")
       .then(function(res) { return res.json(); })
       .then(function(data) {
-        if (data.country) actualizarPais(data.country);
-        actualizarCiudad(data.city || "", data.regionName || "");
+        if (data.countryName) actualizarPais(data.countryName);
+        if (data.cityName && data.regionName) actualizarCiudad(data.cityName, data.regionName);
       })
       .catch(function() {
         // Fallback a ipapi.co
         fetch("https://ipapi.co/json/")
           .then(function(res) { return res.json(); })
           .then(function(data) {
-            actualizarPais(data.country_name);
-            actualizarCiudad(data.city || "", data.region || "");
+            if (data.country_name) actualizarPais(data.country_name);
+            if (data.city && data.region) actualizarCiudad(data.city, data.region);
           })
           .catch(function() {});
       });
