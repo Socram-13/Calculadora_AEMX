@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADMIN · ATLAS EARTH AEMX</title>
+  <link rel="icon" type="image/png" href="imagen_1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #060b14;
+      --panel:     #0b1626;
+      --panel2:    #0f1e35;
+      --border:    #1a3a5c;
+      --glow:      #00c8ff;
+      --glow2:     #00ff9d;
+      --danger:    #ff4466;
+      --warning:   #ffaa00;
+      --success:   #00ff9d;
+      --text:      #cce4ff;
+      --text2:     #6b8ab0;
+      --banned-bg: rgba(255,68,102,0.08);
+      --banned-border: rgba(255,68,102,0.3);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes gridMove {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(40px); }
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,68,102,0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 90%, rgba(0,200,255,0.04) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Auth overlay ── */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,11,20,0.98);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(10px);
+    }
+    .auth-overlay.hidden { display: none; }
+
+    .auth-box {
+      background: var(--panel);
+      border: 1px solid var(--danger);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,68,102,0.15);
+      animation: fadeUp 0.4s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .auth-box .lock-icon {
+      font-size: 40px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .auth-box h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      color: var(--danger);
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+
+    .auth-box p {
+      color: var(--text2);
+      font-size: 13px;
+      margin-bottom: 28px;
+      letter-spacing: 1px;
+    }
+
+    .auth-btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #1a1a2e, #0b1626);
+      border: 1px solid var(--danger);
+      border-radius: 10px;
+      color: var(--danger);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .auth-btn-google:hover {
+      background: var(--danger);
+      color: #fff;
+      box-shadow: 0 0 24px rgba(255,68,102,0.4);
+    }
+
+    .auth-error {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--danger);
+      letter-spacing: 1px;
+      min-height: 18px;
+    }
+
+    /* ── Access denied ── */
+    .access-denied {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,11,20,0.98);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1999;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      padding: 20px;
+    }
+    .access-denied.visible { display: flex; }
+    .access-denied .icon { font-size: 56px; }
+    .access-denied h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      color: var(--danger);
+      letter-spacing: 4px;
+    }
+    .access-denied p {
+      color: var(--text2);
+      font-size: 13px;
+      letter-spacing: 1px;
+    }
+    .btn-signout-denied {
+      margin-top: 8px;
+      background: none;
+      border: 1px solid var(--danger);
+      border-radius: 8px;
+      color: var(--danger);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-signout-denied:hover { background: var(--danger); color: #fff; }
+
+    /* ── Layout ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-left h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(16px, 3.5vw, 22px);
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--danger);
+      text-shadow: 0 0 20px rgba(255,68,102,0.4);
+    }
+
+    .header-left .subtitle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .admin-badge {
+      background: rgba(255,68,102,0.15);
+      border: 1px solid var(--danger);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      color: var(--danger);
+      letter-spacing: 2px;
+    }
+
+    .btn-signout {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Stats ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .stat-card.total::before   { background: linear-gradient(90deg, var(--glow), var(--glow2)); }
+    .stat-card.banned-c::before { background: var(--danger); }
+    .stat-card.active-c::before { background: var(--success); }
+
+    .stat-value {
+      font-family: 'Orbitron', monospace;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .stat-card.total .stat-value   { color: var(--glow); }
+    .stat-card.banned-c .stat-value { color: var(--danger); }
+    .stat-card.active-c .stat-value { color: var(--success); }
+
+    .stat-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .filter-btn:hover { border-color: var(--glow); color: var(--glow); }
+    .filter-btn.active { border-color: var(--glow); color: var(--glow); background: rgba(0,200,255,0.08); }
+    .filter-btn.active-banned { border-color: var(--danger); color: var(--danger); background: rgba(255,68,102,0.08); }
+
+    /* ── User table ── */
+    .table-wrap {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .table-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      color: var(--glow);
+      letter-spacing: 3px;
+    }
+
+    .search-input {
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      padding: 6px 12px;
+      outline: none;
+      width: 200px;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--glow); }
+    .search-input::placeholder { color: var(--text2); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--text2);
+      text-align: left;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(26,58,92,0.5);
+      transition: background 0.15s;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(0,200,255,0.03); }
+    tbody tr.banned-row { background: var(--banned-bg); border-left: 2px solid var(--danger); }
+    tbody tr.banned-row:hover { background: rgba(255,68,102,0.1); }
+
+    tbody td { padding: 12px 20px; vertical-align: middle; }
+
+    .player-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #060b14;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+    .player-name {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+
+    .player-email {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+    .status-badge.active  { color: var(--success); background: rgba(0,255,157,0.1); border: 1px solid rgba(0,255,157,0.3); }
+    .status-badge.banned  { color: var(--danger);  background: rgba(255,68,102,0.1); border: 1px solid rgba(255,68,102,0.3); }
+    .status-badge::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+    }
+    .status-badge.active::before { background: var(--success); box-shadow: 0 0 6px var(--success); }
+    .status-badge.banned::before { background: var(--danger); }
+
+    .parcelas-cell {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--glow);
+    }
+
+    .country-cell {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    /* ── Action buttons ── */
+    .actions-cell { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn-action {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+
+    .btn-ban {
+      color: var(--danger);
+      border-color: rgba(255,68,102,0.5);
+      background: rgba(255,68,102,0.08);
+    }
+    .btn-ban:hover { background: var(--danger); color: #fff; box-shadow: 0 0 14px rgba(255,68,102,0.4); }
+
+    .btn-unban {
+      color: var(--success);
+      border-color: rgba(0,255,157,0.5);
+      background: rgba(0,255,157,0.08);
+    }
+    .btn-unban:hover { background: var(--success); color: #060b14; box-shadow: 0 0 14px rgba(0,255,157,0.4); }
+
+    .btn-ban-chat {
+      color: var(--warning);
+      border-color: rgba(255,170,0,0.5);
+      background: rgba(255,170,0,0.08);
+    }
+    .btn-ban-chat:hover { background: var(--warning); color: #060b14; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--panel);
+      border: 1px solid var(--glow);
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--glow);
+      letter-spacing: 1px;
+      z-index: 3000;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Empty / loading ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    .spinner {
+      width: 28px; height: 28px;
+      border: 2px solid var(--border);
+      border-top-color: var(--danger);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 14px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Confirm modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,11,20,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1500;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.visible { display: flex; }
+
+    .modal-box {
+      background: var(--panel);
+      border: 1px solid var(--danger);
+      border-radius: 14px;
+      padding: 32px 28px;
+      max-width: 340px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(255,68,102,0.2);
+      animation: fadeUp 0.3s ease;
+    }
+    .modal-box h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      color: var(--danger);
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+    }
+    .modal-box p {
+      color: var(--text2);
+      font-size: 13px;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+      line-height: 1.5;
+    }
+    .modal-box strong { color: var(--text); }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; }
+    .btn-confirm {
+      background: var(--danger);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-confirm:hover { opacity: 0.85; }
+    .btn-cancel {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text2);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-cancel:hover { border-color: var(--text2); color: var(--text); }
+
+    @media (max-width: 640px) {
+      .actions-cell { flex-direction: column; }
+      .search-input { width: 100%; }
+      tbody td { padding: 10px 12px; }
+      thead th { padding: 8px 12px; }
+      .player-email { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-box">
+      <span class="lock-icon">🔐</span>
+      <h2>PANEL DE ADMINISTRACIÓN</h2>
+      <p>Acceso restringido — solo administradores</p>
+      <button class="auth-btn-google" onclick="authWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        INICIAR CON GOOGLE
+      </button>
+      <div class="auth-error" id="authError"></div>
+    </div>
+  </div>
+
+  <!-- Access Denied -->
+  <div class="access-denied" id="accessDenied">
+    <span class="icon">🚫</span>
+    <h2>ACCESO DENEGADO</h2>
+    <p>No tienes permisos de administrador.</p>
+    <button class="btn-signout-denied" onclick="signOutUser()">CERRAR SESIÓN</button>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+      <h3 id="modalTitle">CONFIRMAR</h3>
+      <p id="modalBody"></p>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">CANCELAR</button>
+        <button class="btn-confirm" id="modalConfirmBtn">CONFIRMAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <h1>⚙️ ADMIN PANEL</h1>
+        <div class="subtitle">ATLAS EARTH AEMX · GESTIÓN DE USUARIOS</div>
+      </div>
+      <div class="header-right" id="headerRight" style="display:none">
+        <span class="admin-badge">ADMIN</span>
+        <span id="adminEmail"></span>
+        <button class="btn-signout" onclick="signOutUser()">SALIR</button>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-card total">
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-label">USUARIOS TOTALES</div>
+      </div>
+      <div class="stat-card active-c">
+        <div class="stat-value" id="statActive">—</div>
+        <div class="stat-label">ACTIVOS</div>
+      </div>
+      <div class="stat-card banned-c">
+        <div class="stat-value" id="statBanned">—</div>
+        <div class="stat-label">BLOQUEADOS</div>
+      </div>
+    </div>
+
+    <!-- Filters + search -->
+    <div class="filters">
+      <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">TODOS</button>
+      <button class="filter-btn" id="filterActive" onclick="setFilter('active')">ACTIVOS</button>
+      <button class="filter-btn" id="filterBanned" onclick="setFilter('banned')">BLOQUEADOS</button>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="table-header">
+        <span class="table-title">USUARIOS REGISTRADOS</span>
+        <input class="search-input" type="text" placeholder="Buscar usuario..." oninput="filterSearch(this.value)" id="searchInput">
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>JUGADOR</th>
+            <th>PAÍS</th>
+            <th>PARCELAS</th>
+            <th>ESTADO</th>
+            <th>ACCIONES</th>
+          </tr>
+        </thead>
+        <tbody id="usersBody">
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <div class="spinner"></div>
+                CARGANDO USUARIOS...
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
+                               from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getDatabase, ref, onValue, update }
+                               from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+    const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
+
+    const firebaseConfig = {
+      apiKey:        'AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk',
+      authDomain:    'aemx-chat.firebaseapp.com',
+      databaseURL:   'https://aemx-chat-default-rtdb.firebaseio.com',
+      projectId:     'aemx-chat',
+      storageBucket: 'aemx-chat.appspot.com',
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    // ── Auth ──
+    window.authWithGoogle = async function() {
+      document.getElementById('authError').textContent = '';
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch(e) {
+        document.getElementById('authError').textContent = 'Error al iniciar sesión.';
+      }
+    };
+
+    window.signOutUser = async function() { await signOut(auth); };
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById('authOverlay').classList.add('hidden');
+        if (user.email !== ADMIN_EMAIL) {
+          document.getElementById('accessDenied').classList.add('visible');
+          return;
+        }
+        // Admin autorizado
+        document.getElementById('accessDenied').classList.remove('visible');
+        document.getElementById('headerRight').style.display = 'flex';
+        document.getElementById('adminEmail').textContent = user.displayName || user.email;
+        loadUsers();
+      } else {
+        document.getElementById('authOverlay').classList.remove('hidden');
+        document.getElementById('accessDenied').classList.remove('visible');
+        document.getElementById('headerRight').style.display = 'none';
+      }
+    });
+
+    // ── Data ──
+    let allUsers   = [];
+    let currentFilter = 'all';
+    let searchQuery   = '';
+    let pendingAction = null;
+
+    function loadUsers() {
+      onValue(ref(db, 'users'), (snapshot) => {
+        allUsers = [];
+        snapshot.forEach((child) => {
+          const d = child.val();
+          if (!d.username) return;
+          const common    = parseInt(d.common)    || 0;
+          const rare      = parseInt(d.rare)      || 0;
+          const epic      = parseInt(d.epic)      || 0;
+          const legendary = parseInt(d.legendary) || 0;
+          allUsers.push({
+            uid:        child.key,
+            username:   d.username,
+            avatar:     d.avatar     || '',
+            borderColor:d.borderColor|| '',
+            country:    d.country    || '',
+            total:      common + rare + epic + legendary,
+            bannedChat:      !!d.bannedChat,
+            bannedLeaderboard: !!d.bannedLeaderboard,
+          });
+        });
+        allUsers.sort((a, b) => b.total - a.total);
+        updateStats();
+        renderTable();
+      });
+    }
+
+    function updateStats() {
+      const bannedAny = allUsers.filter(u => u.bannedChat || u.bannedLeaderboard).length;
+      document.getElementById('statTotal').textContent  = allUsers.length;
+      document.getElementById('statActive').textContent = allUsers.length - bannedAny;
+      document.getElementById('statBanned').textContent = bannedAny;
+    }
+
+    function getFiltered() {
+      return allUsers.filter(u => {
+        const matchFilter =
+          currentFilter === 'all'    ? true :
+          currentFilter === 'banned' ? (u.bannedChat || u.bannedLeaderboard) :
+          currentFilter === 'active' ? (!u.bannedChat && !u.bannedLeaderboard) : true;
+        const matchSearch = !searchQuery ||
+          u.username.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchFilter && matchSearch;
+      });
+    }
+
+    function avatarHTML(u) {
+      const letter = (u.username || '?').charAt(0).toUpperCase();
+      const colors = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#4ade80','#f472b6'];
+      const bg = colors[letter.charCodeAt(0) % colors.length];
+      if (u.avatar && u.avatar.startsWith('data:image')) {
+        return `<div class="avatar" style="border-color:${u.borderColor||'var(--border)'}"><img src="${u.avatar}" alt="${letter}"></div>`;
+      }
+      return `<div class="avatar" style="background:${bg};border-color:${u.borderColor||bg}">${letter}</div>`;
+    }
+
+    function renderTable() {
+      const tbody  = document.getElementById('usersBody');
+      const users  = getFiltered();
+
+      if (users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">SIN USUARIOS</div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = users.map((u, i) => {
+        const isBannedChat  = u.bannedChat;
+        const isBannedLb    = u.bannedLeaderboard;
+        const anyBanned     = isBannedChat || isBannedLb;
+        const rowClass      = anyBanned ? 'banned-row' : '';
+        const delay         = Math.min(i * 0.03, 0.5);
+
+        const statusBadges = [];
+        if (isBannedChat) statusBadges.push(`<span class="status-badge banned">💬 CHAT</span>`);
+        if (isBannedLb)   statusBadges.push(`<span class="status-badge banned">🏆 RANKING</span>`);
+        if (!anyBanned)   statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
+
+        const actionBtns = [];
+        if (isBannedChat) {
+          actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanChat','${u.uid}','${u.username}')">✓ CHAT</button>`);
+        } else {
+          actionBtns.push(`<button class="btn-action btn-ban btn-ban-chat" onclick="confirmAction('banChat','${u.uid}','${u.username}')">✕ CHAT</button>`);
+        }
+        if (isBannedLb) {
+          actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanLb','${u.uid}','${u.username}')">✓ RANKING</button>`);
+        } else {
+          actionBtns.push(`<button class="btn-action btn-ban" onclick="confirmAction('banLb','${u.uid}','${u.username}')">✕ RANKING</button>`);
+        }
+
+        return `
+          <tr class="${rowClass}" style="animation-delay:${delay}s">
+            <td>
+              <div class="player-cell">
+                ${avatarHTML(u)}
+                <div>
+                  <div class="player-name">${u.username}</div>
+                </div>
+              </div>
+            </td>
+            <td class="country-cell">${u.country || '—'}</td>
+            <td class="parcelas-cell">${u.total.toLocaleString()}</td>
+            <td>${statusBadges.join(' ')}</td>
+            <td><div class="actions-cell">${actionBtns.join('')}</div></td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ── Filters ──
+    window.setFilter = function(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.remove('active', 'active-banned');
+      });
+      const btn = document.getElementById(f === 'all' ? 'filterAll' : f === 'active' ? 'filterActive' : 'filterBanned');
+      btn.classList.add(f === 'banned' ? 'active-banned' : 'active');
+      renderTable();
+    };
+
+    window.filterSearch = function(q) {
+      searchQuery = q;
+      renderTable();
+    };
+
+    // ── Confirm modal ──
+    window.confirmAction = function(action, uid, username) {
+      const messages = {
+        banChat:  `¿Bloquear a <strong>${username}</strong> del chat?`,
+        unbanChat:`¿Desbloquear a <strong>${username}</strong> del chat?`,
+        banLb:    `¿Bloquear a <strong>${username}</strong> del leaderboard?`,
+        unbanLb:  `¿Desbloquear a <strong>${username}</strong> del leaderboard?`,
+      };
+      const titles = {
+        banChat:  'BLOQUEAR CHAT',
+        unbanChat:'DESBLOQUEAR CHAT',
+        banLb:    'BLOQUEAR RANKING',
+        unbanLb:  'DESBLOQUEAR RANKING',
+      };
+      document.getElementById('modalTitle').textContent = titles[action];
+      document.getElementById('modalBody').innerHTML    = messages[action];
+      document.getElementById('modalConfirmBtn').onclick = () => executeAction(action, uid, username);
+      document.getElementById('confirmModal').classList.add('visible');
+    };
+
+    window.closeModal = function() {
+      document.getElementById('confirmModal').classList.remove('visible');
+    };
+
+    async function executeAction(action, uid, username) {
+      closeModal();
+      const updates = {};
+      if (action === 'banChat')   updates.bannedChat = true;
+      if (action === 'unbanChat') updates.bannedChat = false;
+      if (action === 'banLb')     updates.bannedLeaderboard = true;
+      if (action === 'unbanLb')   updates.bannedLeaderboard = false;
+
+      try {
+        await update(ref(db, `users/${uid}`), updates);
+        const msgs = {
+          banChat:  `${username} bloqueado del chat`,
+          unbanChat:`${username} desbloqueado del chat`,
+          banLb:    `${username} bloqueado del ranking`,
+          unbanLb:  `${username} desbloqueado del ranking`,
+        };
+        showToast(msgs[action]);
+      } catch(e) {
+        showToast('Error al actualizar', true);
+      }
+    }
+
+    // ── Toast ──
+    let toastTimer;
+    function showToast(msg, isError = false) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.toggle('error', isError);
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

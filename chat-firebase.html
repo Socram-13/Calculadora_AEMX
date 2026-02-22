@@ -1019,11 +1019,20 @@
         // Escuchar cambios de sesión
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Autenticado — ocultar overlay y arrancar el chat
-                authOverlay.classList.add('hidden');
-                initChat(user);
+                // Verificar si está bloqueado del chat
+                get(ref(database, `users/${user.uid}`)).then(snap => {
+                    if (snap.exists() && snap.val().bannedChat) {
+                        authOverlay.classList.remove('hidden');
+                        document.getElementById('authError').textContent = '⛔ Tu cuenta ha sido bloqueada del chat.';
+                        return;
+                    }
+                    authOverlay.classList.add('hidden');
+                    initChat(user);
+                }).catch(() => {
+                    authOverlay.classList.add('hidden');
+                    initChat(user);
+                });
             } else {
-                // No autenticado — mostrar overlay
                 authOverlay.classList.remove('hidden');
             }
         });
