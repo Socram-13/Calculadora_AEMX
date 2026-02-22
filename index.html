@@ -671,7 +671,57 @@
   }
 
   /* Save button */
-  
+  .save-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+    position: relative;
+  }
+
+  .btn-save {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #000;
+    background: linear-gradient(135deg, #00c8ff, #4ade80);
+    border: none;
+    border-radius: 8px;
+    padding: 9px 20px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 0 20px rgba(0,200,255,0.35);
+  }
+
+  .btn-save:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 0 30px rgba(0,200,255,0.5);
+  }
+
+  .btn-save:active { transform: scale(0.97); }
+
+  .save-status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--glow2);
+    opacity: 0;
+    transition: opacity 0.4s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+  }
+
+  .save-status.visible { opacity: 1; }
+
 
   
 
@@ -1915,6 +1965,10 @@
 
 
   <!-- Save bar -->
+  <div class="save-bar">
+    <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
+    <div class="save-status" id="save-status">✔ Datos guardados</div>
+  </div>
 </div>
 
   <!-- ===== GOOGLE AUTH BAR ===== -->
@@ -1953,6 +2007,11 @@
     });
 
     // Hook en el botón 💾 Guardar para que también suba a Firebase
+    const _origShareData = typeof shareData === 'function' ? shareData : null;
+    window.shareData = function() {
+      if (_origShareData) _origShareData();
+      if (window._fbUser && window._fbSaveAll) window._fbSaveAll();
+    };
   </script>
 
   <p style="text-align:center;color:var(--text2);font-size:11px;margin-top:10px;letter-spacing:1px;">
@@ -2442,6 +2501,23 @@
     el.textContent = msg || '✔ Enlace copiado';
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2500);
+  }
+
+  function shareData() {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        common:     document.getElementById('common').value,
+        rare:       document.getElementById('rare').value,
+        epic:       document.getElementById('epic').value,
+        legendary:  document.getElementById('legendary').value,
+        badges:     document.getElementById('badges').value,
+        diamonds:   document.getElementById('diamonds').value,
+        atlasbucks: document.getElementById('atlasbucks').value,
+        explorer:   explorerActive,
+        startDate:  document.getElementById('start-date').value,
+      }));
+    } catch(e) {}
+    showStatus('✔ Datos guardados');
   }
 
   async function loadData() {
