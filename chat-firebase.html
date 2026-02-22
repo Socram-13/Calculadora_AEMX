@@ -587,28 +587,6 @@
             background: var(--primary-color);
             color: #060b14;
         }
-        .auth-btn-email {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            width: 100%;
-            padding: 12px 20px;
-            background: transparent;
-            border: 1px solid var(--text-secondary);
-            border-radius: 10px;
-            color: var(--text-secondary);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .auth-btn-email:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
         .auth-error {
             margin-top: 14px;
             font-family: 'Rajdhani', sans-serif;
@@ -617,51 +595,6 @@
             letter-spacing: 1px;
             min-height: 18px;
         }
-        /* Email form dentro del auth-box */
-        .auth-email-form { display: none; margin-top: 20px; text-align: left; }
-        .auth-email-form.visible { display: block; }
-        .auth-email-form input {
-            width: 100%;
-            padding: 10px 14px;
-            background: #0a0e1a;
-            border: 1px solid var(--text-secondary);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 13px;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .auth-email-form input:focus { border-color: var(--primary-color); }
-        .auth-email-form .auth-submit {
-            width: 100%;
-            padding: 10px;
-            background: var(--primary-color);
-            border: none;
-            border-radius: 8px;
-            color: #060b14;
-            font-family: 'Orbitron', monospace;
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-        .auth-email-form .auth-submit:hover { opacity: 0.85; }
-        .auth-back {
-            background: none;
-            border: none;
-            color: var(--text-secondary);
-            font-family: 'Rajdhani', sans-serif;
-            font-size: 12px;
-            cursor: pointer;
-            margin-top: 10px;
-            letter-spacing: 1px;
-            text-decoration: underline;
-        }
-
         .username-form {
             background: var(--bg-panel);
             border: 2px solid var(--primary-color);
@@ -911,20 +844,6 @@
                 CONTINUAR CON GOOGLE
             </button>
 
-            <button class="auth-btn-email" id="btnEmail" onclick="showEmailForm()">
-                ✉️ &nbsp;CONTINUAR CON EMAIL
-            </button>
-
-            <div class="auth-email-form" id="authEmailForm">
-                <input type="email" id="authEmail" placeholder="correo@email.com" />
-                <input type="password" id="authPassword" placeholder="Contraseña" />
-                <button class="auth-submit" onclick="authWithEmail()">ENTRAR</button>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <button class="auth-back" onclick="hideEmailForm()">← Volver</button>
-                    <button class="auth-back" onclick="registerWithEmail()">Registrarse</button>
-                </div>
-            </div>
-
             <div class="auth-error" id="authError"></div>
         </div>
     </div>
@@ -1024,7 +943,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         // Configuración de Firebase
         const firebaseConfig = {
@@ -1060,44 +979,8 @@
             }
         };
 
-        window.showEmailForm = function() {
-            document.getElementById('authEmailForm').classList.add('visible');
-            document.getElementById('btnGoogle').style.display = 'none';
-            document.getElementById('btnEmail').style.display = 'none';
-        };
-
-        window.hideEmailForm = function() {
-            document.getElementById('authEmailForm').classList.remove('visible');
-            document.getElementById('btnGoogle').style.display = '';
-            document.getElementById('btnEmail').style.display = '';
-            showAuthError('');
-        };
-
-        window.authWithEmail = async function() {
-            showAuthError('');
-            const email = document.getElementById('authEmail').value.trim();
-            const pass  = document.getElementById('authPassword').value;
-            if (!email || !pass) { showAuthError('Completa todos los campos.'); return; }
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-            } catch(e) {
-                showAuthError('Credenciales incorrectas.');
-            }
-        };
-
-        window.registerWithEmail = async function() {
-            showAuthError('');
-            const email = document.getElementById('authEmail').value.trim();
-            const pass  = document.getElementById('authPassword').value;
-            if (!email || !pass) { showAuthError('Completa todos los campos.'); return; }
-            if (pass.length < 6) { showAuthError('La contraseña debe tener al menos 6 caracteres.'); return; }
-            try {
-                await createUserWithEmailAndPassword(auth, email, pass);
-            } catch(e) {
-                if (e.code === 'auth/email-already-in-use') showAuthError('Este email ya está registrado.');
-                else showAuthError('Error al registrarse. Intenta de nuevo.');
-            }
-        };
+        window.showEmailForm = undefined;
+        window.hideEmailForm = undefined;
 
         // Escuchar cambios de sesión
         onAuthStateChanged(auth, (user) => {
@@ -1308,7 +1191,7 @@
             const snapshot = await get(messagesRef);
             if (!snapshot.exists()) return;
 
-            const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
+            const tenMinutesAgo = Date.now() - 2 * 60 * 60 * 1000;
             let shouldClear = false;
 
             snapshot.forEach((child) => {
@@ -1323,7 +1206,7 @@
 
         // Limpiar al cargar y luego cada 10 minutos
         clearOldMessages();
-        setInterval(clearOldMessages, 10 * 60 * 1000);
+        setInterval(clearOldMessages, 2 * 60 * 60 * 1000);
 
         // Leer username desde URL o desde Firebase Auth
         const urlParams = new URLSearchParams(window.location.search);
