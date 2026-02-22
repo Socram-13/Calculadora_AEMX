@@ -6,6 +6,7 @@
   <title>ADMIN · ATLAS EARTH AEMX</title>
   <link rel="icon" type="image/png" href="imagen_1.png">
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
   <style>
     :root {
       --bg:        #060b14;
@@ -192,9 +193,128 @@
     .container {
       position: relative;
       z-index: 1;
-      max-width: 1000px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 24px 16px 60px;
+    }
+
+    /* ── Two-column layout ── */
+    .admin-body {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    /* ── Left column: mapa compacto ── */
+    .map-col {
+      position: sticky;
+      top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .map-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .map-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--glow), var(--glow2));
+      z-index: 10;
+    }
+
+    .map-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+
+    .map-card-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--glow);
+    }
+
+    .map-live-dot {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--glow2);
+      letter-spacing: 1px;
+    }
+
+    .map-live-dot::before {
+      content: '';
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--glow2);
+      box-shadow: 0 0 6px var(--glow2);
+      animation: pulse 1.5s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    #mini-map {
+      height: 400px;
+      width: 100%;
+      background: #060b14;
+    }
+
+    .map-mini-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .map-mini-stat {
+      background: var(--panel2);
+      padding: 8px 12px;
+      text-align: center;
+    }
+
+    .map-mini-stat .num {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--glow);
+    }
+
+    .map-mini-stat .lbl {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      color: var(--text2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* ── Right column ── */
+    .table-col { min-width: 0; }
+
+    @media (max-width: 900px) {
+      .admin-body { grid-template-columns: 1fr; }
+      .map-col { position: static; }
+      #mini-map { height: 260px; }
     }
 
     /* ── Header ── */
@@ -796,6 +916,21 @@
       #chat-fab { bottom: 20px; right: 20px; }
     }
     /* ===== FIN CHAT WIDGET ===== */
+
+    /* ── Leaflet mini-map overrides ── */
+    #mini-map .leaflet-control-zoom { display: none; }
+    #mini-map .leaflet-control-attribution { display: none; }
+    #mini-map { background: #060b14 !important; }
+    .leaflet-container { background: #060b14 !important; font-family: 'Rajdhani', sans-serif; }
+    .leaflet-tooltip {
+      background: var(--panel) !important;
+      border: 1px solid var(--border) !important;
+      color: var(--text2) !important;
+      font-family: 'Orbitron', monospace !important;
+      font-size: 9px !important;
+      letter-spacing: 1px !important;
+      border-radius: 6px !important;
+    }
   </style>
 </head>
 <body>
@@ -890,42 +1025,212 @@
       </div>
     </div>
 
-    <!-- Filters + search -->
-    <div class="filters">
-      <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">TODOS</button>
-      <button class="filter-btn" id="filterActive" onclick="setFilter('active')">ACTIVOS</button>
-      <button class="filter-btn" id="filterBanned" onclick="setFilter('banned')">BLOQUEADOS</button>
-    </div>
+    <!-- Two-column body -->
+    <div class="admin-body">
 
-    <!-- Table -->
-    <div class="table-wrap">
-      <div class="table-header">
-        <span class="table-title">USUARIOS REGISTRADOS</span>
-        <input class="search-input" type="text" placeholder="Buscar usuario..." oninput="filterSearch(this.value)" id="searchInput">
+      <!-- LEFT: Mapa compacto -->
+      <div class="map-col">
+        <div class="map-card">
+          <div class="map-card-header">
+            <span class="map-card-title">🗺️ MAPA EN VIVO</span>
+            <span class="map-live-dot">EN VIVO</span>
+          </div>
+          <div id="mini-map"></div>
+          <div class="map-mini-stats">
+            <div class="map-mini-stat">
+              <div class="num" id="miniStatJugadores">—</div>
+              <div class="lbl">Jugadores</div>
+            </div>
+            <div class="map-mini-stat">
+              <div class="num" id="miniStatEstados">—</div>
+              <div class="lbl">Estados</div>
+            </div>
+            <div class="map-mini-stat">
+              <div class="num" id="miniStatCiudades">—</div>
+              <div class="lbl">Ciudades</div>
+            </div>
+            <div class="map-mini-stat">
+              <div class="num" id="miniStatAemx" style="color:var(--glow2)">—</div>
+              <div class="lbl">Miembros AEMX</div>
+            </div>
+          </div>
+        </div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>JUGADOR</th>
-            <th>PAÍS</th>
-            <th>PARCELAS</th>
-            <th>ESTADO</th>
-            <th>ACCIONES</th>
-          </tr>
-        </thead>
-        <tbody id="usersBody">
-          <tr>
-            <td colspan="5">
-              <div class="empty-state">
-                <div class="spinner"></div>
-                CARGANDO USUARIOS...
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+
+      <!-- RIGHT: Tabla usuarios -->
+      <div class="table-col">
+        <!-- Filters + search -->
+        <div class="filters">
+          <button class="filter-btn active" id="filterAll" onclick="setFilter('all')">TODOS</button>
+          <button class="filter-btn" id="filterActive" onclick="setFilter('active')">ACTIVOS</button>
+          <button class="filter-btn" id="filterBanned" onclick="setFilter('banned')">BLOQUEADOS</button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrap">
+          <div class="table-header">
+            <span class="table-title">USUARIOS REGISTRADOS</span>
+            <input class="search-input" type="text" placeholder="Buscar usuario..." oninput="filterSearch(this.value)" id="searchInput">
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>JUGADOR</th>
+                <th>PAÍS</th>
+                <th>PARCELAS</th>
+                <th>ESTADO</th>
+                <th>ACCIONES</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state">
+                    <div class="spinner"></div>
+                    CARGANDO USUARIOS...
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /admin-body -->
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script>
+    // ── Mini mapa Leaflet ──
+    const miniMap = L.map('mini-map', {
+      center: [23.6345, -102.5528],
+      zoom: 4,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: true,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      touchZoom: true,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd', maxZoom: 19,
+    }).addTo(miniMap);
+
+    // Coordenadas de estados
+    const ESTADO_COORDS_MINI = {
+      'Aguascalientes':[21.8853,-102.2916],'Baja California':[30.8406,-115.2838],
+      'Baja California Sur':[26.0444,-111.6661],'Campeche':[19.8301,-90.5349],
+      'Chiapas':[16.7569,-93.1292],'Chihuahua':[28.6353,-106.0889],
+      'Ciudad de México':[19.4326,-99.1332],'Coahuila':[27.0587,-101.7068],
+      'Colima':[19.2452,-103.7241],'Durango':[24.0277,-104.6532],
+      'Estado de México':[19.2826,-99.6557],'Guanajuato':[21.0190,-101.2574],
+      'Guerrero':[17.4392,-100.0000],'Hidalgo':[20.0911,-98.7624],
+      'Jalisco':[20.6597,-103.3496],'Michoacán':[19.7008,-101.1844],
+      'Morelos':[18.6813,-99.1013],'Nayarit':[21.7514,-104.8455],
+      'Nuevo León':[25.5922,-99.9962],'Oaxaca':[17.0732,-96.7266],
+      'Puebla':[19.0414,-98.2063],'Querétaro':[20.5888,-100.3899],
+      'Quintana Roo':[19.1817,-88.4791],'San Luis Potosí':[22.1565,-100.9855],
+      'Sinaloa':[25.1721,-107.4795],'Sonora':[29.0729,-110.9559],
+      'Tabasco':[17.8409,-92.6189],'Tamaulipas':[24.2669,-98.8363],
+      'Tlaxcala':[19.3182,-98.2375],'Veracruz':[19.1738,-96.1342],
+      'Yucatán':[20.9674,-89.5926],'Zacatecas':[22.7709,-102.5832],
+    };
+
+    const CIUDAD_ESTADO_MINI = {
+      'ciudad de méxico':'Ciudad de México','cdmx':'Ciudad de México',
+      'guadalajara':'Jalisco','monterrey':'Nuevo León','puebla':'Puebla',
+      'tijuana':'Baja California','mexicali':'Baja California',
+      'toluca':'Estado de México','ecatepec':'Estado de México',
+      'león':'Guanajuato','chihuahua':'Chihuahua','ciudad juárez':'Chihuahua',
+      'mérida':'Yucatán','hermosillo':'Sonora','culiacán':'Sinaloa',
+      'cancún':'Quintana Roo','veracruz':'Veracruz','morelia':'Michoacán',
+      'aguascalientes':'Aguascalientes','san luis potosí':'San Luis Potosí',
+      'saltillo':'Coahuila','torreón':'Coahuila','durango':'Durango',
+      'querétaro':'Querétaro','cuernavaca':'Morelos','tampico':'Tamaulipas',
+      'reynosa':'Tamaulipas','la paz':'Baja California Sur',
+      'villahermosa':'Tabasco','tuxtla gutiérrez':'Chiapas',
+      'oaxaca':'Oaxaca','acapulco':'Guerrero','zacatecas':'Zacatecas',
+      'pachuca':'Hidalgo','tepic':'Nayarit','colima':'Colima',
+      'campeche':'Campeche','tlaxcala':'Tlaxcala',
+    };
+
+    function extractEstadoMini(city) {
+      if (!city) return null;
+      const parts = city.split(',');
+      if (parts.length >= 2) return parts[parts.length - 1].trim();
+      return CIUDAD_ESTADO_MINI[city.toLowerCase().trim()] || null;
+    }
+
+    let miniMarkers = [];
+    let miniCircles = [];
+
+    function renderMiniMap(players) {
+      miniMarkers.forEach(m => miniMap.removeLayer(m));
+      miniCircles.forEach(c => miniMap.removeLayer(c));
+      miniMarkers = []; miniCircles = [];
+
+      // Agrupar por estado
+      const porEstado = {};
+      players.forEach(p => {
+        const estado = extractEstadoMini(p.city || '');
+        if (!estado) return;
+        if (!porEstado[estado]) porEstado[estado] = [];
+        porEstado[estado].push(p);
+      });
+
+      // Círculos por estado
+      Object.entries(porEstado).forEach(([estado, jugs]) => {
+        const coords = ESTADO_COORDS_MINI[estado];
+        if (!coords) return;
+        const n = jugs.length;
+        const tieneAEMX = jugs.some(p => (p.username||'').toUpperCase().includes('AEMX'));
+        const color = tieneAEMX ? '#00ff9d' : (n >= 5 ? '#00c8ff' : n >= 2 ? '#1a6a9c' : '#1a3a5c');
+        const fill  = tieneAEMX ? 'rgba(0,255,157,0.55)' : (n >= 5 ? 'rgba(0,200,255,0.45)' : n >= 2 ? 'rgba(0,200,255,0.25)' : 'rgba(0,200,255,0.12)');
+
+        const c = L.circle(coords, {
+          radius: 60000 + n * 12000,
+          color, fillColor: fill, fillOpacity: 1, weight: 1.5, opacity: 0.9,
+          interactive: true,
+        }).addTo(miniMap);
+
+        c.bindTooltip(`${estado} · ${n} jugador${n>1?'es':''}`, { permanent: false, direction: 'top' });
+        miniCircles.push(c);
+      });
+
+      // Marcadores simples (puntos)
+      players.forEach(p => {
+        const estado = extractEstadoMini(p.city || '');
+        const coords = estado && ESTADO_COORDS_MINI[estado]
+          ? [ESTADO_COORDS_MINI[estado][0] + (Math.random()-0.5)*0.8, ESTADO_COORDS_MINI[estado][1] + (Math.random()-0.5)*0.8]
+          : null;
+        if (!coords) return;
+
+        const letter = (p.username||'?').charAt(0).toUpperCase();
+        const colors = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#4ade80','#f472b6'];
+        const bg = p.borderColor || colors[letter.charCodeAt(0) % colors.length];
+
+        const icon = L.divIcon({
+          html: `<div style="width:10px;height:10px;border-radius:50%;background:${bg};border:1.5px solid #fff;box-shadow:0 0 6px ${bg};"></div>`,
+          className: '', iconSize: [10,10], iconAnchor: [5,5],
+        });
+        const m = L.marker(coords, { icon, interactive: true }).addTo(miniMap);
+        m.bindTooltip(`${p.username} · ${p.total.toLocaleString()} parcelas`, { direction: 'top' });
+        miniMarkers.push(m);
+      });
+
+      // Stats del mapa
+      const estados  = Object.keys(porEstado).length;
+      const ciudades = new Set(players.map(p => p.city).filter(Boolean)).size;
+      const aemx     = players.filter(p => (p.username||'').toUpperCase().includes('AEMX')).length;
+      document.getElementById('miniStatJugadores').textContent = players.length;
+      document.getElementById('miniStatEstados').textContent   = estados;
+      document.getElementById('miniStatCiudades').textContent  = ciudades;
+      document.getElementById('miniStatAemx').textContent      = aemx;
+    }
+
+    window.renderMiniMap = renderMiniMap;
+  </script>
 
   <script type="module">
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -1010,6 +1315,7 @@
         allUsers.sort((a, b) => b.total - a.total);
         updateStats();
         renderTable();
+        if (window.renderMiniMap) window.renderMiniMap(allUsers);
       });
     }
 
