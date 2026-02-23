@@ -74,7 +74,7 @@
 
         .chat-container {
             display: grid;
-            grid-template-columns: 320px 1fr;
+            grid-template-columns: 1fr;
             height: 100vh;
             position: relative;
             z-index: 1;
@@ -1127,73 +1127,7 @@
         </div>
     </div>
 
-    <!-- Overlay para cerrar sidebar en móvil -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
     <div class="chat-container">
-        <!-- SIDEBAR -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <div class="sidebar-title">📹 Video-Guías</div>
-                <div class="online-status">
-                    <span class="status-dot"></span>
-                    <span id="onlineCount">0 EN LÍNEA</span>
-                </div>
-            </div>
-            <div class="guides-list">
-                <a class="guide-item" href="https://www.facebook.com/watch/?v=1281678283267913&rdid=0QOJKJVjIdLXWFcN" target="_blank">
-                    <span class="guide-item-icon">👨‍🚀</span>
-                    <span class="guide-item-text">Primeros pasos en Atlas Earth</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1YW1XiRBRL/" target="_blank">
-                    <span class="guide-item-icon">🧭</span>
-                    <span class="guide-item-text">Suscripciones Premium EC/SP</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1A8SnBcX6R/" target="_blank">
-                    <span class="guide-item-icon">🤵</span>
-                    <span class="guide-item-text">V.I.P. en Atlas Earth</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1A9vPNQFwR/" target="_blank">
-                    <span class="guide-item-icon">🗺️</span>
-                    <span class="guide-item-text">Mapa de Atlas Earth</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1N3UXYcRfT/" target="_blank">
-                    <span class="guide-item-icon">🐇</span>
-                    <span class="guide-item-text">Topes, Caídas y Saltos</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/19ySgWJ5Lo/" target="_blank">
-                    <span class="guide-item-icon">📈</span>
-                    <span class="guide-item-text">Tablas de Saltos</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1BV5NKitE2/" target="_blank">
-                    <span class="guide-item-icon">📊</span>
-                    <span class="guide-item-text">C.R.E.L.</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1EWMgw9X8t/" target="_blank">
-                    <span class="guide-item-icon">🚫</span>
-                    <span class="guide-item-text">Mejoras de Parcelas</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1ZpapUhcLg/" target="_blank">
-                    <span class="guide-item-icon">🌳</span>
-                    <span class="guide-item-text">Seguir la Vegetación</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1G1cvT5EHT/" target="_blank">
-                    <span class="guide-item-icon">🏚️</span>
-                    <span class="guide-item-text">Diversificar las Parcelas</span>
-                    <span class="guide-item-arrow">›</span>
-                </a>
-            </div>
-        </div>
-
         <!-- MAIN CHAT -->
         <div class="chat-main">
             <!-- Ticker de avisos -->
@@ -1206,12 +1140,6 @@
 
             <div class="chat-header">
                 <div class="chat-header-content">
-                    <!-- Botón hamburguesa (solo móvil) -->
-                    <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Ver jugadores">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </button>
                     <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
                     <a class="btn-guias" href="guias.html" target="_top">📹 <span class="guias-text">GUÍAS</span></a>
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
@@ -1325,14 +1253,6 @@
         let currentBorderColor = '';
 
         // Sidebar móvil
-        window.toggleSidebar = function() {
-            document.querySelector('.sidebar').classList.toggle('open');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
-        }
-        window.closeSidebar = function() {
-            document.querySelector('.sidebar').classList.remove('open');
-            document.getElementById('sidebarOverlay').classList.remove('active');
-        }
 
         // Hacer funciones globales
         window.setUsername = setUsername;
