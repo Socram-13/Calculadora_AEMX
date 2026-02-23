@@ -961,6 +961,86 @@
             }
         }
 
+        
+        .btn-marco {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px solid #facc15;
+            border-radius: 8px;
+            color: #facc15;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .btn-marco:hover {
+            background: #facc15;
+            color: #060b14;
+            box-shadow: 0 0 16px rgba(250,204,21,0.4);
+        }
+        .btn-marco:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        @media (max-width: 768px) {
+            .btn-marco .marco-text { display: none; }
+            .btn-marco { padding: 6px 9px; font-size: 14px; }
+        }
+
+        /* Modal acceso denegado */
+        .denied-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10,14,26,0.92);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+        }
+        .denied-modal.active { display: flex; }
+        .denied-box {
+            background: #0f1419;
+            border: 1px solid #ff0066;
+            border-radius: 16px;
+            padding: 36px 32px;
+            max-width: 340px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(255,0,102,0.2);
+        }
+        .denied-box h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            color: #ff0066;
+            letter-spacing: 3px;
+            margin-bottom: 12px;
+        }
+        .denied-box p {
+            font-family: 'Rajdhani', sans-serif;
+            color: #8f9bb3;
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+        .denied-box button {
+            background: none;
+            border: 1px solid #ff0066;
+            border-radius: 8px;
+            color: #ff0066;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            letter-spacing: 2px;
+            padding: 8px 20px;
+            cursor: pointer;
+        }
+        .denied-box button:hover { background: #ff0066; color: #fff; }
+
         /* Pantallas muy pequeñas */
         @media (max-width: 380px) {
             .chat-header h2 {
@@ -1043,6 +1123,7 @@
                         <span></span>
                     </button>
                     <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
+                    <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
 
                 </div>
             </div>
@@ -1067,6 +1148,16 @@
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+
+    <!-- Modal acceso denegado al marco -->
+    <div class="denied-modal" id="deniedModal">
+        <div class="denied-box">
+            <h3>⛔ ACCESO DENEGADO</h3>
+            <p>Solo los miembros del clan AEMX pueden acceder al editor de marco.</p>
+            <button onclick="document.getElementById('deniedModal').classList.remove('active')">CERRAR</button>
         </div>
     </div>
 
@@ -1430,6 +1521,21 @@
 
         // ── Ticker de avisos desde Firebase ──
         loadTicker();
+
+        // ── Botón Marco: solo miembros del clan ──
+        window.abrirMarco = async function() {
+            if (!auth.currentUser) return;
+            const snap = await get(ref(database, `users/${auth.currentUser.uid}`));
+            const data = snap.exists() ? snap.val() : {};
+            // Verificar que tenga el campo clanMember: true (o rol de admin/moderador)
+            const esMiembro = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
+            if (esMiembro) {
+                window.open('editor_marco.html', '_blank');
+            } else {
+                document.getElementById('deniedModal').classList.add('active');
+            }
+        };
+
 
         } // fin initChat
     </script>
