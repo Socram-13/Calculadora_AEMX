@@ -1375,26 +1375,36 @@
         }
 
         // Borrar mensajes según TTL configurado en admin
-        let chatTTL = null; // null = aún no cargado desde Firebase
+        let chatTTL = null;      // null = aún no cargado desde Firebase
+        let ttlLoaded = false;   // bandera: ya recibimos el valor real de Firebase
 
         onValue(ref(database, 'config/chatTTL'), (snap) => {
             chatTTL = snap.exists() ? snap.val() : 24;
+            // Primera vez que llega el valor → lanzar limpieza inicial
+            if (!ttlLoaded) {
+                ttlLoaded = true;
+                clearOldMessages();
+            }
         });
 
         async function clearOldMessages() {
-            if (chatTTL === null) return; // aún no cargó desde Firebase
-            if (chatTTL === 0) return;    // autoborrado apagado
+            if (!ttlLoaded) return;  // aún no recibimos el TTL real de Firebase
+            if (chatTTL === 0) return; // autoborrado apagado
 
             const messagesRef = ref(database, 'messages');
             const snapshot = await get(messagesRef);
             if (!snapshot.exists()) return;
 
-            const cutoff = Date.now() - chatTTL * 60 * 60 * 1000;
+            const now = Date.now();
+            const cutoff = now - chatTTL * 60 * 60 * 1000;
             const deletePromises = [];
 
             snapshot.forEach((child) => {
                 const ts = child.val().timestamp;
-                if (ts && ts < cutoff) {
+                // Ignorar mensajes sin timestamp o con timestamp futuro/inválido
+                // (serverTimestamp() puede llegar como null mientras se sincroniza)
+                if (!ts || ts <= 0 || ts > now) return;
+                if (ts < cutoff) {
                     deletePromises.push(remove(child.ref));
                 }
             });
@@ -1404,8 +1414,7 @@
             }
         }
 
-        // Esperar a que Firebase cargue el TTL antes de limpiar por primera vez
-        setTimeout(clearOldMessages, 3000);
+        // Limpieza periódica cada hora (la inicial se lanza cuando llega el TTL)
         setInterval(clearOldMessages, 60 * 60 * 1000);
 
         // Leer username desde URL o desde Firebase Auth
