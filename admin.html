@@ -1130,6 +1130,76 @@
       text-overflow: ellipsis;
     }
 
+    /* ── AEMX Coins ── */
+    .coins-cell {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
+      white-space: nowrap;
+    }
+    .coins-cell .coin-icon { margin-right: 4px; font-size: 14px; }
+    .coins-cell .coin-zero { color: var(--border); font-size: 12px; text-shadow: none; }
+
+    .btn-edit-coins {
+      color: #ffd700;
+      border-color: rgba(255,215,0,0.4);
+      background: rgba(255,215,0,0.07);
+      font-size: 9px;
+      margin-left: 6px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid;
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      vertical-align: middle;
+    }
+    .btn-edit-coins:hover {
+      background: #ffd700;
+      color: #060b14;
+      box-shadow: 0 0 10px rgba(255,215,0,0.4);
+    }
+
+    /* Modal coins */
+    #coinsModal .modal-box { border-color: #ffd700; box-shadow: 0 0 40px rgba(255,215,0,0.15); }
+    #coinsModal .modal-box h3 { color: #ffd700; }
+    #coinsModal .btn-confirm-coins {
+      background: #ffd700;
+      color: #060b14;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 9px 20px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    #coinsModal .btn-confirm-coins:hover { opacity: 0.85; }
+    #coinsModal input[type="number"] {
+      width: 100%;
+      background: var(--panel2);
+      border: 1px solid rgba(255,215,0,0.4);
+      border-radius: 8px;
+      color: #ffd700;
+      font-family: 'Orbitron', monospace;
+      font-size: 22px;
+      font-weight: 700;
+      padding: 10px 14px;
+      outline: none;
+      text-align: center;
+      margin-bottom: 18px;
+      letter-spacing: 2px;
+    }
+    #coinsModal input[type="number"]:focus { border-color: #ffd700; box-shadow: 0 0 8px rgba(255,215,0,0.2); }
+    #coinsModal input[type="number"]::-webkit-inner-spin-button,
+    #coinsModal input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
     /* ── Leaflet mini-map overrides ── */
     #mini-map .leaflet-control-zoom {
       border: 1px solid var(--border) !important;
@@ -1219,6 +1289,24 @@
       <div class="modal-actions">
         <button class="btn-cancel" onclick="closeCountryModal()">CANCELAR</button>
         <button class="btn-confirm" style="background:#a78bfa;" onclick="saveCountry()">GUARDAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Coins Modal -->
+  <div class="modal-overlay" id="coinsModal">
+    <div class="modal-box">
+      <h3>🪙 EDITAR AEMX COINS</h3>
+      <p id="coinsModalUser" style="margin-bottom:14px;"></p>
+      <input
+        id="coinsInput"
+        type="number"
+        min="0"
+        placeholder="0"
+      >
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeCoinsModal()">CANCELAR</button>
+        <button class="btn-confirm-coins" onclick="saveCoins()">GUARDAR</button>
       </div>
     </div>
   </div>
@@ -1357,6 +1445,7 @@
                 <th>JUGADOR</th>
                 <th>PAÍS</th>
                 <th>PARCELAS</th>
+                <th>AEMX COINS</th>
                 <th>ACTUALIZADO</th>
                 <th>CLAN</th>
                 <th>ESTADO</th>
@@ -1365,7 +1454,7 @@
             </thead>
             <tbody id="usersBody">
               <tr>
-                <td colspan="6">
+                <td colspan="8">
                   <div class="empty-state">
                     <div class="spinner"></div>
                     CARGANDO USUARIOS...
@@ -1656,6 +1745,7 @@
             country:    d.country     || '',
             city:       d.city        || '',
             total:      common + rare + epic + legendary,
+            coins:      parseInt(d.coins) || 0,
             updatedAt:  d.updatedAt   || null,
             bannedChat:        !!d.bannedChat,
             bannedLeaderboard: !!d.bannedLeaderboard,
@@ -1704,7 +1794,7 @@
       const users  = getFiltered();
 
       if (users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">SIN USUARIOS</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state">SIN USUARIOS</div></td></tr>`;
         return;
       }
 
@@ -1761,6 +1851,13 @@
               ` : ''}
             </td>
             <td class="parcelas-cell">${u.total.toLocaleString()}</td>
+            <td class="coins-cell">
+              ${u.coins > 0
+                ? `<span class="coin-icon">🪙</span>${u.coins}`
+                : `<span class="coin-zero">—</span>`
+              }
+              <button class="btn-edit-coins" onclick="editCoins('${u.uid}','${u.username}',${u.coins})">✎</button>
+            </td>
             <td style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);white-space:nowrap;">${
               u.updatedAt
                 ? (() => {
@@ -1858,6 +1955,44 @@
         showToast('Error al actualizar', true);
       }
     }
+
+    // ── Edit Coins ──
+    let editingCoinsUid = null;
+
+    window.editCoins = function(uid, username, currentCoins) {
+      editingCoinsUid = uid;
+      document.getElementById('coinsModalUser').innerHTML =
+        `Usuario: <strong>${username}</strong> · Coins actuales: <strong>🪙 ${currentCoins}</strong>`;
+      document.getElementById('coinsInput').value = currentCoins;
+      document.getElementById('coinsModal').classList.add('visible');
+      setTimeout(() => document.getElementById('coinsInput').focus(), 100);
+    };
+
+    window.closeCoinsModal = function() {
+      document.getElementById('coinsModal').classList.remove('visible');
+      editingCoinsUid = null;
+    };
+
+    window.saveCoins = async function() {
+      if (!editingCoinsUid) return;
+      const newCoins = parseInt(document.getElementById('coinsInput').value);
+      if (isNaN(newCoins) || newCoins < 0) {
+        showToast('Ingresa un valor válido (0 o más)', true);
+        return;
+      }
+      try {
+        await update(ref(db, `users/${editingCoinsUid}`), { coins: newCoins });
+        closeCoinsModal();
+        showToast(`🪙 Coins actualizados a ${newCoins}`);
+      } catch(e) {
+        showToast('Error al actualizar coins', true);
+      }
+    };
+
+    document.getElementById('coinsInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter')  window.saveCoins();
+      if (e.key === 'Escape') window.closeCoinsModal();
+    });
 
     // ── Edit Country ──
     let editingUid = null;
