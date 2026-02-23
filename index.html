@@ -1706,8 +1706,8 @@
       <!-- Donut + CREL label -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
         <div class="donut-wrap">
-          <svg width="100%" height="100%" viewBox="-5 -5 110 110" id="donut-svg">
-            <circle cx="50" cy="50" r="28" fill="none" stroke="#1a3a5c" stroke-width="10"/>
+          <svg width="100%" height="100%" viewBox="-10 -10 120 120" id="donut-svg">
+            <circle id="donut-bg-circle" cx="50" cy="50" r="28" fill="none" stroke="#1a3a5c" stroke-width="30"/>
           </svg>
           <div class="donut-center" id="donut-center">—</div>
         </div>
@@ -2466,6 +2466,12 @@
     }
     center.textContent = total;
 
+    // Aplicar color del usuario al círculo de fondo
+    const _donutBg = document.getElementById('donut-bg-circle');
+    if (_donutBg && window._userThemeRgb) {
+      _donutBg.setAttribute('stroke', `rgba(${window._userThemeRgb},0.15)`);
+    }
+
     const activeCount = vals.filter(v => v > 0).length;
 
     // Calcular ángulos usando radio base común para distribuir 360°
@@ -2505,6 +2511,12 @@
       return d;
     }
 
+    // 4 radios fijos por rareza: common=más exterior, legendary=más interior
+    // Se solapan intencionalmente para que se crucen al girar
+    const RADIOS = [38, 30, 22, 14]; // common, rare, epic, legendary
+    // Sentido de giro alternado para que se crucen visualmente
+    const SPIN_DIR = ['segSpinFwd', 'segSpinRev', 'segSpinFwd', 'segSpinRev'];
+
     let angleOffset = -Math.PI / 2; // empezar arriba
 
     vals.forEach((val, i) => {
@@ -2514,9 +2526,7 @@
       const startAngle = angleOffset;
       const endAngle = angleOffset + segAngle;
       const midAngle = (startAngle + endAngle) / 2;
-      const pctForRadius = (val / total) * 100;
-      const isAboveBase = pctForRadius > BASE_DONUT_R[i];
-      const radius = isAboveBase ? 34 : 24;
+      const radius = RADIOS[i];
 
       // Explode: desplazar el segmento hacia afuera desde el centro
       const EXPLODE = 2;
@@ -2551,11 +2561,7 @@
       else if (segVal <= 2000)  segSpeed = 1.5;
       else if (segVal <= 4000)  segSpeed = 1;
       else                      segSpeed = 0.5;
-      if (isAboveBase) {
-        g.style.animation = `segSpinFwd ${segSpeed.toFixed(2)}s linear infinite`;
-      } else {
-        g.style.animation = `segSpinRev ${(segSpeed * 1.4).toFixed(2)}s linear infinite`;
-      }
+      g.style.animation = `${SPIN_DIR[i]} ${segSpeed.toFixed(2)}s linear infinite`;
       g.appendChild(seg);
       svg.appendChild(g);
 
@@ -2912,6 +2918,12 @@
     document.querySelectorAll('.breakdown-separator').forEach(el => {
       el.style.borderTopColor = `rgba(${rgb},0.35)`;
     });
+
+    // Círculo de fondo del donut con color del usuario al 15% de opacidad
+    const donutBg = document.getElementById('donut-bg-circle');
+    if (donutBg) donutBg.setAttribute('stroke', `rgba(${rgb},0.15)`);
+    // Guardar color para cuando se redibuje el donut
+    window._userThemeRgb = rgb;
   }
   // Exponer en window para que el módulo Firebase pueda accederla
   window.applyThemeColor = applyThemeColor;
