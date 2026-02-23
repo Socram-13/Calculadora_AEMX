@@ -607,32 +607,100 @@
     const con = players.filter(p => p.coords);
     if (con.length < 2) return;
 
-    // Ordenar de norte a sur (latitud descendente)
-    const ordenados = [...con].sort((a, b) => b.coords[0] - a.coords[0]);
+    // Ordenar por proximidad (nearest neighbor): cada punto se une al más cercano no visitado
+    function distancia(a, b) {
+      const dLat = a.coords[0] - b.coords[0];
+      const dLng = a.coords[1] - b.coords[1];
+      return Math.sqrt(dLat * dLat + dLng * dLng);
+    }
+
+    const visitados = new Array(con.length).fill(false);
+    const ordenados = [];
+    let actual = 0; // empezar desde el primer jugador
+    visitados[actual] = true;
+    ordenados.push(con[actual]);
+
+    for (let i = 1; i < con.length; i++) {
+      let mejorIdx = -1;
+      let mejorDist = Infinity;
+      for (let j = 0; j < con.length; j++) {
+        if (!visitados[j]) {
+          const d = distancia(con[actual], con[j]);
+          if (d < mejorDist) { mejorDist = d; mejorIdx = j; }
+        }
+      }
+      visitados[mejorIdx] = true;
+      ordenados.push(con[mejorIdx]);
+      actual = mejorIdx;
+    }
+
+    // Inyectar keyframes de animación una sola vez
+    if (!document.getElementById('pulse-style')) {
+      const style = document.createElement('style');
+      style.id = 'pulse-style';
+      style.textContent = `
+        @keyframes dashFlow {
+          from { stroke-dashoffset: 28; }
+          to   { stroke-dashoffset: 0;  }
+        }
+        @keyframes dashFlowReverse {
+          from { stroke-dashoffset: 0;  }
+          to   { stroke-dashoffset: 28; }
+        }
+        .pulse-line {
+          animation: dashFlow 1.2s linear infinite;
+        }
+        .pulse-line-rev {
+          animation: dashFlowReverse 1.2s linear infinite;
+        }
+        @keyframes glowPulse {
+          0%,100% { stroke-opacity: 0.15; }
+          50%      { stroke-opacity: 0.55; }
+        }
+        .glow-line {
+          animation: glowPulse 1.8s ease-in-out infinite;
+        }
+      `;
+      document.head.appendChild(style);
+    }
 
     // Trazar ruta encadenada
     for (let i = 0; i < ordenados.length - 1; i++) {
       const a = ordenados[i];
       const b = ordenados[i + 1];
 
-      // Progreso en la ruta (0 = norte, 1 = sur) → color cambia de cian a púrpura
+      // Progreso → color cambia de cian a púrpura
       const t = i / (ordenados.length - 1);
       const r = Math.round(0   + t * 192);
       const g = Math.round(200 - t * 68);
       const bC= Math.round(255 - t * 123);
       const color = `rgb(${r},${g},${bC})`;
 
-      const line = L.polyline([a.coords, b.coords], {
+      // ── Capa 1: línea base tenue (glow suave pulsante) ──
+      const lineBase = L.polyline([a.coords, b.coords], {
+        color,
+        weight:    4,
+        opacity:   0.12,
+        dashArray: null,
+        interactive: false,
+        className: 'glow-line',
+      }).addTo(map);
+      networkLines.push(lineBase);
+
+      // ── Capa 2: línea punteada animada (flujo de datos) ──
+      // segmentos alternos van en dirección contraria para simular bidireccionalidad
+      const cls = i % 2 === 0 ? 'pulse-line' : 'pulse-line-rev';
+      const linePulse = L.polyline([a.coords, b.coords], {
         color,
         weight:    2,
-        opacity:   0.55,
-        dashArray: '6, 8',     // línea punteada estilo ruta
+        opacity:   0.85,
+        dashArray: '6, 22',
         interactive: false,
+        className: cls,
       }).addTo(map);
+      networkLines.push(linePulse);
 
-      networkLines.push(line);
-
-      // Número de orden sobre el segmento
+      // ── Número de orden ──
       const midLat = (a.coords[0] + b.coords[0]) / 2;
       const midLng = (a.coords[1] + b.coords[1]) / 2;
       const label = L.divIcon({
