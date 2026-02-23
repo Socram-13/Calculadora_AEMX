@@ -878,17 +878,13 @@
             }
 
             .chat-header-content {
-                gap: 10px;
+                gap: 6px;
             }
 
-            .btn-leaderboard .lb-text {
-                display: none;
-            }
-
-            .btn-leaderboard {
-                padding: 6px 9px;
-                font-size: 14px;
-            }
+            .btn-leaderboard .lb-text { display: none; }
+            .btn-leaderboard { padding: 6px 9px; font-size: 14px; }
+            .btn-marco .marco-text { display: none; }
+            .btn-marco { padding: 6px 9px; font-size: 14px; }
 
             /* Botón hamburguesa visible */
             .menu-toggle {
@@ -1522,22 +1518,29 @@
         // ── Ticker de avisos desde Firebase ──
         loadTicker();
 
-        // ── Botón Marco: solo miembros del clan ──
+        } // fin initChat
+
+        // ── Botón Marco: fuera de initChat para que siempre esté disponible ──
         window.abrirMarco = async function() {
-            if (!auth.currentUser) return;
-            const snap = await get(ref(database, `users/${auth.currentUser.uid}`));
-            const data = snap.exists() ? snap.val() : {};
-            // Verificar que tenga el campo clanMember: true (o rol de admin/moderador)
-            const esMiembro = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
-            if (esMiembro) {
-                window.open('editor_marco.html', '_blank');
-            } else {
+            const user = auth.currentUser;
+            if (!user) {
+                document.getElementById('deniedModal').classList.add('active');
+                return;
+            }
+            try {
+                const snap = await get(ref(database, 'users/' + user.uid));
+                const data = snap.exists() ? snap.val() : {};
+                const esMiembro = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
+                if (esMiembro) {
+                    window.open('editor_marco.html', '_blank');
+                } else {
+                    document.getElementById('deniedModal').classList.add('active');
+                }
+            } catch(e) {
+                console.error('Error verificando membresía:', e);
                 document.getElementById('deniedModal').classList.add('active');
             }
         };
-
-
-        } // fin initChat
     </script>
 </body>
 </html>
