@@ -1346,35 +1346,10 @@
 
         // Cargar usuarios online
         function loadUsers() {
+            // Solo actualizar el contador, ya no hay lista de usuarios
             const usersRef = ref(database, 'chat_presence');
-            
             onValue(usersRef, (snapshot) => {
-                const usersList = document.getElementById('usersList');
-                usersList.innerHTML = '';
-                
-                let count = 0;
-                snapshot.forEach((childSnapshot) => {
-                    const user = childSnapshot.val();
-                    count++;
-                    
-                    const avatarHTML = user.avatar
-                        ? `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`
-                        : user.username.charAt(0);
-                    const borderStyle = user.borderColor ? `border-color:${user.borderColor};box-shadow:0 0 8px ${user.borderColor}40;` : '';
-
-                    const userHTML = `
-                        <div class="user-item">
-                            <div class="user-avatar" style="${borderStyle}">${avatarHTML}</div>
-                            <div class="user-info">
-                                <div class="user-name">${user.username}</div>
-                                <div class="user-status">Activo</div>
-                            </div>
-                        </div>
-                    `;
-                    usersList.insertAdjacentHTML('beforeend', userHTML);
-                });
-                
-                document.getElementById('onlineCount').textContent = `${count} EN LÍNEA`;
+                document.getElementById('onlineCount').textContent = `${snapshot.size} EN LÍNEA`;
             });
         }
 
