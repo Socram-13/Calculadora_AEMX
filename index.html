@@ -1533,7 +1533,6 @@
         badges:      document.getElementById('badges')?.value      || 0,
         diamonds:    document.getElementById('diamonds')?.value    || 0,
         atlasbucks:  document.getElementById('atlasbucks')?.value  || 0,
-        updatedAt:   Date.now(),
       };
       try {
         const snap = await get(ref(db, `users/${user.uid}`));
@@ -1542,6 +1541,15 @@
           if (prev.country)        data.country        = prev.country;
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
+          // Solo actualizar updatedAt si cambiaron las parcelas
+          const parcelasChanged =
+            String(data.common)    !== String(prev.common    || 0) ||
+            String(data.rare)      !== String(prev.rare      || 0) ||
+            String(data.epic)      !== String(prev.epic      || 0) ||
+            String(data.legendary) !== String(prev.legendary || 0);
+          data.updatedAt = parcelasChanged ? Date.now() : (prev.updatedAt || null);
+        } else {
+          data.updatedAt = Date.now();
         }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
