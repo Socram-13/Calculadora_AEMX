@@ -761,21 +761,20 @@
         }
 
         .ticker-text {
-            position: absolute;
+            display: inline-block;
             white-space: nowrap;
             font-family: 'Rajdhani', sans-serif;
             font-size: 19px;
             font-weight: 700;
             letter-spacing: 1px;
             color: #ffe066;
-            top: 50%;
-            transform: translateY(-50%);
-            animation: tickerScroll 6s linear infinite;
+            line-height: 40px;
+            animation: tickerScroll 8s linear infinite;
         }
 
         @keyframes tickerScroll {
-            0%   { left: 100%; }
-            100% { left: -100%; }
+            0%   { transform: translateX(100vw); }
+            100% { transform: translateX(-100%); }
         }
 
         /* Scrollbar personalizada */
@@ -1350,7 +1349,7 @@
                 if (texto && texto.trim()) {
                     txt.textContent = texto.trim();
                     bar.classList.add('visible');
-                    const duration = Math.max(4, texto.length * 0.05) + 's';
+                    const duration = Math.max(5, texto.length * 0.06) + 's';
                     txt.style.animationDuration = duration;
                 } else {
                     bar.classList.remove('visible');
