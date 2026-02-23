@@ -375,6 +375,9 @@
         .message-avatar {
             width: 32px;
             height: 32px;
+            min-width: 32px;
+            min-height: 32px;
+            aspect-ratio: 1 / 1;
             border-radius: 50%;
             border: 2px solid var(--primary-color);
             background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -386,6 +389,13 @@
             flex-shrink: 0;
             box-shadow: 0 0 8px rgba(0,255,136,0.3);
             overflow: hidden;
+        }
+        .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
         }
 
         .message-content {
@@ -905,7 +915,9 @@
 
             .message-avatar {
                 width: 28px;
-                height: 40px;
+                height: 28px;
+                min-width: 28px;
+                min-height: 28px;
                 font-size: 11px;
             }
 
@@ -1222,7 +1234,7 @@
                 
                 // Mostrar solo los últimos 50 mensajes
                 messages.slice(-50).forEach((msg) => {
-                    addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername);
+                    addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.avatar || '', msg.borderColor || '');
                 });
                 
                 // Scroll al final
@@ -1244,7 +1256,7 @@
                     count++;
                     
                     const avatarHTML = user.avatar
-                        ? `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+                        ? `<img src="${user.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`
                         : user.username.charAt(0);
                     const borderStyle = user.borderColor ? `border-color:${user.borderColor};box-shadow:0 0 8px ${user.borderColor}40;` : '';
 
@@ -1272,9 +1284,11 @@
             if (message && currentUsername) {
                 const messagesRef = ref(database, 'messages');
                 push(messagesRef, {
-                    username: currentUsername,
-                    text: message,
-                    timestamp: serverTimestamp()
+                    username:    currentUsername,
+                    text:        message,
+                    timestamp:   serverTimestamp(),
+                    avatar:      currentAvatar      || '',
+                    borderColor: currentBorderColor || '',
                 });
                 
                 input.value = '';
@@ -1290,16 +1304,19 @@
         }
 
         // Agregar mensaje a la UI
-        function addMessageToUI(author, text, timestamp, isOwn = false) {
+        function addMessageToUI(author, text, timestamp, isOwn = false, msgAvatar = '', msgBorderColor = '') {
             const container = document.getElementById('messagesContainer');
             const ownClass = isOwn ? 'own' : '';
 
-            const borderStyle = (isOwn && currentBorderColor)
-                ? `border:2px solid ${currentBorderColor};box-shadow:0 0 8px ${currentBorderColor}40;`
+            const avatar      = isOwn ? (currentAvatar || msgAvatar) : msgAvatar;
+            const borderColor = isOwn ? (currentBorderColor || msgBorderColor) : msgBorderColor;
+
+            const borderStyle = borderColor
+                ? `border:2px solid ${borderColor};box-shadow:0 0 8px ${borderColor}40;`
                 : '';
 
-            const avatarHTML = (isOwn && currentAvatar)
-                ? `<img src="${currentAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+            const avatarHTML = avatar
+                ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`
                 : author.charAt(0).toUpperCase();
 
             const messageHTML = `
