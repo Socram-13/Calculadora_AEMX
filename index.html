@@ -1542,11 +1542,11 @@
           else if (window.userCountry) data.country    = window.userCountry;
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
-          // Preservar campos gestionados por el admin
-          if (prev.clanMember  !== undefined) data.clanMember         = prev.clanMember;
-          if (prev.bannedChat  !== undefined) data.bannedChat         = prev.bannedChat;
-          if (prev.bannedLeaderboard !== undefined) data.bannedLeaderboard = prev.bannedLeaderboard;
-          if (prev.role        !== undefined) data.role               = prev.role;
+          // Preservar campos gestionados por el admin (siempre, aunque sean false)
+          data.clanMember        = prev.clanMember        === true;
+          data.bannedChat        = prev.bannedChat        === true;
+          data.bannedLeaderboard = prev.bannedLeaderboard === true;
+          data.role              = prev.role              || '';
           // Solo actualizar updatedAt si cambiaron las parcelas
           const parcelasChanged =
             String(data.common)    !== String(prev.common    || 0) ||
@@ -1557,6 +1557,11 @@
         } else {
           data.updatedAt = Date.now();
           if (window.userCountry) data.country = window.userCountry;
+          // Usuario nuevo: campos admin en false por defecto
+          data.clanMember        = false;
+          data.bannedChat        = false;
+          data.bannedLeaderboard = false;
+          data.role              = '';
         }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
@@ -3386,7 +3391,7 @@
       <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       <span id="widget-time">--:--</span>
     </div>
-    <iframe id="chat-frame" src="chat-firebase.html" title="Chat Atlas Earth México" loading="lazy" allow="clipboard-write" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe>
+    <iframe id="chat-frame" src="chat-firebase.html" title="Chat Atlas Earth México" loading="lazy" allow="clipboard-write"></iframe>
   </div>
 
   <script>
