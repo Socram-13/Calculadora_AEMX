@@ -593,6 +593,7 @@
   let estadoLayers = {};   // estado → L.circle
   let playerMarkers = [];
   let networkLines  = [];  // líneas de ruta
+  let geojsonLayer  = null;
 
   function limpiarMapa() {
     Object.values(estadoLayers).forEach(l => map.removeLayer(l));
@@ -601,6 +602,7 @@
     playerMarkers = [];
     networkLines.forEach(l => map.removeLayer(l));
     networkLines = [];
+    if (geojsonLayer) { map.removeLayer(geojsonLayer); geojsonLayer = null; }
   }
 
   function renderRed(players) {
@@ -711,7 +713,7 @@
     }
   }
 
-  function renderMapa(players) {
+  async function renderMapa(players) {
     limpiarMapa();
 
     // Agrupar por estado
@@ -724,6 +726,67 @@
     });
 
 
+
+    // ── Polígonos GeoJSON por estado ──
+    const NOMBRE_MAP = {
+      'Baja California Norte': 'Baja California',
+      'Coahuila de Zaragoza': 'Coahuila',
+      'Michoacán de Ocampo': 'Michoacán',
+      'Veracruz de Ignacio de la Llave': 'Veracruz',
+      'México': 'Estado de México',
+    };
+
+    try {
+      const geoRes  = await fetch('https://raw.githubusercontent.com/angelnmara/geojson/master/mexicoHigh.json');
+      const geoData = await geoRes.json();
+
+      geojsonLayer = L.geoJSON(geoData, {
+        style: feature => {
+          const rawName = feature.properties.name || feature.properties.NAME_1 || '';
+          const nombre  = NOMBRE_MAP[rawName] || rawName;
+          const tieneJugadores = !!porEstado[nombre];
+          return {
+            color:       tieneJugadores ? '#00ff9d' : 'transparent',
+            weight:      tieneJugadores ? 1.5        : 0,
+            fillColor:   tieneJugadores ? '#00ff9d' : 'transparent',
+            fillOpacity: tieneJugadores ? 0.5        : 0,
+            opacity:     tieneJugadores ? 0.8        : 0,
+          };
+        },
+        onEachFeature: (feature, layer) => {
+          const rawName = feature.properties.name || feature.properties.NAME_1 || '';
+          const nombre  = NOMBRE_MAP[rawName] || rawName;
+          const jugadores = porEstado[nombre];
+          if (!jugadores) return;
+          const n = jugadores.length;
+          const rows = jugadores.map(p => `
+            <div class="popup-player">
+              ${avatarHTML(p, 32)}
+              <div>
+                <div class="popup-name">${p.username}</div>
+                <div class="popup-total">${p.total.toLocaleString()} parcelas · ${p.city || nombre}</div>
+              </div>
+            </div>
+          `).join('');
+          layer.bindTooltip(`${nombre.toUpperCase()} · ${n} jugador${n > 1 ? 'es' : ''}`, {
+            sticky: true, direction: 'top',
+          });
+          layer.bindPopup(`
+            <div style="min-width:200px;max-width:280px;">
+              <div class="popup-state-title">📍 ${nombre.toUpperCase()}</div>
+              <div class="popup-count">${n} JUGADOR${n > 1 ? 'ES' : ''}</div>
+              <div style="margin-top:10px;">${rows}</div>
+            </div>
+          `);
+        },
+        interactive: true,
+      }).addTo(map);
+
+      // Asegurarse de que los marcadores queden encima
+      geojsonLayer.bringToBack();
+    } catch(e) {
+      console.warn('No se pudo cargar GeoJSON de estados:', e);
+    }
 
     // ── Red de conexiones ──
     renderRed(players);
