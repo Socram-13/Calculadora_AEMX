@@ -1703,8 +1703,10 @@
           data.bannedChat        = false;
           data.bannedLeaderboard = false;
           data.role              = '';
+          data.coins             = 0;
+          data.lastCoinDate      = null;
         }
-        await set(ref(db, `users/${user.uid}`), data);
+        await update(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
     };
 
