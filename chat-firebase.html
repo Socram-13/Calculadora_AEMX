@@ -170,6 +170,9 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+            pointer-events: all;
+            position: relative;
+            z-index: 10;
         }
 
         .guide-item {
@@ -185,6 +188,10 @@
             transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
+            pointer-events: all;
+            cursor: pointer;
+            -webkit-tap-highlight-color: rgba(0,255,136,0.1);
+            touch-action: manipulation;
         }
 
         .guide-item::before {
@@ -1079,52 +1086,52 @@
                 </div>
             </div>
             <div class="guides-list">
-                <a class="guide-item" href="https://www.facebook.com/share/v/1AcP9Vo8Rf/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1AcP9Vo8Rf/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1AcP9Vo8Rf/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">👨‍🚀</span>
                     <span class="guide-item-text">Primeros pasos en Atlas Earth</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1YW1XiRBRL/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1YW1XiRBRL/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1YW1XiRBRL/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">🧭</span>
                     <span class="guide-item-text">Suscripciones Premium EC/SP</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1A8SnBcX6R/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1A8SnBcX6R/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1A8SnBcX6R/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">🤵</span>
                     <span class="guide-item-text">V.I.P. en Atlas Earth</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1A9vPNQFwR/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1A9vPNQFwR/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1A9vPNQFwR/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">🗺️</span>
                     <span class="guide-item-text">Mapa de Atlas Earth</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1N3UXYcRfT/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1N3UXYcRfT/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1N3UXYcRfT/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">🐇</span>
                     <span class="guide-item-text">Topes, Caídas y Saltos</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/19ySgWJ5Lo/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/19ySgWJ5Lo/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/19ySgWJ5Lo/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">📈</span>
                     <span class="guide-item-text">Tablas de Saltos</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1BV5NKitE2/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1BV5NKitE2/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1BV5NKitE2/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">📊</span>
                     <span class="guide-item-text">C.R.E.L.</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1EWMgw9X8t/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1EWMgw9X8t/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1EWMgw9X8t/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">🚫</span>
                     <span class="guide-item-text">Mejoras de Parcelas</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1ZpapUhcLg/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1ZpapUhcLg/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1ZpapUhcLg/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">🌳</span>
                     <span class="guide-item-text">Seguir la Vegetación</span>
                     <span class="guide-item-arrow">›</span>
                 </a>
-                <a class="guide-item" href="https://www.facebook.com/share/v/1G1cvT5EHT/" target="_blank" rel="noopener" onclick="event.stopPropagation();window.open(\'https://www.facebook.com/share/v/1G1cvT5EHT/\',\'_blank\')">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1G1cvT5EHT/" target="_blank" rel="noopener noreferrer">
                     <span class="guide-item-icon">🏚️</span>
                     <span class="guide-item-text">Diversificar las Parcelas</span>
                     <span class="guide-item-arrow">›</span>
