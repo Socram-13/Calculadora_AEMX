@@ -1674,6 +1674,9 @@
           data.bannedChat        = prev.bannedChat        === true;
           data.bannedLeaderboard = prev.bannedLeaderboard === true;
           data.role              = prev.role              || '';
+          // Preservar coins y fecha (nunca sobreescribir con set)
+          data.coins             = prev.coins             || 0;
+          data.lastCoinDate      = prev.lastCoinDate      || null;
           // Solo actualizar updatedAt si cambiaron las parcelas
           const parcelasChanged =
             String(data.common)    !== String(prev.common    || 0) ||
@@ -2275,52 +2278,35 @@
       if (el) el.outerHTML = `<span id="coins-status-text">${html}</span>`;
     }
 
-    // Otorga 1 coin al día usando Firestore con transacción
+    // Otorga 1 coin al día usando Realtime Database
     window._awardDailyCoin = async function() {
       if (!window._fbUser) return;
       const uid = window._fbUser.uid;
+      const hoy = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
 
       try {
-        const db = firebase.firestore();
-        const userRef = db.collection('users').doc(uid);
+        const snap = await get(ref(db, `users/${uid}`));
+        const data = snap.exists() ? snap.val() : {};
 
-        const result = await db.runTransaction(async (transaction) => {
-          const userDoc = await transaction.get(userRef);
-          const hoy = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+        const ultimaFecha = data.lastCoinDate || null;
 
-          let coins = 0;
-          let ultimaFecha = null;
+        if (ultimaFecha === hoy) {
+          // Ya ganó su coin hoy
+          window._coinsUpdateDisplay(data.coins || 0);
+          setCoinStatus(`<span class="waiting">Ya ganaste tu coin hoy · Vuelve mañana 🕐</span>`);
+          return;
+        }
 
-          if (userDoc.exists) {
-            const data = userDoc.data();
-            coins = data.coins || 0;
-            ultimaFecha = data.lastCoinDate || null;
-          }
-
-          if (ultimaFecha === hoy) {
-            return { awarded: false, coins, hoy };
-          }
-
-          const nuevoTotal = coins + 1;
-          const updateData = { coins: nuevoTotal, lastCoinDate: hoy };
-
-          if (userDoc.exists) {
-            transaction.update(userRef, updateData);
-          } else {
-            transaction.set(userRef, updateData, { merge: true });
-          }
-
-          return { awarded: true, coins: nuevoTotal, hoy };
+        // Sumar 1 coin y guardar fecha
+        const nuevoTotal = (data.coins || 0) + 1;
+        await update(ref(db, `users/${uid}`), {
+          coins:        nuevoTotal,
+          lastCoinDate: hoy
         });
 
-        window._coinsUpdateDisplay(result.coins);
-
-        if (result.awarded) {
-          showCoinToast(result.coins);
-          setCoinStatus(`<span class="earned">✔ +1 Coin ganado hoy · ${result.hoy}</span>`);
-        } else {
-          setCoinStatus(`<span class="waiting">Ya ganaste tu coin hoy · Vuelve mañana 🕐</span>`);
-        }
+        window._coinsUpdateDisplay(nuevoTotal);
+        showCoinToast(nuevoTotal);
+        setCoinStatus(`<span class="earned">✔ +1 Coin ganado hoy · ${hoy}</span>`);
 
       } catch (err) {
         console.warn('Coins error:', err);
@@ -2331,10 +2317,9 @@
     window._coinsLoad = async function(uid) {
       if (!uid) return;
       try {
-        const db = firebase.firestore();
-        const doc = await db.collection('users').doc(uid).get();
-        if (doc.exists) {
-          const data = doc.data();
+        const snap = await get(ref(db, `users/${uid}`));
+        if (snap.exists()) {
+          const data = snap.val();
           const coins = data.coins || 0;
           const hoy = new Date().toISOString().split('T')[0];
           window._coinsUpdateDisplay(coins);
