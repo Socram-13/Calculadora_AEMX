@@ -1556,6 +1556,9 @@
       } else {
         window._fbUser = null;
         renderAuthUI(null);
+        // Ocultar coins si no hay sesión
+        const coinsBar = document.getElementById('coins-bar');
+        if (coinsBar) coinsBar.style.display = 'none';
       }
     });
 
