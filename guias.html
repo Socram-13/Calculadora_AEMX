@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video-Guías AURA · Atlas Earth México</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060b14;
+      --panel: #0b1626;
+      --border: #1a3a5c;
+      --glow: #00c8ff;
+      --glow2: #00ff9d;
+      --gold: #facc15;
+      --text: #cce4ff;
+      --text2: #6b8ab0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Grid background */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* Glow top */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(0,200,255,0.08) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .container {
+      position: relative; z-index: 1;
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 52px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,200,255,0.08);
+      border: 1px solid rgba(0,200,255,0.2);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: var(--glow);
+      margin-bottom: 20px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .header-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--glow2);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--glow2);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    .header-title {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(28px, 6vw, 48px);
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--text);
+      text-transform: uppercase;
+      line-height: 1;
+      margin-bottom: 6px;
+      animation: fadeDown 0.6s 0.1s ease both;
+    }
+
+    .header-title span { color: var(--glow); }
+
+    .header-sub {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: var(--text2);
+      margin-bottom: 20px;
+      animation: fadeDown 0.6s 0.2s ease both;
+    }
+
+    .header-desc {
+      font-size: 15px;
+      color: var(--text2);
+      letter-spacing: 0.5px;
+      line-height: 1.7;
+      max-width: 520px;
+      margin: 0 auto;
+      animation: fadeDown 0.6s 0.3s ease both;
+    }
+
+    .header-line {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--glow), transparent);
+      margin: 32px 0;
+      opacity: 0.4;
+      animation: fadeDown 0.6s 0.35s ease both;
+    }
+
+    /* Grid de guías */
+    .guides-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .guide-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .guide-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--glow);
+      transform: scaleY(0);
+      transition: transform 0.25s ease;
+      transform-origin: bottom;
+    }
+
+    .guide-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(0,200,255,0.04), transparent);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .guide-card:hover {
+      border-color: var(--glow);
+      transform: translateX(6px);
+      box-shadow: 0 0 24px rgba(0,200,255,0.08), -4px 0 20px rgba(0,200,255,0.05);
+    }
+
+    .guide-card:hover::before { transform: scaleY(1); }
+    .guide-card:hover::after { opacity: 1; }
+
+    .guide-icon {
+      font-size: 26px;
+      width: 48px; height: 48px;
+      min-width: 48px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,200,255,0.06);
+      border: 1px solid rgba(0,200,255,0.15);
+      border-radius: 10px;
+      transition: all 0.25s ease;
+      position: relative; z-index: 1;
+    }
+
+    .guide-card:hover .guide-icon {
+      background: rgba(0,200,255,0.12);
+      border-color: rgba(0,200,255,0.35);
+      box-shadow: 0 0 16px rgba(0,200,255,0.15);
+    }
+
+    .guide-info {
+      flex: 1;
+      position: relative; z-index: 1;
+    }
+
+    .guide-num {
+      font-family: 'Orbitron', monospace;
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: var(--text2);
+      margin-bottom: 3px;
+    }
+
+    .guide-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--text);
+      transition: color 0.2s;
+      text-transform: uppercase;
+    }
+
+    .guide-card:hover .guide-title { color: var(--glow); }
+
+    .guide-arrow {
+      font-size: 18px;
+      color: var(--text2);
+      transition: all 0.25s ease;
+      position: relative; z-index: 1;
+    }
+
+    .guide-card:hover .guide-arrow {
+      color: var(--glow);
+      transform: translateX(4px);
+    }
+
+    /* Stagger animaciones */
+    .guide-card:nth-child(1)  { animation-delay: 0.1s; }
+    .guide-card:nth-child(2)  { animation-delay: 0.15s; }
+    .guide-card:nth-child(3)  { animation-delay: 0.2s; }
+    .guide-card:nth-child(4)  { animation-delay: 0.25s; }
+    .guide-card:nth-child(5)  { animation-delay: 0.3s; }
+    .guide-card:nth-child(6)  { animation-delay: 0.35s; }
+    .guide-card:nth-child(7)  { animation-delay: 0.4s; }
+    .guide-card:nth-child(8)  { animation-delay: 0.45s; }
+    .guide-card:nth-child(9)  { animation-delay: 0.5s; }
+    .guide-card:nth-child(10) { animation-delay: 0.55s; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 52px;
+      animation: fadeUp 0.6s 0.6s ease both;
+    }
+
+    .footer-rocket {
+      font-size: 32px;
+      margin-bottom: 12px;
+      display: block;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .footer-text {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--text2);
+      text-transform: uppercase;
+    }
+
+    .footer-text span { color: var(--glow); }
+
+    /* Animaciones */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mobile */
+    @media (max-width: 480px) {
+      .guide-card { padding: 13px 14px; gap: 12px; }
+      .guide-icon { width: 40px; height: 40px; min-width: 40px; font-size: 20px; }
+      .guide-title { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="header-badge">📹 VIDEO-GUÍAS AURA</div>
+      <h1 class="header-title">ATLAS EARTH<br><span>MÉXICO</span></h1>
+      <div class="header-sub">COMUNIDAD · GUÍAS · EXPLORACIÓN</div>
+      <p class="header-desc">
+        Información clara, rápida y lista para mejorar tu experiencia en el juego.
+        Consulta las guías cuando lo necesites.
+      </p>
+      <div class="header-line"></div>
+    </div>
+
+    <div class="guides-grid">
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1AcP9Vo8Rf/" target="_blank" rel="noopener">
+        <div class="guide-icon">👨‍🚀</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 01</div>
+          <div class="guide-title">Primeros pasos en Atlas Earth</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1YW1XiRBRL/" target="_blank" rel="noopener">
+        <div class="guide-icon">🧭</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 02</div>
+          <div class="guide-title">Suscripciones Premium EC/SP</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1A8SnBcX6R/" target="_blank" rel="noopener">
+        <div class="guide-icon">🤵</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 03</div>
+          <div class="guide-title">V.I.P. en Atlas Earth</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1A9vPNQFwR/" target="_blank" rel="noopener">
+        <div class="guide-icon">🗺️</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 04</div>
+          <div class="guide-title">Mapa de Atlas Earth</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1N3UXYcRfT/" target="_blank" rel="noopener">
+        <div class="guide-icon">🐇</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 05</div>
+          <div class="guide-title">Topes, Caídas y Saltos</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/19ySgWJ5Lo/" target="_blank" rel="noopener">
+        <div class="guide-icon">📈</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 06</div>
+          <div class="guide-title">Tablas de Saltos</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1BV5NKitE2/" target="_blank" rel="noopener">
+        <div class="guide-icon">📊</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 07</div>
+          <div class="guide-title">C.R.E.L.</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1EWMgw9X8t/" target="_blank" rel="noopener">
+        <div class="guide-icon">🚫</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 08</div>
+          <div class="guide-title">Mejoras de Parcelas</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1ZpapUhcLg/" target="_blank" rel="noopener">
+        <div class="guide-icon">🌳</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 09</div>
+          <div class="guide-title">Seguir la Vegetación</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+      <a class="guide-card" href="https://www.facebook.com/share/v/1G1cvT5EHT/" target="_blank" rel="noopener">
+        <div class="guide-icon">🏚️</div>
+        <div class="guide-info">
+          <div class="guide-num">GUÍA 10</div>
+          <div class="guide-title">Diversificar las Parcelas</div>
+        </div>
+        <div class="guide-arrow">›</div>
+      </a>
+
+    </div>
+
+    <div class="footer">
+      <span class="footer-rocket">🚀</span>
+      <div class="footer-text">A darle, <span>exploradores</span></div>
+    </div>
+
+  </div>
+</body>
+</html>
