@@ -2195,7 +2195,7 @@
 
 
   <!-- ===== COINS COUNTER ===== -->
-  <div class="coins-bar" id="coins-bar" style="margin-top:16px;margin-bottom:0;">
+  <div class="coins-bar" id="coins-bar" style="margin-top:16px;margin-bottom:0;display:none;">
     <div class="coins-icon">🪙</div>
     <div class="coins-info">
       <div class="coins-label">AEMX Coins</div>
@@ -2300,6 +2300,11 @@
       if (!_db || !_ref || !_get || !_upd) return;
 
       try {
+        // Verificar si el sistema está activo
+        const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
+        const coinsActivo = configSnap.exists() ? configSnap.val() : true;
+        if (!coinsActivo) return;
+
         const snap = await _get(_ref(_db, `users/${uid}`));
         const data = snap.exists() ? snap.val() : {};
         const ultimaFecha = data.lastCoinDate || null;
@@ -2333,6 +2338,17 @@
       const _get = window._fbGet;
       if (!_db || !_ref || !_get) return;
       try {
+        // Verificar si el sistema de coins está activo
+        const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
+        const coinsActivo = configSnap.exists() ? configSnap.val() : true;
+        const coinsBar = document.getElementById('coins-bar');
+
+        if (!coinsActivo) {
+          if (coinsBar) coinsBar.style.display = 'none';
+          return;
+        }
+        if (coinsBar) coinsBar.style.display = '';
+
         const snap = await _get(_ref(_db, `users/${uid}`));
         if (snap.exists()) {
           const data = snap.val();
