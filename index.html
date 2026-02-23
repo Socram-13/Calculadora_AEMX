@@ -1639,6 +1639,9 @@
 
         if(window.calc) window.calc();
 
+        // Cargar coins
+        if (window._coinsLoad) window._coinsLoad(uid);
+
         // Sincronización completa — resubir a Firebase para mantener fresco
         setTimeout(() => { if(window._fbSaveAll) window._fbSaveAll(); }, 800);
       } catch(e) { console.warn('Firebase sync error:', e); }
