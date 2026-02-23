@@ -163,93 +163,77 @@
             50% { transform: scale(1.2); opacity: 0.7; }
         }
 
-        .users-list {
+        .guides-list {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .user-item {
+        .guide-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px;
-            margin-bottom: 8px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            gap: 10px;
+            padding: 11px 12px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(0,255,136,0.15);
+            border-radius: 6px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
             position: relative;
             overflow: hidden;
         }
 
-        .user-item::before {
+        .guide-item::before {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
+            left: 0; top: 0; bottom: 0;
             width: 3px;
-            height: 100%;
             background: var(--primary-color);
             transform: scaleY(0);
-            transition: transform 0.3s ease;
+            transition: transform 0.2s ease;
         }
 
-        .user-item:hover {
-            background: rgba(0, 255, 136, 0.05);
+        .guide-item:hover {
+            background: rgba(0,255,136,0.05);
             border-color: var(--primary-color);
             transform: translateX(4px);
         }
 
-        .user-item:hover::before {
-            transform: scaleY(1);
+        .guide-item:hover::before { transform: scaleY(1); }
+
+        .guide-item-icon {
+            font-size: 18px;
+            width: 32px;
+            text-align: center;
+            flex-shrink: 0;
         }
 
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid var(--primary-color);
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 16px;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
-            position: relative;
-        }
-
-        .user-avatar::after {
-            content: '';
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: var(--primary-color);
-            border: 2px solid var(--bg-panel);
-            border-radius: 50%;
-            bottom: -2px;
-            right: -2px;
-            box-shadow: 0 0 5px var(--primary-color);
-        }
-
-        .user-info {
+        .guide-item-text {
             flex: 1;
-        }
-
-        .user-name {
+            font-size: 12px;
             font-weight: 600;
-            font-size: 14px;
-            color: var(--text-primary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            color: var(--text-secondary);
+            transition: color 0.2s;
+            line-height: 1.3;
         }
 
-        .user-status {
-            font-size: 11px;
+        .guide-item:hover .guide-item-text { color: var(--text-primary); }
+
+        .guide-item-arrow {
+            font-size: 16px;
             color: var(--text-secondary);
-            text-transform: uppercase;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .guide-item:hover .guide-item-arrow {
+            color: var(--primary-color);
+            transform: translateX(3px);
         }
 
         /* MAIN CHAT AREA */
@@ -1088,15 +1072,63 @@
         <!-- SIDEBAR -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <div class="sidebar-title">Jugadores</div>
+                <div class="sidebar-title">📹 Video-Guías</div>
                 <div class="online-status">
                     <span class="status-dot"></span>
                     <span id="onlineCount">0 EN LÍNEA</span>
                 </div>
             </div>
-            
-            <div class="users-list" id="usersList">
-                <!-- Los usuarios se cargarán dinámicamente -->
+            <div class="guides-list">
+                <a class="guide-item" href="https://www.facebook.com/share/v/1AcP9Vo8Rf/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">👨‍🚀</span>
+                    <span class="guide-item-text">Primeros pasos en Atlas Earth</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1YW1XiRBRL/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">🧭</span>
+                    <span class="guide-item-text">Suscripciones Premium EC/SP</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1A8SnBcX6R/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">🤵</span>
+                    <span class="guide-item-text">V.I.P. en Atlas Earth</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1A9vPNQFwR/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">🗺️</span>
+                    <span class="guide-item-text">Mapa de Atlas Earth</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1N3UXYcRfT/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">🐇</span>
+                    <span class="guide-item-text">Topes, Caídas y Saltos</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/19ySgWJ5Lo/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">📈</span>
+                    <span class="guide-item-text">Tablas de Saltos</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1BV5NKitE2/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">📊</span>
+                    <span class="guide-item-text">C.R.E.L.</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1EWMgw9X8t/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">🚫</span>
+                    <span class="guide-item-text">Mejoras de Parcelas</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1ZpapUhcLg/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">🌳</span>
+                    <span class="guide-item-text">Seguir la Vegetación</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
+                <a class="guide-item" href="https://www.facebook.com/share/v/1G1cvT5EHT/" target="_blank" rel="noopener">
+                    <span class="guide-item-icon">🏚️</span>
+                    <span class="guide-item-text">Diversificar las Parcelas</span>
+                    <span class="guide-item-arrow">›</span>
+                </a>
             </div>
         </div>
 
