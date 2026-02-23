@@ -1650,9 +1650,7 @@
             window._coinsLoad(uid);
           }
         }, 100);
-        setTimeout(() => clearInterval(waitCoins), 5000);
-
-        // Sincronización completa — resubir a Firebase para mantener fresco
+        setTimeout(() => clearInterval(waitCoins), 5000);        // Sincronización completa — resubir a Firebase para mantener fresco
         setTimeout(() => { if(window._fbSaveAll) window._fbSaveAll(); }, 800);
       } catch(e) { console.warn('Firebase sync error:', e); }
     }
@@ -2276,6 +2274,26 @@
       }
     };
 
+    // Sonido de coin ganado (Web Audio API)
+    function playCoinSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do (octava alta)
+        notes.forEach((freq, i) => {
+          const osc  = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.09);
+          gain.gain.setValueAtTime(0.35, ctx.currentTime + i * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.09 + 0.18);
+          osc.start(ctx.currentTime + i * 0.09);
+          osc.stop(ctx.currentTime + i * 0.09 + 0.18);
+        });
+      } catch(e) {}
+    }
+
     // Muestra el toast de "+1 coin"
     function showCoinToast(total) {
       const toast = document.getElementById('coin-toast');
@@ -2325,6 +2343,7 @@
         });
 
         window._coinsUpdateDisplay(nuevoTotal);
+        playCoinSound();
         showCoinToast(nuevoTotal);
         setCoinStatus(`<span class="earned">✔ +1 Coin ganado hoy · ${hoy}</span>`);
 
