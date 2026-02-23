@@ -1541,6 +1541,7 @@
     window._fbRef      = ref;
     window._fbSet      = set;
     window._fbGet      = get;
+    window._fbUpdate   = update;
     window._fbOnValue  = onValue;
     window._fbSignIn   = () => signInWithPopup(auth, provider);
     window._fbSignOut  = () => signOut(auth);
@@ -2291,24 +2292,26 @@
     window._awardDailyCoin = async function() {
       if (!window._fbUser) return;
       const uid = window._fbUser.uid;
-      const hoy = new Date().toISOString().split('T')[0]; // "YYYY-MM-DD"
+      const hoy = new Date().toISOString().split('T')[0];
+      const _db  = window._fbDb;
+      const _ref = window._fbRef;
+      const _get = window._fbGet;
+      const _upd = window._fbUpdate;
+      if (!_db || !_ref || !_get || !_upd) return;
 
       try {
-        const snap = await get(ref(db, `users/${uid}`));
+        const snap = await _get(_ref(_db, `users/${uid}`));
         const data = snap.exists() ? snap.val() : {};
-
         const ultimaFecha = data.lastCoinDate || null;
 
         if (ultimaFecha === hoy) {
-          // Ya ganó su coin hoy
           window._coinsUpdateDisplay(data.coins || 0);
           setCoinStatus(`<span class="waiting">Ya ganaste tu coin hoy · Vuelve mañana 🕐</span>`);
           return;
         }
 
-        // Sumar 1 coin y guardar fecha
         const nuevoTotal = (data.coins || 0) + 1;
-        await update(ref(db, `users/${uid}`), {
+        await _upd(_ref(_db, `users/${uid}`), {
           coins:        nuevoTotal,
           lastCoinDate: hoy
         });
@@ -2325,8 +2328,12 @@
     // Carga los coins actuales del usuario al iniciar sesión
     window._coinsLoad = async function(uid) {
       if (!uid) return;
+      const _db  = window._fbDb;
+      const _ref = window._fbRef;
+      const _get = window._fbGet;
+      if (!_db || !_ref || !_get) return;
       try {
-        const snap = await get(ref(db, `users/${uid}`));
+        const snap = await _get(_ref(_db, `users/${uid}`));
         if (snap.exists()) {
           const data = snap.val();
           const coins = data.coins || 0;
