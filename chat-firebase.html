@@ -291,6 +291,31 @@
             align-items: center;
         }
 
+
+        .btn-guias {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px solid #00ff9d;
+            border-radius: 8px;
+            color: #00ff9d;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .btn-guias:hover {
+            background: #00ff9d;
+            color: #060b14;
+            box-shadow: 0 0 16px rgba(0,255,157,0.4);
+        }
+
         .btn-leaderboard {
             display: flex;
             align-items: center;
@@ -878,7 +903,32 @@
             }
 
             .btn-leaderboard .lb-text { display: none; }
-            .btn-leaderboard { padding: 6px 9px; font-size: 14px; }
+    
+        .btn-guias {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px solid #00ff9d;
+            border-radius: 8px;
+            color: #00ff9d;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .btn-guias:hover {
+            background: #00ff9d;
+            color: #060b14;
+            box-shadow: 0 0 16px rgba(0,255,157,0.4);
+        }
+
+        .btn-leaderboard { padding: 6px 9px; font-size: 14px; }
             .btn-marco .marco-text { display: none; }
             .btn-marco { padding: 6px 9px; font-size: 14px; }
 
@@ -1163,6 +1213,7 @@
                         <span></span>
                     </button>
                     <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
+                    <a class="btn-guias" href="guias.html" target="_top">📹 <span class="guias-text">GUÍAS</span></a>
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
 
                 </div>
