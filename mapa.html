@@ -687,28 +687,27 @@
       }).addTo(map);
       networkLines.push(lineBase);
 
-      // ── Capa 2: línea punteada animada (flujo de datos) ──
-      // segmentos alternos van en dirección contraria para simular bidireccionalidad
-      const cls = i % 2 === 0 ? 'pulse-line' : 'pulse-line-rev';
+      // ── Capa 2: pulso ida ──
       const linePulse = L.polyline([a.coords, b.coords], {
         color,
         weight:    2,
         opacity:   0.85,
         dashArray: '6, 22',
         interactive: false,
-        className: cls,
+        className: 'pulse-line',
       }).addTo(map);
       networkLines.push(linePulse);
 
-      // ── Número de orden ──
-      const midLat = (a.coords[0] + b.coords[0]) / 2;
-      const midLng = (a.coords[1] + b.coords[1]) / 2;
-      const label = L.divIcon({
-        html: `<div style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;color:${color};text-shadow:0 0 4px #000,0 0 8px #000;pointer-events:none;">${i + 1}</div>`,
-        className: '', iconSize: [16, 16], iconAnchor: [8, 8],
-      });
-      const labelMarker = L.marker([midLat, midLng], { icon: label, interactive: false }).addTo(map);
-      networkLines.push(labelMarker);
+      // ── Capa 3: pulso vuelta (bidireccional) ──
+      const linePulseRev = L.polyline([a.coords, b.coords], {
+        color,
+        weight:    2,
+        opacity:   0.55,
+        dashArray: '4, 24',
+        interactive: false,
+        className: 'pulse-line-rev',
+      }).addTo(map);
+      networkLines.push(linePulseRev);
     }
   }
 
