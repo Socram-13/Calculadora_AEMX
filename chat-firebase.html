@@ -717,7 +717,7 @@
         .ticker-bar {
             display: none;
             align-items: center;
-            height: 28px;
+            height: 34px;
             background: linear-gradient(90deg, rgba(255,170,0,0.15), rgba(255,170,0,0.05));
             border-bottom: 1px solid rgba(255,170,0,0.4);
             overflow: hidden;
@@ -754,8 +754,8 @@
             position: absolute;
             white-space: nowrap;
             font-family: 'Rajdhani', sans-serif;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 15px;
+            font-weight: 700;
             letter-spacing: 1px;
             color: #ffe066;
             top: 50%;
@@ -905,7 +905,7 @@
 
             .message-avatar {
                 width: 28px;
-                height: 28px;
+                height: 34px;
                 font-size: 11px;
             }
 
@@ -1358,32 +1358,37 @@
         }
 
         // Borrar mensajes según TTL configurado en admin
-        let chatTTL = 24; // horas por defecto
+        let chatTTL = null; // null = aún no cargado desde Firebase
+
         onValue(ref(database, 'config/chatTTL'), (snap) => {
-            if (snap.exists()) chatTTL = snap.val(); // 0 = apagado
+            chatTTL = snap.exists() ? snap.val() : 24;
         });
 
         async function clearOldMessages() {
-            if (chatTTL === 0) return; // autoborrado apagado
+            if (chatTTL === null) return; // aún no cargó desde Firebase
+            if (chatTTL === 0) return;    // autoborrado apagado
+
             const messagesRef = ref(database, 'messages');
             const snapshot = await get(messagesRef);
             if (!snapshot.exists()) return;
 
             const cutoff = Date.now() - chatTTL * 60 * 60 * 1000;
-            let shouldClear = false;
+            const deletePromises = [];
 
             snapshot.forEach((child) => {
                 const ts = child.val().timestamp;
-                if (ts && ts < cutoff) shouldClear = true;
+                if (ts && ts < cutoff) {
+                    deletePromises.push(remove(child.ref));
+                }
             });
 
-            if (shouldClear) {
-                await remove(messagesRef);
+            if (deletePromises.length > 0) {
+                await Promise.all(deletePromises);
             }
         }
 
-        // Limpiar al cargar y luego cada hora
-        clearOldMessages();
+        // Esperar a que Firebase cargue el TTL antes de limpiar por primera vez
+        setTimeout(clearOldMessages, 3000);
         setInterval(clearOldMessages, 60 * 60 * 1000);
 
         // Leer username desde URL o desde Firebase Auth
