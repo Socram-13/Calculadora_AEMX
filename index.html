@@ -1639,8 +1639,14 @@
 
         if(window.calc) window.calc();
 
-        // Cargar coins
-        if (window._coinsLoad) window._coinsLoad(uid);
+        // Cargar coins (esperar a que _coinsLoad esté definido)
+        const waitCoins = setInterval(() => {
+          if (window._coinsLoad) {
+            clearInterval(waitCoins);
+            window._coinsLoad(uid);
+          }
+        }, 100);
+        setTimeout(() => clearInterval(waitCoins), 5000);
 
         // Sincronización completa — resubir a Firebase para mantener fresco
         setTimeout(() => { if(window._fbSaveAll) window._fbSaveAll(); }, 800);
