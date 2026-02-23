@@ -1539,6 +1539,7 @@
         if (snap.exists()) {
           const prev = snap.val();
           if (prev.country)        data.country        = prev.country;
+          else if (window.userCountry) data.country    = window.userCountry;
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
           // Solo actualizar updatedAt si cambiaron las parcelas
@@ -1550,6 +1551,7 @@
           data.updatedAt = parcelasChanged ? Date.now() : (prev.updatedAt || null);
         } else {
           data.updatedAt = Date.now();
+          if (window.userCountry) data.country = window.userCountry;
         }
         await set(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
