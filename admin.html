@@ -1332,13 +1332,14 @@
                 <th>JUGADOR</th>
                 <th>PAÍS</th>
                 <th>PARCELAS</th>
+                <th>ACTUALIZADO</th>
                 <th>ESTADO</th>
                 <th>ACCIONES</th>
               </tr>
             </thead>
             <tbody id="usersBody">
               <tr>
-                <td colspan="5">
+                <td colspan="6">
                   <div class="empty-state">
                     <div class="spinner"></div>
                     CARGANDO USUARIOS...
@@ -1629,6 +1630,7 @@
             country:    d.country     || '',
             city:       d.city        || '',
             total:      common + rare + epic + legendary,
+            updatedAt:  d.updatedAt   || null,
             bannedChat:        !!d.bannedChat,
             bannedLeaderboard: !!d.bannedLeaderboard,
             countryHistory:    Array.isArray(d.countryHistory) ? d.countryHistory : [],
@@ -1675,7 +1677,7 @@
       const users  = getFiltered();
 
       if (users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">SIN USUARIOS</div></td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">SIN USUARIOS</div></td></tr>`;
         return;
       }
 
@@ -1731,6 +1733,19 @@
               ` : ''}
             </td>
             <td class="parcelas-cell">${u.total.toLocaleString()}</td>
+            <td style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);white-space:nowrap;">${
+              u.updatedAt
+                ? (() => {
+                    const d = new Date(u.updatedAt);
+                    const diff = Date.now() - u.updatedAt;
+                    const mins = Math.floor(diff / 60000);
+                    const hrs  = Math.floor(diff / 3600000);
+                    const days = Math.floor(diff / 86400000);
+                    const rel  = days > 0 ? `hace ${days}d` : hrs > 0 ? `hace ${hrs}h` : mins > 0 ? `hace ${mins}m` : 'ahora';
+                    return `<span title="${d.toLocaleString('es-MX')}" style="cursor:default;">${rel}</span>`;
+                  })()
+                : '<span style="color:var(--border);">—</span>'
+            }</td>
             <td>${statusBadges.join(' ')}</td>
             <td><div class="actions-cell">${actionBtns.join('')}</div></td>
           </tr>
