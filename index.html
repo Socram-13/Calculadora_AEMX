@@ -2306,7 +2306,7 @@
 
         if (ultimaFecha === hoy) {
           window._coinsUpdateDisplay(data.coins || 0);
-          setCoinStatus(`<span class="waiting">Ya ganaste tu coin hoy · Vuelve mañana 🕐</span>`);
+          setCoinStatus(`<span class="waiting">Vuelve mañana a guardar tus datos para ganar otro coin 🕐</span>`);
           return;
         }
 
@@ -2340,7 +2340,7 @@
           const hoy = new Date().toISOString().split('T')[0];
           window._coinsUpdateDisplay(coins);
           if (data.lastCoinDate === hoy) {
-            setCoinStatus(`<span class="waiting">Ya ganaste tu coin hoy · Vuelve mañana 🕐</span>`);
+            setCoinStatus(`<span class="waiting">Vuelve mañana a guardar tus datos para ganar otro coin 🕐</span>`);
           } else {
             setCoinStatus(`<span class="waiting">Guarda tus datos para ganar 1 coin 🪙</span>`);
           }
