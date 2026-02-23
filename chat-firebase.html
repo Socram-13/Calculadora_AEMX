@@ -103,6 +103,7 @@
                 var(--primary-color) 50%, 
                 transparent 100%);
             animation: borderPulse 3s ease-in-out infinite;
+            pointer-events: none;
         }
 
         @keyframes borderPulse {
@@ -126,6 +127,7 @@
             height: 2px;
             background: var(--primary-color);
             box-shadow: 0 0 10px var(--primary-color);
+            pointer-events: none;
         }
 
         .sidebar-title {
@@ -202,6 +204,7 @@
             background: var(--primary-color);
             transform: scaleY(0);
             transition: transform 0.2s ease;
+            pointer-events: none;
         }
 
         .guide-item:hover {
