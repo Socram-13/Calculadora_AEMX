@@ -2326,7 +2326,12 @@
         // Verificar si el sistema está activo
         const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
         const coinsActivo = configSnap.exists() ? configSnap.val() : true;
-        if (!coinsActivo) return;
+
+        // Solo disponible para México
+        const pais = (window.userCountry || '').toLowerCase();
+        const esMexico = pais === 'mexico' || pais === 'méxico';
+
+        if (!coinsActivo || !esMexico) return;
 
         const snap = await _get(_ref(_db, `users/${uid}`));
         const data = snap.exists() ? snap.val() : {};
@@ -2367,7 +2372,11 @@
         const coinsActivo = configSnap.exists() ? configSnap.val() : true;
         const coinsBar = document.getElementById('coins-bar');
 
-        if (!coinsActivo) {
+        // Solo disponible para México
+        const pais = (window.userCountry || '').toLowerCase();
+        const esMexico = pais === 'mexico' || pais === 'méxico';
+
+        if (!coinsActivo || !esMexico) {
           if (coinsBar) coinsBar.style.display = 'none';
           return;
         }
