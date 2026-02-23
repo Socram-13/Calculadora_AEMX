@@ -723,53 +723,7 @@
       porEstado[estado].push(p);
     });
 
-    // ── Círculos por estado ──
-    Object.entries(porEstado).forEach(([estado, jugadores]) => {
-      const coords = ESTADO_COORDS[estado];
-      if (!coords) return;
-      const n = jugadores.length;
 
-      // Verde si algún jugador tiene AEMX en su nombre
-      const tieneAEMX = jugadores.some(p => p.username.toUpperCase().includes('AEMX'));
-      const fillColor  = tieneAEMX ? 'rgba(0,255,157,0.65)' : colorEstado(n);
-      const borderColor = tieneAEMX ? '#00ff9d'              : borderEstado(n);
-      const weight      = tieneAEMX ? 2.5                    : 1.5;
-
-      const circle = L.circle(coords, {
-        radius: 80000 + n * 15000,
-        color:       borderColor,
-        fillColor:   fillColor,
-        fillOpacity: 1,
-        weight:      weight,
-        opacity:     0.9,
-      }).addTo(map);
-
-      // Tooltip hover
-      circle.bindTooltip(`${estado.toUpperCase()} · ${n} jugador${n > 1 ? 'es' : ''}`, {
-        permanent: false, direction: 'top', offset: [0, -10],
-      });
-
-      // Popup click
-      const rows = jugadores.map(p => `
-        <div class="popup-player">
-          ${avatarHTML(p, 32)}
-          <div>
-            <div class="popup-name">${p.username}</div>
-            <div class="popup-total">${p.total.toLocaleString()} parcelas · ${p.city || estado}</div>
-          </div>
-        </div>
-      `).join('');
-
-      circle.bindPopup(`
-        <div style="min-width:200px;max-width:280px;">
-          <div class="popup-state-title">📍 ${estado.toUpperCase()}</div>
-          <div class="popup-count">${n} JUGADOR${n > 1 ? 'ES' : ''}</div>
-          <div style="margin-top:10px;">${rows}</div>
-        </div>
-      `);
-
-      estadoLayers[estado] = circle;
-    });
 
     // ── Red de conexiones ──
     renderRed(players);
