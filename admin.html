@@ -1257,6 +1257,19 @@
       <div class="header-right" id="headerRight" style="display:none">
         <span class="admin-badge">ADMIN</span>
         <span id="adminEmail"></span>
+
+        <!-- Network bars -->
+        <div id="netWidget" style="display:flex;align-items:center;gap:5px;padding:0 6px;">
+          <div style="display:flex;align-items:flex-end;gap:2px;height:22px;">
+            <div class="net-bar" id="nb1" style="width:4px;background:var(--glow);border-radius:2px 2px 0 0;opacity:0.3;transition:height 0.3s ease,opacity 0.3s;"></div>
+            <div class="net-bar" id="nb2" style="width:4px;background:var(--glow);border-radius:2px 2px 0 0;opacity:0.3;transition:height 0.3s ease,opacity 0.3s;"></div>
+            <div class="net-bar" id="nb3" style="width:4px;background:var(--glow);border-radius:2px 2px 0 0;opacity:0.3;transition:height 0.3s ease,opacity 0.3s;"></div>
+            <div class="net-bar" id="nb4" style="width:4px;background:var(--glow);border-radius:2px 2px 0 0;opacity:0.3;transition:height 0.3s ease,opacity 0.3s;"></div>
+            <div class="net-bar" id="nb5" style="width:4px;background:var(--glow);border-radius:2px 2px 0 0;opacity:0.3;transition:height 0.3s ease,opacity 0.3s;"></div>
+          </div>
+          <span id="netLabel" style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--glow);letter-spacing:1px;white-space:nowrap;">-- ms</span>
+        </div>
+
         <a href="mapa.html" class="btn-mapa">🗺️ MAPA</a>
         <button class="btn-signout" onclick="signOutUser()">SALIR</button>
       </div>
@@ -1922,5 +1935,55 @@
     window.addEventListener('popstate', () => { if (chatOpen) closeChatWidget(); });
   </script>
   <!-- ===== FIN CHAT WIDGET ===== -->
+  <script>
+    // ── Network bars widget ──
+    const bars   = [1,2,3,4,5].map(i => document.getElementById('nb' + i));
+    const netLbl = document.getElementById('netLabel');
+    const maxH   = 22; // px altura máxima
+
+    async function measurePing() {
+      const t0 = performance.now();
+      try {
+        await fetch('https://www.gstatic.com/generate_204', { cache: 'no-store', mode: 'no-cors' });
+      } catch(e) {}
+      return Math.round(performance.now() - t0);
+    }
+
+    async function updateNetBars() {
+      const ping = await measurePing();
+
+      // Calidad: <60ms excelente, <120 bueno, <200 regular, <400 malo, ≥400 pésimo
+      let nivel, color;
+      if      (ping < 60)  { nivel = 5; color = '#00ff9d'; }
+      else if (ping < 120) { nivel = 4; color = '#00c8ff'; }
+      else if (ping < 200) { nivel = 3; color = '#ffaa00'; }
+      else if (ping < 400) { nivel = 2; color = '#ff6644'; }
+      else                 { nivel = 1; color = '#ff4466'; }
+
+      bars.forEach((bar, i) => {
+        const active = i < nivel;
+        const h = Math.round(maxH * (i + 1) / 5);
+        bar.style.height  = h + 'px';
+        bar.style.background = color;
+        bar.style.opacity = active ? '1' : '0.15';
+        bar.style.boxShadow = active ? `0 0 6px ${color}` : 'none';
+      });
+
+      netLbl.style.color = color;
+      netLbl.textContent = ping + ' ms';
+    }
+
+    // Arrancar solo cuando el header sea visible
+    const headerObs = new MutationObserver(() => {
+      const hr = document.getElementById('headerRight');
+      if (hr && hr.style.display !== 'none') {
+        headerObs.disconnect();
+        updateNetBars();
+        setInterval(updateNetBars, 3000);
+      }
+    });
+    headerObs.observe(document.getElementById('headerRight'), { attributes: true, attributeFilter: ['style'] });
+  </script>
+
 </body>
 </html>
