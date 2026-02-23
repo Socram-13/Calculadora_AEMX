@@ -1352,19 +1352,6 @@
     z-index: 1;
     pointer-events: none;
   }
-  #chat-widget-bar span {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
-    font-weight: 700;
-    color: #00ff88;
-    letter-spacing: 2px;
-    text-shadow: 0 0 8px #00ff88;
-  }
-  #chat-widget-bar .dots { display: flex; gap: 5px; }
-  #chat-widget-bar .dot { width: 8px; height: 8px; border-radius: 50%; }
-  #chat-widget-bar .dot:nth-child(1) { background: #ff5f57; }
-  #chat-widget-bar .dot:nth-child(2) { background: #ffbd2e; }
-  #chat-widget-bar .dot:nth-child(3) { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
 
   @media (max-width: 480px) {
     #chat-widget-bar { display: none; }
@@ -3351,8 +3338,7 @@
 
   <div id="chat-iframe-container">
     <div id="chat-widget-bar">
-      <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-      <span id="widget-time">--:--</span>
+      
     </div>
     <iframe id="chat-frame" src="chat-firebase.html" title="Chat Atlas Earth México" loading="lazy" allow="clipboard-write"></iframe>
   </div>
@@ -3390,7 +3376,6 @@
 
     function updateWidgetTime() {
       const now = new Date();
-      document.getElementById('widget-time').textContent =
         String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
     }
     updateWidgetTime();
