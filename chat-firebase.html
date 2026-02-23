@@ -770,7 +770,7 @@
             color: #ffe066;
             top: 50%;
             transform: translateY(-50%);
-            animation: tickerScroll 12s linear infinite;
+            animation: tickerScroll 6s linear infinite;
         }
 
         @keyframes tickerScroll {
@@ -1350,7 +1350,7 @@
                 if (texto && texto.trim()) {
                     txt.textContent = texto.trim();
                     bar.classList.add('visible');
-                    const duration = Math.max(8, texto.length * 0.03) + 's';
+                    const duration = Math.max(4, texto.length * 0.05) + 's';
                     txt.style.animationDuration = duration;
                 } else {
                     bar.classList.remove('visible');
