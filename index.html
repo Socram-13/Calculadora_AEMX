@@ -1542,6 +1542,11 @@
           else if (window.userCountry) data.country    = window.userCountry;
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
+          // Preservar campos gestionados por el admin
+          if (prev.clanMember  !== undefined) data.clanMember         = prev.clanMember;
+          if (prev.bannedChat  !== undefined) data.bannedChat         = prev.bannedChat;
+          if (prev.bannedLeaderboard !== undefined) data.bannedLeaderboard = prev.bannedLeaderboard;
+          if (prev.role        !== undefined) data.role               = prev.role;
           // Solo actualizar updatedAt si cambiaron las parcelas
           const parcelasChanged =
             String(data.common)    !== String(prev.common    || 0) ||
