@@ -1624,6 +1624,16 @@
         <span class="coins-toggle-status off" id="transToggleStatus">APAGADO</span>
       </div>
 
+      <!-- Botón transacciones en chat -->
+      <div class="coins-toggle-wrap" style="border-color:rgba(255,215,0,0.35);border-top-color:#ffd700;">
+        <span class="coins-toggle-label" style="color:#ffd700;font-size:8px;">🪙 BTN COINS EN CHAT</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="btnTransToggle" onchange="toggleBtnTransacciones(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="coins-toggle-status off" id="btnTransToggleStatus">OCULTO</span>
+      </div>
+
     </div>
   </div>
 
@@ -2021,6 +2031,17 @@
             status.className = `coins-toggle-status ${activo ? 'trans-status-on' : 'trans-status-off'}`;
           }
         });
+        // Cargar estado del botón de transacciones en chat
+        onValue(ref(db, 'config/btnTransaccionesActivo'), (snap) => {
+          const activo = snap.exists() ? snap.val() : false;
+          const checkbox = document.getElementById('btnTransToggle');
+          const status   = document.getElementById('btnTransToggleStatus');
+          if (checkbox) checkbox.checked = activo;
+          if (status) {
+            status.textContent = activo ? 'VISIBLE' : 'OCULTO';
+            status.className = `coins-toggle-status ${activo ? 'on' : 'off'}`;
+          }
+        });
       } else {
       }
     });
@@ -2394,6 +2415,16 @@
         showToast(activo ? '🔄 Transacciones ENCENDIDAS' : '🔄 Transacciones APAGADAS');
       } catch(e) {
         showToast('Error al actualizar transacciones', true);
+      }
+    };
+
+    // ── Toggle Botón Transacciones en chat ──
+    window.toggleBtnTransacciones = async function(activo) {
+      try {
+        await set(ref(db, 'config/btnTransaccionesActivo'), activo);
+        showToast(activo ? '🪙 Botón COINS visible en chat' : '🪙 Botón COINS oculto en chat');
+      } catch(e) {
+        showToast('Error al actualizar', true);
       }
     };
 
