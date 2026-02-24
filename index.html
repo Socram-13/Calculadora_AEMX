@@ -2212,8 +2212,8 @@
           <span class="breakdown-value" id="b-single-event" style="color:#fbbf24;">$0.0000</span>
         </div>
         <div class="breakdown-row" style="margin-bottom:6px;">
-          <span class="breakdown-label">Horas normales del mes <span style="font-size:10px;color:var(--text2)">(≈672h − 64h evento)</span></span>
-          <span class="breakdown-value" id="b-event-normal-hours">608 h</span>
+          <span class="breakdown-label">Horas normales del mes <span style="font-size:10px;color:var(--text2)">(≈720h − 64h evento)</span></span>
+          <span class="breakdown-value" id="b-event-normal-hours">656 h</span>
         </div>
         <div class="breakdown-row" style="margin-bottom:6px;">
           <span class="breakdown-label">Renta en horas normales</span>
@@ -2702,11 +2702,11 @@
     const perHour  = boostedPerSec * 3600;
     const perDay   = boostedPerSec * 86400;
     const perWeek  = perDay * 7;
-    const perMonth = perDay * 28;
+    const perMonth = perDay * 30;
     // perYear se calcula más abajo incluyendo eventos SRB
 
     // Base per month
-    const basePerMonth = basePerSec * 86400 * 28;
+    const basePerMonth = basePerSec * 86400 * 30;
     const badgeExtra = basePerMonth * (badgeBoost - 1);
     const adExtra = basePerMonth * badgeBoost * (adBoost - 1);
 
@@ -2716,7 +2716,7 @@
     const basePerHour = basePerSec * 3600;
     const basePerDay  = basePerSec * 86400;
     const basePerWeek = basePerDay * 7;
-    const basePerMo   = basePerDay * 28;
+    const basePerMo   = basePerDay * 30;
     const basePerYear = basePerDay * 365;
 
     document.getElementById('r-sec-base').textContent  = '$' + basePerSec.toFixed(12);
@@ -2755,7 +2755,7 @@
     const EVENT_BOOST  = 50;
     const EVENT_HOURS  = 32;
     const EVENTS_MONTH = 2;
-    const MONTH_HOURS  = 30.41 * 24;
+    const MONTH_HOURS  = 30 * 24;
     const TOTAL_EVT_H  = EVENT_HOURS * EVENTS_MONTH;       // 64 h
     const NORMAL_HOURS = MONTH_HOURS - TOTAL_EVT_H;
 
