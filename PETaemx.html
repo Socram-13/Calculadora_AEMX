@@ -1374,7 +1374,7 @@ function sleep() {
   updateUI();
 }
 // Buy outfit
-async async function buyItem(itemKey, price, icon){
+async function buyItem(itemKey, price, icon){
   if (!currentUser){
     showToast('⚠️ Inicia sesión para comprar', 'warning');
     return;
