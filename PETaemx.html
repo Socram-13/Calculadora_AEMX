@@ -1111,7 +1111,8 @@ function loadState() {
     const data = JSON.parse(saved);
     // Coins ahora vienen de Firebase; ignorar cualquier valor guardado localmente
     delete data.coins;
-    Object.assign(gameState, data);
+    delete data.petSprites;
+Object.assign(gameState, data);
     return true;
   }
   return false;
@@ -1120,7 +1121,7 @@ function loadState() {
 // Save state
 function saveState() {
   // Coins ahora vienen de Firebase (users/{uid}/coins); no se guardan en localStorage
-  const { coins, ...persist } = gameState;
+  const { coins, petSprites, ...persist } = gameState;
   localStorage.setItem('tamagotchiAEMX', JSON.stringify(persist));
 }
 
