@@ -1587,17 +1587,20 @@
         function initAudioCtx() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                // Una vez creado, remover los listeners — ya no se necesitan
+                document.removeEventListener('touchstart', initAudioCtx);
+                document.removeEventListener('click',      initAudioCtx);
+                document.removeEventListener('keydown',    initAudioCtx);
             }
-            // Safari/iOS deja el contexto en 'suspended' — reanudarlo en cada toque
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume().catch(() => {});
             }
         }
 
         // Desbloquear en el primer gesto del usuario
-        document.addEventListener('touchstart', initAudioCtx, { once: false, passive: true });
-        document.addEventListener('click',      initAudioCtx, { once: false, passive: true });
-        document.addEventListener('keydown',    initAudioCtx, { once: false, passive: true });
+        document.addEventListener('touchstart', initAudioCtx, { passive: true });
+        document.addEventListener('click',      initAudioCtx, { passive: true });
+        document.addEventListener('keydown',    initAudioCtx, { passive: true });
 
         function playPopSound() {
             if (soundMuted || !audioCtx || audioCtx.state === 'suspended') return;
