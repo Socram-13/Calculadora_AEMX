@@ -904,45 +904,54 @@ function normalizarPais(name) {
 async function checkLocation(user) {
   const locationStatus = document.getElementById('location-status');
   locationStatus.className = 'location-status checking';
-  locationStatus.innerHTML = '<span class="spinner"></span>Verificando ubicación...';
-  
-  // Intentar detectar país por IP
+  locationStatus.innerHTML = '<span class="spinner"></span>Verificando acceso...';
+
+  // 1) Primero: usar el mismo criterio que transactions.html (campo country del usuario)
+  //    Esto evita problemas de CORS cuando el HTML se abre con file://
+  try {
+    const userRef = ref(db, `users/${user.uid}`);
+    const snap = await get(userRef);
+    const udata = snap.exists() ? (snap.val() || {}) : {};
+    const country = udata.country ? normalizarPais(String(udata.country)) : null;
+
+    if (country && country === 'Mexico') {
+      locationStatus.className = 'location-status success';
+      locationStatus.textContent = '✅ Acceso verificado: México';
+      setTimeout(() => grantAccess(user), 400);
+      return;
+    }
+  } catch (e) {
+    console.log('No se pudo validar country en DB, intentando por IP...');
+  }
+
+  // 2) Fallback: detectar país por IP (puede fallar en file:// por CORS)
   let detectedCountry = null;
-  
+
   try {
     const res = await fetch('https://freeipapi.com/api/json');
     const data = await res.json();
-    if (data.countryName) {
-      detectedCountry = normalizarPais(data.countryName);
-    }
+    if (data.countryName) detectedCountry = normalizarPais(data.countryName);
   } catch(e) {
     console.log('Error con freeipapi, intentando ipapi.co');
   }
-  
+
   if (!detectedCountry) {
     try {
       const res2 = await fetch('https://ipapi.co/json/');
       const data2 = await res2.json();
-      if (data2.country_name) {
-        detectedCountry = normalizarPais(data2.country_name);
-      }
+      if (data2.country_name) detectedCountry = normalizarPais(data2.country_name);
     } catch(e) {
       console.log('Error con ipapi.co');
     }
   }
-  
-  // Verificar si es México
+
   if (detectedCountry === 'Mexico') {
     locationStatus.className = 'location-status success';
-    locationStatus.textContent = '✅ Ubicación verificada: México';
-    
-    setTimeout(() => {
-      grantAccess(user);
-    }, 1000);
+    locationStatus.textContent = '✅ Acceso verificado: México';
+    setTimeout(() => grantAccess(user), 400);
   } else {
     locationStatus.className = 'location-status error';
     locationStatus.textContent = `⚠️ Solo disponible en México${detectedCountry ? ' (Detectado: ' + detectedCountry + ')' : ''}`;
-    
     showToast('Acceso denegado: Solo disponible en México', 'warning');
   }
 }
@@ -1129,7 +1138,6 @@ function loadState() {
     const data = JSON.parse(saved);
     // Coins ahora vienen de Firebase; ignorar cualquier valor guardado localmente
     delete data.coins;
-    delete data.lastCheckin;
     Object.assign(gameState, data);
     return true;
   }
@@ -1139,7 +1147,7 @@ function loadState() {
 // Save state
 function saveState() {
   // Coins ahora vienen de Firebase (users/{uid}/coins); no se guardan en localStorage
-  const { coins, lastCheckin, ...persist } = gameState;
+  const { coins, ...persist } = gameState;
   localStorage.setItem('tamagotchiAEMX', JSON.stringify(persist));
 }
 
@@ -1279,14 +1287,6 @@ function sleep() {
   showToast('😴 Zzz... Tu mascota descansó bien', 'success');
   updateUI();
 }
-
-  
-  gameState.coins += 1;
-  gameState.lastCheckin = today;
-  showToast('💰 +1 AMX Coin obtenido!', 'gold');
-  updateUI();
-}
-
 // Buy outfit
 async function buyOutfit() {
 if (gameState.hasOutfit) {
