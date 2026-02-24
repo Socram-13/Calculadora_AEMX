@@ -1584,7 +1584,8 @@
     <!-- Sonido de notificación — script normal (no módulo) para acceso global inmediato -->
     <script>
         var audioCtx = null;
-        var soundMuted = localStorage.getItem('chat-muted') === 'true';
+        var soundMuted = false;
+        try { soundMuted = localStorage.getItem('chat-muted') === 'true'; } catch(e) {}
 
         function initAudioCtx() {
             if (!audioCtx) {
@@ -1621,12 +1622,18 @@
 
         function toggleMute() {
             soundMuted = !soundMuted;
-            localStorage.setItem('chat-muted', String(soundMuted));
+            try { localStorage.setItem('chat-muted', soundMuted ? 'true' : 'false'); } catch(e) {}
             var btn = document.getElementById('btnMute');
             if (btn) {
-                btn.textContent = soundMuted ? '🔕' : '🔔';
-                btn.classList.toggle('muted', soundMuted);
-                btn.title = soundMuted ? 'Activar sonido' : 'Silenciar notificaciones';
+                if (soundMuted) {
+                    btn.textContent = '🔕';
+                    btn.className = 'btn-mute muted';
+                    btn.title = 'Activar sonido';
+                } else {
+                    btn.textContent = '🔔';
+                    btn.className = 'btn-mute';
+                    btn.title = 'Silenciar notificaciones';
+                }
             }
         }
 
@@ -1635,7 +1642,7 @@
             var btn = document.getElementById('btnMute');
             if (btn && soundMuted) {
                 btn.textContent = '🔕';
-                btn.classList.add('muted');
+                btn.className = 'btn-mute muted';
                 btn.title = 'Activar sonido';
             }
         });
