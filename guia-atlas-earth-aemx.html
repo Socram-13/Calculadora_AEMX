@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📘 Guía Completa Atlas Earth AEMX - México</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060b14;
+    --panel: #0b1626;
+    --panel2: #0f1e35;
+    --border: #1a3a5c;
+    --glow: #00c8ff;
+    --glow2: #00ff9d;
+    --gold: #ffd700;
+    --epic: #c084fc;
+    --rare: #60a5fa;
+    --common: #4ade80;
+    --legendary: #facc15;
+    --text: #cce4ff;
+    --text2: #6b8ab0;
+    --accent: #00c8ff;
+    --warning: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  html { overflow-x: hidden; scroll-behavior: smooth; }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0;
+    animation: gridMove 20s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(40px); }
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(0,200,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(0,255,157,0.04) 0%, transparent 50%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 40px 20px;
+    margin-bottom: 40px;
+    background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%);
+    border: 3px solid var(--border);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, #00c8ff, #4ade80, #facc15, #c084fc, #00c8ff);
+    background-size: 200% 100%;
+    animation: rainbowSlide 6s linear infinite;
+  }
+
+  @keyframes rainbowSlide {
+    0% { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(28px, 6vw, 48px);
+    font-weight: 900;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+  }
+
+  .mexico-text { color: #7EC8E3; }
+  .aemx-text { color: var(--gold); }
+
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(12px, 3vw, 16px);
+    color: var(--text2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Navigation */
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 40px;
+  }
+
+  .nav-btn {
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .nav-btn:hover {
+    border-color: var(--glow);
+    transform: translateY(-2px);
+    box-shadow: 0 0 20px rgba(0,200,255,0.3);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--panel);
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--glow);
+    transform: translateY(-2px);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(20px, 4vw, 32px);
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    color: var(--gold);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(16px, 3vw, 24px);
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin: 25px 0 15px;
+    color: var(--glow);
+  }
+
+  h4 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(14px, 2.5vw, 20px);
+    font-weight: 700;
+    margin: 20px 0 10px;
+    color: var(--glow2);
+  }
+
+  p {
+    margin-bottom: 15px;
+    font-size: clamp(14px, 2vw, 18px);
+    line-height: 1.8;
+  }
+
+  ul, ol {
+    margin: 15px 0 15px 30px;
+    font-size: clamp(14px, 2vw, 18px);
+  }
+
+  li {
+    margin-bottom: 10px;
+    line-height: 1.7;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    background: rgba(0,200,255,0.1);
+    border: 1px solid var(--glow);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin: 0 5px;
+    color: var(--glow);
+  }
+
+  .badge.gold { background: rgba(255,215,0,0.1); border-color: var(--gold); color: var(--gold); }
+  .badge.green { background: rgba(74,222,128,0.1); border-color: var(--common); color: var(--common); }
+  .badge.purple { background: rgba(192,132,252,0.1); border-color: var(--epic); color: var(--epic); }
+  .badge.warning { background: rgba(239,68,68,0.1); border-color: var(--warning); color: var(--warning); }
+
+  /* Highlight boxes */
+  .highlight {
+    background: linear-gradient(135deg, #0a1f38 0%, #060f1e 100%);
+    border: 2px solid var(--glow);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 0 20px rgba(0,200,255,0.1);
+  }
+
+  .highlight.warning {
+    border-color: var(--warning);
+    box-shadow: 0 0 20px rgba(239,68,68,0.1);
+  }
+
+  .highlight.gold {
+    border-color: var(--gold);
+    box-shadow: 0 0 20px rgba(255,215,0,0.1);
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: clamp(11px, 1.8vw, 15px);
+    background: var(--panel2);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  th {
+    background: var(--border);
+    padding: 12px;
+    text-align: left;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-bottom: 2px solid var(--glow);
+  }
+
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:hover {
+    background: rgba(0,200,255,0.05);
+  }
+
+  /* Code */
+  code {
+    background: #060b14;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9em;
+    color: var(--glow2);
+  }
+
+  /* Links */
+  a {
+    color: var(--glow);
+    text-decoration: none;
+    transition: color 0.3s;
+  }
+
+  a:hover {
+    color: var(--glow2);
+    text-decoration: underline;
+  }
+
+  /* Icons */
+  .icon {
+    font-size: 1.2em;
+    margin-right: 8px;
+  }
+
+  /* Scroll to top button */
+  #scrollTop {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: var(--panel);
+    border: 2px solid var(--glow);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s;
+    z-index: 1000;
+    font-size: 24px;
+    color: var(--glow);
+  }
+
+  #scrollTop.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  #scrollTop:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(0,200,255,0.5);
+  }
+
+  /* Mobile */
+  @media (max-width: 768px) {
+    .container { padding: 10px; }
+    .card { padding: 20px; }
+    h2 { font-size: 20px; }
+    h3 { font-size: 18px; }
+    table { font-size: 11px; }
+    th, td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<header>
+  <h1><span class="aemx-text">GUÍA COMPLETA</span></h1>
+  <h1>ATLAS EARTH <span class="mexico-text">MÉXICO</span></h1>
+  <p class="subtitle">COMUNIDAD AEMX • EDICIÓN NOV 2025</p>
+</header>
+
+<!-- Navigation -->
+<nav class="nav">
+  <a href="#intro" class="nav-btn">📘 Introducción</a>
+  <a href="#primeros-pasos" class="nav-btn">🚀 Primeros Pasos</a>
+  <a href="#estrategias" class="nav-btn">🎯 Estrategias</a>
+  <a href="#vender" class="nav-btn">🤝 Vender Parcelas</a>
+  <a href="#referidos" class="nav-btn">👥 Referidos</a>
+  <a href="#insignias" class="nav-btn">🏅 Insignias</a>
+  <a href="#vip" class="nav-btn">💎 Ser VIP</a>
+  <a href="#minijuegos" class="nav-btn">🎮 Minijuegos</a>
+  <a href="#gamertag" class="nav-btn">🪪 Gamertag</a>
+  <a href="#saltos" class="nav-btn">📊 Tabla de Saltos</a>
+  <a href="#paypal" class="nav-btn">💰 PayPal</a>
+</nav>
+
+<!-- Introducción -->
+<div id="intro" class="card">
+  <h2><span class="icon">📘</span>Bienvenido a Atlas Earth</h2>
+  <p>Atlas Earth es un juego de realidad aumentada basado en ubicación donde los jugadores pueden comprar terrenos virtuales, recolectar recompensas y avanzar dentro del ecosistema digital. Esta guía está diseñada para ayudarte a entender el juego, optimizar tu progreso y evitar malas inversiones.</p>
+</div>
+
+<!-- Primeros Pasos -->
+<div id="primeros-pasos" class="card">
+  <h2><span class="icon">🚀</span>Primeros Pasos en Atlas Earth</h2>
+  
+  <h3>1. Configuración Inicial</h3>
+  <ul>
+    <li>📍 <strong>Activa tu ubicación GPS</strong> para que el juego pueda mostrarte el mapa real de tu entorno.</li>
+    <li>📚 <strong>Completa el tutorial básico</strong> para aprender las funciones principales.</li>
+    <li>⚠️ <strong>Verifica tu cuenta</strong> para evitar pérdida de progreso.</li>
+    <li>📶 <strong>Asegúrate de tener una conexión estable</strong>, ya que el juego requiere GPS y acceso a datos en tiempo real.</li>
+  </ul>
+
+  <h3>2. ¿Cómo Comprar tu Primer Terreno?</h3>
+  <ul>
+    <li>🗺️ En la pantalla principal, verás un <strong>mapa con terrenos disponibles</strong>.</li>
+    <li>💎 Necesitas <strong>Atlas Bucks (AB)</strong> para comprar terrenos. Al iniciar, recibes una pequeña cantidad.</li>
+    <li>📺 Puedes ganar más Atlas Bucks <strong>viendo anuncios</strong>, recolectando diamantes o comprándolos.</li>
+    <li>📍 Selecciona una <strong>ubicación cercana a ti</strong> y adquiere tu primer terreno.</li>
+  </ul>
+
+  <h4>📦 Tipos de parcelas:</h4>
+  <ul>
+    <li><span class="badge green">● Comunes</span></li>
+    <li><span class="badge rare">● Raras</span></li>
+    <li><span class="badge purple">● Épicas</span></li>
+    <li><span class="badge gold">● Legendarias</span></li>
+  </ul>
+
+  <div class="highlight gold">
+    <h4>💡 Estrategia recomendada:</h4>
+    <p>Compra terrenos en <strong>zonas turísticas o de alto tráfico</strong> para maximizar el potencial de <strong>insignias</strong> y la <strong>revalorización futura</strong>.</p>
+  </div>
+</div>
+
+<!-- Estrategia de Adquisición -->
+<div id="estrategias" class="card">
+  <h2><span class="icon">🎯</span>Estrategia de Adquisición de Parcelas</h2>
+  
+  <h3>1. Seguimiento de la Vegetación</h3>
+  <p>En Atlas Earth, la distribución de las parcelas dentro del mapa no es completamente aleatoria, sino que sigue un <strong>patrón basado en un algoritmo predefinido</strong>. Esto significa que los terrenos de mayor calidad no aparecen de manera aislada, sino que responden a reglas de generación que los jugadores pueden aprovechar estratégicamente.</p>
+  
+  <p>Uno de los descubrimientos más importantes dentro de la comunidad es la <strong>estrategia "Seguir la Vegetación"</strong>, que ha demostrado ser efectiva para encontrar parcelas de mayor rareza.</p>
+  
+  <div class="highlight">
+    <h4>¿En qué consiste la estrategia?</h4>
+    <p>La clave de esta estrategia radica en la <strong>distribución descendente</strong> de las parcelas raras, similar a la mecánica del clásico juego <strong>Buscaminas</strong>. Es decir, las parcelas de mayor calidad <strong>no aparecen de manera aleatoria</strong>, sino que siguen una estructura en la que las de menor valor sirven como indicios de las más valiosas.</p>
+  </div>
+
+  <h4>📌 Patrones identificados:</h4>
+  <ul>
+    <li><strong>Las parcelas Legendarias suelen estar rodeadas de Épicas y Raras</strong>, por lo que encontrar una indica que hay otras de alta rareza en las cercanías.</li>
+    <li><strong>Las parcelas Raras deben colindar con al menos otra parcela que no sea Común</strong>, lo que significa que podrían estar cerca de una Épica o Legendaria.</li>
+    <li><strong>La vegetación en el mapa sigue la misma dirección que las parcelas de mayor rareza</strong>, lo que permite utilizar el entorno natural como guía para ubicar zonas de alto potencial.</li>
+  </ul>
+
+  <p>En resumen, si estás buscando terrenos valiosos, <strong>seguir la dirección de las parcelas no comunes y observar la vegetación puede darte una ventaja estratégica importante</strong>.</p>
+
+  <h3>Cómo aplicar la estrategia en tu compra de terrenos</h3>
+  <p>Para aumentar tus probabilidades de obtener parcelas raras, sigue estos pasos:</p>
+  <ol>
+    <li><strong>Ubica una parcela no común</strong> (Rara, Épica o Legendaria).</li>
+    <li><strong>Observa la vegetación y el entorno</strong> dentro del mapa.</li>
+    <li><strong>Identifica la dirección en la que aparecen más parcelas no comunes</strong>, siguiendo el patrón de distribución del terreno.</li>
+    <li><strong>Compra estratégicamente en áreas alineadas con este patrón</strong> para mejorar tus probabilidades de obtener terrenos valiosos.</li>
+  </ol>
+
+  <div class="highlight warning">
+    <p>Si bien esta estrategia <strong>no garantiza resultados inmediatos</strong>, muchos jugadores han obtenido <strong>más parcelas raras y épicas</strong> aplicando este método en lugar de comprar al azar.</p>
+  </div>
+
+  <div class="highlight gold">
+    <p><strong>💡 Consejo:</strong> La vegetación en el juego no es un simple adorno; puede usarse para <strong>predecir dónde aparecerán mejores terrenos</strong> y así optimizar la compra de parcelas sin necesidad de gastar Atlas Bucks en mejoras.</p>
+  </div>
+</div>
+
+<!-- Mejoras de Parcelas -->
+<div class="card">
+  <h2><span class="icon">⚠️</span>Mejoras de Parcelas: La Peor Inversión</h2>
+  
+  <p>Las mejoras de parcelas permiten personalizar la apariencia de tus terrenos, pero su <strong>costo en Atlas Bucks es demasiado alto</strong> en comparación con los beneficios que ofrecen.</p>
+  
+  <ul>
+    <li><strong>Costo de la mejora:</strong> 2500 AB para convertir una parcela en legendaria.</li>
+    <li><strong>Beneficio:</strong> Una parcela legendaria genera ingresos equivalentes a <strong>4 parcelas comunes</strong>.</li>
+    <li><strong>Alternativa más rentable:</strong> Con 2500 AB puedes comprar 25 parcelas comunes, generando ingresos equivalentes a <strong>más de 6 legendarias</strong>. Además, existe la posibilidad de que algunas de esas parcelas sean raras, épicas o legendarias sin necesidad de mejoras.</li>
+  </ul>
+
+  <div class="highlight warning">
+    <h4>📌 Conclusión:</h4>
+    <p>Las mejoras de parcelas <strong>no son rentables</strong>. Es mejor invertir Atlas Bucks en comprar más terrenos y expandir tu dominio en el juego.</p>
+  </div>
+</div>
+
+<!-- Vender Parcelas -->
+<div id="vender" class="card">
+  <h2><span class="icon">🤝</span>Cómo Vender Parcelas en Atlas Earth</h2>
+  
+  <h3>❓ ¿Qué es la venta de parcelas?</h3>
+  <p>Atlas Earth permite a los jugadores poner a la venta parcelas que ya poseen. Esta función se realiza <strong>localmente</strong>, es decir, <strong>debes estar físicamente cerca</strong> de la parcela que deseas vender. La venta se hace en <strong>Atlas Bucks (AB)</strong> y está sujeta a condiciones específicas.</p>
+
+  <h3>📝 Pasos para poner una parcela a la venta</h3>
+  <ol>
+    <li>📍 Dirígete al lugar físico donde se encuentra la parcela que deseas vender.</li>
+    <li>🏠 Toca la parcela en el mapa.</li>
+    <li>💰 Establece un <strong>precio en Atlas Bucks</strong> (el mínimo es <strong>150 AB</strong>).</li>
+    <li>✅ Toca "Confirmar" para ponerla a la venta.</li>
+  </ol>
+
+  <h3>ℹ️ Detalles importantes</h3>
+  <ul>
+    <li>💰 <strong>Comisión del 20%:</strong> Atlas Earth retiene una comisión del 20% sobre el valor de la venta.</li>
+    <li>🏦 El resto se te abonará en Atlas Bucks cuando otro jugador compre la parcela.</li>
+    <li>⏳ <strong>Tu parcela seguirá generando renta virtual</strong> hasta el momento en que sea vendida.</li>
+    <li>🔄 Puedes <strong>cancelar la venta en cualquier momento</strong> si la parcela aún no ha sido comprada. Para ello, ve al lugar, toca la parcela y selecciona la opción para quitarla del mercado.</li>
+  </ul>
+
+  <h3>⚠️ Situación actual del mercado</h3>
+  <div class="highlight warning">
+    <p>Actualmente, <strong>la función de venta de parcelas no es efectiva como método de obtención de Atlas Bucks</strong>, ya que:</p>
+    <ul>
+      <li>Las parcelas nuevas cuestan solo <strong>100 AB</strong>.</li>
+      <li>El precio mínimo de reventa es de <strong>150 AB</strong>, lo que no resulta atractivo para compradores.</li>
+      <li><strong>La mayoría de los jugadores no están comprando parcelas de reventa</strong>.</li>
+    </ul>
+    <p>🔍 Por esta razón, poner parcelas a la venta es una función con utilidad limitada en esta etapa del juego. Puede que tenga más relevancia en el futuro si se introduce escasez de terrenos o cambios en la economía del juego.</p>
+  </div>
+
+  <div class="highlight gold">
+    <p><strong>❗ La función está suspendida hasta nuevo aviso debido a abusos por parte de algunos jugadores.</strong></p>
+  </div>
+</div>
+
+<!-- Recompensas por Referir -->
+<div id="referidos" class="card">
+  <h2><span class="icon">👥</span>Recompensas por Referir Amigos</h2>
+  
+  <p>Atlas Earth permite a los jugadores recomendar el juego a sus amigos y recibir recompensas cuando estos realizan compras dentro del juego.</p>
+  
+  <h3>1. ¿Cómo recomendar Atlas Earth?</h3>
+  <p>Para invitar a un amigo, sigue estos pasos:</p>
+  <ul>
+    <li>Haz clic en tu <strong>foto de perfil</strong> en la esquina superior izquierda.</li>
+    <li>Pulsa el icono del <strong>engranaje</strong> para abrir la configuración.</li>
+    <li>Desplázate hasta la sección <strong>"Invitar amigos"</strong> y haz clic en <strong>"Enviar invitación"</strong>.</li>
+    <li>Se generará un <strong>enlace de invitación</strong> que podrás compartir con amigos y familiares.</li>
+  </ul>
+
+  <div class="highlight warning">
+    <h4>📌 Importante:</h4>
+    <p>Para que el sistema registre correctamente la referencia, tu amigo debe descargar el juego a través del enlace o ingresar tu código de referencia en la configuración <strong>antes de comprar su segundo paquete</strong>.</p>
+  </div>
+
+  <h3>2. ¿Qué recompensas se obtienen por recomendar amigos?</h3>
+  <ul>
+    <li><strong>Como jugador que recomienda:</strong>
+      <ul>
+        <li>Recibirás <strong>10 AB por cada paquete</strong> que tu amigo compre, hasta un máximo de <strong>100 AB</strong>.</li>
+        <li>El paquete gratuito del tutorial <strong>no cuenta</strong> para esta recompensa.</li>
+      </ul>
+    </li>
+    <li><strong>Como jugador referido:</strong>
+      <ul>
+        <li>Si ingresas un código de referencia <strong>antes de comprar tu segundo paquete</strong>, recibirás <strong>200 AB</strong> cuando hayas recolectado tu décimo paquete.</li>
+        <li>El paquete gratuito del tutorial <strong>no cuenta</strong> para esta recompensa.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="highlight warning">
+    <h4>📌 Nota:</h4>
+    <p>Las recompensas por referencia <strong>no son retroactivas</strong>, lo que significa que si ya estás jugando Atlas Earth y no ingresaste un código de referencia antes de tu segunda compra, <strong>no podrás obtener la recompensa</strong>.</p>
+  </div>
+
+  <div class="highlight gold">
+    <p><strong>❗ La función está suspendida hasta nuevo aviso debido a abusos por parte de algunos jugadores.</strong></p>
+  </div>
+</div>
+
+<!-- Insignias -->
+<div id="insignias" class="card">
+  <h2><span class="icon">🏅</span>Las Insignias en Atlas Earth</h2>
+  
+  <h3>1. ¿Qué son las Insignias?</h3>
+  <p>Las insignias son objetos virtuales que los jugadores pueden comprar y agregar a su <strong>pasaporte digital</strong> dentro del juego. Cada insignia representa una ubicación específica, como una ciudad, un estado o un país, y se pueden coleccionar para mostrar los lugares donde has adquirido terrenos o visitado dentro del juego.</p>
+
+  <h3>2. ¿Cómo se obtienen las Insignias?</h3>
+  <p>Las insignias se pueden adquirir en la tienda del juego utilizando <strong>Atlas Bucks (AB)</strong>. Cada insignia tiene un <strong>costo fijo de 200 AB</strong>, sin importar la ubicación que representa.</p>
+  
+  <h4>Métodos para obtener insignias:</h4>
+  <ul>
+    <li><strong>Comprarlas directamente en la tienda del juego.</strong></li>
+    <li><strong>Ganar Atlas Bucks en minijuegos</strong> y usarlos para adquirir insignias.</li>
+    <li><strong>Participar en eventos especiales</strong> donde se otorgan insignias como recompensa.</li>
+  </ul>
+
+  <div class="highlight">
+    <h4>💡 Consejo:</h4>
+    <p>Si planeas viajar o moverte a diferentes ciudades dentro del juego, aprovecha para comprar insignias de distintas ubicaciones y diversificar tu pasaporte.</p>
+  </div>
+
+  <h3>3. Beneficios de las Insignias</h3>
+  <p>Las insignias no solo son un elemento estético dentro del juego, sino que también tienen un <strong>impacto económico</strong> dentro de Atlas Earth.</p>
+  
+  <h4>Ventajas de coleccionar insignias:</h4>
+  <ul>
+    <li><strong>Acceso al Club Explorador Atlas:</strong> Se requiere un mínimo de <strong>5 insignias</strong> para poder suscribirse al <strong>Club Explorador</strong>, que ofrece beneficios exclusivos como bonos de racha y más giros en la ruleta diaria.</li>
+    <li><strong>Apoyar a los VIPs:</strong> Al comprar una insignia de una ciudad, estado o país, el <strong>VIP de esa zona</strong> (mayor, gobernador o presidente) recibe <strong>20 AB</strong> como comisión. Esto fomenta la competencia entre jugadores para obtener más territorios.</li>
+    <li><strong>Aumento de renta por número de insignias:</strong> Cada insignia adquirida aumenta el porcentaje de renta que generan tus terrenos:
+      <ul>
+        <li><span class="badge green">1-10 insignias:</span> +5% de renta</li>
+        <li><span class="badge rare">11-30 insignias:</span> +10% de renta</li>
+        <li><span class="badge purple">31-60 insignias:</span> +15% de renta</li>
+        <li><span class="badge gold">61-100 insignias:</span> +20% de renta</li>
+        <li><span class="badge gold">101-9999 insignias:</span> +25% de renta</li>
+        <li><strong>Máximo incremento:</strong> +25% al alcanzar 101 insignias</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="highlight warning">
+    <h4>📌 Dato importante:</h4>
+    <p>Las insignias <strong>no afectan los ingresos pasivos</strong> generados por tus terrenos de forma individual, pero el incremento de renta sí aplica a todas las parcelas que poseas.</p>
+  </div>
+
+  <h3>4. Estrategia para Maximizar el Uso de Insignias</h3>
+  <p>Si deseas aprovechar las insignias al máximo dentro del juego, sigue estas estrategias:</p>
+  <ul>
+    <li><strong>Compra insignias en lugares turísticos:</strong> Esto puede ayudar a generar ingresos si en el futuro se implementa un sistema de intercambio o beneficios especiales por insignias populares.</li>
+    <li><strong>Prioriza la compra de 5 insignias para acceder al Club Explorador Atlas:</strong> Si planeas suscribirte al Club Explorador Atlas, adquiere primero 5 insignias para desbloquear la opción de suscripción.</li>
+    <li><strong>Apoya a otros jugadores:</strong> Si quieres beneficiar a un amigo o compañero de equipo que sea VIP en una zona, compra una insignia en su ciudad para ayudarlo a ganar Atlas Bucks adicionales.</li>
+    <li><strong>Diversifica tu colección:</strong> Tener insignias de diferentes ciudades y estados puede ser útil si en el futuro se añaden nuevas mecánicas relacionadas con las insignias.</li>
+  </ul>
+</div>
+
+<!-- Club Explorador Atlas -->
+<div class="card">
+  <h2><span class="icon">🔍</span>Club Explorador Atlas</h2>
+  
+  <p>El <strong>Club Explorador Atlas</strong> es una suscripción premium con un costo de <strong>50 dólares mensuales</strong>. Para unirte, primero debes adquirir al menos <strong>5 insignias en el pasaporte</strong>.</p>
+  
+  <h3>¿Cómo suscribirse?</h3>
+  <p>La suscripción se realiza directamente en la página oficial de Atlas Earth:<br>
+  <a href="https://www.atlasearth.com/" target="_blank">https://www.atlasearth.com/</a></p>
+  
+  <p>El <strong>Club Explorador Atlas</strong> tiene un costo de suscripción de <strong>49.99 USD mensuales</strong>.</p>
+  <p>También existe otra opción con un costo de suscripción <strong>549.99 USD al año</strong>.</p>
+
+  <h3>Beneficios del Club Explorador Atlas</h3>
+  <ol>
+    <li><strong>Bono de racha por logueo diario:</strong>
+      <ul>
+        <li>90 AB por día.</li>
+        <li>Bonos adicionales en los días 7, 14, 30, 60 y 90.</li>
+        <li><strong>Importante:</strong> Si no cobras un día, la racha se reinicia al día 1.</li>
+      </ul>
+    </li>
+    <li><strong>Acumulación de Boosts hasta por 8 horas.</strong></li>
+    <li><strong>Ruleta diaria extendida:</strong>
+      <ul>
+        <li>7 tiros en total (5 normales y 2 adicionales con anuncio).</li>
+      </ul>
+    </li>
+  </ol>
+
+  <div class="highlight warning">
+    <h4>📌 Nota:</h4>
+    <p>Si ya llevabas racha de recompensas antes de suscribirte, esta se reiniciará al día 1 tras la activación del Club Explorador.</p>
+  </div>
+</div>
+
+<!-- Pase de Temporada -->
+<div class="card">
+  <h2><span class="icon">🎫</span>Pase de Temporada en Atlas Earth</h2>
+  
+  <p>El <strong>Pase de Temporada</strong> es una característica especial que permite a los jugadores obtener recompensas exclusivas mediante la realización de misiones dentro del juego.</p>
+  
+  <h3>📌 Beneficios del Pase de Temporada:</h3>
+  <ul>
+    <li>Acceso a recompensas especiales, incluyendo <strong>Atlas Bucks, diamantes y mejoras temporales</strong>.</li>
+    <li>Posibilidad de obtener <strong>parcelas raras o épicas</strong> al completar misiones.</li>
+    <li>Misiones semanales con objetivos progresivos para mantener el interés en el juego.</li>
+  </ul>
+
+  <h3>📌 ¿Cómo funciona el Pase de Temporada?</h3>
+  <ul>
+    <li>Cada temporada dura un tiempo determinado y tiene un conjunto de desafíos.</li>
+    <li>Los jugadores pueden progresar completando misiones diarias y semanales.</li>
+    <li>Existen dos versiones: <strong>Pase Gratuito</strong> y <strong>Pase Premium</strong> (requiere compra con Atlas Bucks o dinero real).</li>
+  </ul>
+
+  <h3>📌 Estrategia recomendada:</h3>
+  <ul>
+    <li>Prioriza misiones que te permitan avanzar más rápido en la temporada.</li>
+    <li>Si planeas invertir en el <strong>Pase Premium</strong>, hazlo al inicio para aprovechar al máximo las recompensas.</li>
+    <li>Utiliza las recompensas obtenidas para reinvertir en más parcelas o insignias que generen ingresos pasivos.</li>
+  </ul>
+
+  <p>El <strong>Pase de Temporada</strong> tiene un costo de suscripción de <strong>9.99 USD</strong> si se adquiere de forma anticipada. Sin embargo, si compras el pase activo, su precio sube a <strong>14.99 USD</strong>. También existe la opción adicional de suscribirse por un año con un costo de <strong>109.99 USD</strong>. Por esta razón, se recomienda realizar el pago con anticipación para aprovechar el menor costo y acceder a las recompensas exclusivas que incluye.</p>
+</div>
+
+<!-- Beneficios VIP -->
+<div id="vip" class="card">
+  <h2><span class="icon">💎</span>Beneficios de ser VIP en Atlas Earth</h2>
+  
+  <p>Ser <strong>VIP</strong> en Atlas Earth es una estrategia clave para maximizar tus ingresos pasivos y fortalecer tu presencia en el juego. Al adquirir más parcelas, puedes alcanzar distintos niveles de influencia y obtener beneficios adicionales, dentro de <strong>Atlas Earth México</strong>. Dependiendo del área donde vives, puedes alcanzar uno de los siguientes títulos:</p>
+  
+  <h3>👑 Niveles de VIP en Atlas Earth:</h3>
+  <ul>
+    <li><span class="badge gold">🤴 Mayor:</span> Es la persona con más parcelas adquiridas en su <strong>Ciudad</strong>.</li>
+    <li><span class="badge purple">🏛️ Gobernador:</span> Es la persona con más parcelas adquiridas en su <strong>Estado</strong>.</li>
+    <li><span class="badge legendary">🏆 Presidente:</span> Es la persona con más parcelas adquiridas en <strong>todo el país</strong>.</li>
+  </ul>
+
+  <h3>❓ ¿Qué se necesita para ser VIP?</h3>
+  <p>Solo necesitas tener el mayor número de parcelas en la zona correspondiente.<br>
+  No hay ningún otro requisito adicional. Simple y directo. ✅</p>
+
+  <h3>💰 Beneficios de ser VIP</h3>
+  <p>Cada vez que alguien compra una insignia de pasaporte de tu zona (ciudad, estado o país), tú ganas el <strong>10% del costo de esa insignia</strong>.</p>
+  
+  <ul>
+    <li>Cada insignia cuesta: <code>200 AB</code></li>
+    <li>Tú ganas: <code>20 AB</code> por cada venta en tu zona</li>
+  </ul>
+
+  <p>Mientras más zonas controles, más ingresos pasivos puedes generar.</p>
+
+  <h3>💼 Ejemplo de ganancia:</h3>
+  <div class="highlight">
+    <p>Si una insignia cuesta <strong>200 AB</strong>, recibirás <strong>20 AB</strong> por cada insignia vendida en tu zona. Entre más jugadores compren insignias en tu territorio, mayores serán tus ganancias.</p>
+  </div>
+
+  <h3>❓ ¿Puedo ser VIP en varias regiones?</h3>
+  <p>Sí, no hay restricciones en la cantidad de regiones en las que puedes ser VIP. Mientras más áreas domines, mayores serán tus oportunidades de generar ingresos de manera continua. Mientras más áreas tengas bajo tu dominio, mayores serán tus oportunidades de ganar Atlas Bucks pasivamente.</p>
+
+  <h3>📌 Estrategia para maximizar tus ingresos como VIP</h3>
+  <p>Para obtener el máximo beneficio de tu estatus VIP, considera <strong>adquirir parcelas estratégicamente en zonas con alto tráfico de jugadores</strong>, como áreas turísticas y centros urbanos. Esto aumentará la probabilidad de que más jugadores compren insignias en tu territorio, incrementando así tus ganancias pasivas, donde los jugadores tengan más interés en comprar insignias. Esto le permitirá obtener más ganancias con menor esfuerzo.</p>
+</div>
+
+<!-- Minijuegos -->
+<div id="minijuegos" class="card">
+  <h2><span class="icon">🎮</span>MINIJUEGOS</h2>
+  
+  <h3>📅 ¿Cuándo se juegan los minijuegos?</h3>
+  <p>Los minijuegos están disponibles <strong>en días y horarios específicos</strong>, según los eventos activos. Para saber cuándo puedes jugar:</p>
+  <ol>
+    <li>Abre la aplicación de Atlas Earth.</li>
+    <li>Ve a la <strong>pestaña de eventos</strong>.</li>
+    <li>Revisa el apartado <strong>"Próximos"</strong> para confirmar el horario en tu zona.</li>
+  </ol>
+
+  <h3>🎲 ¿Cuáles son los minijuegos disponibles?</h3>
+  <p>Actualmente están activos los siguientes:</p>
+  <ul>
+    <li>🏎️ <strong>Racer</strong></li>
+    <li>🎣 <strong>Fishing</strong></li>
+    <li>⛳ <strong>Golf</strong></li>
+    <li>🚢 <strong>Warship</strong></li>
+    <li>🎳 <strong>Bowling</strong></li>
+    <li>✊📄✂️ <strong>Piedra, papel o tijera</strong> (¡Próximamente!)</li>
+  </ul>
+
+  <h3>🕹️ ¿Cómo jugar un minijuego?</h3>
+  <ol>
+    <li>Asegúrate de que el evento esté <strong>activo</strong>.</li>
+    <li>Ve al <strong>mapa</strong> dentro de la app.</li>
+    <li>Toca el ícono del minijuego que sigue a tu avatar.</li>
+    <li>¡El juego iniciará automáticamente!</li>
+  </ol>
+
+  <h3>🏆 Sistema de Recompensas</h3>
+  <p>Cada evento tiene un bote inicial de <strong>3000 Atlas Bucks (AB)</strong>, que se incrementa conforme más jugadores participan. Las recompensas se reparten así:</p>
+  
+  <ul>
+    <li>🥇 <strong>1º lugar</strong></li>
+    <li>🥈 <strong>2º lugar</strong></li>
+    <li>🥉 <strong>3º lugar</strong></li>
+    <li>🏅 <strong>4º al 25º</strong></li>
+    <li>🎖️ <strong>26º al 50º</strong></li>
+    <li>💎 <strong>51º al 100º</strong></li>
+    <li>⭐ <strong>101º al 500º</strong></li>
+  </ul>
+
+  <p>Hay <strong>rankings estatales y nacionales</strong>, y los premios varían según la participación.</p>
+  
+  <div class="highlight warning">
+    <p>🎯 <strong>Importante:</strong> Las partidas son <strong>completamente gratuitas</strong>, pero si <strong>saltas los anuncios</strong>, tu partida no sumará al bote.</p>
+  </div>
+
+  <div class="highlight">
+    <h4>💡 Consejos Generales para Todos los Minijuegos</h4>
+    <ul>
+      <li><strong>Precisión y rapidez:</strong> Con el paso del tiempo, el indicador se acelera, por lo que debes afinar tu sincronización y reflejos.</li>
+      <li><strong>Optimización tecnológica:</strong> Jugar en un dispositivo con buena conexión a internet y mayor capacidad de procesamiento hará la diferencia en cada partida.</li>
+      <li><strong>Practica y aprende:</strong> La experiencia es el mejor maestro. Cada partida te enseña algo nuevo sobre el timing y la estrategia.</li>
+      <li><strong>Actitud positiva:</strong> No te tomes los errores muy en serio. Una sonrisa y un poco de humor pueden convertir hasta la derrota en una lección valiosa.</li>
+    </ul>
+  </div>
+
+  <p>Con esta guía detallada, serás capaz de enfrentar cada minijuego con toda la preparación y estrategias que hacen a un verdadero explorador. ¿Qué esperas para subir a bordo, acelerar, pescar, golpear, disparar o lanzar la bola?</p>
+  <p>¡Que el mejor (y el más rápido) gane!</p>
+
+  <div class="highlight gold">
+    <p>¡Gracias a <strong>CHANO94</strong> por su valiosa colaboración en esta guía de minijuegos! 🎮🎧</p>
+    <p>Tu experiencia y aportes fueron clave para que cada explorador de AEMX pueda jugar con más estrategia y confianza.</p>
+    <p>¡Seguimos construyendo juntos esta comunidad! 💚🚀</p>
+  </div>
+</div>
+
+<!-- Gamertag -->
+<div id="gamertag" class="card">
+  <h2><span class="icon">🪪</span>Gamertag en Atlas Earth México</h2>
+  
+  <p>El <strong>Gamertag de AEMX</strong> es un sistema personalizado de identificación dentro de la comunidad de Atlas Earth México. Este Gamertag permite a los jugadores llevar un registro detallado de su progreso, acceder al Dashboard Nacional, y participar en eventos organizados por la comunidad. Además, ayuda a facilitar la comunicación y el reconocimiento entre los jugadores dentro y fuera del juego.</p>
+
+  <h3>1. ¿Cómo configurar tu Gamertag?</h3>
+  <p>El Gamertag de la comunidad de Atlas Earth México se gestiona a través de un formulario de actualización donde cada jugador puede ingresar y actualizar su información. Esto permite un mejor seguimiento del progreso y facilita la integración en la comunidad.</p>
+  
+  <p>Para establecer tu Gamertag en Atlas Earth, sigue estos pasos:</p>
+  <ol>
+    <li>Ingresa tu información en el <a href="#" target="_blank">Formulario de actualización</a> para que tu Gamertag sea registrado en la comunidad.</li>
+    <li><strong>Datos requeridos en el formulario:</strong>
+      <ul>
+        <li><strong>Nombre de usuario:</strong> Ingresa tu nombre dentro de Atlas Earth.</li>
+        <li><strong>Parcelas adquiridas:</strong> Se solicita el número de parcelas Comunes, Raras, Épicas y Legendarias.</li>
+        <li><strong>Insignias de pasaporte:</strong> Cantidad total de insignias adquiridas.</li>
+        <li><strong>Recursos disponibles:</strong> Número de Diamantes y Atlas Bucks en la cuenta.</li>
+        <li><strong>Pertenencia al Club de Exploradores:</strong> Confirmar si eres miembro activo o no.</li>
+        <li><strong>Fecha de inicio en Atlas Earth:</strong> Indicar la fecha en que comenzaste a jugar.</li>
+        <li><strong>Ubicación:</strong> Estado o región donde juegas.</li>
+        <li><strong>Título personalizado:</strong> Un apodo o rango dentro de la comunidad.</li>
+        <li><strong>Avatar:</strong> Imagen de perfil, con restricciones para contenido delicado o 18+. Escala 1:1</li>
+        <li><strong>Clave personal:</strong> Código de validación proporcionado por un miembro de AEMX para garantizar la autenticidad del registro. Si aún no tienes una clave personal, deja este espacio en blanco.</li>
+      </ul>
+    </li>
+    <li>Puedes visualizar tu Gamertag en la <a href="#" target="_blank">Hoja de Gamertag</a>.</li>
+  </ol>
+
+  <h3>📌 Reglas Importantes:</h3>
+  <ul>
+    <li><strong>Cada jugador debe actualizar su información personalmente</strong> en el formulario.</li>
+    <li><strong>No se recopila el correo electrónico de los usuarios</strong> para garantizar la privacidad.</li>
+    <li><strong>No se permite contenido delicado o 18+ en las imágenes de perfil subidas al formulario.</strong></li>
+  </ul>
+
+  <h3>2. Beneficios del Gamertag Personalizado AEMX</h3>
+  <ul>
+    <li><strong>Acceso al Dashboard Nacional:</strong> Los jugadores que registran su Gamertag pueden visualizar su progreso en un tablero interactivo con estadísticas detalladas de su cuenta.</li>
+    <li><strong>Mayor reconocimiento dentro de la comunidad.</strong></li>
+    <li><strong>Participación en eventos y torneos organizados por AEMX.</strong></li>
+    <li><strong>Acceso a clasificaciones y rankings comunitarios.</strong></li>
+    <li><strong>Facilidad para organizar estrategias y colaborar con otros jugadores en México.</strong></li>
+    <li><strong>Diferenciación clara dentro del juego y en redes sociales.</strong></li>
+    <li><strong>Herramienta clave para el seguimiento de progreso y rentabilidad en Atlas Earth.</strong></li>
+  </ul>
+
+  <h3>3. Reglas de Uso del Gamertag y Registro de Información</h3>
+  <ul>
+    <li><strong>Cada jugador debe ingresar su información en el formulario de Google.</strong></li>
+    <li><strong>Los datos deben ser actualizados por los propios jugadores</strong> para garantizar la privacidad.</li>
+    <li><strong>No se recopila el correo electrónico de los usuarios</strong> para garantizar la privacidad.</li>
+    <li><strong>No se tolerará contenido delicado o 18+ en las imágenes de perfil subidas al formulario.</strong></li>
+  </ul>
+
+  <div class="highlight gold">
+    <p>💡 <strong>Consejo:</strong> Usar el formato de AEMX facilita la identificación en la comunidad y ayuda a fortalecer el grupo de jugadores dentro de México.</p>
+  </div>
+</div>
+
+<!-- Maximizar Renta -->
+<div id="saltos" class="card">
+  <h2><span class="icon">📊</span>Maximizar Renta y Estrategia de Saltos en Atlas Earth (México)</h2>
+  
+  <p>Esta guía integra la información oficial de las <strong>Tasas de Renta en México</strong> proporcionadas por el juego junto con la <strong>Tabla de Saltos</strong> desarrollada por la comunidad de <strong>AEMX</strong> para optimizar la adquisición de parcelas y maximizar los ingresos.</p>
+
+  <h3>1. Tasas de Renta en México (Datos Oficiales de Atlas Earth)</h3>
+  <p>La tabla muestra los multiplicadores de Boost disponibles en cada rango de parcelas y la renta generada con y sin anuncios.</p>
+  
+  <div class="highlight">
+    <h4>Conclusiones Clave de las Tasas en México</h4>
+    <ul>
+      <li><strong>Los Boosts disminuyen a medida que se adquieren más parcelas</strong>, lo que afecta la renta generada.</li>
+      <li><strong>El mejor momento para comprar parcelas es antes de cruzar un umbral de Boost</strong> para evitar caídas bruscas en los ingresos.</li>
+      <li><strong>Los anuncios incrementan significativamente la renta generada</strong>, por lo que se recomienda aprovecharlos al máximo.</li>
+    </ul>
+  </div>
+
+  <h3>2. Tabla de Saltos (Desarrollada por AEMX)</h3>
+  
+  <h4>¿Qué es un "Salto" en Atlas Earth?</h4>
+  <p>Un <strong>Salto</strong> es la estrategia de <strong>acumular Atlas Bucks</strong> y realizar una compra masiva de parcelas en un solo movimiento para compensar la caída de ingresos al cambiar de multiplicador de Boost.</p>
+  
+  <p>Cuando un jugador cruza ciertos umbrales de parcelas, el juego reduce el multiplicador de renta, lo que puede generar una caída en los ingresos pasivos. <strong>Un Salto bien planificado ayuda a mantener la estabilidad de las ganancias</strong> y permite seguir creciendo de manera óptima.</p>
+
+  <h3>Estructura de la Tabla de Saltos</h3>
+  <p>La <strong>Tabla de Saltos</strong> clasifica cada umbral de parcelas en tres estados clave:</p>
+  <ul>
+    <li><span class="badge green">TOPE:</span> Punto máximo antes de una caída de renta.</li>
+    <li><span class="badge warning">CAÍDA:</span> Primer número de parcelas donde el multiplicador de Boost disminuye, reduciendo los ingresos.</li>
+    <li><span class="badge gold">SALTO:</span> Cantidad de parcelas recomendada para comprar en un solo movimiento para compensar la pérdida de ingresos.</li>
+  </ul>
+
+  <h4>Explicación de Columnas</h4>
+  <ul>
+    <li><strong>PARCELAS:</strong> Número de parcelas en ese umbral.</li>
+    <li><strong>X:</strong> Multiplicador de renta en ese rango de parcelas.</li>
+    <li><strong>%:</strong> Incremento de renta comparado con la base.</li>
+    <li><strong>C.R.E.L DÍA:</strong> Renta estimada generada por día.</li>
+    <li><strong>C.R.E.L AÑO:</strong> Renta estimada generada por año.</li>
+    <li><strong>SRB 32H:</strong> Renta generada en 32 horas de actividad.</li>
+    <li><strong>SRB AÑO:</strong> Renta generada en un año con actividad constante.</li>
+    <li><strong>$ MES:</strong> Ganancias mensuales estimadas en dólares.</li>
+    <li><strong>$ ANUAL:</strong> Ganancias anuales estimadas en dólares.</li>
+  </ul>
+
+  <h3>Estrategia de Saltos en Atlas Earth</h3>
+  <ul>
+    <li><strong>Evita las caídas de Boost:</strong> Planifica los saltos antes de cruzar los umbrales de <span class="badge warning">CAÍDA</span>.</li>
+    <li><strong>Asegura el crecimiento continuo:</strong> Los <span class="badge green">TOPE</span> indican cuándo estás maximizando la renta antes de un cambio.</li>
+    <li><strong>Haz compras masivas:</strong> Los <span class="badge gold">SALTO</span> indican el número de parcelas recomendadas para compensar la caída de ingresos.</li>
+    <li><strong>No te quedes en los números de CAÍDA:</strong> Son los peores puntos en términos de ingresos, ya que reducen tu rentabilidad.</li>
+  </ul>
+
+  <div class="highlight warning">
+    <h4>📌 Nota:</h4>
+    <p>La <strong>Tabla de Saltos</strong> es una herramienta esencial para planificar la compra de parcelas en <strong>Atlas Earth</strong> y maximizar los ingresos. Siguiendo esta guía, los jugadores pueden evitar caídas drásticas en su renta y lograr un crecimiento más estable y rentable.</p>
+  </div>
+
+  <p>Datos proporcionados por: <strong>Linkeichi</strong></p>
+</div>
+
+<!-- Enlazar PayPal -->
+<div id="paypal" class="card">
+  <h2><span class="icon">💰</span>Cómo enlazar tu cuenta PayPal para cobrar en Atlas Earth</h2>
+  
+  <p>Una de las funciones más atractivas de <strong>Atlas Earth</strong> es poder <strong>cobrar dinero real</strong> por las rentas generadas por tus propiedades virtuales. Para hacerlo, necesitas tener una cuenta de <strong>PayPal</strong> activa y enlazada correctamente a tu perfil. Aquí te explicamos todo lo que necesitas saber:</p>
+
+  <h3>💰 Requisitos para poder cobrar</h3>
+  <ul>
+    <li>Tener <strong>al menos $5 USD acumulados</strong> en tu balance de renta.</li>
+    <li>Contar con una cuenta de <strong>PayPal personal o empresarial</strong>, activa y en regla.</li>
+    <li>Que tu cuenta esté <strong>verificada</strong> (con un método de pago y correo confirmado).</li>
+    <li>Usar el <strong>correo electrónico correcto</strong> al momento de enlazar PayPal con Atlas Earth.</li>
+  </ul>
+
+  <h3>🔧 Pasos para enlazar tu cuenta PayPal</h3>
+  <ol>
+    <li>Abre la app de <strong>Atlas Earth</strong>.</li>
+    <li>Toca tu <strong>perfil</strong> o el menú de opciones (ícono de engrane ⚙️).</li>
+    <li>Selecciona la opción <strong>"Withdraw Earnings"</strong> / "Retirar ganancias".</li>
+    <li>Ingresa tu <strong>correo electrónico asociado a PayPal</strong>.</li>
+    <li>Confirma y guarda los cambios.</li>
+    <li>Atlas Earth te enviará una notificación por correo indicando que tu cuenta fue enlazada con éxito.</li>
+  </ol>
+
+  <h3>💵 ¿Cuánto se necesita para cobrar?</h3>
+  <ul>
+    <li>Si tienes <strong>$10 USD o más</strong>, puedes <strong>retirar de inmediato</strong> y recibir tu pago en un plazo de <strong>3 a 7 días hábiles</strong>.</li>
+    <li>Si tienes <strong>menos de $10 USD</strong>, el retiro <strong>no es inmediato</strong>, pero el sistema hace un <strong>corte diario automático</strong>:
+      <ul>
+        <li>Durante ese corte, si hay retiros pendientes por debajo del mínimo, <strong>se programan para ser enviados</strong> automáticamente a tu cuenta PayPal.</li>
+        <li>En este caso, <strong>no necesitas hacer nada</strong>, solo esperar a que se procese.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="highlight">
+    <p>💡 <strong>Tip:</strong> Puedes consultar tu progreso desde el menú "Earnings" y ver tu balance actualizado en todo momento.</p>
+  </div>
+
+  <h3>🆕 ¿No tienes cuenta PayPal? Aquí te explicamos cómo crear una</h3>
+  <ol>
+    <li>Ve a <a href="https://www.paypal.com" target="_blank">www.paypal.com</a> o descarga la app <strong>PayPal</strong> desde la tienda de tu dispositivo.</li>
+    <li>Toca en <strong>"Crear cuenta"</strong>.</li>
+    <li>Elige el tipo de cuenta: <strong>Personal</strong> (recomendado para Atlas Earth).</li>
+    <li>Ingresa tu <strong>correo electrónico</strong> y crea una <strong>contraseña segura</strong>.</li>
+    <li>Completa tu <strong>información personal</strong>: nombre, dirección, fecha de nacimiento, etc.</li>
+    <li><strong>Agrega y verifica</strong> una tarjeta de débito/crédito o cuenta bancaria (esto permite que tu cuenta sea válida para recibir pagos).</li>
+    <li>Confirma tu correo desde el mensaje que PayPal te enviará.</li>
+  </ol>
+
+  <p>Una vez hecho esto, tu cuenta estará lista para <strong>recibir retiros desde Atlas Earth</strong>.</p>
+
+  <h3>⚠️ Consejos importantes</h3>
+  <ul>
+    <li>Verifica bien <strong>el correo electrónico</strong> que ingresas en Atlas Earth.</li>
+    <li>Asegúrate de que tu cuenta PayPal esté <strong>activa y sin restricciones</strong>.</li>
+    <li>Si tienes algún problema con el retiro, contacta <strong>al soporte de Atlas Earth</strong> desde la misma app.</li>
+    <li>Si cambias de correo PayPal, deberás <strong>actualizarlo manualmente</strong> en la app de Atlas Earth.</li>
+  </ul>
+</div>
+
+<!-- Vincular cuenta bancaria -->
+<div class="card">
+  <h2><span class="icon">💳</span>Cómo vincular una cuenta bancaria para recibir dinero desde PayPal</h2>
+  
+  <p>Una vez que has cobrado tu renta en Atlas Earth y tienes el dinero en tu cuenta de PayPal, puedes <strong>transferir ese dinero a tu cuenta bancaria</strong> de forma sencilla. Aquí te explicamos cómo hacerlo paso a paso:</p>
+
+  <h3>🔗 Pasos para vincular tu cuenta bancaria a PayPal</h3>
+  <ol>
+    <li><strong>Inicia sesión</strong> en tu cuenta desde <a href="https://www.paypal.com" target="_blank">paypal.com</a> o desde la app oficial.</li>
+    <li>Dirígete al <strong>Menú principal</strong> (ícono de engrane ⚙️ o tu foto de perfil).</li>
+    <li>Selecciona la opción <strong>"Billetera"</strong> o "Wallet".</li>
+    <li>Toca en <strong>"Vincular una cuenta bancaria"</strong> o "Agregar cuenta bancaria".</li>
+    <li>Elige el tipo de cuenta:
+      <ul>
+        <li><strong>Cuenta bancaria nacional</strong> (CLABE de 18 dígitos si estás en México).</li>
+        <li>En algunos países también se puede vincular una <strong>tarjeta de débito o crédito</strong> para retirar fondos.</li>
+      </ul>
+    </li>
+    <li>Ingresa los <strong>datos bancarios solicitados</strong>:
+      <ul>
+        <li>Nombre del banco.</li>
+        <li>Número de cuenta o CLABE interbancaria (en México).</li>
+        <li>Titular de la cuenta (debe coincidir con tu nombre en PayPal).</li>
+      </ul>
+    </li>
+    <li>PayPal realizará un <strong>cargo o depósito de prueba</strong> (generalmente entre $0.01 y $1.00).</li>
+    <li>En un plazo de 1 a 3 días, revisa tu estado de cuenta y <strong>confirma el monto</strong> que aparece.</li>
+    <li>Vuelve a PayPal, ve a la sección de "Billetera" y <strong>verifica tu cuenta</strong> ingresando el monto exacto recibido.</li>
+  </ol>
+
+  <h3>✅ Una vez vinculada tu cuenta bancaria</h3>
+  <ul>
+    <li>Podrás <strong>retirar el dinero</strong> que recibes en PayPal en cualquier momento.</li>
+    <li>Las transferencias bancarias suelen tardar entre <strong>24 y 72 horas hábiles</strong>, dependiendo del banco.</li>
+    <li>No necesitas tener tarjeta física, basta con que la cuenta esté activa y a tu nombre.</li>
+  </ul>
+
+  <h3>📌 Importante:</h3>
+  <ul>
+    <li>El <strong>nombre del titular de la cuenta bancaria</strong> debe coincidir con el nombre en tu cuenta PayPal.</li>
+    <li>Algunos bancos pueden cobrar <strong>comisiones por recepción</strong> de fondos (verifica con tu banco).</li>
+    <li>Puedes vincular <strong>más de una cuenta</strong> si lo necesitas, pero solo una puede ser principal.</li>
+  </ul>
+</div>
+
+<!-- Unirse a la Comunidad -->
+<div class="card">
+  <h2><span class="icon">🌟</span>Únete a la Comunidad de Atlas Earth México</h2>
+  
+  <ul>
+    <li><strong>Grupos en redes sociales</strong> donde los jugadores comparten estrategias.</li>
+    <li><strong>Eventos y competencias</strong> organizadas por la comunidad con premios.</li>
+    <li><strong>Asesoría para nuevos jugadores</strong> para optimizar su progreso en el juego.</li>
+  </ul>
+
+  <div class="highlight gold">
+    <p><strong>¡Bienvenido a Atlas Earth! Tu aventura digital en México comienza ahora.</strong></p>
+  </div>
+
+  <h3>📌 Esta guía es una colaboración de AEMX (Atlas Earth México AEMX)</h3>
+  <p>AEMX es una comunidad de jugadores apasionados por Atlas Earth que busca compartir conocimientos, estrategias y experiencias para ayudar a todos los jugadores a mejorar su rendimiento dentro del juego. Nuestro objetivo es fomentar una comunidad activa y bien informada, donde los jugadores puedan aprender sobre las mejores tácticas para adquirir terrenos, optimizar sus ganancias y participar en eventos especiales.</p>
+
+  <p>Si tienes dudas, deseas contribuir con información útil o simplemente quieres conectar con otros jugadores, únete a nuestra comunidad y sé parte de la expansión de Atlas Earth en México. ¡Tu éxito en el juego comienza con el conocimiento y el apoyo de otros jugadores!</p>
+
+  <p><strong>Elaborado por: Socram13</strong></p>
+  
+  <p style="text-align: center; margin-top: 40px; font-family: 'Share Tech Mono', monospace; color: var(--text2);">
+    Última actualización: <strong>25 de noviembre de 2025</strong>
+  </p>
+</div>
+
+</div>
+
+<!-- Scroll to top button -->
+<div id="scrollTop">↑</div>
+
+<script>
+// Smooth scroll for navigation
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// Scroll to top button
+const scrollTopBtn = document.getElementById('scrollTop');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 300) {
+    scrollTopBtn.classList.add('visible');
+  } else {
+    scrollTopBtn.classList.remove('visible');
+  }
+});
+
+scrollTopBtn.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+</script>
+
+</body>
+</html>
