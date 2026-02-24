@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>PRESENCIA · AEMX</title>
+  <title>ROOM · AEMX</title>
   <link rel="icon" type="image/png" href="imagen_1.png">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
@@ -260,7 +260,7 @@
 
   <!-- HUD -->
   <div class="hud">
-    <div class="hud-title">⬡ PRESENCIA AEMX</div>
+    <div class="hud-title">⬡ ROOM AEMX</div>
     <div class="hud-right">
       <div class="online-count">
         <div class="online-dot"></div>
@@ -714,7 +714,7 @@
       mouseY = t.clientY;
     }, { passive: true });
 
-    // ── Firebase Auth + Presencia ──
+    // ── Firebase Auth + ROOM ──
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try {
