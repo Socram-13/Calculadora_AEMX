@@ -1579,25 +1579,25 @@
 
         } // fin initChat
 
-        // ── Sonido de notificación (pop suave con Web Audio API) ──
-        let audioCtx = null;
-        let soundMuted = localStorage.getItem('chat-muted') === 'true';
+    </script>
 
-        // Crear el contexto en el primer toque del usuario (requerido en móviles)
+    <!-- Sonido de notificación — script normal (no módulo) para acceso global inmediato -->
+    <script>
+        var audioCtx = null;
+        var soundMuted = localStorage.getItem('chat-muted') === 'true';
+
         function initAudioCtx() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                // Una vez creado, remover los listeners — ya no se necesitan
                 document.removeEventListener('touchstart', initAudioCtx);
                 document.removeEventListener('click',      initAudioCtx);
                 document.removeEventListener('keydown',    initAudioCtx);
             }
             if (audioCtx.state === 'suspended') {
-                audioCtx.resume().catch(() => {});
+                audioCtx.resume().catch(function(){});
             }
         }
 
-        // Desbloquear en el primer gesto del usuario
         document.addEventListener('touchstart', initAudioCtx, { passive: true });
         document.addEventListener('click',      initAudioCtx, { passive: true });
         document.addEventListener('keydown',    initAudioCtx, { passive: true });
@@ -1605,8 +1605,8 @@
         function playPopSound() {
             if (soundMuted || !audioCtx || audioCtx.state === 'suspended') return;
             try {
-                const osc  = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                var osc  = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.type = 'sine';
@@ -1621,8 +1621,8 @@
 
         function toggleMute() {
             soundMuted = !soundMuted;
-            localStorage.setItem('chat-muted', soundMuted);
-            const btn = document.getElementById('btnMute');
+            localStorage.setItem('chat-muted', String(soundMuted));
+            var btn = document.getElementById('btnMute');
             if (btn) {
                 btn.textContent = soundMuted ? '🔕' : '🔔';
                 btn.classList.toggle('muted', soundMuted);
@@ -1631,14 +1631,15 @@
         }
 
         // Aplicar estado guardado al cargar
-        (function() {
-            const btn = document.getElementById('btnMute');
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('btnMute');
             if (btn && soundMuted) {
                 btn.textContent = '🔕';
                 btn.classList.add('muted');
                 btn.title = 'Activar sonido';
             }
-        })();
+        });
+    </script>
 
         // ── Botón Marco: fuera de initChat para que siempre esté disponible ──
         window.abrirMarco = async function() {
