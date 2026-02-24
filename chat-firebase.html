@@ -976,39 +976,26 @@
                 gap: 6px;
             }
 
+            .chat-header-content {
+                gap: 5px;
+                padding-bottom: 2px;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* Forzar que el botón presencia sea siempre visible */
+            .btn-presencia {
+                order: -1; /* Aparece primero en móvil */
+            }
+
             .btn-leaderboard .lb-text { display: none; }
-    
-        .btn-guias {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: none;
-            border: 1px solid #00ff9d;
-            border-radius: 8px;
-            color: #00ff9d;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            padding: 6px 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-            text-decoration: none;
-        }
-        .btn-guias:hover {
-            background: #00ff9d;
-            color: #060b14;
-            box-shadow: 0 0 16px rgba(0,255,157,0.4);
-        }
 
         .btn-leaderboard { padding: 6px 9px; font-size: 14px; }
             .btn-marco .marco-text { display: none; }
             .btn-marco { padding: 6px 9px; font-size: 14px; }
             .btn-transacciones .tx-text { display: none; }
             .btn-transacciones { padding: 6px 9px; font-size: 14px; flex-shrink: 0; }
-            .btn-presencia .pr-text { display: none; }
-            .btn-presencia { padding: 6px 9px; font-size: 14px; flex-shrink: 0; }
+            .btn-presencia .pr-text { display: inline; font-size: 8px; letter-spacing: 1px; }
+            .btn-presencia { padding: 6px 10px; font-size: 13px; flex-shrink: 0; background: rgba(0,255,157,0.12); box-shadow: 0 0 10px rgba(0,255,157,0.25); }
             .btn-mute { width: 30px; height: 30px; font-size: 14px; padding: 0; flex-shrink: 0; }
             .btn-marco { flex-shrink: 0; }
             .btn-leaderboard { flex-shrink: 0; }

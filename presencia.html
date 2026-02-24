@@ -26,7 +26,6 @@
       cursor: none;
     }
 
-    /* Grid animado de fondo */
     body::before {
       content: '';
       position: fixed;
@@ -44,7 +43,6 @@
       100% { transform: translateY(48px); }
     }
 
-    /* Resplandores de fondo */
     body::after {
       content: '';
       position: fixed;
@@ -56,7 +54,6 @@
       z-index: 0;
     }
 
-    /* Canvas principal */
     #canvas {
       position: fixed;
       inset: 0;
@@ -149,7 +146,7 @@
       box-shadow: 0 0 10px rgba(0,200,255,0.6);
     }
 
-    /* Estado de carga */
+    /* Loading */
     .loading {
       position: fixed;
       inset: 0;
@@ -178,7 +175,7 @@
     /* Toast */
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%) translateY(60px);
       background: rgba(11,22,38,0.95);
@@ -194,6 +191,69 @@
       white-space: nowrap;
     }
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ── BARRA DE MENSAJE ── */
+    #msg-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 15;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(6,11,20,0.85);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(0,200,255,0.15);
+    }
+
+    #msg-input {
+      flex: 1;
+      background: rgba(0,200,255,0.05);
+      border: 1px solid rgba(0,200,255,0.2);
+      border-radius: 8px;
+      color: #cce8f4;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      padding: 9px 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      caret-color: var(--glow);
+      cursor: text;
+    }
+    #msg-input::placeholder { color: rgba(107,138,176,0.5); }
+    #msg-input:focus {
+      border-color: rgba(0,200,255,0.55);
+      box-shadow: 0 0 12px rgba(0,200,255,0.12);
+    }
+
+    #msg-send {
+      background: rgba(0,200,255,0.1);
+      border: 1px solid rgba(0,200,255,0.35);
+      border-radius: 8px;
+      color: var(--glow);
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 9px 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    #msg-send:hover {
+      background: rgba(0,200,255,0.2);
+      border-color: var(--glow);
+      box-shadow: 0 0 14px rgba(0,200,255,0.25);
+    }
+    #msg-send:active { transform: scale(0.96); }
+
+    /* hint de atajos */
+    #msg-hint {
+      font-size: 10px;
+      color: rgba(107,138,176,0.4);
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -226,11 +286,18 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
+  <!-- Barra de mensajes -->
+  <div id="msg-bar">
+    <input id="msg-input" type="text" placeholder="Escribe un mensaje... (Enter para enviar)" maxlength="120" autocomplete="off" spellcheck="false">
+    <span id="msg-hint">↵ ENVIAR</span>
+    <button id="msg-send">TRANSMITIR</button>
+  </div>
+
   <script type="module">
     import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, remove }
+    import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, remove, push }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -249,7 +316,7 @@
     const canvas  = document.getElementById('canvas');
     const ctx     = canvas.getContext('2d');
     const loading = document.getElementById('loading');
-    const cursor  = document.getElementById('cursor');
+    const cursorEl= document.getElementById('cursor');
 
     function resize() {
       canvas.width  = window.innerWidth;
@@ -258,15 +325,22 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // ── Burbujas ──
-    const RADIUS   = 44;   // radio de la burbuja
-    const FRICTION = 0.88; // amortiguación
-    const REPULSE  = 0.38; // fuerza de empuje
-    const ATTRACT  = 0.09; // fuerza de atracción al cursor
-    const TOP_PAD  = 60;   // espacio para el HUD
+    // ── Constantes de física ──
+    const RADIUS   = 44;
+    const FRICTION = 0.88;
+    const REPULSE  = 0.38;
+    const ATTRACT  = 0.09;
+    const TOP_PAD  = 60;
+    const BOT_PAD  = 56; // espacio para la barra de mensajes
 
     const bubbles  = new Map(); // uid → burbuja
     const imgCache = new Map(); // url → HTMLImageElement
+
+    // ── Globos de diálogo ──
+    // Cada globo: { uid, text, born, duration, alpha, lines, boxW, boxH }
+    const speechBubbles = [];
+    const BUBBLE_DURATION = 6000; // ms que dura el globo
+    const MSG_MAX_WIDTH   = 220;  // ancho máximo del texto
 
     function loadImg(url) {
       if (!url) return null;
@@ -285,15 +359,13 @@
         avatar:      data.avatar   || '',
         borderColor: data.borderColor || '#00c8ff',
         photoURL:    data.photoURL || '',
-        // posición aleatoria inicial
         x: RADIUS + Math.random() * (canvas.width  - RADIUS * 2),
-        y: TOP_PAD + RADIUS + Math.random() * (canvas.height - TOP_PAD - RADIUS * 2),
+        y: TOP_PAD + RADIUS + Math.random() * (canvas.height - TOP_PAD - BOT_PAD - RADIUS * 2),
         vx: (Math.random() - 0.5) * 2,
         vy: (Math.random() - 0.5) * 2,
-        // Para dibujar el donut (anillo)
         ringAngle: Math.random() * Math.PI * 2,
         img: null,
-        pulse: 0,  // animación al entrar
+        pulse: 0,
       };
     }
 
@@ -304,38 +376,32 @@
 
     function updatePhysics() {
       const bArr = [...bubbles.values()];
+      const canvasH = canvas.height - BOT_PAD;
 
       for (let i = 0; i < bArr.length; i++) {
         const b = bArr[i];
 
-        // Atracción al cursor/toque (solo la burbuja del usuario actual)
         if (b.uid === myUid) {
           const dx = mouseX - b.x;
           const dy = mouseY - b.y;
           b.vx += dx * ATTRACT;
           b.vy += dy * ATTRACT;
         } else {
-          // Los demás flotan con leve atracción al centro
-          const cx = canvas.width / 2, cy = canvas.height / 2;
+          const cx = canvas.width / 2, cy = (TOP_PAD + canvasH) / 2;
           b.vx += (cx - b.x) * 0.002;
           b.vy += (cy - b.y) * 0.002;
         }
 
-        // Fricción
         b.vx *= FRICTION;
         b.vy *= FRICTION;
-
-        // Mover
         b.x += b.vx;
         b.y += b.vy;
 
-        // Límites (rebote suave en bordes)
-        if (b.x < RADIUS)                  { b.x = RADIUS;                  b.vx *= -0.5; }
-        if (b.x > canvas.width - RADIUS)   { b.x = canvas.width - RADIUS;   b.vx *= -0.5; }
-        if (b.y < TOP_PAD + RADIUS)        { b.y = TOP_PAD + RADIUS;         b.vy *= -0.5; }
-        if (b.y > canvas.height - RADIUS)  { b.y = canvas.height - RADIUS;  b.vy *= -0.5; }
+        if (b.x < RADIUS)                 { b.x = RADIUS;                 b.vx *= -0.5; }
+        if (b.x > canvas.width - RADIUS)  { b.x = canvas.width - RADIUS;  b.vx *= -0.5; }
+        if (b.y < TOP_PAD + RADIUS)       { b.y = TOP_PAD + RADIUS;        b.vy *= -0.5; }
+        if (b.y > canvasH - RADIUS)       { b.y = canvasH - RADIUS;        b.vy *= -0.5; }
 
-        // Empuje entre burbujas
         for (let j = i + 1; j < bArr.length; j++) {
           const o  = bArr[j];
           const dx = o.x - b.x;
@@ -345,8 +411,7 @@
 
           if (dist < minDist) {
             const force = (minDist - dist) / minDist * REPULSE;
-            const nx = dx / dist;
-            const ny = dy / dist;
+            const nx = dx / dist, ny = dy / dist;
             b.vx -= nx * force;
             b.vy -= ny * force;
             o.vx += nx * force;
@@ -354,15 +419,148 @@
           }
         }
 
-        // Animar anillo girando
         b.ringAngle += 0.008;
-
-        // Pulse de entrada
         if (b.pulse < 1) b.pulse = Math.min(1, b.pulse + 0.04);
       }
     }
 
-    // ── Dibujar burbuja ──
+    // ── Utilidades de texto ──
+    function wrapText(text, maxWidth) {
+      ctx.font = '12px "Share Tech Mono", monospace';
+      const words = text.split(' ');
+      const lines = [];
+      let current = '';
+
+      for (const word of words) {
+        const test = current ? current + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && current) {
+          lines.push(current);
+          current = word;
+        } else {
+          current = test;
+        }
+      }
+      if (current) lines.push(current);
+      return lines;
+    }
+
+    // ── Dibujar globo de diálogo ──
+    function drawSpeechBubbles() {
+      const now = performance.now();
+
+      for (let i = speechBubbles.length - 1; i >= 0; i--) {
+        const sb = speechBubbles[i];
+        const bubble = bubbles.get(sb.uid);
+        if (!bubble) { speechBubbles.splice(i, 1); continue; }
+
+        const elapsed = now - sb.born;
+        if (elapsed > sb.duration) { speechBubbles.splice(i, 1); continue; }
+
+        // fade in/out
+        let alpha = 1;
+        const fadeIn  = 300;
+        const fadeOut = 800;
+        if (elapsed < fadeIn) {
+          alpha = elapsed / fadeIn;
+        } else if (elapsed > sb.duration - fadeOut) {
+          alpha = (sb.duration - elapsed) / fadeOut;
+        }
+        alpha = Math.max(0, Math.min(1, alpha));
+
+        const { x, y } = bubble;
+        const color = bubble.borderColor || '#00c8ff';
+
+        // Calcular dimensiones del box
+        ctx.font = '12px "Share Tech Mono", monospace';
+        const lineH = 17;
+        const padX  = 12, padY = 9;
+        const boxW  = sb.boxW;
+        const boxH  = sb.lines.length * lineH + padY * 2;
+
+        // Posición del globo (arriba del avatar)
+        const tailH  = 10;
+        const bx     = x - boxW / 2;
+        const by     = y - RADIUS - tailH - boxH - 8;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+
+        // Fondo del globo
+        const fillColor = hexToRgba(color, 0.12);
+        const borderCol = hexToRgba(color, 0.75);
+
+        // Sombra glow
+        ctx.shadowColor = color;
+        ctx.shadowBlur  = 18;
+
+        // Cuerpo del globo (rounded rect)
+        const rx = 10;
+        ctx.beginPath();
+        ctx.moveTo(bx + rx, by);
+        ctx.lineTo(bx + boxW - rx, by);
+        ctx.quadraticCurveTo(bx + boxW, by, bx + boxW, by + rx);
+        ctx.lineTo(bx + boxW, by + boxH - rx);
+        ctx.quadraticCurveTo(bx + boxW, by + boxH, bx + boxW - rx, by + boxH);
+        // cola del globo
+        const midX = x;
+        ctx.lineTo(midX + 8, by + boxH);
+        ctx.lineTo(midX, by + boxH + tailH);
+        ctx.lineTo(midX - 8, by + boxH);
+        ctx.lineTo(bx + rx, by + boxH);
+        ctx.quadraticCurveTo(bx, by + boxH, bx, by + boxH - rx);
+        ctx.lineTo(bx, by + rx);
+        ctx.quadraticCurveTo(bx, by, bx + rx, by);
+        ctx.closePath();
+
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = borderCol;
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
+
+        // Texto
+        ctx.shadowColor = color;
+        ctx.shadowBlur  = 6;
+        ctx.fillStyle   = '#e8f4ff';
+        ctx.font        = '12px "Share Tech Mono", monospace';
+        ctx.textAlign   = 'left';
+        ctx.textBaseline= 'top';
+
+        sb.lines.forEach((line, idx) => {
+          ctx.fillText(line, bx + padX, by + padY + idx * lineH);
+        });
+
+        ctx.restore();
+      }
+    }
+
+    // ── Recibir mensaje y crear globo ──
+    function addSpeechBubble(uid, text) {
+      // Calcular ancho máximo según canvas
+      const maxW = Math.min(MSG_MAX_WIDTH, canvas.width * 0.4);
+      ctx.font = '12px "Share Tech Mono", monospace';
+      const lines = wrapText(text, maxW - 24);
+      let boxW = 0;
+      lines.forEach(l => { boxW = Math.max(boxW, ctx.measureText(l).width + 24); });
+      boxW = Math.max(boxW, 80);
+
+      // Eliminar globo anterior del mismo uid
+      const existIdx = speechBubbles.findIndex(sb => sb.uid === uid);
+      if (existIdx !== -1) speechBubbles.splice(existIdx, 1);
+
+      speechBubbles.push({
+        uid,
+        text,
+        born: performance.now(),
+        duration: BUBBLE_DURATION,
+        lines,
+        boxW,
+      });
+    }
+
+    // ── Dibujar avatar ──
     function drawBubble(b) {
       const { x, y, username, borderColor, avatar, photoURL, ringAngle, pulse } = b;
       const scale = 0.4 + pulse * 0.6;
@@ -373,12 +571,10 @@
       ctx.translate(x, y);
       ctx.scale(scale, scale);
 
-      // Sombra/glow exterior
       ctx.shadowColor = borderColor;
       ctx.shadowBlur  = isMe ? 28 : 16;
 
-      // ── Donut / anillo exterior animado ──
-      const ringR = RADIUS + 10;
+      const ringR    = RADIUS + 10;
       const segments = 12;
       for (let i = 0; i < segments; i++) {
         const a1 = ringAngle + (i / segments) * Math.PI * 2;
@@ -391,19 +587,15 @@
         ctx.lineCap     = 'round';
         ctx.stroke();
       }
-
       ctx.shadowBlur = 0;
 
-      // ── Clip circular para el avatar ──
       ctx.beginPath();
       ctx.arc(0, 0, RADIUS, 0, Math.PI * 2);
       ctx.clip();
 
-      // Fondo del círculo
       ctx.fillStyle = '#0b1626';
       ctx.fill();
 
-      // Avatar (foto de Google o imagen base64)
       const imgSrc = photoURL || avatar;
       if (imgSrc) {
         const img = loadImg(imgSrc);
@@ -422,7 +614,6 @@
 
       ctx.restore();
 
-      // ── Borde del círculo ──
       ctx.save();
       ctx.translate(x, y);
       ctx.beginPath();
@@ -434,14 +625,12 @@
       ctx.stroke();
       ctx.restore();
 
-      // ── Nombre ──
       ctx.save();
       ctx.translate(x, y);
       const label = isMe ? `${username} ◀` : username;
       ctx.font         = `bold ${isMe ? 11 : 10}px "Share Tech Mono", monospace`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'top';
-      // Fondo del label
       const tw = ctx.measureText(label).width;
       ctx.fillStyle = 'rgba(6,11,20,0.85)';
       ctx.beginPath();
@@ -479,7 +668,6 @@
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Líneas de conexión entre burbujas cercanas
       const bArr = [...bubbles.values()];
       for (let i = 0; i < bArr.length; i++) {
         for (let j = i + 1; j < bArr.length; j++) {
@@ -501,6 +689,7 @@
 
       updatePhysics();
       bArr.forEach(drawBubble);
+      drawSpeechBubbles();  // globos encima de todo
       requestAnimationFrame(loop);
     }
 
@@ -508,8 +697,8 @@
     window.addEventListener('mousemove', e => {
       mouseX = e.clientX;
       mouseY = e.clientY;
-      cursor.style.left = e.clientX + 'px';
-      cursor.style.top  = e.clientY + 'px';
+      cursorEl.style.left = e.clientX + 'px';
+      cursorEl.style.top  = e.clientY + 'px';
     });
 
     window.addEventListener('touchmove', e => {
@@ -528,7 +717,6 @@
     // ── Firebase Auth + Presencia ──
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        // Login automático con Google
         try {
           await signInWithPopup(auth, new GoogleAuthProvider());
         } catch(e) {
@@ -539,7 +727,6 @@
 
       myUid = user.uid;
 
-      // Leer datos del usuario desde Firebase
       const { get } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
       const snap = await get(ref(db, `users/${user.uid}`));
       const userData = snap.exists() ? snap.val() : {};
@@ -553,12 +740,11 @@
         lastSeen: serverTimestamp(),
       };
 
-      // Registrar presencia
       const presRef = ref(db, `presencia/${user.uid}`);
       await set(presRef, myData);
       onDisconnect(presRef).remove();
 
-      // Escuchar todos los presentes
+      // Escuchar presencia
       onValue(ref(db, 'presencia'), (snap) => {
         const online = new Set();
 
@@ -569,14 +755,12 @@
             online.add(uid);
 
             if (bubbles.has(uid)) {
-              // Actualizar datos pero mantener posición/velocidad
               const b = bubbles.get(uid);
               b.username    = data.username    || b.username;
               b.avatar      = data.avatar      || b.avatar;
               b.photoURL    = data.photoURL    || b.photoURL;
               b.borderColor = data.borderColor || b.borderColor;
             } else {
-              // Nueva burbuja
               const b = createBubble(uid, data);
               b.img = loadImg(data.photoURL || data.avatar);
               bubbles.set(uid, b);
@@ -585,7 +769,6 @@
           });
         }
 
-        // Eliminar burbujas de quienes se desconectaron
         for (const uid of bubbles.keys()) {
           if (!online.has(uid)) {
             const b = bubbles.get(uid);
@@ -597,8 +780,46 @@
         document.getElementById('onlineNum').textContent = bubbles.size;
       });
 
+      // ── Escuchar mensajes en tiempo real ──
+      onValue(ref(db, 'mensajes'), (snap) => {
+        if (!snap.exists()) return;
+        const data  = snap.val();
+        const keys  = Object.keys(data).sort();
+        // Solo procesar el más reciente
+        const last  = data[keys[keys.length - 1]];
+        if (last && last.uid && last.text) {
+          addSpeechBubble(last.uid, last.text);
+        }
+      });
+
       loading.style.display = 'none';
       loop();
+    });
+
+    // ── Enviar mensaje ──
+    async function sendMessage() {
+      if (!myUid) return;
+      const input = document.getElementById('msg-input');
+      const text  = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+
+      // Guardar en Firebase: nodo mensajes/<pushId>
+      const msgsRef = ref(db, 'mensajes');
+      await push(msgsRef, {
+        uid:       myUid,
+        text,
+        timestamp: serverTimestamp(),
+      });
+    }
+
+    document.getElementById('msg-send').addEventListener('click', sendMessage);
+    document.getElementById('msg-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
     });
 
     // ── Toast ──
