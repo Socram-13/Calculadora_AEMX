@@ -2314,12 +2314,20 @@
       }
     };
 
-    // Fecha actual en zona horaria CDMX (America/Mexico_City) — reset a medianoche
-    function fechaCDMX() {
-      return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/Mexico_City',
-        year: 'numeric', month: '2-digit', day: '2-digit'
-      }).format(new Date()); // devuelve "YYYY-MM-DD"
+    // Obtiene la fecha actual de CDMX desde una API externa para evitar errores del navegador
+    async function fechaCDMX() {
+      try {
+        const res  = await fetch('https://worldtimeapi.org/api/timezone/America/Mexico_City');
+        const data = await res.json();
+        // data.datetime viene como "2026-02-23T20:15:00.000000-06:00"
+        return data.datetime.split('T')[0]; // "YYYY-MM-DD"
+      } catch(e) {
+        // Fallback: calcular con Intl si la API falla
+        return new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Mexico_City',
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).format(new Date());
+      }
     }
 
     // Maneja el estado del botón check in
@@ -2383,7 +2391,7 @@
     window._awardDailyCoin = async function() {
       if (!window._fbUser) return;
       const uid = window._fbUser.uid;
-      const hoy = fechaCDMX();
+      const hoy = await fechaCDMX();
       const _db  = window._fbDb;
       const _ref = window._fbRef;
       const _get = window._fbGet;
@@ -2470,7 +2478,7 @@
         if (coinsBar) coinsBar.style.display = '';
 
         const coins = serverData.coins || 0;
-        const hoy   = fechaCDMX();
+        const hoy   = await fechaCDMX();
 
         window._coinsUpdateDisplay(coins);
 
