@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇲🇽 Tamagotchi Mexicano AEMX</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060b14;
+    --panel: #0b1626;
+    --panel2: #0f1e35;
+    --border: #1a3a5c;
+    --glow: #00c8ff;
+    --glow2: #00ff9d;
+    --gold: #ffd700;
+    --text: #cce4ff;
+    --text2: #6b8ab0;
+    --warning: #ef4444;
+    --success: #4ade80;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: 0;
+    animation: gridMove 20s linear infinite;
+  }
+
+  @keyframes gridMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(40px); }
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(0,200,255,0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(0,255,157,0.04) 0%, transparent 50%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 500px;
+    width: 95%;
+    padding: 20px;
+  }
+
+  /* Card principal */
+  .card {
+    background: var(--panel);
+    border: 3px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #00c8ff, #4ade80, #facc15, #c084fc, #00c8ff);
+    background-size: 200% 100%;
+    animation: rainbowSlide 6s linear infinite;
+  }
+
+  @keyframes rainbowSlide {
+    0% { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 5px;
+  }
+
+  .subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--text2);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  /* Coins display */
+  .coins-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--panel2);
+    border: 2px solid var(--gold);
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin-bottom: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+  }
+
+  /* Selection screen */
+  #selection-screen {
+    text-align: center;
+  }
+
+  .selection-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 18px;
+    color: var(--glow);
+    margin-bottom: 20px;
+    letter-spacing: 1px;
+  }
+
+  .pet-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .pet-option {
+    background: var(--panel2);
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+  }
+
+  .pet-option:hover {
+    border-color: var(--glow);
+    transform: translateY(-5px);
+    box-shadow: 0 0 20px rgba(0,200,255,0.3);
+  }
+
+  .pet-sprite {
+    font-size: 60px;
+    margin-bottom: 10px;
+    display: block;
+  }
+
+  .pet-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  /* Game screen */
+  #game-screen {
+    display: none;
+  }
+
+  /* Pet display area */
+  .pet-display {
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 20px;
+    text-align: center;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  #current-pet {
+    font-size: 100px;
+    position: relative;
+    transition: all 0.3s;
+  }
+
+  #pet-outfit {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 100px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  #pet-outfit.visible {
+    opacity: 1;
+  }
+
+
+  /* SVG sprites sizing */
+  .pet-sprite svg { width: 64px; height: 64px; }
+  #current-pet svg { width: 120px; height: 120px; }
+  /* Outfit as hat overlay */
+  #pet-outfit {
+    top: 18%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 110px;
+    height: 110px;
+    font-size: 0;
+  }
+  #pet-outfit svg { width: 110px; height: 110px; }
+
+  /* Animations */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  .hungry {
+    animation: shake 0.5s infinite;
+  }
+
+  .happy {
+    transform: scale(1.1);
+  }
+
+  .sad {
+    filter: grayscale(100%);
+    opacity: 0.7;
+  }
+
+  /* Stats */
+  .stats {
+    margin-bottom: 20px;
+  }
+
+  .stat {
+    margin-bottom: 15px;
+  }
+
+  .stat-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+
+  .stat-bar-container {
+    background: #060b14;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    height: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .stat-bar {
+    height: 100%;
+    transition: width 0.5s, background 0.3s;
+    border-radius: 8px;
+  }
+
+  .stat-bar.happiness { background: linear-gradient(90deg, #4ade80, #00ff9d); }
+  .stat-bar.hunger { background: linear-gradient(90deg, #ef4444, #fbbf24); }
+  .stat-bar.sleep { background: linear-gradient(90deg, #60a5fa, #c084fc); }
+
+  /* Buttons */
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .btn {
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 15px 10px;
+    cursor: pointer;
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .btn:hover {
+    border-color: var(--glow);
+    transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(0,200,255,0.3);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-icon {
+    font-size: 24px;
+  }
+
+  .bottom-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .btn-secondary {
+    background: var(--panel2);
+    border: 2px solid var(--gold);
+    color: var(--gold);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--gold);
+    box-shadow: 0 0 15px rgba(255,215,0,0.3);
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal.active {
+    display: flex;
+  }
+
+  .modal-content {
+    background: var(--panel);
+    border: 3px solid var(--gold);
+    border-radius: 14px;
+    padding: 30px;
+    max-width: 400px;
+    width: 100%;
+    position: relative;
+  }
+
+  .modal-content::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #facc15, #ffd700, #facc15);
+    background-size: 200% 100%;
+    animation: rainbowSlide 3s linear infinite;
+  }
+
+  .modal-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    color: var(--gold);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  .shop-item {
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .shop-item-icon {
+    font-size: 60px;
+    margin-bottom: 10px;
+  }
+
+  .shop-item-name {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
+
+  .shop-item-desc {
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 10px;
+  }
+
+  .shop-item-price {
+    color: var(--gold);
+    font-weight: 700;
+    margin-bottom: 15px;
+  }
+
+  .btn-buy {
+    background: var(--panel);
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    padding: 10px 20px;
+    color: var(--gold);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .btn-buy:hover {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  .btn-buy:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Toast notifications */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--panel);
+    border: 2px solid var(--glow);
+    border-radius: 10px;
+    padding: 15px 20px;
+    z-index: 2000;
+    font-family: 'Share Tech Mono', monospace;
+    transform: translateX(400px);
+    transition: transform 0.3s;
+  }
+
+  .toast.show {
+    transform: translateX(0);
+  }
+
+  .toast.success { border-color: var(--success); color: var(--success); }
+  .toast.warning { border-color: var(--warning); color: var(--warning); }
+  .toast.gold { border-color: var(--gold); color: var(--gold); }
+
+  /* Reset button */
+  .btn-reset {
+    width: 100%;
+    margin-top: 20px;
+    background: var(--panel2);
+    border: 2px solid var(--warning);
+    color: var(--warning);
+  }
+
+  .btn-reset:hover {
+    border-color: var(--warning);
+    box-shadow: 0 0 15px rgba(239,68,68,0.3);
+  }
+
+  /* Login screen */
+  #login-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 11, 20, 0.97);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(8px);
+  }
+
+  #login-screen.hidden {
+    display: none;
+  }
+
+  .login-container {
+    background: var(--panel);
+    border: 1px solid var(--glow);
+    border-radius: 16px;
+    padding: 44px 40px;
+    max-width: 380px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 60px rgba(0,200,255,0.12);
+    animation: fadeUp 0.4s ease;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .login-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+  }
+
+  .login-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    color: var(--glow);
+    letter-spacing: 4px;
+    margin-bottom: 8px;
+  }
+
+  .login-subtitle {
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--text2);
+    font-size: 13px;
+    margin-bottom: 28px;
+    letter-spacing: 1px;
+  }
+
+  .auth-btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 20px;
+    background: linear-gradient(135deg, #1a3a5c, #0b1626);
+    border: 1px solid var(--glow);
+    border-radius: 10px;
+    color: var(--glow);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .auth-btn-google:hover {
+    background: var(--glow);
+    color: #060b14;
+    box-shadow: 0 0 24px rgba(0,200,255,0.4);
+  }
+
+  #google-signin-btn {
+    margin: 0 auto;
+  }
+
+  .location-status {
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--text2);
+    letter-spacing: 1px;
+    min-height: 18px;
+  }
+
+  .location-status.checking {
+    color: var(--glow);
+  }
+
+  .location-status.success {
+    color: var(--success);
+  }
+
+  .location-status.error {
+    color: var(--warning);
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid var(--border);
+    border-top-color: var(--glow);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-right: 6px;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  @media (max-width: 480px) {
+    .pet-sprite { font-size: 50px; }
+    #current-pet { font-size: 80px; }
+    #pet-outfit { font-size: 80px; }
+    .login-container { padding: 30px 20px; }
+    .login-icon { font-size: 60px; }
+  }
+
+  /* =========================
+     Mascota: animación básica
+     ========================= */
+  #current-pet { display:flex; align-items:center; justify-content:center; }
+  #current-pet .pet-svg{
+    width: 148px;
+    height: 148px;
+    transform-origin: 50% 85%;
+    animation: petBob 2.8s ease-in-out infinite;
+    will-change: transform, filter;
+  }
+  #current-pet .pet-svg.pet-wiggle{
+    animation: petWiggle 480ms ease-in-out 1;
+  }
+  #current-pet .pet-svg.pet-happy{
+    animation: petHop 520ms ease-out 1;
+    filter: drop-shadow(0 6px 14px rgba(0,0,0,.35));
+  }
+  #current-pet .pet-eye{
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: petBlink 5.6s infinite;
+  }
+  @keyframes petBob{
+    0%,100%{ transform: translateY(0px) rotate(0deg); }
+    50%{ transform: translateY(-6px) rotate(-0.6deg); }
+  }
+  @keyframes petWiggle{
+    0%{ transform: translateY(0px) rotate(0deg) scale(1); }
+    20%{ transform: translateY(-2px) rotate(-4deg) scale(1.02); }
+    40%{ transform: translateY(0px) rotate(4deg) scale(1.02); }
+    60%{ transform: translateY(-2px) rotate(-3deg) scale(1.01); }
+    80%{ transform: translateY(0px) rotate(3deg) scale(1.01); }
+    100%{ transform: translateY(0px) rotate(0deg) scale(1); }
+  }
+  @keyframes petHop{
+    0%{ transform: translateY(0px) scale(1); }
+    35%{ transform: translateY(-16px) scale(1.03); }
+    70%{ transform: translateY(0px) scale(0.99); }
+    100%{ transform: translateY(0px) scale(1); }
+  }
+  @keyframes petBlink{
+    0%, 92%, 100%{ opacity: 1; }
+    94%, 96%{ opacity: 0.15; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <div class="header">
+      <h1>🇲🇽 TAMAGOTCHI AEMX</h1>
+      <p class="subtitle">EDICIÓN MEXICANA • ATLAS EARTH</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-container">
+    <div class="login-icon">🇲🇽</div>
+    <h2 class="login-title">ACCESO RESTRINGIDO</h2>
+    <p class="login-subtitle">Solo disponible en México</p>
+    
+    <button class="auth-btn-google" onclick="authWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="currentColor" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="currentColor" d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9.003 18z"/><path fill="currentColor" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9.002c0 1.452.348 2.827.957 4.042l3.007-2.332z"/><path fill="currentColor" d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.428 0 9.002 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29c.708-2.127 2.692-3.71 5.036-3.71z"/></svg>
+      INICIAR SESIÓN CON GOOGLE
+    </button>
+    
+    <div class="location-status" id="location-status"></div>
+  </div>
+</div>
+
+<!-- Game Container -->
+<div class="container" id="game-container" style="display:none;">
+  <div class="card">
+    <div class="header">
+      <h1>🇲🇽 TAMAGOTCHI AEMX</h1>
+      <p class="subtitle">EDICIÓN MEXICANA • ATLAS EARTH</p>
+    </div>
+
+    <div class="coins-display">
+      <span>💰</span>
+      <span id="coins-amount">0</span>
+      <span>AMX COINS</span>
+    </div>
+
+    <!-- Selection Screen -->
+    <div id="selection-screen">
+      <div class="selection-title">ELIGE TU MASCOTA 🇲🇽</div>
+      <div class="pet-options">
+        <div class="pet-option" data-pet="ajolote">
+          <span class="pet-sprite" data-sprite="ajolote"></span>
+          <div class="pet-name">Ajolote</div>
+        </div>
+        <div class="pet-option" data-pet="quetzal">
+          <span class="pet-sprite" data-sprite="quetzal"></span>
+          <div class="pet-name">Quetzal</div>
+        </div>
+        <div class="pet-option" data-pet="tlacuache">
+          <span class="pet-sprite" data-sprite="tlacuache"></span>
+          <div class="pet-name">Tlacuache</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen">
+      <div class="pet-display">
+        <div style="position: relative;">
+          <div id="current-pet"></div>
+          <div id="pet-outfit"></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-label">
+            <span>😊 Felicidad</span>
+            <span id="happiness-value">100</span>
+          </div>
+          <div class="stat-bar-container">
+            <div class="stat-bar happiness" id="happiness-bar" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-label">
+            <span>🍖 Hambre</span>
+            <span id="hunger-value">0</span>
+          </div>
+          <div class="stat-bar-container">
+            <div class="stat-bar hunger" id="hunger-bar" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <div class="stat">
+          <div class="stat-label">
+            <span>😴 Sueño</span>
+            <span id="sleep-value">0</span>
+          </div>
+          <div class="stat-bar-container">
+            <div class="stat-bar sleep" id="sleep-bar" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="feed-btn">
+          <span class="btn-icon">🍖</span>
+          <span>Alimentar</span>
+        </button>
+        <button class="btn" id="play-btn">
+          <span class="btn-icon">🎮</span>
+          <span>Jugar</span>
+        </button>
+        <button class="btn" id="sleep-btn">
+          <span class="btn-icon">😴</span>
+          <span>Dormir</span>
+        </button>
+      </div>
+
+      <div class="bottom-actions">
+<button class="btn btn-secondary" id="shop-btn">
+          <span class="btn-icon">🛒</span>
+          <span>Tienda</span>
+        </button>
+      </div>
+
+      <button class="btn btn-reset" id="reset-btn">
+        🔄 Reiniciar Juego
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Shop Modal -->
+<div class="modal" id="shop-modal">
+  <div class="modal-content">
+    <button class="modal-close" id="close-shop">×</button>
+    <div class="modal-title">🛒 TIENDA MEXA</div>
+    
+    <div class="shop-item">
+      <div class="shop-item-icon">🤠</div>
+      <div class="shop-item-name">Sombrero Charro</div>
+      <div class="shop-item-desc">Se ve y se siente más mexicano</div>
+      <div class="shop-item-price">💰 10 AMX Coins</div>
+      <button class="btn-buy" id="buy-outfit-btn">Comprar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+// ============================================
+// FIREBASE SETUP
+// ============================================
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getDatabase, ref, get, update, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
+  authDomain: "aemx-chat.firebaseapp.com",
+  databaseURL: "https://aemx-chat-default-rtdb.firebaseio.com",
+  projectId: "aemx-chat",
+  storageBucket: "aemx-chat.appspot.com",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+let currentUser = null;
+let userCoins = 0;
+let unsubscribeCoins = null;
+// ============================================
+// AUTHENTICATION
+// ============================================
+window.authWithGoogle = async function() {
+  const locationStatus = document.getElementById('location-status');
+  locationStatus.textContent = '';
+  locationStatus.className = 'location-status';
+  
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch(e) {
+    locationStatus.className = 'location-status error';
+    locationStatus.textContent = '⚠️ Error al iniciar sesión. Intenta de nuevo.';
+  }
+};
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    // Usuario autenticado, verificar ubicación
+    checkLocation(user);
+  } else {
+    // Cleanup listeners/session
+    currentUser = null;
+    userCoins = 0;
+    if (typeof unsubscribeCoins === 'function') {
+      unsubscribeCoins();
+      unsubscribeCoins = null;
+    }
+    // Mostrar pantalla de login
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('game-container').style.display = 'none';
+  }
+});
+
+// ============================================
+// LOCATION VERIFICATION
+// ============================================
+const COUNTRY_MAP = {
+  "méxico": "Mexico", "mexico": "Mexico",
+  "estados unidos": "United States", "united states": "United States",
+  "us": "United States", "usa": "United States",
+};
+
+function normalizarPais(name) {
+  if (!name) return '';
+  return COUNTRY_MAP[name.toLowerCase().trim()] || name;
+}
+
+async function checkLocation(user) {
+  const locationStatus = document.getElementById('location-status');
+  locationStatus.className = 'location-status checking';
+  locationStatus.innerHTML = '<span class="spinner"></span>Verificando ubicación...';
+  
+  // Intentar detectar país por IP
+  let detectedCountry = null;
+  
+  try {
+    const res = await fetch('https://freeipapi.com/api/json');
+    const data = await res.json();
+    if (data.countryName) {
+      detectedCountry = normalizarPais(data.countryName);
+    }
+  } catch(e) {
+    console.log('Error con freeipapi, intentando ipapi.co');
+  }
+  
+  if (!detectedCountry) {
+    try {
+      const res2 = await fetch('https://ipapi.co/json/');
+      const data2 = await res2.json();
+      if (data2.country_name) {
+        detectedCountry = normalizarPais(data2.country_name);
+      }
+    } catch(e) {
+      console.log('Error con ipapi.co');
+    }
+  }
+  
+  // Verificar si es México
+  if (detectedCountry === 'Mexico') {
+    locationStatus.className = 'location-status success';
+    locationStatus.textContent = '✅ Ubicación verificada: México';
+    
+    setTimeout(() => {
+      grantAccess(user);
+    }, 1000);
+  } else {
+    locationStatus.className = 'location-status error';
+    locationStatus.textContent = `⚠️ Solo disponible en México${detectedCountry ? ' (Detectado: ' + detectedCountry + ')' : ''}`;
+    
+    showToast('Acceso denegado: Solo disponible en México', 'warning');
+  }
+}
+
+function startCoinsListener(user) {
+  try {
+    if (typeof unsubscribeCoins === 'function') unsubscribeCoins();
+    // Suscripción en tiempo real a coins del usuario
+    unsubscribeCoins = onValue(ref(db, `users/${user.uid}/coins`), (s) => {
+      userCoins = s.exists() ? (s.val() || 0) : 0;
+      document.getElementById('coins-amount').textContent = userCoins;
+    });
+  } catch (e) {
+    console.warn('No se pudo suscribir a coins:', e);
+  }
+}
+
+window.signOutUser = async function() {
+  try { await signOut(auth); } catch(e) {}
+};
+
+function grantAccess(user) {
+  // Ocultar login
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('game-container').style.display = 'block';
+
+  // Conectar coins con el mismo sistema que Transacciones (users/{uid}/coins)
+  startCoinsListener(user);
+
+  // Cargar estado del juego
+  loadState();
+  renderPetOptions();
+  
+  // Mostrar pantalla apropiada
+  if (gameState.selectedPet) {
+    document.getElementById('selection-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'block';
+    updateUI();
+    startDegradationTimer();
+  } else {
+    document.getElementById('selection-screen').style.display = 'block';
+    document.getElementById('game-screen').style.display = 'none';
+  }
+  
+  showToast(`¡Bienvenido ${user.displayName || user.email}!`, 'success');
+}
+
+// ============================================
+// GAME STATE
+// ============================================
+const gameState = {
+  selectedPet: null,
+  happiness: 100,
+  hunger: 0,
+  sleep: 0,
+  hasOutfit: false,
+  // Sprites en SVG con vibra mexicana 🌮🇲🇽
+  petSprites: {
+    ajolote: `<svg class="pet-svg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-label="Ajolote charro">
+  <defs>
+    <filter id="ds" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <g filter="url(#ds)">
+    <!-- body -->
+    <rect x="26" y="46" width="76" height="62" rx="26" fill="#ff7aa8"/>
+    <rect x="34" y="56" width="60" height="44" rx="20" fill="#ff9cbc" opacity="0.85"/>
+    <!-- cheeks -->
+    <circle cx="46" cy="76" r="6" fill="#ff4d7d" opacity="0.75"/>
+    <circle cx="82" cy="76" r="6" fill="#ff4d7d" opacity="0.75"/>
+    <!-- eyes -->
+    <circle cx="50" cy="68" r="6" fill="#0b1626" class="pet-eye"/>
+    <circle cx="78" cy="68" r="6" fill="#0b1626" class="pet-eye"/>
+    <circle cx="48" cy="66" r="2" fill="#ffffff" opacity="0.9"/>
+    <circle cx="76" cy="66" r="2" fill="#ffffff" opacity="0.9"/>
+    <!-- smile -->
+    <path d="M58 80c4 4 8 4 12 0" fill="none" stroke="#0b1626" stroke-width="4" stroke-linecap="round"/>
+    <!-- gills -->
+    <path d="M26 54c-10 0-14-14-2-18" fill="none" stroke="#ff4d7d" stroke-width="6" stroke-linecap="round"/>
+    <path d="M102 54c10 0 14-14 2-18" fill="none" stroke="#ff4d7d" stroke-width="6" stroke-linecap="round"/>
+    <path d="M26 64c-12 2-16-12-4-18" fill="none" stroke="#ff4d7d" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+    <path d="M102 64c12 2 16-12 4-18" fill="none" stroke="#ff4d7d" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+    <!-- sarape band -->
+    <rect x="30" y="92" width="68" height="12" rx="6" fill="#16a34a"/>
+    <rect x="30" y="92" width="10" height="12" rx="6" fill="#dc2626"/>
+    <rect x="46" y="92" width="10" height="12" rx="6" fill="#ffffff"/>
+    <rect x="62" y="92" width="10" height="12" rx="6" fill="#dc2626"/>
+    <rect x="78" y="92" width="10" height="12" rx="6" fill="#ffffff"/>
+    <!-- tiny cactus badge -->
+    <path d="M90 42c0-10 12-10 12 0v6c0 8-12 8-12 0v-6z" fill="#16a34a"/>
+  </g>
+</svg>`,
+    quetzal: `<svg class="pet-svg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-label="Quetzal festivo">
+  <defs>
+    <filter id="ds2" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <g filter="url(#ds2)">
+    <!-- body -->
+    <ellipse cx="62" cy="72" rx="32" ry="26" fill="#16a34a"/>
+    <ellipse cx="68" cy="72" rx="24" ry="18" fill="#22c55e" opacity="0.9"/>
+    <!-- head -->
+    <circle cx="74" cy="50" r="18" fill="#16a34a"/>
+    <circle cx="80" cy="48" r="6" fill="#0b1626" class="pet-eye"/>
+    <circle cx="78" cy="46" r="2" fill="#ffffff" opacity="0.9"/>
+    <!-- beak -->
+    <path d="M88 54l22 8-22 8z" fill="#f59e0b"/>
+    <!-- wing -->
+    <path d="M46 70c-16 6-20 20-6 30 18 12 36-2 34-18" fill="#10b981" opacity="0.9"/>
+    <!-- tail (long quetzal vibe) -->
+    <path d="M44 88c-14 10-18 20-14 34" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round"/>
+    <path d="M56 92c-10 12-12 22-8 34" fill="none" stroke="#16a34a" stroke-width="10" stroke-linecap="round"/>
+    <!-- papel picado band -->
+    <rect x="24" y="18" width="80" height="10" rx="5" fill="#0b1626" opacity="0.35"/>
+    <g transform="translate(26 22)">
+      <path d="M0 0h12l-6 10z" fill="#dc2626"/>
+      <path d="M16 0h12l-6 10z" fill="#ffffff"/>
+      <path d="M32 0h12l-6 10z" fill="#16a34a"/>
+      <path d="M48 0h12l-6 10z" fill="#f59e0b"/>
+      <path d="M64 0h12l-6 10z" fill="#a855f7"/>
+    </g>
+  </g>
+</svg>`,
+    tlacuache: `<svg class="pet-svg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-label="Tlacuache luchador">
+  <defs>
+    <filter id="ds3" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <g filter="url(#ds3)">
+    <!-- body -->
+    <ellipse cx="64" cy="80" rx="34" ry="26" fill="#9ca3af"/>
+    <ellipse cx="64" cy="84" rx="26" ry="18" fill="#d1d5db" opacity="0.9"/>
+    <!-- head -->
+    <circle cx="64" cy="52" r="22" fill="#9ca3af"/>
+    <circle cx="64" cy="56" r="14" fill="#d1d5db" opacity="0.95"/>
+    <!-- lucha mask -->
+    <path d="M44 52c4-16 36-16 40 0v10c0 10-10 18-20 18S44 72 44 62V52z" fill="#dc2626"/>
+    <path d="M56 54c2-6 14-6 16 0v8c0 4-4 8-8 8s-8-4-8-8v-8z" fill="#ffffff" opacity="0.9"/>
+    <!-- eyes -->
+    <circle cx="58" cy="58" r="4" fill="#0b1626" class="pet-eye"/>
+    <circle cx="70" cy="58" r="4" fill="#0b1626" class="pet-eye"/>
+    <!-- nose -->
+    <circle cx="64" cy="66" r="4" fill="#0b1626" opacity="0.8"/>
+    <!-- tail -->
+    <path d="M96 88c18 10 20 26 10 34" fill="none" stroke="#9ca3af" stroke-width="10" stroke-linecap="round"/>
+    <!-- belt -->
+    <rect x="38" y="94" width="52" height="10" rx="5" fill="#16a34a"/>
+    <circle cx="64" cy="99" r="6" fill="#f59e0b"/>
+  </g>
+</svg>`
+  },
+  outfitSvg: `<svg class="pet-svg" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" aria-label="Sombrero charro">
+  <defs>
+    <filter id="hatds" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  <g filter="url(#hatds)">
+    <path d="M16 78c0-10 22-18 48-18s48 8 48 18-22 18-48 18-48-8-48-18z" fill="#111827"/>
+    <path d="M44 38c0-10 10-18 20-18s20 8 20 18v22H44V38z" fill="#1f2937"/>
+    <path d="M36 78c0-6 14-10 28-10s28 4 28 10-14 10-28 10-28-4-28-10z" fill="#374151"/>
+    <path d="M24 76c8-10 72-10 80 0" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round"/>
+  </g>
+</svg>`
+};
+
+
+// Renderizar sprites en la pantalla de selección
+function renderPetOptions() {
+  document.querySelectorAll('.pet-option .pet-sprite').forEach(el => {
+    const key = el.getAttribute('data-sprite');
+    if (key && gameState.petSprites[key]) {
+      el.innerHTML = gameState.petSprites[key];
+    }
+  });
+}
+// Load saved state
+function loadState() {
+  const saved = localStorage.getItem('tamagotchiAEMX');
+  if (saved) {
+    const data = JSON.parse(saved);
+    // Coins ahora vienen de Firebase; ignorar cualquier valor guardado localmente
+    delete data.coins;
+    delete data.lastCheckin;
+    Object.assign(gameState, data);
+    return true;
+  }
+  return false;
+}
+
+// Save state
+function saveState() {
+  // Coins ahora vienen de Firebase (users/{uid}/coins); no se guardan en localStorage
+  const { coins, lastCheckin, ...persist } = gameState;
+  localStorage.setItem('tamagotchiAEMX', JSON.stringify(persist));
+}
+
+// Show toast notification
+function showToast(message, type = 'success') {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.className = `toast ${type}`;
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+// Update UI
+function updateUI() {
+  // Update coins (Firebase)
+  document.getElementById('coins-amount').textContent = userCoins;
+  
+  // Update stats
+  document.getElementById('happiness-value').textContent = gameState.happiness;
+  document.getElementById('hunger-value').textContent = gameState.hunger;
+  document.getElementById('sleep-value').textContent = gameState.sleep;
+  
+  document.getElementById('happiness-bar').style.width = gameState.happiness + '%';
+  document.getElementById('hunger-bar').style.width = gameState.hunger + '%';
+  document.getElementById('sleep-bar').style.width = gameState.sleep + '%';
+  
+  // Update pet sprite
+  const petElement = document.getElementById('current-pet');
+  petElement.innerHTML = gameState.petSprites[gameState.selectedPet] || '';
+  // Animación: enganchar clases al SVG recién renderizado
+  const svg = petElement.querySelector('.pet-svg');
+  if (svg) {
+    // Reiniciar micro-animaciones si venimos de un evento
+    svg.classList.remove('pet-happy','pet-wiggle');
+    // Asegurar un reflow rápido para que la animación 1-shot vuelva a disparar
+    void svg.getBBox();
+  }
+  // ensure svg scales nicely
+
+  
+  // Update outfit
+  const outfitElement = document.getElementById('pet-outfit');
+  if (gameState.hasOutfit) {
+    outfitElement.classList.add('visible');
+  } else {
+    outfitElement.classList.remove('visible');
+  }
+
+  // Render outfit SVG
+  outfitElement.innerHTML = gameState.hasOutfit ? gameState.outfitSvg : '';
+// Apply animations based on state
+  petElement.classList.remove('hungry', 'happy', 'sad');
+  
+  if (gameState.hunger > 70) {
+    petElement.classList.add('hungry');
+  }
+  if (gameState.happiness > 80) {
+    petElement.classList.add('happy');
+  }
+  if (gameState.happiness < 30) {
+    petElement.classList.add('sad');
+  }
+  
+  saveState();
+}
+
+// Degrade stats
+let degradationTimer = null;
+
+function degradeStats() {
+  gameState.hunger = Math.min(100, gameState.hunger + 2);
+  gameState.sleep = Math.min(100, gameState.sleep + 1);
+  gameState.happiness = Math.max(0, gameState.happiness - 1);
+  
+  updateUI();
+}
+
+function startDegradationTimer() {
+  if (degradationTimer) return;
+  degradationTimer = setInterval(degradeStats, 60000);
+}
+
+
+// Pequeñas animaciones para que se sienta “viva” la mascota
+function animatePet(kind = 'wiggle') {
+  const svg = document.querySelector('#current-pet .pet-svg');
+  if (!svg) return;
+  if (kind === 'happy') {
+    svg.classList.remove('pet-wiggle');
+    // reflow
+    void svg.getBBox();
+    svg.classList.add('pet-happy');
+    setTimeout(() => svg.classList.remove('pet-happy'), 600);
+  } else {
+    svg.classList.remove('pet-happy');
+    void svg.getBBox();
+    svg.classList.add('pet-wiggle');
+    setTimeout(() => svg.classList.remove('pet-wiggle'), 520);
+  }
+}
+
+// Wiggly idle aleatorio (cada 6–12s aprox)
+setInterval(() => {
+  if (!gameState.selectedPet) return;
+  if (document.hidden) return;
+  // 50% de probabilidad de moverse en cada tick
+  if (Math.random() < 0.5) animatePet('wiggle');
+}, 6000);
+
+// Action: Feed
+function feed() {
+  animatePet('happy');
+  gameState.hunger = Math.max(0, gameState.hunger - 20);
+  gameState.happiness = Math.min(100, gameState.happiness + 5);
+  showToast('🍖 ¡Ñam ñam! Tu mascota está feliz', 'success');
+  updateUI();
+}
+
+// Action: Play
+function play() {
+  animatePet('happy');
+  gameState.happiness = Math.min(100, gameState.happiness + 15);
+  gameState.hunger = Math.min(100, gameState.hunger + 5);
+  gameState.sleep = Math.min(100, gameState.sleep + 5);
+  showToast('🎮 ¡Diversión espacial!', 'success');
+  updateUI();
+}
+
+// Action: Sleep
+function sleep() {
+  animatePet('wiggle');
+  gameState.sleep = Math.max(0, gameState.sleep - 30);
+  gameState.happiness = Math.min(100, gameState.happiness + 10);
+  showToast('😴 Zzz... Tu mascota descansó bien', 'success');
+  updateUI();
+}
+
+  
+  gameState.coins += 1;
+  gameState.lastCheckin = today;
+  showToast('💰 +1 AMX Coin obtenido!', 'gold');
+  updateUI();
+}
+
+// Buy outfit
+async function buyOutfit() {
+if (gameState.hasOutfit) {
+    showToast('⚠️ Ya tienes este outfit', 'warning');
+    return;
+  }
+  
+  if (!currentUser) {
+    showToast('⚠️ Inicia sesión para comprar', 'warning');
+    return;
+  }
+  if (userCoins < 10) {
+    showToast('⚠️ Necesitas 10 coins', 'warning');
+    return;
+  }
+
+  // Descontar coins en Firebase (misma bolsa que Transacciones)
+  const btn = document.getElementById('buy-outfit-btn');
+  btn.disabled = true;
+  const prevText = btn.textContent;
+  btn.textContent = '⏳ Comprando...';
+  try {
+    await update(ref(db, `users/${currentUser.uid}`), { coins: userCoins - 10 });
+  } catch (e) {
+    showToast('⚠️ No se pudo completar la compra', 'warning');
+    console.warn(e);
+    btn.disabled = false;
+    btn.textContent = prevText;
+    return;
+  }
+
+  gameState.hasOutfit = true;
+  showToast('🤠 ¡Sombrero comprado!', 'gold');
+  updateUI();
+  closeShop();
+  btn.disabled = false;
+  btn.textContent = prevText;
+}
+
+// Open/close shop
+function openShop() {
+  document.getElementById('shop-modal').classList.add('active');
+}
+
+function closeShop() {
+  document.getElementById('shop-modal').classList.remove('active');
+}
+
+// Reset game
+function resetGame() {
+  if (!confirm('¿Seguro que quieres reiniciar? Se perderá todo el progreso y lo comprado.')) return;
+
+  // Borrar progreso local (coins viven en Firebase)
+  localStorage.removeItem('tamagotchiAEMX');
+
+  // Detener degradación
+  if (degradationTimer) {
+    clearInterval(degradationTimer);
+    degradationTimer = null;
+  }
+
+  // Resetear estado (incluye compras)
+  gameState.selectedPet = null;
+  gameState.happiness = 100;
+  gameState.hunger = 0;
+  gameState.sleep = 0;
+  gameState.hasOutfit = false;
+
+  // UI: volver a selección de mascota
+  closeShop();
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('selection-screen').style.display = 'block';
+
+  updateUI();
+  showToast('🔄 Reiniciado. Elige tu nueva mascota.', 'success');
+}
+
+// Pet selection
+document.querySelectorAll('.pet-option').forEach(option => {
+  option.addEventListener('click', function() {
+    const pet = this.dataset.pet;
+    gameState.selectedPet = pet;
+    
+    document.getElementById('selection-screen').style.display = 'none';
+    document.getElementById('game-screen').style.display = 'block';
+    
+    updateUI();
+    showToast(`🎉 ¡${pet.charAt(0).toUpperCase() + pet.slice(1)} seleccionado!`, 'success');
+    
+    startDegradationTimer();
+  });
+});
+
+// Event listeners
+document.getElementById('feed-btn').addEventListener('click', feed);
+document.getElementById('play-btn').addEventListener('click', play);
+document.getElementById('sleep-btn').addEventListener('click', sleep);
+document.getElementById('shop-btn').addEventListener('click', openShop);
+document.getElementById('close-shop').addEventListener('click', closeShop);
+document.getElementById('buy-outfit-btn').addEventListener('click', buyOutfit);
+document.getElementById('reset-btn').addEventListener('click', resetGame);
+
+// Close modal on outside click
+document.getElementById('shop-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeShop();
+});
+
+// --- PET NAME ---
+let petName = localStorage.getItem("petName") || "";
+const nameInput = document.getElementById("petNameInput");
+const nameDisplay = document.getElementById("petNameDisplay");
+
+function setPetName(name){
+  petName = name || "Mascota";
+  localStorage.setItem("petName", petName);
+  if(nameDisplay) nameDisplay.textContent = "🐾 " + petName;
+}
+
+if(nameInput) nameInput.value = petName;
+if(petName && nameDisplay) nameDisplay.textContent = "🐾 " + petName;
+
+document.querySelectorAll("[data-pet]").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    setPetName(nameInput?.value?.trim());
+  });
+});
+
+// Clear name on full reset
+const _resetGame = window.resetGame;
+window.resetGame = function(){
+  localStorage.removeItem("petName");
+  if(_resetGame) _resetGame();
+};
+</script>
+
+
+</body>
+</html>
