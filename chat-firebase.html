@@ -289,6 +289,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 6px;
+            overflow: visible;
         }
 
 
@@ -974,6 +976,9 @@
         .btn-leaderboard { padding: 6px 9px; font-size: 14px; }
             .btn-marco .marco-text { display: none; }
             .btn-marco { padding: 6px 9px; font-size: 14px; }
+            .btn-transacciones .tx-text { display: none; }
+            .btn-transacciones { padding: 6px 9px; font-size: 14px; }
+            .btn-mute { width: 30px; height: 30px; font-size: 14px; padding: 0; flex-shrink: 0; }
 
             /* Botón hamburguesa visible */
             .menu-toggle {
@@ -1578,28 +1583,37 @@
         let audioCtx = null;
         let soundMuted = localStorage.getItem('chat-muted') === 'true';
 
-        function getAudioCtx() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            return audioCtx;
+        // Crear el contexto en el primer toque del usuario (requerido en móviles)
+        function initAudioCtx() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // Safari/iOS deja el contexto en 'suspended' — reanudarlo en cada toque
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume().catch(() => {});
+            }
         }
 
+        // Desbloquear en el primer gesto del usuario
+        document.addEventListener('touchstart', initAudioCtx, { once: false, passive: true });
+        document.addEventListener('click',      initAudioCtx, { once: false, passive: true });
+        document.addEventListener('keydown',    initAudioCtx, { once: false, passive: true });
+
         function playPopSound() {
-            if (soundMuted) return;
+            if (soundMuted || !audioCtx || audioCtx.state === 'suspended') return;
             try {
-                const ctx = getAudioCtx();
-                // Pop suave: oscilador sinusoidal con decay rápido
-                const osc  = ctx.createOscillator();
-                const gain = ctx.createGain();
+                const osc  = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(audioCtx.destination);
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(880, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.25, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-                osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.15);
-            } catch(e) { /* silenciar errores de autoplay policy */ }
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.15);
+            } catch(e) {}
         }
 
         function toggleMute() {
@@ -1611,6 +1625,8 @@
                 btn.classList.toggle('muted', soundMuted);
                 btn.title = soundMuted ? 'Activar sonido' : 'Silenciar notificaciones';
             }
+            // Inicializar contexto en este toque (importante en iPhone)
+            initAudioCtx();
         }
 
         // Aplicar estado guardado al cargar
