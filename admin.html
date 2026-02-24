@@ -1222,6 +1222,18 @@
     .coins-toggle-status.on  { color: #ffd700; }
     .coins-toggle-status.off { color: var(--text2); }
 
+    /* Toggle transacciones (cyan) */
+    #transToggle:checked + .toggle-slider {
+      background: rgba(0,200,255,0.2) !important;
+      border-color: var(--glow) !important;
+      box-shadow: 0 0 10px rgba(0,200,255,0.4) !important;
+    }
+    #transToggle:checked + .toggle-slider::before {
+      background: var(--glow) !important;
+    }
+    .trans-status-on  { color: var(--glow) !important; }
+    .trans-status-off { color: var(--text2); }
+
     /* ── AEMX Coins ── */
     .coins-cell {
       font-family: 'Orbitron', monospace;
@@ -1600,6 +1612,16 @@
           <span class="toggle-slider"></span>
         </label>
         <span class="coins-toggle-status off" id="coinsToggleStatus">APAGADO</span>
+      </div>
+
+      <!-- Transacciones toggle -->
+      <div class="coins-toggle-wrap" style="border-color:rgba(0,200,255,0.35);border-top-color:var(--glow);">
+        <span class="coins-toggle-label" style="color:var(--glow);">🔄 TRANSACCIONES</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="transToggle" onchange="toggleTransacciones(this.checked)">
+          <span class="toggle-slider" style=""></span>
+        </label>
+        <span class="coins-toggle-status off" id="transToggleStatus">APAGADO</span>
       </div>
 
     </div>
@@ -1988,6 +2010,17 @@
             status.className = `coins-toggle-status ${activo ? 'on' : 'off'}`;
           }
         });
+        // Cargar estado de transacciones
+        onValue(ref(db, 'config/transaccionesActivo'), (snap) => {
+          const activo = snap.exists() ? snap.val() : true;
+          const checkbox = document.getElementById('transToggle');
+          const status   = document.getElementById('transToggleStatus');
+          if (checkbox) checkbox.checked = activo;
+          if (status) {
+            status.textContent = activo ? 'ENCENDIDO' : 'APAGADO';
+            status.className = `coins-toggle-status ${activo ? 'trans-status-on' : 'trans-status-off'}`;
+          }
+        });
       } else {
       }
     });
@@ -2351,6 +2384,16 @@
         showToast(activo ? '🪙 Sistema de coins ENCENDIDO' : '🪙 Sistema de coins APAGADO');
       } catch(e) {
         showToast('Error al actualizar coins', true);
+      }
+    };
+
+    // ── Toggle Transacciones ──
+    window.toggleTransacciones = async function(activo) {
+      try {
+        await set(ref(db, 'config/transaccionesActivo'), activo);
+        showToast(activo ? '🔄 Transacciones ENCENDIDAS' : '🔄 Transacciones APAGADAS');
+      } catch(e) {
+        showToast('Error al actualizar transacciones', true);
       }
     };
 

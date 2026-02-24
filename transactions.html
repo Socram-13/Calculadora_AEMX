@@ -646,7 +646,17 @@
       </div>
     </header>
 
+    <!-- Banner: transacciones desactivadas -->
+    <div id="txDisabledBanner" style="display:none;align-items:center;justify-content:center;gap:14px;background:rgba(255,68,102,0.08);border:1px solid rgba(255,68,102,0.3);border-radius:12px;padding:20px 24px;margin-bottom:16px;text-align:center;flex-direction:column;">
+      <span style="font-size:36px;">🔒</span>
+      <div>
+        <div style="font-family:'Orbitron',monospace;font-size:12px;color:var(--danger);letter-spacing:3px;margin-bottom:6px;">TRANSACCIONES DESACTIVADAS</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);letter-spacing:1px;">El administrador ha desactivado temporalmente el sistema de transacciones.</div>
+      </div>
+    </div>
+
     <!-- Send + Redeem -->
+    <div id="txCards">
     <div class="cards-grid">
 
       <!-- Generar código -->
@@ -697,9 +707,27 @@
 
     </div>
 
-  </div>
-
-  <script type="module">
+    <!-- Códigos activos -->
+    <div class="codes-card">
+      <div class="codes-header">
+        <span class="codes-title">⚡ CÓDIGOS ACTIVOS</span>
+        <span class="codes-count" id="codesCount">—</span>
+      </div>
+      <table class="codes-table">
+        <thead>
+          <tr>
+            <th>CÓDIGO</th>
+            <th>VALOR</th>
+            <th>CREADO</th>
+            <th>ACCIÓN</th>
+          </tr>
+        </thead>
+        <tbody id="codesBody">
+          <tr><td colspan="4"><div class="empty-state">Cargando...</div></td></tr>
+        </tbody>
+      </table>
+    </div><!-- /cards-grid -->
+    </div><!-- /txCards -->
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -739,6 +767,43 @@
       if (user) {
         currentUser = user;
         document.getElementById('authOverlay').classList.add('hidden');
+
+        // Verificar si transacciones están habilitadas
+        const configSnap = await get(ref(db, 'config/transaccionesActivo'));
+        const transActivo = configSnap.exists() ? configSnap.val() : true;
+        if (!transActivo) {
+          showToast('🔄 Las transacciones están desactivadas', 'error');
+          // Mostrar aviso y bloquear UI
+          document.getElementById('mainContent').style.display = 'block';
+          document.getElementById('txDisabledBanner').style.display = 'flex';
+          document.getElementById('txCards').style.display = 'none';
+
+          // Escuchar cambios en tiempo real por si el admin lo reactiva
+          onValue(ref(db, 'config/transaccionesActivo'), (s) => {
+            const on = s.exists() ? s.val() : true;
+            document.getElementById('txDisabledBanner').style.display = on ? 'none' : 'flex';
+            document.getElementById('txCards').style.display = on ? '' : 'none';
+          });
+
+          // Aun así cargar datos del usuario
+          const snap = await get(ref(db, `users/${user.uid}`));
+          if (snap.exists()) {
+            const d = snap.val();
+            userCountry = (d.country || '').toLowerCase();
+            userCoins   = d.coins || 0;
+          }
+          const esMexico = userCountry.includes('mexico') || userCountry.includes('méxico');
+          if (!esMexico) { document.getElementById('noMexico').classList.add('visible'); return; }
+          updateCoinsDisplay();
+          return;
+        }
+
+        // Escuchar cambios en tiempo real (por si el admin lo apaga después)
+        onValue(ref(db, 'config/transaccionesActivo'), (s) => {
+          const on = s.exists() ? s.val() : true;
+          document.getElementById('txDisabledBanner').style.display = on ? 'none' : 'flex';
+          document.getElementById('txCards').style.display = on ? '' : 'none';
+        });
 
         // Verificar país desde Firebase
         const snap = await get(ref(db, `users/${user.uid}`));
