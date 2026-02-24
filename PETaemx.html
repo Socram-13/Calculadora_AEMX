@@ -805,6 +805,38 @@
   transform: scale(1.02);
 }
 
+
+/* ===== FIX MODAL TIENDA (viewport-safe) ===== */
+#shop-modal{
+  align-items: center;
+}
+#shop-modal .modal-content{
+  max-height: 85vh;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+#shop-modal .modal-title{
+  flex-shrink: 0;
+}
+#shop-modal .modal-close{
+  position: sticky;
+  top: 10px;
+  z-index: 10;
+}
+.shop-items{
+  overflow-y: auto;
+  padding-right: 6px;
+  max-height: 55vh;
+}
+.shop-items::-webkit-scrollbar{ width: 6px; }
+.shop-items::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,0.25);
+  border-radius: 6px;
+}
+
 </style>
 </head>
 <body>
@@ -947,29 +979,34 @@
     <button class="modal-close" id="close-shop">×</button>
     <div class="modal-title">🛒 TIENDA MEXA</div>
 
-    <div class="shop-item" data-item="trompo" data-price="6">
-      <div class="shop-item-icon">🪀</div>
-      <div class="shop-item-name">Trompo</div>
+    <div class="shop-item-name">Trompo</div>
       <div class="shop-item-desc">Para que tu mascota haga “trick shots”</div>
       <div class="shop-item-price">💰 6 AMX Coins</div>
       <button class="btn-buy" data-action="buy">Comprar</button>
     </div>
 
-    <div class="shop-item" data-item="pelota" data-price="4">
-      <div class="shop-item-icon">⚽</div>
-      <div class="shop-item-name">Pelota</div>
+    <div class="shop-item-name">Pelota</div>
       <div class="shop-item-desc">Energía instantánea (y caos controlado)</div>
       <div class="shop-item-price">💰 4 AMX Coins</div>
       <button class="btn-buy" data-action="buy">Comprar</button>
     </div>
 
-    <div class="shop-item" data-item="pinata" data-price="10">
-      <div class="shop-item-icon">🪅</div>
-      <div class="shop-item-name">Mini Piñata</div>
+    <div class="shop-item-name">Mini Piñata</div>
       <div class="shop-item-desc">Sube la felicidad. Advertencia: antojo de dulces.</div>
       <div class="shop-item-price">💰 10 AMX Coins</div>
       <button class="btn-buy" data-action="buy">Comprar</button>
     </div>
+
+    <div class="shop-items">
+<div class="shop-item" data-item="trompo" data-price="6">
+      <div class="shop-item-icon">🪀</div>
+      
+<div class="shop-item" data-item="pelota" data-price="4">
+      <div class="shop-item-icon">⚽</div>
+      
+<div class="shop-item" data-item="pinata" data-price="10">
+      <div class="shop-item-icon">🪅</div>
+</div>
 
     <div class="shop-hint">Tip: si ya lo compraste, el botón cambia a <b>Equipar</b>.</div>
   </div>
