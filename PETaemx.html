@@ -1050,6 +1050,14 @@ function normalizarPais(name) {
   return COUNTRY_MAP[name.toLowerCase().trim()] || name;
 }
 
+
+function isMexico(value){
+  if(!value) return false;
+  const v = String(value).toLowerCase().trim();
+  // accept mexico variants and codes
+  return v.includes('mex') || v === 'mx' || v.includes('méx') || v.includes('méxico');
+}
+
 async function checkLocation(user) {
   const locationStatus = document.getElementById('location-status');
   locationStatus.className = 'location-status checking';
@@ -1063,7 +1071,7 @@ async function checkLocation(user) {
     const udata = snap.exists() ? (snap.val() || {}) : {};
     const country = udata.country ? normalizarPais(String(udata.country)) : null;
 
-    if (country && country === 'Mexico') {
+    if (country && isMexico(country)) {
       locationStatus.className = 'location-status success';
       locationStatus.textContent = '✅ Acceso verificado: México';
       setTimeout(() => grantAccess(user), 400);
@@ -1072,6 +1080,14 @@ async function checkLocation(user) {
   } catch (e) {
     console.log('No se pudo validar country en DB, intentando por IP...');
   }
+
+  // Si el country no está registrado en Firebase, no bloqueamos el juego.
+  // Esto evita quedar atrapado en GitHub Pages si los servicios de geolocalización bloquean CORS.
+  // (Puedes reforzarlo luego agregando country en users/{uid}/country.)
+  locationStatus.className = 'location-status success';
+  locationStatus.textContent = '✅ Sesión iniciada (country no registrado)';
+  setTimeout(() => grantAccess(user), 300);
+  return;
 
   // 2) Fallback: detectar país por IP (puede fallar en file:// por CORS)
   let detectedCountry = null;
@@ -1094,7 +1110,7 @@ async function checkLocation(user) {
     }
   }
 
-  if (detectedCountry === 'Mexico') {
+  if (isMexico(detectedCountry)) {
     locationStatus.className = 'location-status success';
     locationStatus.textContent = '✅ Acceso verificado: México';
     setTimeout(() => grantAccess(user), 400);
