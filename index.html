@@ -1683,11 +1683,12 @@
 
         if(window.calc) window.calc();
 
-        // Cargar coins (esperar a que _coinsLoad esté definido)
+        // Pasar los datos del servidor directamente a _coinsLoad para evitar doble lectura
+        // y garantizar que el estado del Check In siempre venga del servidor
         const waitCoins = setInterval(() => {
           if (window._coinsLoad) {
             clearInterval(waitCoins);
-            window._coinsLoad(uid);
+            window._coinsLoad(uid, d); // pasamos los datos ya leídos del servidor
           }
         }, 100);
         setTimeout(() => clearInterval(waitCoins), 5000);
@@ -2428,8 +2429,9 @@
       }
     };
 
-    // Carga los coins actuales del usuario al iniciar sesión — solo lee del servidor
-    window._coinsLoad = async function(uid) {
+    // Carga los coins actuales del usuario — solo lee del servidor, nunca de localStorage
+    // serverDataPrefetch: datos ya leídos del servidor (para evitar doble lectura)
+    window._coinsLoad = async function(uid, serverDataPrefetch) {
       if (!uid) return;
       const _db  = window._fbDb;
       const _ref = window._fbRef;
@@ -2447,9 +2449,14 @@
           return;
         }
 
-        // Leer datos del usuario directo del servidor
-        const snap = await _get(_ref(_db, `users/${uid}`));
-        const serverData = snap.exists() ? snap.val() : {};
+        // Usar datos prefetched si están disponibles, si no leer del servidor
+        let serverData;
+        if (serverDataPrefetch) {
+          serverData = serverDataPrefetch;
+        } else {
+          const snap = await _get(_ref(_db, `users/${uid}`));
+          serverData = snap.exists() ? snap.val() : {};
+        }
 
         // Verificar país desde el servidor (no localStorage)
         const pais = (serverData.country || window.userCountry || '').toLowerCase();
