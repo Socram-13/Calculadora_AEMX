@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>PRESENCIA · AEMX</title>
+  <link rel="icon" type="image/png" href="imagen_1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060b14;
+      --glow: #00c8ff;
+      --gold: #ffd700;
+      --text2: #6b8ab0;
+      --border: #1a3a5c;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Share Tech Mono', monospace;
+      cursor: none;
+    }
+
+    /* Grid animado de fondo */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
+      background-size: 48px 48px;
+      animation: gridMove 25s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes gridMove {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(48px); }
+    }
+
+    /* Resplandores de fondo */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 20%, rgba(0,200,255,0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 80%, rgba(255,215,0,0.05) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Canvas principal */
+    #canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      touch-action: none;
+    }
+
+    /* HUD superior */
+    .hud {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(0,200,255,0.12);
+      background: rgba(6,11,20,0.7);
+      backdrop-filter: blur(12px);
+    }
+
+    .hud-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 5px;
+      color: var(--glow);
+      text-shadow: 0 0 20px rgba(0,200,255,0.5);
+    }
+
+    .hud-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .online-count {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 2px;
+    }
+
+    .online-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: #00ff9d;
+      box-shadow: 0 0 8px #00ff9d;
+      animation: pulse 1.5s ease infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.4; transform: scale(0.7); }
+    }
+
+    .online-num {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      font-weight: 700;
+      color: #00ff9d;
+    }
+
+    .btn-back {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 5px 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .btn-back:hover { border-color: var(--glow); color: var(--glow); }
+
+    /* Cursor personalizado */
+    #cursor {
+      position: fixed;
+      width: 12px; height: 12px;
+      border: 2px solid var(--glow);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 100;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease;
+      box-shadow: 0 0 10px rgba(0,200,255,0.6);
+    }
+
+    /* Estado de carga */
+    .loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      gap: 16px;
+    }
+    .loading-ring {
+      width: 48px; height: 48px;
+      border: 2px solid var(--border);
+      border-top-color: var(--glow);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 3px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: rgba(11,22,38,0.95);
+      border: 1px solid var(--glow);
+      border-radius: 8px;
+      padding: 8px 20px;
+      font-size: 11px;
+      color: var(--glow);
+      letter-spacing: 1px;
+      z-index: 50;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- HUD -->
+  <div class="hud">
+    <div class="hud-title">⬡ PRESENCIA AEMX</div>
+    <div class="hud-right">
+      <div class="online-count">
+        <div class="online-dot"></div>
+        <span class="online-num" id="onlineNum">0</span>
+        <span>EN LÍNEA</span>
+      </div>
+      <a href="index.html" class="btn-back">← VOLVER</a>
+    </div>
+  </div>
+
+  <!-- Canvas -->
+  <canvas id="canvas"></canvas>
+
+  <!-- Cursor -->
+  <div id="cursor"></div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-ring"></div>
+    <div class="loading-text">CONECTANDO...</div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
+                              from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, remove }
+                              from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey:        'AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk',
+      authDomain:    'aemx-chat.firebaseapp.com',
+      databaseURL:   'https://aemx-chat-default-rtdb.firebaseio.com',
+      projectId:     'aemx-chat',
+      storageBucket: 'aemx-chat.appspot.com',
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    // ── Canvas setup ──
+    const canvas  = document.getElementById('canvas');
+    const ctx     = canvas.getContext('2d');
+    const loading = document.getElementById('loading');
+    const cursor  = document.getElementById('cursor');
+
+    function resize() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // ── Burbujas ──
+    const RADIUS   = 44;   // radio de la burbuja
+    const FRICTION = 0.88; // amortiguación
+    const REPULSE  = 0.38; // fuerza de empuje
+    const ATTRACT  = 0.09; // fuerza de atracción al cursor
+    const TOP_PAD  = 60;   // espacio para el HUD
+
+    const bubbles  = new Map(); // uid → burbuja
+    const imgCache = new Map(); // url → HTMLImageElement
+
+    function loadImg(url) {
+      if (!url) return null;
+      if (imgCache.has(url)) return imgCache.get(url);
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = url;
+      imgCache.set(url, img);
+      return img;
+    }
+
+    function createBubble(uid, data) {
+      return {
+        uid,
+        username:    data.username || '?',
+        avatar:      data.avatar   || '',
+        borderColor: data.borderColor || '#00c8ff',
+        photoURL:    data.photoURL || '',
+        // posición aleatoria inicial
+        x: RADIUS + Math.random() * (canvas.width  - RADIUS * 2),
+        y: TOP_PAD + RADIUS + Math.random() * (canvas.height - TOP_PAD - RADIUS * 2),
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2,
+        // Para dibujar el donut (anillo)
+        ringAngle: Math.random() * Math.PI * 2,
+        img: null,
+        pulse: 0,  // animación al entrar
+      };
+    }
+
+    // ── Física ──
+    let mouseX = canvas.width  / 2;
+    let mouseY = canvas.height / 2;
+    let myUid  = null;
+
+    function updatePhysics() {
+      const bArr = [...bubbles.values()];
+
+      for (let i = 0; i < bArr.length; i++) {
+        const b = bArr[i];
+
+        // Atracción al cursor/toque (solo la burbuja del usuario actual)
+        if (b.uid === myUid) {
+          const dx = mouseX - b.x;
+          const dy = mouseY - b.y;
+          b.vx += dx * ATTRACT;
+          b.vy += dy * ATTRACT;
+        } else {
+          // Los demás flotan con leve atracción al centro
+          const cx = canvas.width / 2, cy = canvas.height / 2;
+          b.vx += (cx - b.x) * 0.002;
+          b.vy += (cy - b.y) * 0.002;
+        }
+
+        // Fricción
+        b.vx *= FRICTION;
+        b.vy *= FRICTION;
+
+        // Mover
+        b.x += b.vx;
+        b.y += b.vy;
+
+        // Límites (rebote suave en bordes)
+        if (b.x < RADIUS)                  { b.x = RADIUS;                  b.vx *= -0.5; }
+        if (b.x > canvas.width - RADIUS)   { b.x = canvas.width - RADIUS;   b.vx *= -0.5; }
+        if (b.y < TOP_PAD + RADIUS)        { b.y = TOP_PAD + RADIUS;         b.vy *= -0.5; }
+        if (b.y > canvas.height - RADIUS)  { b.y = canvas.height - RADIUS;  b.vy *= -0.5; }
+
+        // Empuje entre burbujas
+        for (let j = i + 1; j < bArr.length; j++) {
+          const o  = bArr[j];
+          const dx = o.x - b.x;
+          const dy = o.y - b.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const minDist = RADIUS * 2 + 8;
+
+          if (dist < minDist) {
+            const force = (minDist - dist) / minDist * REPULSE;
+            const nx = dx / dist;
+            const ny = dy / dist;
+            b.vx -= nx * force;
+            b.vy -= ny * force;
+            o.vx += nx * force;
+            o.vy += ny * force;
+          }
+        }
+
+        // Animar anillo girando
+        b.ringAngle += 0.008;
+
+        // Pulse de entrada
+        if (b.pulse < 1) b.pulse = Math.min(1, b.pulse + 0.04);
+      }
+    }
+
+    // ── Dibujar burbuja ──
+    function drawBubble(b) {
+      const { x, y, username, borderColor, avatar, photoURL, ringAngle, pulse } = b;
+      const scale = 0.4 + pulse * 0.6;
+      const r = RADIUS * scale;
+      const isMe = b.uid === myUid;
+
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scale, scale);
+
+      // Sombra/glow exterior
+      ctx.shadowColor = borderColor;
+      ctx.shadowBlur  = isMe ? 28 : 16;
+
+      // ── Donut / anillo exterior animado ──
+      const ringR = RADIUS + 10;
+      const segments = 12;
+      for (let i = 0; i < segments; i++) {
+        const a1 = ringAngle + (i / segments) * Math.PI * 2;
+        const a2 = a1 + (Math.PI * 2 / segments) * 0.6;
+        const alpha = (i % 2 === 0) ? 0.9 : 0.25;
+        ctx.beginPath();
+        ctx.arc(0, 0, ringR, a1, a2);
+        ctx.strokeStyle = hexToRgba(borderColor, alpha);
+        ctx.lineWidth   = isMe ? 3.5 : 2.5;
+        ctx.lineCap     = 'round';
+        ctx.stroke();
+      }
+
+      ctx.shadowBlur = 0;
+
+      // ── Clip circular para el avatar ──
+      ctx.beginPath();
+      ctx.arc(0, 0, RADIUS, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Fondo del círculo
+      ctx.fillStyle = '#0b1626';
+      ctx.fill();
+
+      // Avatar (foto de Google o imagen base64)
+      const imgSrc = photoURL || avatar;
+      if (imgSrc) {
+        const img = loadImg(imgSrc);
+        if (img && img.complete && img.naturalWidth > 0) {
+          try {
+            ctx.drawImage(img, -RADIUS, -RADIUS, RADIUS * 2, RADIUS * 2);
+          } catch(e) {
+            drawInitial(ctx, username, borderColor);
+          }
+        } else {
+          drawInitial(ctx, username, borderColor);
+        }
+      } else {
+        drawInitial(ctx, username, borderColor);
+      }
+
+      ctx.restore();
+
+      // ── Borde del círculo ──
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.beginPath();
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
+      ctx.strokeStyle = hexToRgba(borderColor, 0.7);
+      ctx.lineWidth   = 2;
+      ctx.shadowColor = borderColor;
+      ctx.shadowBlur  = 10;
+      ctx.stroke();
+      ctx.restore();
+
+      // ── Nombre ──
+      ctx.save();
+      ctx.translate(x, y);
+      const label = isMe ? `${username} ◀` : username;
+      ctx.font         = `bold ${isMe ? 11 : 10}px "Share Tech Mono", monospace`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'top';
+      // Fondo del label
+      const tw = ctx.measureText(label).width;
+      ctx.fillStyle = 'rgba(6,11,20,0.85)';
+      ctx.beginPath();
+      ctx.roundRect(-tw/2 - 6, r + 6, tw + 12, 18, 4);
+      ctx.fill();
+      ctx.fillStyle   = isMe ? '#ffd700' : borderColor;
+      ctx.shadowColor = isMe ? '#ffd700' : borderColor;
+      ctx.shadowBlur  = 6;
+      ctx.fillText(label, 0, r + 8);
+      ctx.restore();
+    }
+
+    function drawInitial(ctx, username, color) {
+      const letter = (username || '?').charAt(0).toUpperCase();
+      ctx.fillStyle = hexToRgba(color, 0.18);
+      ctx.fillRect(-RADIUS, -RADIUS, RADIUS * 2, RADIUS * 2);
+      ctx.font         = `bold ${RADIUS * 0.9}px "Orbitron", monospace`;
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle    = color;
+      ctx.shadowColor  = color;
+      ctx.shadowBlur   = 12;
+      ctx.fillText(letter, 0, 2);
+    }
+
+    function hexToRgba(hex, alpha) {
+      if (!hex || !hex.startsWith('#')) return `rgba(0,200,255,${alpha})`;
+      const r = parseInt(hex.slice(1,3), 16);
+      const g = parseInt(hex.slice(3,5), 16);
+      const b = parseInt(hex.slice(5,7), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    // ── Loop principal ──
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Líneas de conexión entre burbujas cercanas
+      const bArr = [...bubbles.values()];
+      for (let i = 0; i < bArr.length; i++) {
+        for (let j = i + 1; j < bArr.length; j++) {
+          const a = bArr[i], b = bArr[j];
+          const dx = b.x - a.x, dy = b.y - a.y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          const maxDist = 180;
+          if (dist < maxDist) {
+            const alpha = (1 - dist / maxDist) * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.strokeStyle = `rgba(0,200,255,${alpha})`;
+            ctx.lineWidth   = 1;
+            ctx.stroke();
+          }
+        }
+      }
+
+      updatePhysics();
+      bArr.forEach(drawBubble);
+      requestAnimationFrame(loop);
+    }
+
+    // ── Cursor ──
+    window.addEventListener('mousemove', e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+    });
+
+    window.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const t = e.touches[0];
+      mouseX = t.clientX;
+      mouseY = t.clientY;
+    }, { passive: false });
+
+    window.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      mouseX = t.clientX;
+      mouseY = t.clientY;
+    }, { passive: true });
+
+    // ── Firebase Auth + Presencia ──
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        // Login automático con Google
+        try {
+          await signInWithPopup(auth, new GoogleAuthProvider());
+        } catch(e) {
+          showToast('Error al iniciar sesión');
+        }
+        return;
+      }
+
+      myUid = user.uid;
+
+      // Leer datos del usuario desde Firebase
+      const { get } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+      const snap = await get(ref(db, `users/${user.uid}`));
+      const userData = snap.exists() ? snap.val() : {};
+
+      const myData = {
+        username:    userData.username    || user.displayName || 'Usuario',
+        avatar:      userData.avatar      || '',
+        photoURL:    user.photoURL        || '',
+        borderColor: userData.borderColor || '#00c8ff',
+        online: true,
+        lastSeen: serverTimestamp(),
+      };
+
+      // Registrar presencia
+      const presRef = ref(db, `presencia/${user.uid}`);
+      await set(presRef, myData);
+      onDisconnect(presRef).remove();
+
+      // Escuchar todos los presentes
+      onValue(ref(db, 'presencia'), (snap) => {
+        const online = new Set();
+
+        if (snap.exists()) {
+          snap.forEach(child => {
+            const uid  = child.key;
+            const data = child.val();
+            online.add(uid);
+
+            if (bubbles.has(uid)) {
+              // Actualizar datos pero mantener posición/velocidad
+              const b = bubbles.get(uid);
+              b.username    = data.username    || b.username;
+              b.avatar      = data.avatar      || b.avatar;
+              b.photoURL    = data.photoURL    || b.photoURL;
+              b.borderColor = data.borderColor || b.borderColor;
+            } else {
+              // Nueva burbuja
+              const b = createBubble(uid, data);
+              b.img = loadImg(data.photoURL || data.avatar);
+              bubbles.set(uid, b);
+              if (uid !== myUid) showToast(`${data.username || 'Usuario'} se unió`);
+            }
+          });
+        }
+
+        // Eliminar burbujas de quienes se desconectaron
+        for (const uid of bubbles.keys()) {
+          if (!online.has(uid)) {
+            const b = bubbles.get(uid);
+            showToast(`${b.username} se fue`);
+            bubbles.delete(uid);
+          }
+        }
+
+        document.getElementById('onlineNum').textContent = bubbles.size;
+      });
+
+      loading.style.display = 'none';
+      loop();
+    });
+
+    // ── Toast ──
+    let toastTimer;
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
