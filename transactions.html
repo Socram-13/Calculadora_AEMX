@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRANSACCIONES · ATLAS EARTH AEMX</title>
+  <link rel="icon" type="image/png" href="imagen_1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:      #060b14;
+      --panel:   #0b1626;
+      --panel2:  #0f1e35;
+      --border:  #1a3a5c;
+      --glow:    #00c8ff;
+      --glow2:   #00ff9d;
+      --gold:    #ffd700;
+      --gold2:   #ffaa00;
+      --danger:  #ff4466;
+      --success: #00ff9d;
+      --text:    #cce4ff;
+      --text2:   #6b8ab0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes gridMove {
+      0%   { transform: translateY(0); }
+      100% { transform: translateY(40px); }
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(255,215,0,0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 90%, rgba(0,200,255,0.04) 0%, transparent 50%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Auth overlay ── */
+    .auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,11,20,0.98);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(10px);
+    }
+    .auth-overlay.hidden { display: none; }
+
+    .auth-box {
+      background: var(--panel);
+      border: 1px solid var(--gold);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 380px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,215,0,0.1);
+      animation: fadeUp 0.4s ease;
+    }
+    .auth-box .lock-icon { font-size: 40px; margin-bottom: 16px; display: block; }
+    .auth-box h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      color: var(--gold);
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+    }
+    .auth-box p { color: var(--text2); font-size: 13px; margin-bottom: 28px; letter-spacing: 1px; }
+
+    .auth-denied {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 14px;
+      letter-spacing: 1px;
+      min-height: 18px;
+    }
+
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      background: linear-gradient(135deg, #1a1a2e, #0b1626);
+      border: 1px solid var(--gold);
+      border-radius: 10px;
+      color: var(--gold);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-google:hover { background: var(--gold); color: #060b14; box-shadow: 0 0 24px rgba(255,215,0,0.4); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── No Mexico overlay ── */
+    .no-mexico {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,11,20,0.98);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1999;
+      flex-direction: column;
+      gap: 16px;
+      text-align: center;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .no-mexico.visible { display: flex; }
+    .no-mexico .icon { font-size: 56px; }
+    .no-mexico h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px;
+      color: var(--danger);
+      letter-spacing: 4px;
+    }
+    .no-mexico p { color: var(--text2); font-size: 13px; letter-spacing: 1px; }
+    .btn-signout-denied {
+      margin-top: 8px;
+      background: none;
+      border: 1px solid var(--danger);
+      border-radius: 8px;
+      color: var(--danger);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 8px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-signout-denied:hover { background: var(--danger); color: #fff; }
+
+    /* ── Layout ── */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header-left h1 {
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(16px, 3.5vw, 22px);
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(255,215,0,0.4);
+    }
+    .header-left .subtitle {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .coins-badge {
+      background: rgba(255,215,0,0.12);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 5px 14px;
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-back {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 5px 12px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-back:hover { border-color: var(--glow); color: var(--glow); }
+    .btn-signout {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 11px;
+      letter-spacing: 1px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-signout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Cards grid ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 640px) { .cards-grid { grid-template-columns: 1fr; } }
+
+    .tx-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+    .tx-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+    }
+    .tx-card.send::before   { background: linear-gradient(90deg, var(--gold), var(--gold2)); }
+    .tx-card.redeem::before { background: linear-gradient(90deg, var(--glow), var(--glow2)); }
+
+    .tx-card-header {
+      padding: 14px 18px 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tx-card-icon { font-size: 20px; }
+    .tx-card-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+    }
+    .tx-card.send .tx-card-title   { color: var(--gold); }
+    .tx-card.redeem .tx-card-title { color: var(--glow); }
+
+    .tx-card-body { padding: 18px; }
+
+    .tx-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .tx-input {
+      width: 100%;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Orbitron', monospace;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 10px 14px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 2px;
+      transition: border-color 0.2s;
+      margin-bottom: 14px;
+    }
+    .tx-input:focus { border-color: var(--gold); box-shadow: 0 0 10px rgba(255,215,0,0.15); }
+    .tx-input::-webkit-inner-spin-button,
+    .tx-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .tx-input-code {
+      width: 100%;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--glow);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      padding: 10px 14px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 3px;
+      transition: border-color 0.2s;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+    .tx-input-code:focus { border-color: var(--glow); box-shadow: 0 0 10px rgba(0,200,255,0.15); }
+    .tx-input-code::placeholder { color: var(--text2); font-size: 12px; letter-spacing: 2px; }
+
+    .btn-tx {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-tx.send {
+      background: linear-gradient(135deg, rgba(255,215,0,0.25), rgba(255,170,0,0.15));
+      border: 1px solid var(--gold);
+      color: var(--gold);
+    }
+    .btn-tx.send:hover:not(:disabled) {
+      background: var(--gold);
+      color: #060b14;
+      box-shadow: 0 0 20px rgba(255,215,0,0.4);
+    }
+    .btn-tx.redeem {
+      background: linear-gradient(135deg, rgba(0,200,255,0.2), rgba(0,200,255,0.08));
+      border: 1px solid var(--glow);
+      color: var(--glow);
+    }
+    .btn-tx.redeem:hover:not(:disabled) {
+      background: var(--glow);
+      color: #060b14;
+      box-shadow: 0 0 20px rgba(0,200,255,0.4);
+    }
+    .btn-tx:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .tx-hint {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      text-align: center;
+      margin-top: 10px;
+      letter-spacing: 1px;
+      line-height: 1.5;
+    }
+
+    /* ── Active codes table ── */
+    .codes-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .codes-card::before {
+      content: '';
+      display: block;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--gold2), var(--glow), var(--gold));
+      background-size: 200% 100%;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+    .codes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+    .codes-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--gold);
+    }
+    .codes-count {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1px;
+    }
+
+    .codes-table { width: 100%; border-collapse: collapse; }
+    .codes-table th {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--text2);
+      text-align: left;
+      padding: 8px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+    .codes-table td {
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(26,58,92,0.4);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+    }
+    .codes-table tr:last-child td { border-bottom: none; }
+    .codes-table tr { animation: fadeIn 0.3s ease both; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .code-value {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      color: var(--gold);
+    }
+    .code-str {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--glow);
+      letter-spacing: 2px;
+    }
+    .code-date { color: var(--text2); font-size: 11px; }
+
+    .btn-cancel-code {
+      background: none;
+      border: 1px solid rgba(255,68,102,0.4);
+      border-radius: 6px;
+      color: var(--danger);
+      font-family: 'Orbitron', monospace;
+      font-size: 8px;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .btn-cancel-code:hover { background: var(--danger); color: #fff; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+    }
+
+    /* ── Code image modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6,11,20,0.92);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1500;
+      backdrop-filter: blur(6px);
+    }
+    .modal-overlay.visible { display: flex; }
+
+    .code-modal {
+      background: var(--panel);
+      border: 1px solid var(--gold);
+      border-radius: 16px;
+      padding: 28px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(255,215,0,0.15);
+      animation: fadeUp 0.3s ease;
+    }
+    .code-modal h3 {
+      font-family: 'Orbitron', monospace;
+      font-size: 12px;
+      color: var(--gold);
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+    }
+
+    /* ── Canvas para imagen del código ── */
+    #codeCanvas {
+      border-radius: 10px;
+      margin-bottom: 16px;
+      max-width: 100%;
+    }
+
+    .modal-actions { display: flex; gap: 10px; justify-content: center; margin-top: 4px; }
+    .btn-download {
+      background: var(--gold);
+      border: none;
+      border-radius: 8px;
+      color: #060b14;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-download:hover { opacity: 0.85; }
+    .btn-close-modal {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text2);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 10px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-close-modal:hover { border-color: var(--text2); color: var(--text); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--panel);
+      border: 1px solid var(--glow);
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--glow);
+      letter-spacing: 1px;
+      z-index: 3000;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      white-space: nowrap;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+    .toast.success { border-color: var(--gold); color: var(--gold); }
+  </style>
+</head>
+<body>
+
+  <!-- Auth Overlay -->
+  <div class="auth-overlay" id="authOverlay">
+    <div class="auth-box">
+      <span class="lock-icon">🪙</span>
+      <h2>TRANSACCIONES AEMX</h2>
+      <p>Inicia sesión para gestionar tus coins</p>
+      <button class="btn-google" onclick="authWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48">
+          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        </svg>
+        INICIAR CON GOOGLE
+      </button>
+      <div class="auth-denied" id="authError"></div>
+    </div>
+  </div>
+
+  <!-- No Mexico -->
+  <div class="no-mexico" id="noMexico">
+    <span class="icon">🇲🇽</span>
+    <h2>SOLO MÉXICO</h2>
+    <p>Las transacciones de AEMX Coins<br>solo están disponibles para México.</p>
+    <button class="btn-signout-denied" onclick="signOutUser()">CERRAR SESIÓN</button>
+  </div>
+
+  <!-- Code image modal -->
+  <div class="modal-overlay" id="codeModal">
+    <div class="code-modal">
+      <h3>🪙 CÓDIGO GENERADO</h3>
+      <canvas id="codeCanvas" width="360" height="200"></canvas>
+      <p style="font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);margin-bottom:16px;letter-spacing:1px;">
+        Guarda la imagen — el código es de un solo uso
+      </p>
+      <div class="modal-actions">
+        <button class="btn-download" onclick="downloadCode()">⬇ DESCARGAR</button>
+        <button class="btn-close-modal" onclick="closeCodeModal()">CERRAR</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <div class="container" id="mainContent" style="display:none;">
+    <header>
+      <div class="header-left">
+        <h1>🪙 TRANSACCIONES</h1>
+        <div class="subtitle">ATLAS EARTH AEMX · SISTEMA DE COINS</div>
+      </div>
+      <div class="header-right">
+        <div class="coins-badge">
+          🪙 <span id="coinsDisplay">—</span>
+        </div>
+        <a href="index.html" class="btn-back">← VOLVER</a>
+        <button class="btn-signout" onclick="signOutUser()">SALIR</button>
+      </div>
+    </header>
+
+    <!-- Send + Redeem -->
+    <div class="cards-grid">
+
+      <!-- Generar código -->
+      <div class="tx-card send">
+        <div class="tx-card-header">
+          <span class="tx-card-icon">📤</span>
+          <span class="tx-card-title">GENERAR CÓDIGO</span>
+        </div>
+        <div class="tx-card-body">
+          <div class="tx-label">COINS A TRANSFERIR</div>
+          <input
+            type="number"
+            class="tx-input"
+            id="sendAmount"
+            min="1"
+            placeholder="0"
+            oninput="validateSend()"
+          >
+          <button class="btn-tx send" id="btnGenerate" onclick="generateCode()" disabled>
+            ⚡ GENERAR CÓDIGO
+          </button>
+          <p class="tx-hint" id="sendHint">Ingresa la cantidad a transferir</p>
+        </div>
+      </div>
+
+      <!-- Canjear código -->
+      <div class="tx-card redeem">
+        <div class="tx-card-header">
+          <span class="tx-card-icon">📥</span>
+          <span class="tx-card-title">CANJEAR CÓDIGO</span>
+        </div>
+        <div class="tx-card-body">
+          <div class="tx-label">INGRESA EL CÓDIGO</div>
+          <input
+            type="text"
+            class="tx-input-code"
+            id="redeemCode"
+            placeholder="AEMX-XXXX-XXXX"
+            maxlength="14"
+            oninput="formatCodeInput(this)"
+          >
+          <button class="btn-tx redeem" id="btnRedeem" onclick="redeemCode()" disabled>
+            ✅ CANJEAR
+          </button>
+          <p class="tx-hint" id="redeemHint">Ingresa un código válido para recibir coins</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
+                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getDatabase, ref, get, update, remove, set, onValue, push }
+                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey:        'AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk',
+      authDomain:    'aemx-chat.firebaseapp.com',
+      databaseURL:   'https://aemx-chat-default-rtdb.firebaseio.com',
+      projectId:     'aemx-chat',
+      storageBucket: 'aemx-chat.appspot.com',
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    let currentUser = null;
+    let userCoins   = 0;
+    let userCountry = '';
+    let activeCodes = [];
+
+    // ── Auth ──
+    window.authWithGoogle = async function() {
+      document.getElementById('authError').textContent = '';
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch(e) {
+        document.getElementById('authError').textContent = 'Error al iniciar sesión.';
+      }
+    };
+
+    window.signOutUser = async function() { await signOut(auth); };
+
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('authOverlay').classList.add('hidden');
+
+        // Verificar país desde Firebase
+        const snap = await get(ref(db, `users/${user.uid}`));
+        if (snap.exists()) {
+          const d = snap.val();
+          userCountry = (d.country || '').toLowerCase();
+          userCoins   = d.coins || 0;
+        }
+
+        const esMexico = userCountry.includes('mexico') || userCountry.includes('méxico');
+        if (!esMexico) {
+          document.getElementById('noMexico').classList.add('visible');
+          return;
+        }
+
+        document.getElementById('mainContent').style.display = 'block';
+        updateCoinsDisplay();
+        loadMyCodes();
+
+        // Escuchar cambios de coins en tiempo real
+        onValue(ref(db, `users/${user.uid}/coins`), (s) => {
+          userCoins = s.exists() ? s.val() : 0;
+          updateCoinsDisplay();
+          validateSend();
+        });
+
+      } else {
+        currentUser = null;
+        document.getElementById('authOverlay').classList.remove('hidden');
+        document.getElementById('mainContent').style.display = 'none';
+        document.getElementById('noMexico').classList.remove('visible');
+      }
+    });
+
+    function updateCoinsDisplay() {
+      document.getElementById('coinsDisplay').textContent = userCoins;
+    }
+
+    // ── Generar código único ──
+    function generateUniqueCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sin O,0,I,1 para evitar confusión
+      const part  = (n) => Array.from({length: n}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+      return `AEMX-${part(4)}-${part(4)}`;
+    }
+
+    window.validateSend = function() {
+      const amount = parseInt(document.getElementById('sendAmount').value) || 0;
+      const btn    = document.getElementById('btnGenerate');
+      const hint   = document.getElementById('sendHint');
+
+      if (amount <= 0) {
+        btn.disabled = true;
+        hint.textContent = 'Ingresa la cantidad a transferir';
+        hint.style.color = 'var(--text2)';
+      } else if (amount > userCoins) {
+        btn.disabled = true;
+        hint.textContent = `Saldo insuficiente · Tienes ${userCoins} coins`;
+        hint.style.color = 'var(--danger)';
+      } else {
+        btn.disabled = false;
+        hint.textContent = `Transferirás ${amount} coin${amount > 1 ? 's' : ''} · Quedarás con ${userCoins - amount}`;
+        hint.style.color = 'var(--text2)';
+      }
+    };
+
+    window.generateCode = async function() {
+      if (!currentUser) return;
+      const amount = parseInt(document.getElementById('sendAmount').value) || 0;
+      if (amount <= 0 || amount > userCoins) return;
+
+      const btn = document.getElementById('btnGenerate');
+      btn.disabled = true;
+      btn.textContent = '⏳ GENERANDO...';
+
+      try {
+        // Generar código único — verificar que no exista
+        let code;
+        let attempts = 0;
+        do {
+          code = generateUniqueCode();
+          const existing = await get(ref(db, `codes/${code}`));
+          if (!existing.exists()) break;
+          attempts++;
+        } while (attempts < 10);
+
+        // Restar coins al usuario
+        const newCoins = userCoins - amount;
+        await update(ref(db, `users/${currentUser.uid}`), { coins: newCoins });
+
+        // Guardar código en Firebase
+        await set(ref(db, `codes/${code}`), {
+          value:     amount,
+          createdBy: currentUser.uid,
+          createdAt: Date.now(),
+          username:  currentUser.displayName || 'AEMX',
+        });
+
+        // Mostrar imagen del código
+        showCodeImage(code, amount);
+        document.getElementById('sendAmount').value = '';
+        validateSend();
+        loadMyCodes();
+        showToast(`🪙 Código generado por ${amount} coin${amount > 1 ? 's' : ''}`, 'success');
+
+      } catch(e) {
+        showToast('Error al generar código', 'error');
+        console.warn(e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ GENERAR CÓDIGO';
+      }
+    };
+
+    // ── Canjear código ──
+    window.formatCodeInput = function(input) {
+      let val = input.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+      // Formato AEMX-XXXX-XXXX
+      if (val.length > 4 && !val.startsWith('AEMX')) {
+        val = val.slice(0, 4);
+      }
+      let formatted = val;
+      if (val.length > 4)  formatted = val.slice(0,4) + '-' + val.slice(4);
+      if (val.length > 8)  formatted = val.slice(0,4) + '-' + val.slice(4,8) + '-' + val.slice(8);
+      input.value = formatted;
+
+      const clean = formatted.replace(/-/g, '');
+      document.getElementById('btnRedeem').disabled = clean.length < 12;
+      document.getElementById('redeemHint').textContent =
+        clean.length >= 12 ? 'Listo para canjear' : 'Ingresa un código válido para recibir coins';
+    };
+
+    window.redeemCode = async function() {
+      if (!currentUser) return;
+      const codeInput = document.getElementById('redeemCode').value.trim().toUpperCase();
+      if (!codeInput) return;
+
+      const btn = document.getElementById('btnRedeem');
+      btn.disabled = true;
+      btn.textContent = '⏳ VERIFICANDO...';
+
+      try {
+        const codeRef  = ref(db, `codes/${codeInput}`);
+        const codeSnap = await get(codeRef);
+
+        if (!codeSnap.exists()) {
+          showToast('Código inválido o ya fue canjeado', 'error');
+          document.getElementById('redeemHint').textContent = '❌ Código no encontrado';
+          document.getElementById('redeemHint').style.color = 'var(--danger)';
+          return;
+        }
+
+        const codeData = codeSnap.val();
+        const amount   = codeData.value;
+
+        // Sumar coins al usuario
+        const newCoins = userCoins + amount;
+        await update(ref(db, `users/${currentUser.uid}`), { coins: newCoins });
+
+        // Eliminar código (1 solo uso)
+        await remove(codeRef);
+
+        document.getElementById('redeemCode').value = '';
+        document.getElementById('redeemHint').textContent = `✅ +${amount} coin${amount > 1 ? 's' : ''} recibidos`;
+        document.getElementById('redeemHint').style.color = 'var(--success)';
+        document.getElementById('btnRedeem').disabled = true;
+        loadMyCodes();
+        showToast(`🪙 +${amount} coin${amount > 1 ? 's' : ''} canjeados exitosamente`, 'success');
+
+      } catch(e) {
+        showToast('Error al canjear código', 'error');
+        console.warn(e);
+      } finally {
+        btn.textContent = '✅ CANJEAR';
+      }
+    };
+
+    // ── Cancelar código (devuelve coins) ──
+    window.cancelCode = async function(code, value) {
+      if (!currentUser) return;
+      try {
+        await remove(ref(db, `codes/${code}`));
+        const newCoins = userCoins + value;
+        await update(ref(db, `users/${currentUser.uid}`), { coins: newCoins });
+        loadMyCodes();
+        showToast(`↩️ Código cancelado · +${value} coins devueltos`, 'success');
+      } catch(e) {
+        showToast('Error al cancelar código', 'error');
+      }
+    };
+
+    // ── Cargar mis códigos activos ──
+    function loadMyCodes() {
+      if (!currentUser) return;
+      onValue(ref(db, 'codes'), (snap) => {
+        activeCodes = [];
+        if (snap.exists()) {
+          snap.forEach((child) => {
+            const d = child.val();
+            if (d.createdBy === currentUser.uid) {
+              activeCodes.push({ code: child.key, ...d });
+            }
+          });
+        }
+        renderCodes();
+      });
+    }
+
+    function renderCodes() {
+      const tbody = document.getElementById('codesBody');
+      const count = document.getElementById('codesCount');
+
+      const totalTransit = activeCodes.reduce((s, c) => s + c.value, 0);
+      count.textContent  = `${activeCodes.length} código${activeCodes.length !== 1 ? 's' : ''} · ${totalTransit} coin${totalTransit !== 1 ? 's' : ''} en tránsito`;
+
+      if (activeCodes.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4"><div class="empty-state">Sin códigos activos</div></td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = activeCodes.map((c, i) => {
+        const fecha = new Date(c.createdAt);
+        const rel   = (() => {
+          const diff = Date.now() - c.createdAt;
+          const mins = Math.floor(diff / 60000);
+          const hrs  = Math.floor(diff / 3600000);
+          const days = Math.floor(diff / 86400000);
+          return days > 0 ? `hace ${days}d` : hrs > 0 ? `hace ${hrs}h` : mins > 0 ? `hace ${mins}m` : 'ahora';
+        })();
+
+        return `
+          <tr style="animation-delay:${i * 0.05}s">
+            <td><span class="code-str">${c.code}</span></td>
+            <td><span class="code-value">🪙 ${c.value}</span></td>
+            <td><span class="code-date" title="${fecha.toLocaleString('es-MX')}">${rel}</span></td>
+            <td>
+              <button class="btn-cancel-code" onclick="cancelCode('${c.code}', ${c.value})">
+                ↩️ CANCELAR
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ── Imagen del código ──
+    let currentCodeForDownload = '';
+
+    function showCodeImage(code, amount) {
+      currentCodeForDownload = code;
+      const canvas = document.getElementById('codeCanvas');
+      const ctx    = canvas.getContext('2d');
+
+      // Fondo
+      ctx.fillStyle = '#060b14';
+      ctx.fillRect(0, 0, 360, 200);
+
+      // Borde dorado
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth   = 2;
+      ctx.strokeRect(8, 8, 344, 184);
+
+      // Línea superior
+      const grad = ctx.createLinearGradient(0, 0, 360, 0);
+      grad.addColorStop(0, 'transparent');
+      grad.addColorStop(0.5, '#ffd700');
+      grad.addColorStop(1, 'transparent');
+      ctx.strokeStyle = grad;
+      ctx.lineWidth   = 2;
+      ctx.beginPath(); ctx.moveTo(8, 10); ctx.lineTo(352, 10); ctx.stroke();
+
+      // Logo / título
+      ctx.fillStyle   = '#ffd700';
+      ctx.font        = 'bold 11px "Orbitron", monospace';
+      ctx.textAlign   = 'center';
+      ctx.letterSpacing = '3px';
+      ctx.fillText('🪙 AEMX COINS · TRANSFERENCIA', 180, 40);
+
+      // Coins
+      ctx.fillStyle = '#00ff9d';
+      ctx.font      = 'bold 36px "Orbitron", monospace';
+      ctx.fillText(`${amount} COIN${amount > 1 ? 'S' : ''}`, 180, 90);
+
+      // Código
+      ctx.fillStyle = '#00c8ff';
+      ctx.font      = 'bold 22px "Share Tech Mono", monospace';
+      ctx.letterSpacing = '4px';
+      ctx.fillText(code, 180, 135);
+
+      // Aviso
+      ctx.fillStyle = 'rgba(107,138,176,0.8)';
+      ctx.font      = '11px "Share Tech Mono", monospace';
+      ctx.letterSpacing = '1px';
+      ctx.fillText('CÓDIGO DE UN SOLO USO · NO COMPARTIR', 180, 165);
+
+      // Fecha
+      const hoy = new Date().toLocaleDateString('es-MX');
+      ctx.fillStyle = 'rgba(107,138,176,0.5)';
+      ctx.font      = '10px "Share Tech Mono", monospace';
+      ctx.fillText(`atlas.earth/aemx · ${hoy}`, 180, 185);
+
+      document.getElementById('codeModal').classList.add('visible');
+    }
+
+    window.downloadCode = function() {
+      const canvas = document.getElementById('codeCanvas');
+      const link   = document.createElement('a');
+      link.download = `AEMX-${currentCodeForDownload}.png`;
+      link.href     = canvas.toDataURL('image/png');
+      link.click();
+    };
+
+    window.closeCodeModal = function() {
+      document.getElementById('codeModal').classList.remove('visible');
+    };
+
+    // ── Toast ──
+    let toastTimer;
+    function showToast(msg, type = 'default') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className   = 'toast';
+      if (type === 'error')   el.classList.add('error');
+      if (type === 'success') el.classList.add('success');
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+    }
+
+  </script>
+</body>
+</html>
