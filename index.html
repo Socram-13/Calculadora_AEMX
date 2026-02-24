@@ -2313,6 +2313,14 @@
       }
     };
 
+    // Fecha actual en zona horaria CDMX (America/Mexico_City) — reset a medianoche
+    function fechaCDMX() {
+      return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Mexico_City',
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(new Date()); // devuelve "YYYY-MM-DD"
+    }
+
     // Maneja el estado del botón check in
     function updateCheckInBtn(yaHizo) {
       const btn = document.getElementById('btn-checkin');
@@ -2374,7 +2382,7 @@
     window._awardDailyCoin = async function() {
       if (!window._fbUser) return;
       const uid = window._fbUser.uid;
-      const hoy = new Date().toISOString().split('T')[0];
+      const hoy = fechaCDMX();
       const _db  = window._fbDb;
       const _ref = window._fbRef;
       const _get = window._fbGet;
@@ -2455,7 +2463,7 @@
         if (coinsBar) coinsBar.style.display = '';
 
         const coins = serverData.coins || 0;
-        const hoy   = new Date().toISOString().split('T')[0];
+        const hoy   = fechaCDMX();
 
         window._coinsUpdateDisplay(coins);
 
