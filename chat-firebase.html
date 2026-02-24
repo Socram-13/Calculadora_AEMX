@@ -287,11 +287,16 @@
 
         .chat-header-content {
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
             gap: 6px;
-            overflow: visible;
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 2px;
         }
+        .chat-header-content::-webkit-scrollbar { display: none; }
 
 
         .btn-guias {
@@ -1001,10 +1006,13 @@
             .btn-marco .marco-text { display: none; }
             .btn-marco { padding: 6px 9px; font-size: 14px; }
             .btn-transacciones .tx-text { display: none; }
-            .btn-transacciones { padding: 6px 9px; font-size: 14px; }
+            .btn-transacciones { padding: 6px 9px; font-size: 14px; flex-shrink: 0; }
             .btn-presencia .pr-text { display: none; }
-            .btn-presencia { padding: 6px 9px; font-size: 14px; }
+            .btn-presencia { padding: 6px 9px; font-size: 14px; flex-shrink: 0; }
             .btn-mute { width: 30px; height: 30px; font-size: 14px; padding: 0; flex-shrink: 0; }
+            .btn-marco { flex-shrink: 0; }
+            .btn-leaderboard { flex-shrink: 0; }
+            .btn-guias { flex-shrink: 0; }
 
             /* Botón hamburguesa visible */
             .menu-toggle {
