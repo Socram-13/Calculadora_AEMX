@@ -979,34 +979,31 @@
     <button class="modal-close" id="close-shop">×</button>
     <div class="modal-title">🛒 TIENDA MEXA</div>
 
-    <div class="shop-item-name">Trompo</div>
-      <div class="shop-item-desc">Para que tu mascota haga “trick shots”</div>
-      <div class="shop-item-price">💰 6 AMX Coins</div>
-      <button class="btn-buy" data-action="buy">Comprar</button>
-    </div>
-
-    <div class="shop-item-name">Pelota</div>
-      <div class="shop-item-desc">Energía instantánea (y caos controlado)</div>
-      <div class="shop-item-price">💰 4 AMX Coins</div>
-      <button class="btn-buy" data-action="buy">Comprar</button>
-    </div>
-
-    <div class="shop-item-name">Mini Piñata</div>
-      <div class="shop-item-desc">Sube la felicidad. Advertencia: antojo de dulces.</div>
-      <div class="shop-item-price">💰 10 AMX Coins</div>
-      <button class="btn-buy" data-action="buy">Comprar</button>
-    </div>
-
     <div class="shop-items">
-<div class="shop-item" data-item="trompo" data-price="6">
-      <div class="shop-item-icon">🪀</div>
-      
-<div class="shop-item" data-item="pelota" data-price="4">
-      <div class="shop-item-icon">⚽</div>
-      
-<div class="shop-item" data-item="pinata" data-price="10">
-      <div class="shop-item-icon">🪅</div>
-</div>
+      <div class="shop-item" data-item="trompo" data-price="6">
+        <div class="shop-item-icon">🪀</div>
+        <div class="shop-item-name">Trompo</div>
+        <div class="shop-item-desc">Para que tu mascota haga “trick shots”</div>
+        <div class="shop-item-price">💰 6 AMX Coins</div>
+        <button class="btn-buy" type="button">Comprar</button>
+      </div>
+
+      <div class="shop-item" data-item="pelota" data-price="4">
+        <div class="shop-item-icon">⚽</div>
+        <div class="shop-item-name">Pelota</div>
+        <div class="shop-item-desc">Energía instantánea (y caos controlado)</div>
+        <div class="shop-item-price">💰 4 AMX Coins</div>
+        <button class="btn-buy" type="button">Comprar</button>
+      </div>
+
+      <div class="shop-item" data-item="pinata" data-price="10">
+        <div class="shop-item-icon">🪅</div>
+        <div class="shop-item-name">Mini Piñata</div>
+        <div class="shop-item-desc">Sube la felicidad. Advertencia: antojo de dulces.</div>
+        <div class="shop-item-price">💰 10 AMX Coins</div>
+        <button class="btn-buy" type="button">Comprar</button>
+      </div>
+    </div>
 
     <div class="shop-hint">Tip: si ya lo compraste, el botón cambia a <b>Equipar</b>.</div>
   </div>
@@ -1452,6 +1449,7 @@ function refreshShopButtons(){
 // Open/close shop
 function openShop() {
   refreshShopButtons();
+  if (typeof wireShopButtons === 'function') wireShopButtons();
   document.getElementById('shop-modal').classList.add('active');
 }
 
