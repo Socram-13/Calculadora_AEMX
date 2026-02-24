@@ -460,7 +460,7 @@
     /* ── Stats ── */
     .stats-bar {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       gap: 8px;
       margin-bottom: 16px;
     }
@@ -488,6 +488,8 @@
     .stat-card.active-c::before { background: var(--success); }
     .stat-card.clan-c::before   { background: var(--glow2); }
     .stat-card.coins-c::before  { background: #ffd700; }
+    .stat-card[style*="--accent:#ffaa00"]::before { background: #ffaa00; }
+    .stat-card[style*="--accent:#ffffff"]::before { background: linear-gradient(180deg, #fff, #a0cfff); }
 
     .stat-icon {
       font-size: 18px;
@@ -520,6 +522,9 @@
       text-overflow: ellipsis;
     }
 
+    @media (max-width: 1200px) {
+      .stats-bar { grid-template-columns: repeat(4, 1fr); }
+    }
     @media (max-width: 900px) {
       .stats-bar { grid-template-columns: repeat(3, 1fr); }
     }
@@ -1319,6 +1324,127 @@
       letter-spacing: 1px !important;
       border-radius: 6px !important;
     }
+
+    /* ── Códigos activos (admin) ── */
+    .active-codes-section {
+      margin-top: 16px;
+    }
+    .active-codes-card {
+      background: var(--panel);
+      border: 1px solid rgba(255,215,0,0.3);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .active-codes-card::before {
+      content: '';
+      display: block;
+      height: 2px;
+      background: linear-gradient(90deg, #ffd700, #ffaa00, #00ff9d, #ffd700);
+      background-size: 200% 100%;
+      animation: shimmerGold 3s linear infinite;
+    }
+    @keyframes shimmerGold { 0%{background-position:0%} 100%{background-position:200%} }
+    .active-codes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,215,0,0.04);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .active-codes-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #ffd700;
+    }
+    .active-codes-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .active-codes-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1px;
+    }
+    .active-codes-badge span {
+      color: #ffd700;
+      font-weight: 700;
+    }
+    .active-codes-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .active-codes-table th {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: var(--text2);
+      text-align: left;
+      padding: 8px 18px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+    }
+    .active-codes-table td {
+      padding: 10px 18px;
+      border-bottom: 1px solid rgba(26,58,92,0.4);
+      vertical-align: middle;
+    }
+    .active-codes-table tr:last-child td { border-bottom: none; }
+    .active-codes-table tr { animation: fadeIn 0.3s ease both; }
+    .ac-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .ac-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      color: #060b14;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .ac-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .ac-username {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: 1px;
+    }
+    .ac-coins {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255,215,0,0.4);
+    }
+    .ac-time {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--text2);
+      letter-spacing: 1px;
+    }
+    .ac-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+    }
   </style>
 </head>
 <body>
@@ -1514,7 +1640,21 @@
         <span class="stat-icon">🪙</span>
         <div class="stat-info">
           <div class="stat-value" id="statCoins">—</div>
-          <div class="stat-label">COINS TOTALES</div>
+          <div class="stat-label">EN WALLETS</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--accent:#ffaa00;">
+        <span class="stat-icon">🔄</span>
+        <div class="stat-info">
+          <div class="stat-value" id="statTransit" style="color:#ffaa00;">—</div>
+          <div class="stat-label">EN TRÁNSITO</div>
+        </div>
+      </div>
+      <div class="stat-card" style="--accent:#ffffff;">
+        <span class="stat-icon">∑</span>
+        <div class="stat-info">
+          <div class="stat-value" id="statGrandTotal" style="color:#ffffff;text-shadow:0 0 12px rgba(255,255,255,0.3);">—</div>
+          <div class="stat-label">TOTAL EXISTENTE</div>
         </div>
       </div>
     </div>
@@ -1596,6 +1736,32 @@
       </div>
 
     </div><!-- /admin-body -->
+
+    <!-- Códigos activos en tránsito -->
+    <div class="active-codes-section">
+      <div class="active-codes-card">
+        <div class="active-codes-header">
+          <span class="active-codes-title">🪙 CÓDIGOS EN TRÁNSITO</span>
+          <div class="active-codes-meta">
+            <span class="active-codes-badge">Códigos activos: <span id="acCount">—</span></span>
+            <span class="active-codes-badge">Coins en tránsito: <span id="acTotal">—</span></span>
+          </div>
+        </div>
+        <table class="active-codes-table">
+          <thead>
+            <tr>
+              <th>USUARIO</th>
+              <th>COINS</th>
+              <th>CREADO HACE</th>
+            </tr>
+          </thead>
+          <tbody id="activeCodesBody">
+            <tr><td colspan="3"><div class="ac-empty">Cargando...</div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -1745,7 +1911,7 @@
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getDatabase, ref, onValue, update, set }
+    import { getDatabase, ref, onValue, update, set, get }
                                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
     const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
@@ -1894,6 +2060,11 @@
         updateStats();
         renderTable();
         if (window.renderMiniMap) window.renderMiniMap(allUsers);
+
+        // Construir mapa uid → user y cargar códigos activos
+        const usersMap = {};
+        allUsers.forEach(u => { usersMap[u.uid] = u; });
+        loadActiveCodes(usersMap);
       });
     }
 
@@ -1906,6 +2077,16 @@
       document.getElementById('statBanned').textContent = bannedAny;
       document.getElementById('statClan').textContent   = clanMembers;
       document.getElementById('statCoins').textContent  = totalCoins.toLocaleString();
+      // Guardar coins en wallets para el gran total
+      window._coinsInWallets = totalCoins;
+      updateGrandTotal();
+    }
+
+    function updateGrandTotal() {
+      const wallets  = window._coinsInWallets  || 0;
+      const transit  = window._coinsInTransit  || 0;
+      document.getElementById('statTransit').textContent   = transit.toLocaleString();
+      document.getElementById('statGrandTotal').textContent = (wallets + transit).toLocaleString();
     }
 
     function getFiltered() {
@@ -2095,6 +2276,72 @@
       } catch(e) {
         showToast('Error al actualizar', true);
       }
+    }
+
+    // ── Códigos activos en tránsito ──
+    function loadActiveCodes(usersMap) {
+      onValue(ref(db, 'codes'), (snap) => {
+        const tbody = document.getElementById('activeCodesBody');
+        const acCount = document.getElementById('acCount');
+        const acTotal = document.getElementById('acTotal');
+
+        if (!snap.exists()) {
+          tbody.innerHTML = `<tr><td colspan="3"><div class="ac-empty">🪙 Sin códigos activos</div></td></tr>`;
+          acCount.textContent = '0';
+          acTotal.textContent = '0';
+          window._coinsInTransit = 0;
+          updateGrandTotal();
+          return;
+        }
+
+        const codes = [];
+        snap.forEach(child => {
+          codes.push({ ...child.val() });
+        });
+
+        // Ordenar del más reciente al más antiguo
+        codes.sort((a, b) => b.createdAt - a.createdAt);
+
+        const total = codes.reduce((s, c) => s + (c.value || 0), 0);
+        acCount.textContent = codes.length;
+        acTotal.textContent = `🪙 ${total}`;
+
+        // Actualizar stat global
+        window._coinsInTransit = total;
+        updateGrandTotal();
+
+        tbody.innerHTML = codes.map((c, i) => {
+          const user = usersMap[c.createdBy] || {};
+          const username = c.username || user.username || 'Desconocido';
+          const photo    = user.photoURL || '';
+          const letter   = username.charAt(0).toUpperCase();
+          const colors   = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#f472b6'];
+          const bg       = user.borderColor || colors[letter.charCodeAt(0) % colors.length];
+
+          const avatarHTML = photo
+            ? `<div class="ac-avatar"><img src="${photo}" alt=""></div>`
+            : `<div class="ac-avatar" style="background:${bg};">${letter}</div>`;
+
+          const diff = Date.now() - c.createdAt;
+          const mins = Math.floor(diff / 60000);
+          const hrs  = Math.floor(diff / 3600000);
+          const days = Math.floor(diff / 86400000);
+          const rel  = days > 0 ? `${days}d` : hrs > 0 ? `${hrs}h` : mins > 0 ? `${mins}m` : 'ahora';
+
+          return `
+            <tr style="animation-delay:${i * 0.04}s">
+              <td>
+                <div class="ac-user">
+                  ${avatarHTML}
+                  <span class="ac-username">${username}</span>
+                </div>
+              </td>
+              <td><span class="ac-coins">🪙 ${c.value}</span></td>
+              <td><span class="ac-time">hace ${rel}</span></td>
+            </tr>
+          `;
+        }).join('');
+      });
     }
 
     // ── Toggle Coins ──
