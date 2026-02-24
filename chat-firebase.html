@@ -360,6 +360,24 @@
         }
         .btn-transacciones.hidden { display: none; }
 
+        .btn-mute {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid var(--border-color, #1a3a5c);
+            border-radius: 8px;
+            color: var(--text-secondary, #6b8ab0);
+            font-size: 14px;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-mute:hover { border-color: #ffd700; color: #ffd700; }
+        .btn-mute.muted { border-color: #ff4466; color: #ff4466; }
+
         .btn-leaderboard:hover {
             background: var(--primary-color);
             color: #060b14;
@@ -1169,6 +1187,7 @@
                     <a class="btn-guias" href="guias.html" target="_top">📹 <span class="guias-text">GUÍAS</span></a>
                     <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙 <span class="tx-text">COINS</span></a>
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
+                    <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
 
                 </div>
             </div>
@@ -1327,7 +1346,9 @@
         // Cargar mensajes desde Firebase
         function loadMessages() {
             const messagesRef = ref(database, 'messages');
-            
+            let lastMessageCount = 0;
+            let chatInitialized  = false;
+
             onValue(messagesRef, (snapshot) => {
                 const container = document.getElementById('messagesContainer');
                 container.innerHTML = '';
@@ -1342,6 +1363,16 @@
                 
                 // Ordenar por timestamp
                 messages.sort((a, b) => a.timestamp - b.timestamp);
+
+                // Detectar mensajes nuevos de otros usuarios y reproducir sonido
+                const total = messages.length;
+                if (chatInitialized && total > lastMessageCount) {
+                    const nuevos = messages.slice(lastMessageCount);
+                    const hayAjenos = nuevos.some(m => m.username !== currentUsername);
+                    if (hayAjenos) playPopSound();
+                }
+                lastMessageCount = total;
+                chatInitialized  = true;
                 
                 // Mostrar solo los últimos 50 mensajes
                 messages.slice(-50).forEach((msg) => {
@@ -1542,6 +1573,55 @@
         loadTicker();
 
         } // fin initChat
+
+        // ── Sonido de notificación (pop suave con Web Audio API) ──
+        let audioCtx = null;
+        let soundMuted = localStorage.getItem('chat-muted') === 'true';
+
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+
+        function playPopSound() {
+            if (soundMuted) return;
+            try {
+                const ctx = getAudioCtx();
+                // Pop suave: oscilador sinusoidal con decay rápido
+                const osc  = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.15);
+            } catch(e) { /* silenciar errores de autoplay policy */ }
+        }
+
+        function toggleMute() {
+            soundMuted = !soundMuted;
+            localStorage.setItem('chat-muted', soundMuted);
+            const btn = document.getElementById('btnMute');
+            if (btn) {
+                btn.textContent = soundMuted ? '🔕' : '🔔';
+                btn.classList.toggle('muted', soundMuted);
+                btn.title = soundMuted ? 'Activar sonido' : 'Silenciar notificaciones';
+            }
+        }
+
+        // Aplicar estado guardado al cargar
+        (function() {
+            const btn = document.getElementById('btnMute');
+            if (btn && soundMuted) {
+                btn.textContent = '🔕';
+                btn.classList.add('muted');
+                btn.title = 'Activar sonido';
+            }
+        })();
 
         // ── Botón Marco: fuera de initChat para que siempre esté disponible ──
         window.abrirMarco = async function() {
