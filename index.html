@@ -766,6 +766,46 @@
     letter-spacing: 1px;
   }
 
+  /* Botón Check In */
+  .btn-checkin {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: 2px solid #ffd700;
+    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,180,0,0.1));
+    color: #ffd700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    text-shadow: 0 0 8px rgba(255,215,0,0.4);
+    box-shadow: 0 0 12px rgba(255,215,0,0.15);
+  }
+  .btn-checkin:hover:not(:disabled) {
+    background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,180,0,0.25));
+    box-shadow: 0 0 20px rgba(255,215,0,0.4);
+    transform: translateY(-1px);
+  }
+  .btn-checkin:disabled {
+    border-color: rgba(255,215,0,0.2);
+    color: rgba(255,215,0,0.3);
+    background: rgba(255,215,0,0.04);
+    cursor: not-allowed;
+    box-shadow: none;
+    text-shadow: none;
+    transform: none;
+  }
+  .btn-checkin.done {
+    border-color: #4ade80;
+    color: #4ade80;
+    background: rgba(74,222,128,0.08);
+    text-shadow: 0 0 8px rgba(74,222,128,0.4);
+    box-shadow: 0 0 12px rgba(74,222,128,0.15);
+  }
+
   @keyframes fadeInUp {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -1650,12 +1690,12 @@
             window._coinsLoad(uid);
           }
         }, 100);
-        setTimeout(() => clearInterval(waitCoins), 5000);        // Sincronización completa — resubir a Firebase para mantener fresco
-        setTimeout(() => { if(window._fbSaveAll) window._fbSaveAll(); }, 800);
+        setTimeout(() => clearInterval(waitCoins), 5000);
       } catch(e) { console.warn('Firebase sync error:', e); }
     }
 
     // ── Guardar todos los datos en Firebase ──
+    // IMPORTANTE: coins y lastCoinDate NUNCA se incluyen aquí — solo los maneja _awardDailyCoin
     window._fbSaveAll = async function() {
       const user = window._fbUser;
       if (!user) return;
@@ -1680,14 +1720,11 @@
           else if (window.userCountry) data.country    = window.userCountry;
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
-          // Preservar campos gestionados por el admin (siempre, aunque sean false)
+          // Preservar campos del admin
           data.clanMember        = prev.clanMember        === true;
           data.bannedChat        = prev.bannedChat        === true;
           data.bannedLeaderboard = prev.bannedLeaderboard === true;
           data.role              = prev.role              || '';
-          // Preservar coins y fecha (nunca sobreescribir con set)
-          data.coins             = prev.coins             || 0;
-          data.lastCoinDate      = prev.lastCoinDate      || null;
           // Solo actualizar updatedAt si cambiaron las parcelas
           const parcelasChanged =
             String(data.common)    !== String(prev.common    || 0) ||
@@ -1698,13 +1735,10 @@
         } else {
           data.updatedAt = Date.now();
           if (window.userCountry) data.country = window.userCountry;
-          // Usuario nuevo: campos admin en false por defecto
           data.clanMember        = false;
           data.bannedChat        = false;
           data.bannedLeaderboard = false;
           data.role              = '';
-          data.coins             = 0;
-          data.lastCoinDate      = null;
         }
         await update(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
@@ -2208,6 +2242,9 @@
     <div class="coins-status" id="coins-status">
       <span class="waiting" id="coins-status-text">Inicia sesión para ganar coins</span>
     </div>
+    <button class="btn-checkin" id="btn-checkin" onclick="doCheckIn()" disabled>
+      🏁 CHECK IN
+    </button>
   </div>
   <!-- ===== FIN COINS COUNTER ===== -->
 
@@ -2276,7 +2313,29 @@
       }
     };
 
-    // Sonido de coin ganado (Web Audio API)
+    // Maneja el estado del botón check in
+    function updateCheckInBtn(yaHizo) {
+      const btn = document.getElementById('btn-checkin');
+      if (!btn) return;
+      if (yaHizo) {
+        btn.disabled = true;
+        btn.classList.add('done');
+        btn.textContent = '✔ CHECK IN HECHO';
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('done');
+        btn.textContent = '🏁 CHECK IN';
+      }
+    }
+
+    // Check In manual del usuario
+    window.doCheckIn = async function() {
+      const btn = document.getElementById('btn-checkin');
+      if (!btn || btn.disabled) return;
+      btn.disabled = true;
+      btn.textContent = '⏳ ...';
+      await window._awardDailyCoin();
+    };
     function playCoinSound() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2340,6 +2399,7 @@
         if (ultimaFecha === hoy) {
           window._coinsUpdateDisplay(data.coins || 0);
           setCoinStatus(`<span class="waiting">Vuelve mañana a guardar tus datos para ganar otro coin 🕐</span>`);
+          updateCheckInBtn(true);
           return;
         }
 
@@ -2353,50 +2413,60 @@
         playCoinSound();
         showCoinToast(nuevoTotal);
         setCoinStatus(`<span class="earned">✔ +1 Coin ganado hoy · ${hoy}</span>`);
+        updateCheckInBtn(true);
 
       } catch (err) {
         console.warn('Coins error:', err);
       }
     };
 
-    // Carga los coins actuales del usuario al iniciar sesión
+    // Carga los coins actuales del usuario al iniciar sesión — solo lee del servidor
     window._coinsLoad = async function(uid) {
       if (!uid) return;
       const _db  = window._fbDb;
       const _ref = window._fbRef;
       const _get = window._fbGet;
       if (!_db || !_ref || !_get) return;
+
       try {
         // Verificar si el sistema de coins está activo
         const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
         const coinsActivo = configSnap.exists() ? configSnap.val() : true;
         const coinsBar = document.getElementById('coins-bar');
 
-        // Solo disponible para México
-        const pais = (window.userCountry || '').toLowerCase();
-        const esMexico = pais === 'mexico' || pais === 'méxico';
-
-        if (!coinsActivo || !esMexico) {
+        if (!coinsActivo) {
           if (coinsBar) coinsBar.style.display = 'none';
           return;
         }
+
+        // Leer datos del usuario directo del servidor
+        const snap = await _get(_ref(_db, `users/${uid}`));
+        const serverData = snap.exists() ? snap.val() : {};
+
+        // Verificar país desde el servidor (no localStorage)
+        const pais = (serverData.country || window.userCountry || '').toLowerCase();
+        const esMexico = pais.includes('mexico') || pais.includes('méxico');
+
+        if (!esMexico) {
+          if (coinsBar) coinsBar.style.display = 'none';
+          return;
+        }
+
         if (coinsBar) coinsBar.style.display = '';
 
-        const snap = await _get(_ref(_db, `users/${uid}`));
-        if (snap.exists()) {
-          const data = snap.val();
-          const coins = data.coins || 0;
-          const hoy = new Date().toISOString().split('T')[0];
-          window._coinsUpdateDisplay(coins);
-          if (data.lastCoinDate === hoy) {
-            setCoinStatus(`<span class="waiting">Vuelve mañana a guardar tus datos para ganar otro coin 🕐</span>`);
-          } else {
-            setCoinStatus(`<span class="waiting">Guarda tus datos para ganar 1 coin 🪙</span>`);
-          }
+        const coins = serverData.coins || 0;
+        const hoy   = new Date().toISOString().split('T')[0];
+
+        window._coinsUpdateDisplay(coins);
+
+        if (serverData.lastCoinDate === hoy) {
+          setCoinStatus(`<span class="waiting">Vuelve mañana para ganar otro coin 🕐</span>`);
+          updateCheckInBtn(true);
         } else {
-          window._coinsUpdateDisplay(0);
-          setCoinStatus(`<span class="waiting">Guarda tus datos para ganar 1 coin 🪙</span>`);
+          setCoinStatus(`<span class="waiting">Haz Check In para ganar 1 coin 🪙</span>`);
+          updateCheckInBtn(false);
         }
+
       } catch(e) {
         console.warn('Coins load error:', e);
       }
@@ -2429,8 +2499,6 @@
       }
 
       window._fbSaveAll();
-      // Intentar dar coin diario al guardar
-      if (window._awardDailyCoin) window._awardDailyCoin();
     };
   </script>
 
