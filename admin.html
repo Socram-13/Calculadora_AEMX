@@ -193,9 +193,9 @@
     .container {
       position: relative;
       z-index: 1;
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 24px 16px 60px;
+      padding: 16px 16px 40px;
     }
 
     /* ── Aviso panel ── */
@@ -263,8 +263,8 @@
     .aviso-btn.clear:hover { background: var(--text2); color: #060b14; }
     .admin-body {
       display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 16px;
+      grid-template-columns: 280px 1fr;
+      gap: 12px;
       align-items: start;
     }
 
@@ -336,7 +336,7 @@
     }
 
     #mini-map {
-      height: 400px;
+      height: 320px;
       width: 100%;
       background: #060b14;
     }
@@ -460,17 +460,19 @@
     /* ── Stats ── */
     .stats-bar {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
     }
 
     .stat-card {
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      text-align: center;
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       position: relative;
       overflow: hidden;
     }
@@ -478,28 +480,51 @@
     .stat-card::before {
       content: '';
       position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
+      top: 0; left: 0; bottom: 0;
+      width: 3px;
     }
-    .stat-card.total::before   { background: linear-gradient(90deg, var(--glow), var(--glow2)); }
+    .stat-card.total::before    { background: linear-gradient(180deg, var(--glow), var(--glow2)); }
     .stat-card.banned-c::before { background: var(--danger); }
     .stat-card.active-c::before { background: var(--success); }
+    .stat-card.clan-c::before   { background: var(--glow2); }
+    .stat-card.coins-c::before  { background: #ffd700; }
+
+    .stat-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      opacity: 0.8;
+    }
+
+    .stat-info { display: flex; flex-direction: column; min-width: 0; }
 
     .stat-value {
       font-family: 'Orbitron', monospace;
-      font-size: 24px;
+      font-size: 20px;
       font-weight: 700;
+      line-height: 1;
     }
-    .stat-card.total .stat-value   { color: var(--glow); }
+    .stat-card.total .stat-value    { color: var(--glow); }
     .stat-card.banned-c .stat-value { color: var(--danger); }
     .stat-card.active-c .stat-value { color: var(--success); }
+    .stat-card.clan-c .stat-value   { color: var(--glow2); }
+    .stat-card.coins-c .stat-value  { color: #ffd700; }
 
     .stat-label {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 10px;
+      font-size: 9px;
       color: var(--text2);
-      letter-spacing: 2px;
-      margin-top: 4px;
+      letter-spacing: 1px;
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 900px) {
+      .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
     }
 
     /* ── Filters ── */
@@ -573,11 +598,11 @@
 
     thead th {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 10px;
+      font-size: 9px;
       letter-spacing: 2px;
       color: var(--text2);
       text-align: left;
-      padding: 10px 20px;
+      padding: 8px 14px;
       border-bottom: 1px solid var(--border);
       background: var(--panel2);
     }
@@ -598,7 +623,7 @@
     tbody tr.banned-row { background: var(--banned-bg); border-left: 2px solid var(--danger); }
     tbody tr.banned-row:hover { background: rgba(255,68,102,0.1); }
 
-    tbody td { padding: 12px 20px; vertical-align: middle; }
+    tbody td { padding: 8px 14px; vertical-align: middle; }
 
     .player-cell {
       display: flex;
@@ -607,7 +632,7 @@
     }
 
     .avatar {
-      width: 36px; height: 36px;
+      width: 30px; height: 30px;
       border-radius: 50%;
       border-width: 2px;
       border-style: solid;
@@ -616,7 +641,7 @@
       align-items: center;
       justify-content: center;
       font-family: 'Orbitron', monospace;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 700;
       color: #060b14;
       flex-shrink: 0;
@@ -1458,16 +1483,39 @@
 
     <div class="stats-bar">
       <div class="stat-card total">
-        <div class="stat-value" id="statTotal">—</div>
-        <div class="stat-label">USUARIOS TOTALES</div>
+        <span class="stat-icon">👥</span>
+        <div class="stat-info">
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-label">USUARIOS TOTALES</div>
+        </div>
       </div>
       <div class="stat-card active-c">
-        <div class="stat-value" id="statActive">—</div>
-        <div class="stat-label">ACTIVOS</div>
+        <span class="stat-icon">✅</span>
+        <div class="stat-info">
+          <div class="stat-value" id="statActive">—</div>
+          <div class="stat-label">ACTIVOS</div>
+        </div>
       </div>
       <div class="stat-card banned-c">
-        <div class="stat-value" id="statBanned">—</div>
-        <div class="stat-label">BLOQUEADOS</div>
+        <span class="stat-icon">🚫</span>
+        <div class="stat-info">
+          <div class="stat-value" id="statBanned">—</div>
+          <div class="stat-label">BLOQUEADOS</div>
+        </div>
+      </div>
+      <div class="stat-card clan-c">
+        <span class="stat-icon">⚔️</span>
+        <div class="stat-info">
+          <div class="stat-value" id="statClan">—</div>
+          <div class="stat-label">MIEMBROS CLAN</div>
+        </div>
+      </div>
+      <div class="stat-card coins-c">
+        <span class="stat-icon">🪙</span>
+        <div class="stat-info">
+          <div class="stat-value" id="statCoins">—</div>
+          <div class="stat-label">COINS TOTALES</div>
+        </div>
       </div>
     </div>
 
@@ -1850,10 +1898,14 @@
     }
 
     function updateStats() {
-      const bannedAny = allUsers.filter(u => u.bannedChat || u.bannedLeaderboard).length;
+      const bannedAny   = allUsers.filter(u => u.bannedChat || u.bannedLeaderboard).length;
+      const clanMembers = allUsers.filter(u => u.clanMember).length;
+      const totalCoins  = allUsers.reduce((sum, u) => sum + (u.coins || 0), 0);
       document.getElementById('statTotal').textContent  = allUsers.length;
       document.getElementById('statActive').textContent = allUsers.length - bannedAny;
       document.getElementById('statBanned').textContent = bannedAny;
+      document.getElementById('statClan').textContent   = clanMembers;
+      document.getElementById('statCoins').textContent  = totalCoins.toLocaleString();
     }
 
     function getFiltered() {
