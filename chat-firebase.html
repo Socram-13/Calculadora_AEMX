@@ -362,6 +362,30 @@
         }
         .btn-transacciones.hidden { display: none; }
 
+        .btn-presencia {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            border: 1px solid #00ff9d;
+            border-radius: 8px;
+            color: #00ff9d;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            padding: 6px 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .btn-presencia:hover {
+            background: #00ff9d;
+            color: #060b14;
+            box-shadow: 0 0 16px rgba(0,255,157,0.4);
+        }
+
         .btn-mute {
             display: flex;
             align-items: center;
@@ -978,6 +1002,8 @@
             .btn-marco { padding: 6px 9px; font-size: 14px; }
             .btn-transacciones .tx-text { display: none; }
             .btn-transacciones { padding: 6px 9px; font-size: 14px; }
+            .btn-presencia .pr-text { display: none; }
+            .btn-presencia { padding: 6px 9px; font-size: 14px; }
             .btn-mute { width: 30px; height: 30px; font-size: 14px; padding: 0; flex-shrink: 0; }
 
             /* Botón hamburguesa visible */
@@ -1191,9 +1217,9 @@
                     <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
                     <a class="btn-guias" href="guias.html" target="_top">📹 <span class="guias-text">GUÍAS</span></a>
                     <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙 <span class="tx-text">COINS</span></a>
+                    <a class="btn-presencia" href="presencia.html" target="_top">⬡ <span class="pr-text">PRESENCIA</span></a>
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
                     <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
-
                 </div>
             </div>
 
@@ -1657,7 +1683,8 @@
             }
             // Safari bloquea window.open() después de await — abrimos la ventana
             // antes del fetch y la cerramos si no tiene permiso
-            const ventana = window.open('', '_blank');
+            // Usamos _top para evitar bloqueos de popup en Safari/iPhone
+            const ventana = window.open('', '_top');
             try {
                 const snap = await get(ref(database, 'users/' + user.uid));
                 const data = snap.exists() ? snap.val() : {};
@@ -1665,13 +1692,13 @@
                 if (esMiembro) {
                     ventana.location.href = 'editor_marco.html';
                 } else {
-                    ventana.close();
-                    document.getElementById('deniedModal').classList.add('active');
+                    // No se puede cerrar _top, redirigir de vuelta
+                    ventana.location.href = window.location.href;
+                    setTimeout(() => document.getElementById('deniedModal').classList.add('active'), 300);
                 }
             } catch(e) {
                 console.error('Error verificando membresía:', e);
-                ventana.close();
-                document.getElementById('deniedModal').classList.add('active');
+                ventana.location.href = window.location.href;
             }
         };
     </script>
