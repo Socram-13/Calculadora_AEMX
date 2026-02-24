@@ -297,7 +297,7 @@
     import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, onValue, onDisconnect, serverTimestamp, remove, push }
+    import { getDatabase, ref, set, onValue, onChildAdded, onDisconnect, serverTimestamp, remove, push, query, limitToLast }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -781,16 +781,19 @@
       });
 
       // ── Escuchar mensajes en tiempo real ──
-      onValue(ref(db, 'mensajes'), (snap) => {
-        if (!snap.exists()) return;
-        const data  = snap.val();
-        const keys  = Object.keys(data).sort();
-        // Solo procesar el más reciente
-        const last  = data[keys[keys.length - 1]];
-        if (last && last.uid && last.text) {
-          addSpeechBubble(last.uid, last.text);
+      // limitToLast(1) + onChildAdded: solo activa para mensajes nuevos
+      // que llegan DESPUÉS de que el usuario conecta
+      let mensajesInicializado = false;
+      onChildAdded(query(ref(db, 'mensajes'), limitToLast(30)), (snap) => {
+        // Ignorar mensajes que ya existían al conectar (carga inicial)
+        if (!mensajesInicializado) return;
+        const msg = snap.val();
+        if (msg && msg.uid && msg.text) {
+          addSpeechBubble(msg.uid, msg.text);
         }
       });
+      // Marcar como inicializado después de que la carga inicial termine
+      setTimeout(() => { mensajesInicializado = true; }, 1500);
 
       loading.style.display = 'none';
       loop();
