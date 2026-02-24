@@ -741,6 +741,48 @@
   50%{ transform: translateY(-5px) rotate(1.5deg); }
 }
 
+
+/* --- Selection previews --- */
+.pet-selection{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 10px;
+}
+.pet-option{
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  padding: 10px;
+  cursor: pointer;
+  transition: transform .12s ease, border-color .12s ease, background .12s ease;
+}
+.pet-option:hover{
+  transform: translateY(-2px);
+  border-color: rgba(255,215,0,0.45);
+  background: rgba(255,255,255,0.05);
+}
+.pet-preview{
+  height: 120px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.pet-preview .pet-img{
+  width: 120px;
+  height: auto;
+}
+.pet-label{
+  margin-top: 6px;
+  font-weight: 700;
+}
+@media (max-width: 520px){
+  .pet-selection{ grid-template-columns: 1fr; }
+  .pet-preview{ height: 160px; }
+  .pet-preview .pet-img{ width: 160px; }
+}
+
 </style>
 </head>
 <body>
@@ -776,21 +818,36 @@
     </div>
 
     
+
 <!-- Selection Screen -->
 <div id="selection-screen" style="display:none;">
   <div class="card">
     <div class="header">
       <h2>Elige tu mascota</h2>
+      <p class="subtitle">Puedes renombrarla luego (y sí, el tlacuache no se hace el muerto aquí).</p>
     </div>
+
     <div class="pet-selection">
-      <button class="pet-option" data-pet="ajolote">Ajolote</button>
-      <button class="pet-option" data-pet="tlacuache">Tlacuache</button>
-      <button class="pet-option" data-pet="quetzal">Quetzal</button>
+      <button class="pet-option" data-pet="ajolote" type="button">
+        <div class="pet-preview" data-preview="ajolote"></div>
+        <div class="pet-label">Ajolote</div>
+      </button>
+
+      <button class="pet-option" data-pet="tlacuache" type="button">
+        <div class="pet-preview" data-preview="tlacuache"></div>
+        <div class="pet-label">Tlacuache</div>
+      </button>
+
+      <button class="pet-option" data-pet="quetzal" type="button">
+        <div class="pet-preview" data-preview="quetzal"></div>
+        <div class="pet-label">Quetzal</div>
+      </button>
     </div>
   </div>
 </div>
 
 <!-- Game Screen -->
+
 
     <div id="game-screen">
       <div class="pet-display">
@@ -1045,6 +1102,7 @@ function grantAccess(user) {
     startDegradationTimer();
   } else {
     document.getElementById('selection-screen').style.display = 'block';
+  renderPetPreviews();
     document.getElementById('game-screen').style.display = 'none';
   }
   
@@ -1391,6 +1449,25 @@ window.resetGame = function(){
   localStorage.removeItem("petName");
   if(_resetGame) _resetGame();
 };
+
+// --- Render pet previews in selection screen ---
+function renderPetPreviews(){
+  try{
+    document.querySelectorAll('.pet-preview[data-preview]').forEach(el=>{
+      const key = el.getAttribute('data-preview');
+      if (!key) return;
+      el.innerHTML = gameState.petSprites[key] || '';
+      const img = el.querySelector('.pet-img');
+      if (img){
+        // subtle idle on previews
+        img.classList.add('pet-idle');
+        img.classList.toggle('pet-quetzal-idle', key === 'quetzal');
+        img.classList.toggle('pet-tlacuache-idle', key === 'tlacuache');
+      }
+    });
+  }catch(e){ /* noop */ }
+}
+
 </script>
 
 
