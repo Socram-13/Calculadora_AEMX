@@ -1550,17 +1550,22 @@
                 document.getElementById('deniedModal').classList.add('active');
                 return;
             }
+            // Safari bloquea window.open() después de await — abrimos la ventana
+            // antes del fetch y la cerramos si no tiene permiso
+            const ventana = window.open('', '_blank');
             try {
                 const snap = await get(ref(database, 'users/' + user.uid));
                 const data = snap.exists() ? snap.val() : {};
                 const esMiembro = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
                 if (esMiembro) {
-                    window.open('editor_marco.html', '_blank');
+                    ventana.location.href = 'editor_marco.html';
                 } else {
+                    ventana.close();
                     document.getElementById('deniedModal').classList.add('active');
                 }
             } catch(e) {
                 console.error('Error verificando membresía:', e);
+                ventana.close();
                 document.getElementById('deniedModal').classList.add('active');
             }
         };
