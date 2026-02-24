@@ -781,19 +781,21 @@
       });
 
       // ── Escuchar mensajes en tiempo real ──
-      // limitToLast(1) + onChildAdded: solo activa para mensajes nuevos
-      // que llegan DESPUÉS de que el usuario conecta
-      let mensajesInicializado = false;
-      onChildAdded(query(ref(db, 'mensajes'), limitToLast(30)), (snap) => {
-        // Ignorar mensajes que ya existían al conectar (carga inicial)
-        if (!mensajesInicializado) return;
+      // Registrar momento de conexión; ignorar mensajes anteriores a él.
+      // Para mensajes propios recién enviados el serverTimestamp llega como null
+      // en el evento local optimista, por eso también los mostramos.
+      const conectadoEn = Date.now();
+
+      onChildAdded(query(ref(db, 'mensajes'), limitToLast(50)), (snap) => {
         const msg = snap.val();
-        if (msg && msg.uid && msg.text) {
+        if (!msg || !msg.uid || !msg.text) return;
+        const ts = msg.timestamp;
+        const esNuevo = ts !== null && ts !== undefined && ts >= conectadoEn;
+        const esMio   = msg.uid === myUid && (ts === null || ts === undefined);
+        if (esNuevo || esMio) {
           addSpeechBubble(msg.uid, msg.text);
         }
       });
-      // Marcar como inicializado después de que la carga inicial termine
-      setTimeout(() => { mensajesInicializado = true; }, 1500);
 
       loading.style.display = 'none';
       loop();
@@ -808,7 +810,10 @@
 
       input.value = '';
 
-      // Guardar en Firebase: nodo mensajes/<pushId>
+      // Mostrar globo propio inmediatamente (sin esperar Firebase)
+      addSpeechBubble(myUid, text);
+
+      // Guardar en Firebase para que todos los demás lo vean
       const msgsRef = ref(db, 'mensajes');
       await push(msgsRef, {
         uid:       myUid,
