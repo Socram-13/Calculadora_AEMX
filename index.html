@@ -1557,7 +1557,7 @@
   <!-- ===== FIREBASE SDK ===== -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged }
+    import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged, browserLocalPersistence, setPersistence }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import { getDatabase, ref, set, get, update, onValue }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
@@ -1574,6 +1574,9 @@
     const auth = getAuth(app);
     const db   = getDatabase(app);
     const provider = new GoogleAuthProvider();
+
+    // Forzar persistencia LOCAL para que Safari no cierre sesión al cambiar de pestaña
+    setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
     // ── Exponer al scope global para que el resto del código los use ──
     window._fbAuth     = auth;
