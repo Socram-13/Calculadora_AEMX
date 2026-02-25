@@ -868,20 +868,29 @@ window.addEventListener('pointerdown', (e) => {
       // Registrar momento de conexión; ignorar mensajes anteriores a él.
       // Para mensajes propios recién enviados el serverTimestamp llega como null
       // en el evento local optimista, por eso también los mostramos.
-      const conectadoEn = Date.now();
+      // ── Sincronía de tiempo con servidor (evita bugs por reloj del dispositivo) ──
+let serverOffset = 0;
+onValue(ref(db, '.info/serverTimeOffset'), (snap) => {
+  serverOffset = snap.val() || 0;
+});
+const serverNow = () => Date.now() + serverOffset;
 
-      onChildAdded(query(ref(db, 'mensajes'), limitToLast(50)), (snap) => {
-        const msg = snap.val();
-        if (!msg || !msg.uid || !msg.text) return;
-        const ts = msg.timestamp;
-        const esNuevo = ts !== null && ts !== undefined && ts >= conectadoEn;
-        const esMio   = msg.uid === myUid && (ts === null || ts === undefined);
-        if (esNuevo || esMio) {
-          addSpeechBubble(msg.uid, msg.text);
-        }
-      });
+// ── Mensajes (burbujas sobre avatares) ──
+// Mostramos mensajes recientes para evitar que al recargar aparezcan "historiales" viejos.
+// El tiempo se calcula con el reloj del servidor para que todos vean lo mismo.
+const MSG_RECENT_MS = 30 * 1000; // 30s de ventana (la burbuja dura 6s)
 
-      loading.style.display = 'none';
+onChildAdded(query(ref(db, 'mensajes'), limitToLast(50)), (snap) => {
+  const msg = snap.val();
+  if (!msg || !msg.uid || !msg.text) return;
+
+  const ts = (typeof msg.timestamp === 'number') ? msg.timestamp : null;
+  if (ts !== null && (serverNow() - ts) > MSG_RECENT_MS) return;
+
+  addSpeechBubble(msg.uid, msg.text);
+});
+
+loading.style.display = 'none';
       loop();
     });
 
