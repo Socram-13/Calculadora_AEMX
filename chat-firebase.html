@@ -336,8 +336,8 @@
                     document.getElementById('usernameModal').classList.remove('visible');
                     document.getElementById('messageInput').disabled = false;
                     document.getElementById('sendBtn').disabled = false;
-                    document.getElementById('messageInput').focus();
-                    const userRef = ref(database, 'chat_presence/' + userId);
+                    // document.getElementById('messageInput').focus(); // (desactivado para evitar teclado automático en móvil)
+const userRef = ref(database, 'chat_presence/' + userId);
                     set(userRef, {
                         username: currentUsername,
                         avatar: currentAvatar || '',
@@ -514,8 +514,8 @@
                 setUsername();
             } else {
                 document.getElementById('usernameModal').classList.add('visible');
-                document.getElementById('usernameInput').focus();
-            }
+                // document.getElementById('usernameInput').focus(); // (desactivado para evitar teclado automático en móvil)
+}
 
             loadTicker();
         } // fin initChat
@@ -607,5 +607,26 @@
             }
         });
     </script>
+
+<script>
+/* ANTI-TECLADO MÓVIL: evita foco automático al cargar (iOS/Android) */
+document.addEventListener('DOMContentLoaded', () => {
+  const msgInput = document.getElementById('messageInput');
+  const userInput = document.getElementById('usernameInput');
+
+  [msgInput, userInput].forEach((input) => {
+    if (!input) return;
+
+    // Blindaje: asegúrate de que no quede enfocado por scripts previos o restauración de estado
+    input.blur();
+
+    // En móviles, solo enfocar cuando el usuario toque el campo
+    input.addEventListener('touchstart', () => {
+      input.focus();
+    }, { once: true, passive: true });
+  });
+});
+</script>
+
 </body>
 </html>
