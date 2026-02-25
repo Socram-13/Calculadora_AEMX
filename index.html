@@ -213,6 +213,8 @@
     .counter-val { font-size: 18px; min-width: 36px; }
     .breakdown-label, .breakdown-value { font-size: 11px; }
     .results-card { padding: 12px 8px; }
+    .medals-card { margin: 10px 0; }
+    .medals-grid { gap: 8px; padding: 4px 12px 16px; }
     .results-title { font-size: 11px; letter-spacing: 2px; margin-bottom: 10px; }
     .results-table { font-size: 12px; }
     .results-table th { font-size: 8px; letter-spacing: 1px; padding: 6px 6px; }
@@ -1472,6 +1474,404 @@
     }
     #chat-fab { bottom: 20px; right: 20px; }
   }
+
+  /* ════════════════════════════════
+     CARD DE MEDALLAS
+  ════════════════════════════════ */
+  .medals-card {
+    background: var(--panel);
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    transition: border-color 0.3s, transform 0.2s;
+    position: relative;
+  }
+  .medals-card:hover { border-color: var(--glow); }
+  .medals-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .medals-card:hover::before { opacity: 1; }
+
+  .medals-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 48px; /* tap target iOS */
+  }
+  .medals-toggle:hover { background: rgba(0,200,255,0.04); }
+  .medals-toggle-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .medals-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    color: var(--text);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .medals-title-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--glow);
+    box-shadow: 0 0 6px var(--glow);
+    flex-shrink: 0;
+  }
+  .medals-count {
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    color: var(--glow);
+    letter-spacing: 1px;
+    background: rgba(0,200,255,0.1);
+    border: 1px solid rgba(0,200,255,0.25);
+    border-radius: 4px;
+    padding: 1px 7px;
+  }
+  .medals-arrow {
+    font-size: 10px;
+    color: var(--text2);
+    transition: transform 0.3s ease;
+  }
+  .medals-toggle.open .medals-arrow { transform: rotate(180deg); }
+
+  .medals-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.35s ease;
+  }
+  .medals-body.open { max-height: 2400px; }
+
+  .medals-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 4px 18px 20px;
+  }
+
+  .medals-section-label {
+    width: 100%;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(26,58,92,0.9);
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 3px;
+    color: var(--text2);
+    text-transform: uppercase;
+  }
+
+  .mbadge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    position: relative;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mbadge-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border: 1px solid;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .mbadge-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .mbadge:hover .mbadge-icon { transform: translateY(-3px); filter: brightness(1.2); }
+  .mbadge-name {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-align: center;
+    color: var(--text2);
+    max-width: 66px;
+    line-height: 1.2;
+  }
+
+  .mbadge.m-common   .mbadge-icon { background: rgba(74,222,128,0.12);  border-color: rgba(74,222,128,0.4);  box-shadow: 0 0 12px rgba(74,222,128,0.15); }
+  .mbadge.m-rare     .mbadge-icon { background: rgba(96,165,250,0.12);  border-color: rgba(96,165,250,0.4);  box-shadow: 0 0 12px rgba(96,165,250,0.15); }
+  .mbadge.m-epic     .mbadge-icon { background: rgba(192,132,252,0.12); border-color: rgba(192,132,252,0.4); box-shadow: 0 0 12px rgba(192,132,252,0.15); }
+  .mbadge.m-legendary .mbadge-icon { background: rgba(255,215,0,0.12);  border-color: rgba(255,215,0,0.45);  box-shadow: 0 0 16px rgba(255,215,0,0.25); animation: mLegendaryGlow 2s ease-in-out infinite; }
+  .mbadge.m-coins    .mbadge-icon { background: rgba(255,170,0,0.12); border-color: rgba(255,170,0,0.45); box-shadow: 0 0 12px rgba(255,170,0,0.2); }
+
+  @keyframes mLegendaryGlow {
+    0%, 100% { box-shadow: 0 0 16px rgba(255,215,0,0.25); }
+    50%       { box-shadow: 0 0 28px rgba(255,215,0,0.5); }
+  }
+
+  .mbadge-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    width: 170px;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+  }
+  .mbadge:hover .mbadge-tooltip { opacity: 1; }
+  .mbadge-tooltip-name { font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 1px; color: var(--text); margin-bottom: 4px; }
+  .mbadge-tooltip-desc { font-family: 'Rajdhani', sans-serif; font-size: 11px; color: var(--text2); line-height: 1.25; }
+  .mbadge-tooltip-cost { margin-top: 6px; font-family: 'Orbitron', monospace; font-size: 9px; color: #ffaa00; }
+
+  /* Medallas regulares bloqueadas */
+  .mbadge.m-locked .mbadge-icon { filter: grayscale(1); opacity: 0.35; }
+  .mbadge.m-locked .mbadge-name { opacity: 0.4; }
+  .mbadge.m-locked:hover .mbadge-icon { transform: none; filter: grayscale(1); }
+
+  .mbadge.m-coins.m-locked .mbadge-icon { filter: grayscale(1); opacity: 0.45; }
+
+  /* ── Modal de medalla ── */
+  .medal-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 10000;                     /* por encima del chat FAB (9998) */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px); /* Safari */
+  }
+  .medal-modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;               /* "all" no es válido en algunos browsers */
+  }
+  .medal-modal {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    width: 100%;
+    max-width: 480px;
+    background: #0b1626;
+    border: 2px solid var(--border);
+    border-bottom: none;
+    border-radius: 20px 20px 0 0;
+    /* Safe area para iPhone X+ (barra home) */
+    padding: 20px 24px calc(28px + env(safe-area-inset-bottom, 0px));
+    z-index: 10001;
+    transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    overscroll-behavior: contain;       /* evita que el scroll arrastre la página en iOS */
+    -webkit-overflow-scrolling: touch;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .medal-modal.open {
+    transform: translateX(-50%) translateY(0);
+  }
+  .medal-modal-handle {
+    width: 40px;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 18px;
+    flex-shrink: 0;
+  }
+  .medal-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .medal-modal-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    border: 2px solid;
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .medal-modal-icon::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+  }
+  .medal-modal-info { flex: 1; min-width: 0; }
+  .medal-modal-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 6px;
+    word-break: break-word;
+  }
+  .medal-modal-rarity {
+    font-family: 'Orbitron', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+    display: inline-block;
+  }
+  .medal-modal-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 14px 0;
+  }
+  .medal-modal-section-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: var(--text2);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .medal-modal-desc {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+  .medal-modal-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Orbitron', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid;
+  }
+  .medal-modal-status.earned {
+    color: #4ade80;
+    border-color: rgba(74,222,128,0.4);
+    background: rgba(74,222,128,0.08);
+  }
+  .medal-modal-status.locked {
+    color: var(--text2);
+    border-color: rgba(107,138,176,0.3);
+    background: rgba(107,138,176,0.06);
+  }
+  .medal-modal-cost {
+    margin-top: 10px;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: #ffaa00;
+    letter-spacing: 1px;
+  }
+  .mbadge.m-coins.m-owned .mbadge-icon { border-color: rgba(74,222,128,0.7); box-shadow: 0 0 16px rgba(74,222,128,0.35); filter: none; }
+  .mbadge.m-coins.m-owned::after {
+    content: '✔';
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(74,222,128,0.95);
+    color: #07131f;
+    font-family: 'Orbitron', monospace;
+    font-size: 10px;
+    box-shadow: 0 0 10px rgba(74,222,128,0.35);
+  }
+
+  /* ── Botón comprar ── */
+  .mbadge-buy-btn {
+    margin-top: 2px;
+    font-family: 'Orbitron', monospace;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ffaa00;
+    background: rgba(255,170,0,0.12);
+    border: 1px solid rgba(255,170,0,0.45);
+    border-radius: 6px;
+    padding: 6px 10px;                  /* mínimo 44px alto en total con el badge */
+    min-height: 28px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    white-space: nowrap;
+    touch-action: manipulation;         /* evita zoom al doble-tap en iOS */
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mbadge-buy-btn:hover {
+    background: rgba(255,170,0,0.28);
+    transform: scale(1.05);
+  }
+  .mbadge-buy-btn:active { transform: scale(0.97); }
+  .mbadge.m-coins.m-owned .mbadge-buy-btn {
+    color: #4ade80;
+    background: rgba(74,222,128,0.1);
+    border-color: rgba(74,222,128,0.4);
+    cursor: default;
+    pointer-events: none;
+  }
+  .mbadge.m-coins.m-locked .mbadge-buy-btn {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Suprimir tooltips en móvil (hover no funciona en touch) */
+  @media (hover: none) {
+    .mbadge-tooltip { display: none !important; }
+    .mbadge:hover .mbadge-icon { transform: none; filter: none; }
+    .mbadge.m-locked:hover .mbadge-icon { transform: none; }
+    .medals-card:hover { border-color: var(--border); transform: none; }
+    .medals-card:hover::before { opacity: 0; }
+  }
+
+  /* Ajustes extra para pantallas muy pequeñas (< 360px, algunos Android) */
+  @media (max-width: 360px) {
+    .medals-grid { gap: 8px; padding: 4px 10px 16px; }
+    .mbadge-icon { width: 44px; height: 44px; font-size: 20px; border-radius: 10px; }
+    .mbadge-name { font-size: 9px; max-width: 56px; }
+    .mbadge-buy-btn { font-size: 7px; padding: 4px 6px; }
+    .medal-modal { padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px)); }
+    .medal-modal-icon { width: 52px; height: 52px; font-size: 24px; }
+    .medal-modal-name { font-size: 11px; }
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -1805,6 +2205,284 @@
       </div>
     </div>
   </div>
+
+  <!-- ════════ CARD DE MEDALLAS ════════ -->
+  <div class="medals-card">
+    <button class="medals-toggle" id="medalsToggle" onclick="toggleMedals()">
+      <div class="medals-toggle-left">
+        <span class="medals-title">
+          <span class="medals-title-dot"></span>
+          ⬡ Medallas
+        </span>
+        <span class="medals-count" id="medalsCount">41 / 41</span>
+      </div>
+      <span class="medals-arrow">▼</span>
+    </button>
+
+    <div class="medals-body" id="medalsBody">
+      <div class="medals-grid" id="medalsGrid">
+        <div class="medals-section-label">🟢 COMUNES</div>
+
+        <div class="mbadge m-common" data-medal-id="explorador">
+          <div class="mbadge-icon">🗺️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">EXPLORADOR</div><div class="mbadge-tooltip-desc">Diste el primer paso: obtén 1 parcela.</div></div>
+          </div>
+          <div class="mbadge-name">Explorador</div>
+        </div>
+
+        <div class="mbadge m-common" data-medal-id="sembrador">
+          <div class="mbadge-icon">🌱
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">SEMBRADOR</div><div class="mbadge-tooltip-desc">Empiezas a construir tu imperio: 25 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Sembrador</div>
+        </div>
+
+        <div class="mbadge m-common" data-medal-id="colono">
+          <div class="mbadge-icon">🏘️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">COLONO</div><div class="mbadge-tooltip-desc">Tu territorio ya se nota: 50 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Colono</div>
+        </div>
+
+        <div class="mbadge m-common" data-medal-id="ubicado">
+          <div class="mbadge-icon">📍
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">UBICADO</div><div class="mbadge-tooltip-desc">Comparte tu ubicación para aparecer en el mapa.</div></div>
+          </div>
+          <div class="mbadge-name">Ubicado</div>
+        </div>
+
+        <div class="mbadge m-common" data-medal-id="mexicano">
+          <div class="mbadge-icon">🌍
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">MEXICANO</div><div class="mbadge-tooltip-desc">País configurado como México.</div></div>
+          </div>
+          <div class="mbadge-name">Mexicano</div>
+        </div>
+
+        <div class="mbadge m-common" data-medal-id="ahorrador">
+          <div class="mbadge-icon">💰
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">AHORRADOR</div><div class="mbadge-tooltip-desc">Acumula 50 coins.</div></div>
+          </div>
+          <div class="mbadge-name">Ahorrador</div>
+        </div>
+
+        <div class="mbadge m-common" data-medal-id="disciplinado">
+          <div class="mbadge-icon">🪙
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">DISCIPLINADO</div><div class="mbadge-tooltip-desc">Acumula 100 coins (constancia nivel AEMX).</div></div>
+          </div>
+          <div class="mbadge-name">Disciplinado</div>
+        </div>
+
+        <div class="mbadge m-common" data-medal-id="fundador">
+          <div class="mbadge-icon">⏰
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">FUNDADOR</div><div class="mbadge-tooltip-desc">Cuenta iniciada el 26-sep-2024 o antes.</div></div>
+          </div>
+          <div class="mbadge-name">Fundador</div>
+        </div>
+
+        <div class="medals-section-label">🔵 RARAS</div>
+
+        <div class="mbadge m-rare" data-medal-id="terrateniente">
+          <div class="mbadge-icon">🏙️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">TERRATENIENTE</div><div class="mbadge-tooltip-desc">Expande tu territorio: 100 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Terrateniente</div>
+        </div>
+
+        <div class="mbadge m-rare" data-medal-id="urbanista">
+          <div class="mbadge-icon">🌆
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">URBANISTA</div><div class="mbadge-tooltip-desc">Crecimiento serio: 250 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Urbanista</div>
+        </div>
+
+        <div class="mbadge m-rare" data-medal-id="constructor">
+          <div class="mbadge-icon">🏛️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">CONSTRUCTOR</div><div class="mbadge-tooltip-desc">Construcción masiva: 500 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Constructor</div>
+        </div>
+
+        <div class="mbadge m-rare" data-medal-id="magnate">
+          <div class="mbadge-icon">🗼
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">MAGNATE</div><div class="mbadge-tooltip-desc">Imperio en crecimiento: 750 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Magnate</div>
+        </div>
+
+
+
+        <div class="mbadge m-rare" data-medal-id="estratega">
+          <div class="mbadge-icon">🎯
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">ESTRATEGA</div><div class="mbadge-tooltip-desc">Diversifica: 10 comunes + 5 raras + 2 épicas.</div></div>
+          </div>
+          <div class="mbadge-name">Estratega</div>
+        </div>
+
+        <div class="mbadge m-rare" data-medal-id="visionario">
+          <div class="mbadge-icon">🔮
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">VISIONARIO</div><div class="mbadge-tooltip-desc">1000 parcelas totales.</div></div>
+          </div>
+          <div class="mbadge-name">Visionario</div>
+        </div>
+
+        <div class="medals-section-label">🟣 ÉPICAS</div>
+
+        <div class="mbadge m-epic" data-medal-id="tormenta">
+          <div class="mbadge-icon">🌩️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">TORMENTA</div><div class="mbadge-tooltip-desc">Expansión feroz: 1500 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Tormenta</div>
+        </div>
+
+        <div class="mbadge m-epic" data-medal-id="guerrero">
+          <div class="mbadge-icon">⚔️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">GUERRERO</div><div class="mbadge-tooltip-desc">Conquista constante: 2000 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Guerrero</div>
+        </div>
+
+        <div class="mbadge m-epic" data-medal-id="cazador_rarezas">
+          <div class="mbadge-icon">🦅
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">CAZADOR DE RAREZAS</div><div class="mbadge-tooltip-desc">Logra 100 raras o 50 épicas.</div></div>
+          </div>
+          <div class="mbadge-name">Cazador de Rarezas</div>
+        </div>
+
+        <div class="mbadge m-epic" data-medal-id="imparable">
+          <div class="mbadge-icon">🔥
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">IMPARABLE</div><div class="mbadge-tooltip-desc">Nada te detiene: 2500 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Imparable</div>
+        </div>
+
+        <div class="medals-section-label">🟡 LEGENDARIAS</div>
+
+        <div class="mbadge m-legendary" data-medal-id="titan">
+          <div class="mbadge-icon">🌌
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">TITÁN</div><div class="mbadge-tooltip-desc">Nivel élite: 3000 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Titán</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="leyenda">
+          <div class="mbadge-icon">🏅
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">LEYENDA</div><div class="mbadge-tooltip-desc">Entre los mejores: 4000 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Leyenda</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="emperador_supremo">
+          <div class="mbadge-icon">👑
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">EMPERADOR SUPREMO</div><div class="mbadge-tooltip-desc">Imperio supremo: 5000 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Emperador Supremo</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="conquistador">
+          <div class="mbadge-icon">💠
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">CONQUISTADOR</div><div class="mbadge-tooltip-desc">Conquista absoluta: 6000 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Conquistador</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="dominio_absoluto">
+          <div class="mbadge-icon">⭐
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">DOMINIO ABSOLUTO</div><div class="mbadge-tooltip-desc">Dominas el mapa: 7000 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Dominio Absoluto</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="dios_atlas">
+          <div class="mbadge-icon">🔱
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">DIOS DEL ATLAS</div><div class="mbadge-tooltip-desc">Nivel presidente: 8000 parcelas.</div></div>
+          </div>
+          <div class="mbadge-name">Dios del Atlas</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="coleccionista_leg">
+          <div class="mbadge-icon">🟡
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">COLECCIONISTA LEGENDARIO</div><div class="mbadge-tooltip-desc">Ten 100 parcelas legendarias.</div></div>
+          </div>
+          <div class="mbadge-name">Coleccionista Legendario</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="portfolio_perfecto">
+          <div class="mbadge-icon">💎
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">PORTFOLIO PERFECTO</div><div class="mbadge-tooltip-desc">Diversificación legendaria: 100C + 75R + 50E + 25L.</div></div>
+          </div>
+          <div class="mbadge-name">Portfolio Perfecto</div>
+        </div>
+
+        <div class="medals-section-label" id="medalShopSection">💰 SHOP (COINS)</div>
+
+        <div class="mbadge m-coins" data-medal-id="orgullo_mx" data-price="50">
+          <div class="mbadge-icon">🇲🇽
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">ORGULLO MX</div><div class="mbadge-tooltip-desc">Medalla patriótica mexicana.</div><div class="mbadge-tooltip-cost">🪙 50 coins</div></div>
+          </div>
+          <div class="mbadge-name">Orgullo MX</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 50</button>
+        </div>
+
+        <div class="mbadge m-coins" data-medal-id="on_fire" data-price="100">
+          <div class="mbadge-icon">🔥
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">ON FIRE</div><div class="mbadge-tooltip-desc">Racha ardiente.</div><div class="mbadge-tooltip-cost">🪙 100 coins</div></div>
+          </div>
+          <div class="mbadge-name">On Fire</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 100</button>
+        </div>
+
+        <div class="mbadge m-coins" data-medal-id="artista" data-price="150">
+          <div class="mbadge-icon">🎨
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">ARTISTA</div><div class="mbadge-tooltip-desc">Para creadores de contenido.</div><div class="mbadge-tooltip-cost">🪙 150 coins</div></div>
+          </div>
+          <div class="mbadge-name">Artista</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 150</button>
+        </div>
+
+        <div class="mbadge m-coins" data-medal-id="gamer_pro" data-price="200">
+          <div class="mbadge-icon">🎮
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">GAMER PRO</div><div class="mbadge-tooltip-desc">Para los verdaderos gamers.</div><div class="mbadge-tooltip-cost">🪙 200 coins</div></div>
+          </div>
+          <div class="mbadge-name">Gamer Pro</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 200</button>
+        </div>
+
+        <div class="mbadge m-coins" data-medal-id="rainbow" data-price="250">
+          <div class="mbadge-icon">🌈
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">RAINBOW</div><div class="mbadge-tooltip-desc">Edición limitada colorida.</div><div class="mbadge-tooltip-cost">🪙 250 coins</div></div>
+          </div>
+          <div class="mbadge-name">Rainbow</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 250</button>
+        </div>
+
+        <div class="mbadge m-coins" data-medal-id="thunderbolt" data-price="300">
+          <div class="mbadge-icon">⚡
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">THUNDERBOLT</div><div class="mbadge-tooltip-desc">Poder extremo.</div><div class="mbadge-tooltip-cost">🪙 300 coins</div></div>
+          </div>
+          <div class="mbadge-name">Thunderbolt</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 300</button>
+        </div>
+
+        <div class="mbadge m-coins" data-medal-id="phantom" data-price="400">
+          <div class="mbadge-icon">👻
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">PHANTOM</div><div class="mbadge-tooltip-desc">Medalla oscura misteriosa.</div><div class="mbadge-tooltip-cost">🪙 400 coins</div></div>
+          </div>
+          <div class="mbadge-name">Phantom</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 400</button>
+        </div>
+
+        <div class="mbadge m-coins" data-medal-id="diamante" data-price="500">
+          <div class="mbadge-icon">💎
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">DIAMANTE</div><div class="mbadge-tooltip-desc">Medalla premium exclusiva.</div><div class="mbadge-tooltip-cost">🪙 500 coins</div></div>
+          </div>
+          <div class="mbadge-name">Diamante</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 500</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <!-- ════════ FIN CARD MEDALLAS ════════ -->
 
   <div class="grid">
     <div class="card">
@@ -2978,7 +3656,7 @@
     });
     document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
     document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
-    document.querySelectorAll('.card').forEach(el => { el.style.borderColor = `rgba(${rgb},0.5)`; });
+    document.querySelectorAll('.card, .medals-card').forEach(el => { el.style.borderColor = `rgba(${rgb},0.5)`; });
     document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
       el.style.borderColor = `rgba(${rgb},0.5)`;
       el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
@@ -3151,6 +3829,7 @@
     var spanMexico = document.querySelector('.mexico');
     if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; }
     if (typeof calc === 'function') calc();
+    if (typeof updateMedals === 'function') updateMedals();
     var intentos = 0;
     var retry = setInterval(function() {
       intentos++;
@@ -3313,6 +3992,311 @@
 </script>
 
   <div class="coin-toast" id="coin-toast">🪙 +1 COIN GANADO</div>
+
+  <!-- ════════ MODAL MEDALLA ════════ -->
+  <div class="medal-modal-overlay" id="medalModalOverlay" onclick="closeMedalModal()"></div>
+  <div class="medal-modal" id="medalModal">
+    <div class="medal-modal-handle"></div>
+    <div class="medal-modal-header">
+      <div class="medal-modal-icon" id="mmIcon"></div>
+      <div class="medal-modal-info">
+        <div class="medal-modal-name" id="mmName"></div>
+        <div class="medal-modal-rarity" id="mmRarity"></div>
+      </div>
+    </div>
+    <div class="medal-modal-divider"></div>
+    <div class="medal-modal-section-label">¿Cómo obtenerla?</div>
+    <div class="medal-modal-desc" id="mmDesc"></div>
+    <div id="mmCost" class="medal-modal-cost" style="display:none;"></div>
+    <div class="medal-modal-status" id="mmStatus"></div>
+  </div>
+  <!-- ════════ FIN MODAL MEDALLA ════════ -->
+
+  <!-- ════════ JS MEDALLAS ════════ -->
+  <script>
+    function toggleMedals() {
+      const btn  = document.getElementById('medalsToggle');
+      const body = document.getElementById('medalsBody');
+      if (!btn || !body) return;
+      btn.classList.toggle('open');
+      body.classList.toggle('open');
+    }
+
+    const _ownedMedals = {};
+
+    /* ── Leer valores actuales del gamertag ─────────────────── */
+    function _getParcelas() {
+      return {
+        c: Number(document.getElementById('common')?.value)   || 0,
+        r: Number(document.getElementById('rare')?.value)     || 0,
+        e: Number(document.getElementById('epic')?.value)     || 0,
+        l: Number(document.getElementById('legendary')?.value)|| 0,
+      };
+    }
+    function _getCoins() {
+      const txt = document.getElementById('coins-display')?.textContent || '0';
+      return Number(txt.replace(/[^\d]/g, '')) || 0;
+    }
+    function _getLocation() {
+      return (document.getElementById('user-location')?.textContent || '—').trim();
+    }
+    function _getStartDate() {
+      return document.getElementById('start-date')?.value || '';
+    }
+
+    /* ── Condiciones de cada medalla (por data-medal-id) ────── */
+    function isMedalEarned(id) {
+      const p = _getParcelas();
+      const total = p.c + p.r + p.e + p.l;
+      const coins = _getCoins();
+      const loc   = _getLocation();
+      const sd    = _getStartDate();
+
+      switch(id) {
+        /* COMUNES */
+        case 'explorador':       return total >= 1;
+        case 'sembrador':        return total >= 25;
+        case 'colono':           return total >= 50;
+        case 'ubicado':          return loc !== '—' && loc !== '' && loc !== '...';
+        case 'mexicano':         return loc.toUpperCase().includes('MEXICO') || loc.toUpperCase().includes('MX') || loc.toUpperCase().includes('MÉXI');
+        case 'ahorrador':        return coins >= 50;
+        case 'disciplinado':     return coins >= 100;
+        case 'fundador':         return sd !== '' && sd <= '2024-09-26';
+        /* RARAS */
+        case 'terrateniente':    return total >= 100;
+        case 'urbanista':        return total >= 250;
+        case 'constructor':      return total >= 500;
+        case 'magnate':          return total >= 750;
+        case 'globalizado':      return false; // requiere verificación manual
+        case 'campeon_local':    return false; // requiere verificación manual
+        case 'estratega':        return p.c >= 10 && p.r >= 5 && p.e >= 2;
+        case 'visionario':       return total >= 1000;
+        /* ÉPICAS */
+        case 'tormenta':         return total >= 1500;
+        case 'guerrero':         return total >= 2000;
+        case 'cazador_rarezas':  return p.r >= 100 || p.e >= 50;
+        case 'imparable':        return total >= 2500;
+        /* LEGENDARIAS */
+        case 'titan':            return total >= 3000;
+        case 'leyenda':          return total >= 4000;
+        case 'emperador_supremo':return total >= 5000;
+        case 'conquistador':     return total >= 6000;
+        case 'dominio_absoluto': return total >= 7000;
+        case 'dios_atlas':       return total >= 8000;
+        case 'coleccionista_leg':return p.l >= 100;
+        case 'portfolio_perfecto':return p.c >= 100 && p.r >= 75 && p.e >= 50 && p.l >= 25;
+        /* SHOP */
+        default: return !!_ownedMedals[id];
+      }
+    }
+
+    /* ── Actualizar todos los estados y el contador ─────────── */
+    function _esMexico() {
+      const pais = (window.userCountry || _getLocation()).toLowerCase();
+      return pais.includes('mexico') || pais.includes('méxico') || pais.includes('mx');
+    }
+
+    function updateMedals() {
+      // ── Visibilidad del SHOP según país ──
+      const shopSection = document.getElementById('medalShopSection');
+      const shopBadges  = document.querySelectorAll('.mbadge.m-coins');
+      const esMx = _esMexico();
+      if (shopSection) shopSection.style.display = esMx ? '' : 'none';
+      shopBadges.forEach(b => { b.style.display = esMx ? '' : 'none'; });
+
+      const badges = document.querySelectorAll('.mbadge[data-medal-id]');
+      let earned = 0;
+      let total  = 0;
+
+      badges.forEach(b => {
+        // No contar medallas de shop si no es México
+        if (b.classList.contains('m-coins') && !esMx) return;
+        total++;
+
+        const id       = b.dataset.medalId;
+        const isShop   = b.classList.contains('m-coins');
+        const unlocked = isShop ? !!_ownedMedals[id] : isMedalEarned(id);
+
+        if (isShop) {
+          const price = Number(b.dataset.price || 0);
+          const coins = _getCoins();
+          const owned = !!_ownedMedals[id];
+          b.classList.toggle('m-owned',  owned);
+          b.classList.toggle('m-locked', !owned && coins < price);
+          const btn = b.querySelector('.mbadge-buy-btn');
+          if (btn) btn.textContent = owned ? '✔ TUYA' : `🪙 ${price}`;
+        } else {
+          b.classList.toggle('m-locked', !unlocked);
+        }
+
+        if (unlocked) earned++;
+      });
+
+      const counter = document.getElementById('medalsCount');
+      if (counter) counter.textContent = `${earned} / ${total}`;
+    }
+
+    /* ── Compra de medallas shop ─────────────────────────────── */
+    function buyMedal(e, btn) {
+      e.stopPropagation(); // no abrir modal al clickear el botón
+      const badge = btn.closest('.mbadge.m-coins[data-medal-id]');
+      if (!badge) return;
+      const id    = badge.dataset.medalId;
+      const price = Number(badge.dataset.price || 0);
+      if (_ownedMedals[id]) { return; }
+      const coins = _getCoins();
+      if (coins < price) { alert(`❌ Coins insuficientes. Te faltan ${price - coins}.`); return; }
+      if (!confirm(`¿Comprar esta medalla por ${price} coins?`)) return;
+      _ownedMedals[id] = true;
+      updateMedals();
+    }
+
+    document.addEventListener('click', (e) => {
+      const badge = e.target.closest('.mbadge.m-coins[data-medal-id]');
+      if (!badge) return;
+      const id    = badge.dataset.medalId;
+      const price = Number(badge.dataset.price || 0);
+      if (_ownedMedals[id]) return;
+      const coins = _getCoins();
+      if (coins < price) return;
+      if (!confirm(`¿Comprar esta medalla por ${price} coins?`)) return;
+      _ownedMedals[id] = true;
+      updateMedals();
+    });
+
+    /* ── Observar cambios en coins, location, parcelas ──────── */
+    const _coinsEl = document.getElementById('coins-display');
+    if (_coinsEl) new MutationObserver(updateMedals).observe(_coinsEl, { childList: true, subtree: true, characterData: true });
+
+    const _locEl = document.getElementById('user-location');
+    if (_locEl) new MutationObserver(updateMedals).observe(_locEl, { childList: true, subtree: true, characterData: true });
+
+    // Hook a los inputs de parcelas (se llama desde calc() que ya existe)
+    ['common','rare','epic','legendary'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('input', updateMedals);
+    });
+
+    // Hook al input de fecha
+    const _sdEl = document.getElementById('start-date');
+    if (_sdEl) _sdEl.addEventListener('change', updateMedals);
+
+    window.addEventListener('DOMContentLoaded', updateMedals);
+    // También actualizar tras carga completa por si Firebase ya llenó datos
+    setTimeout(updateMedals, 1200);
+
+    /* ── Modal de detalle de medalla ─────────────────────────── */
+    const RARITY_CONFIG = {
+      'common':    { label: 'COMÚN',      color: '#4ade80',  bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.45)'  },
+      'rare':      { label: 'RARA',       color: '#60a5fa',  bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.45)'  },
+      'epic':      { label: 'ÉPICA',      color: '#c084fc',  bg: 'rgba(192,132,252,0.12)', border: 'rgba(192,132,252,0.45)' },
+      'legendary': { label: 'LEGENDARIA', color: '#ffd700',  bg: 'rgba(255,215,0,0.12)',   border: 'rgba(255,215,0,0.45)'   },
+      'coins':     { label: 'SHOP',       color: '#ffaa00',  bg: 'rgba(255,170,0,0.12)',   border: 'rgba(255,170,0,0.45)'   },
+    };
+
+    function getRarity(badge) {
+      if (badge.classList.contains('m-common'))   return 'common';
+      if (badge.classList.contains('m-rare'))     return 'rare';
+      if (badge.classList.contains('m-epic'))     return 'epic';
+      if (badge.classList.contains('m-legendary'))return 'legendary';
+      if (badge.classList.contains('m-coins'))    return 'coins';
+      return 'common';
+    }
+
+    function openMedalModal(badge) {
+      const name  = badge.querySelector('.mbadge-tooltip-name')?.textContent || '';
+      const desc  = badge.querySelector('.mbadge-tooltip-desc')?.textContent || '';
+      const cost  = badge.querySelector('.mbadge-tooltip-cost')?.textContent || '';
+      const icon  = badge.querySelector('.mbadge-icon')?.childNodes[0]?.textContent?.trim() || '🏅';
+      const rarity = getRarity(badge);
+      const cfg   = RARITY_CONFIG[rarity];
+      const mid   = badge.dataset.medalId;
+      const isShop = rarity === 'coins';
+      const earned = isShop ? !!_ownedMedals[mid] : (mid ? isMedalEarned(mid) : false);
+
+      // Ícono
+      const mmIcon = document.getElementById('mmIcon');
+      mmIcon.textContent = icon;
+      mmIcon.style.background = cfg.bg;
+      mmIcon.style.borderColor = cfg.border;
+      mmIcon.style.boxShadow   = `0 0 20px ${cfg.bg}`;
+
+      // Nombre y rareza
+      document.getElementById('mmName').textContent = name;
+      const mmRarity = document.getElementById('mmRarity');
+      mmRarity.textContent = cfg.label;
+      mmRarity.style.color       = cfg.color;
+      mmRarity.style.borderColor = cfg.border;
+      mmRarity.style.background  = cfg.bg;
+
+      // Descripción
+      document.getElementById('mmDesc').textContent = desc;
+
+      // Costo (solo shop)
+      const mmCost = document.getElementById('mmCost');
+      if (cost) { mmCost.textContent = cost; mmCost.style.display = 'block'; }
+      else       { mmCost.style.display = 'none'; }
+
+      // Estado
+      const mmStatus = document.getElementById('mmStatus');
+      if (earned) {
+        mmStatus.textContent  = '✔ MEDALLA OBTENIDA';
+        mmStatus.className    = 'medal-modal-status earned';
+      } else {
+        mmStatus.textContent  = '🔒 AÚN NO DESBLOQUEADA';
+        mmStatus.className    = 'medal-modal-status locked';
+      }
+
+      // Aplicar color del borde del modal al accent actual
+      const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--glow').trim() || '#00c8ff';
+      document.getElementById('medalModal').style.borderColor = `rgba(${hexToRgb(accentColor)},0.4)`;
+
+      document.getElementById('medalModalOverlay').classList.add('open');
+      document.getElementById('medalModal').classList.add('open');
+    }
+
+    function closeMedalModal() {
+      document.getElementById('medalModalOverlay').classList.remove('open');
+      document.getElementById('medalModal').classList.remove('open');
+    }
+
+    function hexToRgb(hex) {
+      hex = hex.replace('#','');
+      if (hex.length === 3) hex = hex.split('').map(c=>c+c).join('');
+      const n = parseInt(hex,16);
+      return `${(n>>16)&255},${(n>>8)&255},${n&255}`;
+    }
+
+    // Tap/click en cualquier badge abre el modal
+    document.addEventListener('click', (e) => {
+      // Si es shop, no interceptar — ya está manejado arriba para la compra
+      const badge = e.target.closest('.mbadge[data-medal-id]');
+      if (!badge) return;
+      // Evitar abrir modal si es shop y se va a comprar
+      if (badge.classList.contains('m-coins')) {
+        // Si no es owned ni locked, dejamos que siga la compra — pero igual mostramos el modal
+        // Solo bloqueamos si ya la tiene (para que no duplique la alerta)
+      }
+      openMedalModal(badge);
+    });
+
+    // Cerrar con Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMedalModal();
+    });
+
+    // Swipe down para cerrar en móvil
+    (function() {
+      let startY = 0;
+      const modal = document.getElementById('medalModal');
+      modal.addEventListener('touchstart', (e) => { startY = e.touches[0].clientY; }, { passive: true });
+      modal.addEventListener('touchend', (e) => {
+        const dy = e.changedTouches[0].clientY - startY;
+        if (dy > 60) closeMedalModal(); // swipe abajo > 60px cierra
+      }, { passive: true });
+    })();
+  </script>
+  <!-- ════════ FIN JS MEDALLAS ════════ -->
 
   <!-- CHAT WIDGET -->
   <button id="chat-fab" onclick="toggleChat()" aria-label="Abrir chat">
