@@ -1653,11 +1653,8 @@
   .mbadge-tooltip-cost { margin-top: 6px; font-family: 'Orbitron', monospace; font-size: 9px; color: #ffaa00; }
 
   /* Medallas regulares bloqueadas */
-  .mbadge.m-locked .mbadge-icon { filter: grayscale(1); opacity: 0.35; }
-  .mbadge.m-locked .mbadge-name { opacity: 0.4; }
-  .mbadge.m-locked:hover .mbadge-icon { transform: none; filter: grayscale(1); }
-
-  .mbadge.m-coins.m-locked .mbadge-icon { filter: grayscale(1); opacity: 0.45; }
+  .mbadge.m-locked { display: none !important; }
+  .mbadge.m-coins.m-locked { display: none !important; }
 
   /* ── Modal de medalla ── */
   .medal-modal-overlay {
@@ -1848,16 +1845,10 @@
     cursor: default;
     pointer-events: none;
   }
-  .mbadge.m-coins.m-locked .mbadge-buy-btn {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
   /* Suprimir tooltips en móvil (hover no funciona en touch) */
   @media (hover: none) {
     .mbadge-tooltip { display: none !important; }
     .mbadge:hover .mbadge-icon { transform: none; filter: none; }
-    .mbadge.m-locked:hover .mbadge-icon { transform: none; }
     .medals-card:hover { border-color: var(--border); transform: none; }
     .medals-card:hover::before { opacity: 0; }
   }
