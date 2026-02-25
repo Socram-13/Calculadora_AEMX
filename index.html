@@ -37,7 +37,6 @@
     overflow-x: hidden;
   }
 
-  /* Animated grid background */
   body::before {
     content: '';
     position: fixed;
@@ -108,7 +107,6 @@
     100% { background-position: 200% 0; }
   }
 
-  /* Left: AEMX logo placeholder */
   .header-left {
     display: flex;
     flex-direction: column;
@@ -133,7 +131,6 @@
     text-transform: uppercase;
   }
 
-  /* Center: Title block */
   .header-center {
     flex: 1;
     text-align: center;
@@ -169,7 +166,6 @@
     margin-top: 6px;
   }
 
-  /* Right: Atlas Earth logo */
   .header-right {
     display: flex;
     flex-direction: column;
@@ -216,20 +212,11 @@
     .counter-btn { width: 28px; height: 28px; font-size: 16px; }
     .counter-val { font-size: 18px; min-width: 36px; }
     .breakdown-label, .breakdown-value { font-size: 11px; }
-
-    /* Results card móvil */
     .results-card { padding: 12px 8px; }
     .results-title { font-size: 11px; letter-spacing: 2px; margin-bottom: 10px; }
     .results-table { font-size: 12px; }
-    .results-table th {
-      font-size: 8px;
-      letter-spacing: 1px;
-      padding: 6px 6px;
-    }
-    .results-table td {
-      font-size: 12px;
-      padding: 8px 6px;
-    }
+    .results-table th { font-size: 8px; letter-spacing: 1px; padding: 6px 6px; }
+    .results-table td { font-size: 12px; padding: 8px 6px; }
     .rt-period { font-size: 9px; letter-spacing: 1px; gap: 5px; }
     .rt-period .dot { width: 5px; height: 5px; }
     .rt-base { font-size: 11px; }
@@ -240,11 +227,8 @@
     .tier-info { flex-wrap: wrap; gap: 6px; padding: 8px; }
     .tier-label { font-size: 11px; }
     .tier-value { font-size: 11px; }
-
-    /* Botones inferiores: reducir tamaño para caber en una fila */
   }
 
-  /* Main grid */
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -301,7 +285,6 @@
     flex-shrink: 0;
   }
 
-  /* Parcel inputs */
   .parcel-row {
     display: flex;
     align-items: center;
@@ -358,7 +341,6 @@
     box-shadow: 0 0 0 2px rgba(0,200,255,0.15);
   }
 
-  /* Colors per rarity */
   .common .parcel-icon { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.3); color: var(--common); }
   .common .parcel-label { color: var(--common); }
   .rare .parcel-icon { background: rgba(96,165,250,0.1); border: 1px solid rgba(96,165,250,0.3); color: var(--rare); }
@@ -368,7 +350,6 @@
   .legendary .parcel-icon { background: rgba(255,140,66,0.1); border: 1px solid rgba(255,140,66,0.3); color: var(--legendary); }
   .legendary .parcel-label { color: var(--legendary); }
 
-  /* Boosters card */
   .booster-row {
     display: flex;
     align-items: center;
@@ -387,7 +368,6 @@
   .booster-name { font-size: 14px; font-weight: 600; }
   .booster-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
 
-  /* Results */
   .results-card {
     background: linear-gradient(135deg, #0a1f38 0%, #060f1e 100%);
     border: 3px solid var(--glow);
@@ -411,7 +391,6 @@
     margin-bottom: 14px;
   }
 
-  /* Results table */
   .results-table {
     width: 100%;
     border-collapse: collapse;
@@ -493,7 +472,6 @@
     text-shadow: 0 0 20px rgba(0,255,157,0.5);
   }
 
-  /* Breakdown */
   .breakdown {
     border-top: 1px solid var(--border);
     padding-top: 12px;
@@ -543,7 +521,6 @@
 
   .breakdown-value.highlight { color: var(--glow); font-weight: 700; }
 
-  /* Badge boost display */
   .boost-badge {
     display: inline-flex;
     align-items: center;
@@ -558,7 +535,6 @@
     margin-left: 8px;
   }
 
-  /* Parcel tier display */
   .tier-info {
     display: flex;
     align-items: center;
@@ -579,17 +555,14 @@
     color: var(--glow);
   }
 
-  /* Divider line */
   .divider {
     height: 1px;
     background: linear-gradient(90deg, transparent, var(--border), transparent);
     margin: 4px 0 8px;
   }
 
-  /* Full-width card */
   .full-card { grid-column: 1 / -1; }
 
-  /* Total parcels display */
   .total-parcels {
     text-align: center;
     margin-bottom: 8px;
@@ -612,7 +585,6 @@
     text-transform: uppercase;
   }
 
-  /* Slider-like counter buttons */
   .counter {
     display: flex;
     align-items: center;
@@ -640,7 +612,6 @@
     border-color: var(--glow);
   }
 
-  /* Animate on change */
   @keyframes pop {
     0% { transform: scale(1); }
     50% { transform: scale(1.05); }
@@ -649,7 +620,6 @@
 
   .pop { animation: pop 0.2s ease; }
 
-  /* Glow pulse on result */
   @keyframes glowPulse {
     0%, 100% { box-shadow: 0 0 40px rgba(0,200,255,0.08); }
     50% { box-shadow: 0 0 60px rgba(0,200,255,0.16); }
@@ -657,10 +627,8 @@
 
   .results-card { animation: glowPulse 4s ease-in-out infinite; }
 
-  /* Diamond value */
   .diamond-row .booster-name { color: #a5f3fc; }
 
-  /* Info tooltip */
   .info {
     font-size: 10px;
     color: var(--text2);
@@ -671,7 +639,6 @@
     margin-left: 4px;
   }
 
-  /* ── Coins counter ─────────────────────────────────────────────── */
   .coins-bar {
     display: flex;
     align-items: center;
@@ -766,7 +733,6 @@
     letter-spacing: 1px;
   }
 
-  /* Botón Check In */
   .btn-checkin {
     font-family: 'Orbitron', monospace;
     font-size: 11px;
@@ -811,7 +777,6 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Toast de coin ganado */
   .coin-toast {
     position: fixed;
     top: 24px;
@@ -836,9 +801,7 @@
   .coin-toast.show {
     transform: translateX(-50%) translateY(0);
   }
-  /* ─────────────────────────────────────────────────────────────────── */
 
-  /* Save button */
   .save-bar {
     display: flex;
     align-items: center;
@@ -890,29 +853,6 @@
 
   .save-status.visible { opacity: 1; }
 
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
   .btn-copy-link {
     font-family: 'Orbitron', monospace;
     font-size: 10px;
@@ -930,7 +870,6 @@
 
   .btn-copy-link:hover { opacity: 0.85; }
 
-  /* Profile section */
   .profile-section {
     display: flex;
     align-items: center;
@@ -1140,16 +1079,8 @@
     letter-spacing: 1px;
   }
 
-  .profile-hint {
-    font-size: 10px;
-    color: var(--text2);
-    margin-top: 6px;
-    letter-spacing: 1px;
-  }
-
   #avatar-input { display: none; }
 
-  /* Explorer compass badge inline next to name */
   .explorer-badge-inline {
     font-size: 22px;
     flex-shrink: 0;
@@ -1162,8 +1093,6 @@
     50%       { filter: drop-shadow(0 0 12px rgba(250,204,21,1)); }
   }
 
-
-  /* Explorer club */
   .explorer-row {
     display: flex;
     align-items: center;
@@ -1235,7 +1164,6 @@
     margin-top: 2px;
   }
 
-  /* Time to $1 section */
   .dollar-box {
     margin-top: 8px;
     background: linear-gradient(135deg, rgba(250,204,21,0.06) 0%, rgba(250,204,21,0.02) 100%);
@@ -1324,7 +1252,6 @@
   .epic .parcel-pct.active    { color: #c084fc; opacity: 1; font-weight: 700; }
   .legendary .parcel-pct.active { color: #facc15; opacity: 1; font-weight: 700; }
 
-  /* Donut chart */
   .profile-chart {
     flex-shrink: 0;
     display: flex;
@@ -1413,8 +1340,6 @@
     padding: 2px 8px;
   }
 
-
-
   .donut-crel {
     display: flex;
     gap: 6px;
@@ -1424,17 +1349,14 @@
     letter-spacing: 3px;
   }
 
-  /* ── Estilos de impresión ─────────────────────────────────────── */
   @media print {
     @page { margin: 0; size: auto; }
     body { background: #060b14 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    
     #visit-wrapper { display: none !important; }
     .container > p { display: none !important; }
     * { animation: none !important; transition: none !important; }
   }
 
-  /* ===== CHAT WIDGET ===== */
   #chat-fab {
     position: fixed;
     bottom: 28px;
@@ -1550,7 +1472,6 @@
     }
     #chat-fab { bottom: 20px; right: 20px; }
   }
-  /* ===== FIN CHAT WIDGET ===== */
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -1575,10 +1496,8 @@
     const db   = getDatabase(app);
     const provider = new GoogleAuthProvider();
 
-    // Forzar persistencia LOCAL para que Safari no cierre sesión al cambiar de pestaña
     setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
-    // ── Exponer al scope global para que el resto del código los use ──
     window._fbAuth     = auth;
     window._fbDb       = db;
     window._fbRef      = ref;
@@ -1589,23 +1508,19 @@
     window._fbSignIn   = () => signInWithPopup(auth, provider);
     window._fbSignOut  = () => signOut(auth);
 
-    // ── Escuchar cambios de sesión ──
     onAuthStateChanged(auth, (user) => {
       if (user) {
         window._fbUser = user;
         renderAuthUI(user);
-        // Esperar a que todos los scripts estén listos antes de sincronizar
         setTimeout(() => syncFromFirebase(user.uid), 300);
       } else {
         window._fbUser = null;
         renderAuthUI(null);
-        // Ocultar coins si no hay sesión
         const coinsBar = document.getElementById('coins-bar');
         if (coinsBar) coinsBar.style.display = 'none';
       }
     });
 
-    // ── Renderizar botón según estado ──
     function renderAuthUI(user) {
       const btn = document.getElementById('google-auth-btn');
       const info = document.getElementById('google-user-info');
@@ -1624,20 +1539,18 @@
       }
     }
 
-    // ── Cargar datos desde Firebase ──
     async function syncFromFirebase(uid) {
       try {
         const snap = await get(ref(db, `users/${uid}`));
         if (!snap.exists()) {
-          // No hay datos en Firebase — guardar lo que haya en local
           if (window._fbSaveAll) setTimeout(window._fbSaveAll, 500);
           return;
         }
         const d = snap.val();
 
-        // Perfil
         if (d.username) { document.getElementById('username').value = d.username; if(window.adjustBadge) window.adjustBadge(); }
-        if (d.avatar) {
+        // ✅ FIX: solo cargar avatar si existe y no está vacío
+        if (d.avatar && d.avatar.length > 0) {
           const img = document.getElementById('avatar-img');
           const ph  = document.getElementById('avatar-placeholder');
           const eb  = document.getElementById('avatar-edit');
@@ -1651,7 +1564,6 @@
           document.getElementById('avatar-border-color').value = d.borderColor;
           const prev = document.getElementById('color-preview');
           if(prev) prev.style.background = d.borderColor;
-          // applyThemeColor puede no estar lista aún (módulo corre antes que los scripts del body)
           const applyBorder = (color) => {
             if (window.applyThemeColor) {
               window.applyThemeColor(color);
@@ -1679,33 +1591,33 @@
           if (elLoc) elLoc.textContent = (d.city || d.country).toUpperCase();
         }
 
-        // Calculadora
         ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
           if (d[k] !== undefined) { document.getElementById(k).value = d[k]; }
         });
 
         if(window.calc) window.calc();
 
-        // Pasar los datos del servidor directamente a _coinsLoad para evitar doble lectura
-        // y garantizar que el estado del Check In siempre venga del servidor
         const waitCoins = setInterval(() => {
           if (window._coinsLoad) {
             clearInterval(waitCoins);
-            window._coinsLoad(uid, d); // pasamos los datos ya leídos del servidor
+            window._coinsLoad(uid, d);
           }
         }, 100);
         setTimeout(() => clearInterval(waitCoins), 5000);
       } catch(e) { console.warn('Firebase sync error:', e); }
     }
 
-    // ── Guardar todos los datos en Firebase ──
-    // IMPORTANTE: coins y lastCoinDate NUNCA se incluyen aquí — solo los maneja _awardDailyCoin
+    // ✅ FIX PRINCIPAL: _fbSaveAll ahora siempre incluye el avatar desde localStorage
     window._fbSaveAll = async function() {
       const user = window._fbUser;
       if (!user) return;
+
+      // Leer el avatar directamente de localStorage en el momento de guardar
+      const avatarData = localStorage.getItem('atlas-avatar') || '';
+
       const data = {
         username:    document.getElementById('username')?.value    || '',
-        avatar:      localStorage.getItem('atlas-avatar')          || '',
+        avatar:      avatarData,
         borderColor: localStorage.getItem('atlas-avatar-border')   || '',
         startDate:   document.getElementById('start-date')?.value  || '',
         common:      document.getElementById('common')?.value      || 0,
@@ -1724,12 +1636,10 @@
           else if (window.userCountry) data.country    = window.userCountry;
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
-          // Preservar campos del admin
           data.clanMember        = prev.clanMember        === true;
           data.bannedChat        = prev.bannedChat        === true;
           data.bannedLeaderboard = prev.bannedLeaderboard === true;
           data.role              = prev.role              || '';
-          // Solo actualizar updatedAt si cambiaron las parcelas
           const parcelasChanged =
             String(data.common)    !== String(prev.common    || 0) ||
             String(data.rare)      !== String(prev.rare      || 0) ||
@@ -1774,7 +1684,6 @@
       } catch(e) { console.warn('Firebase country error:', e); }
     };
 
-    // ── Autoguardar cada vez que el usuario cambia un input ──
     document.addEventListener('DOMContentLoaded', () => {
       ['common','rare','epic','legendary','badges','diamonds','atlasbucks','start-date','username'].forEach(id => {
         const el = document.getElementById(id);
@@ -1788,13 +1697,11 @@
 <div class="container">
   <header>
     <div class="header-bar">
-      <!-- Left: AEMX logo -->
       <div class="header-left">
         <img src="imagen_2.png" alt="AEMX" class="aemx-logo-img">
         <div class="header-left-label">Comunidad</div>
       </div>
 
-      <!-- Center: Title -->
       <div class="header-center">
         <div class="header-title">
           <span class="atlas">ATLAS </span><span class="earth">EARTH </span><span class="mexico">MÉXICO</span>
@@ -1803,7 +1710,6 @@
         <div class="header-tagline">Calcula tus ganancias pasivas</div>
       </div>
 
-      <!-- Right: Atlas Earth logo -->
       <div class="header-right">
         <img src="imagen_3.png" alt="Atlas Earth México" class="atlas-logo-img">
         <div class="header-right-label">Atlas Earth AEMX</div>
@@ -1811,9 +1717,7 @@
     </div>
   </header>
 
-  <!-- Profile section -->
   <div class="profile-section">
-    <!-- Input file nativo como label para máxima compatibilidad -->
     <label for="avatar-input" style="display:none;" id="avatar-label"></label>
     <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
     <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
@@ -1841,9 +1745,7 @@
         <div class="explorer-badge-inline" id="explorer-badge" style="display:none;margin-left:8px;flex-shrink:0;">🧭</div>
       </div>
       <div class="profile-hint">Toca el avatar para cambiar foto</div>
-      <!-- color-preview oculto para mantener funcionalidad -->
       <span id="color-preview" style="display:none;"></span>
-      <!-- Fecha de inicio -->
       <div style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);letter-spacing:1px;">
         <span style="opacity:0.5;">JUGANDO DESDE·</span>
         <input
@@ -1865,36 +1767,28 @@
           "
         >
       </div>
-      <!-- color picker movido arriba -->
-      <!-- Fecha y hora en tiempo real -->
       <div style="margin-top:8px;">
         <div style="display:inline-flex;justify-content:center;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);letter-spacing:1px;">
           <span id="cl-year">—</span><span>·</span><span id="cl-month">—</span><span>·</span><span id="cl-day">—</span><span style="margin:0 5px;opacity:0.4;">|</span><span id="cl-hour">—</span><span>:</span><span id="cl-min">—</span><span>:</span><span id="cl-sec" style="color:var(--glow);">—</span><span style="margin:0 5px;opacity:0.4;">·</span><span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--text2);text-shadow:none;">SOL <span id="aemx-sol">—</span> MX</span>
         </div>
       </div>
-      <!-- Ubicación por IP -->
       <div style="margin-top:6px;">
         <div style="display:inline-flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);letter-spacing:1px;">
           <span style="color:var(--glow);font-size:11px;">📍</span>
           <span id="user-location" style="color:#fff;font-weight:700;text-transform:uppercase;">—</span>
         </div>
       </div>
-
     </div>
 
-    <!-- Círculo parcelas por día -->
     <div class="ppd-circle" id="ppd-circle">—</div>
 
-    <!-- Donut chart -->
     <div class="profile-chart">
-      <!-- % leyenda izquierda -->
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#4ade80;" id="donut-pct-c"><span class="donut-arrow" id="donut-arrow-c"></span>0%</div>
         <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#60a5fa;" id="donut-pct-r"><span class="donut-arrow" id="donut-arrow-r"></span>0%</div>
         <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#c084fc;" id="donut-pct-e"><span class="donut-arrow" id="donut-arrow-e"></span>0%</div>
         <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#facc15;" id="donut-pct-l"><span class="donut-arrow" id="donut-arrow-l"></span>0%</div>
       </div>
-      <!-- Donut + CREL label -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
         <div class="donut-wrap">
           <svg width="100%" height="100%" viewBox="-10 -10 120 120" id="donut-svg">
@@ -1910,12 +1804,9 @@
         </div>
       </div>
     </div>
-
-
   </div>
 
   <div class="grid">
-    <!-- Parcelas -->
     <div class="card">
       <div class="card-title">
         <span class="dot" style="background:#94a3b8;box-shadow:0 0 6px #94a3b8"></span>
@@ -1987,7 +1878,6 @@
         <div class="lbl">Parcelas totales</div>
       </div>
 
-      <!-- Time to $1 compact -->
       <div class="dollar-box">
         <div class="dollar-box-title">Tiempo para ganar $1.00 USD</div>
         <div class="dollar-time">
@@ -2010,7 +1900,6 @@
         </div>
       </div>
 
-      <!-- Parcelas por día -->
       <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 16px;">
         <div style="font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;">Parcelas por día</div>
         <div style="display:flex;align-items:baseline;gap:5px;">
@@ -2018,10 +1907,8 @@
           <span style="font-size:10px;color:var(--text2);">parc/día</span>
         </div>
       </div>
-
     </div>
 
-    <!-- Boosters -->
     <div class="card">
       <div class="card-title">
         <span class="dot" style="background:#ffd700;box-shadow:0 0 6px #ffd700"></span>
@@ -2032,7 +1919,6 @@
         <div class="booster-icon">🏅</div>
         <div class="booster-info">
           <div class="booster-name">Insignias <span id="b-badge-pct" class="boost-badge" style="display:none;">+0%</span></div>
-
         </div>
         <div class="counter">
           <button class="counter-btn" onclick="change('badges',-1)">−</button>
@@ -2061,7 +1947,6 @@
         <div class="booster-icon">💵</div>
         <div class="booster-info">
           <div class="booster-name" style="color:#86efac">Atlas Bucks (AB)</div>
-
         </div>
         <div class="counter">
           <button class="counter-btn" onclick="change('atlasbucks',-100)">−</button>
@@ -2072,7 +1957,6 @@
 
       <div class="divider"></div>
 
-      <!-- Explorer Club -->
       <div class="explorer-row" onclick="toggleExplorer()">
         <div class="explorer-checkbox" id="explorer-check">✓</div>
         <div class="explorer-info">
@@ -2099,8 +1983,6 @@
         </div>
       </div>
 
-
-      <!-- Parcelas comprables -->
       <div class="tier-info" id="tier-info" style="flex-direction:column;gap:6px;text-align:center;">
         <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;">Parcelas que puedes comprar</div>
         <div style="display:flex;align-items:baseline;justify-content:center;gap:8px;">
@@ -2112,7 +1994,6 @@
     </div>
   </div>
 
-  <!-- Results -->
   <div class="results-card">
     <div class="results-title">◈ Resultados de Renta ◈</div>
 
@@ -2203,8 +2084,6 @@
         <span class="breakdown-value" style="color:var(--glow);font-size:15px;font-weight:700;text-shadow:0 0 12px rgba(0,200,255,0.4);" id="b-year">$0.00</span>
       </div>
 
-
-      <!-- Evento 50x -->
       <div style="margin-top:16px;padding:14px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);border-radius:10px;">
         <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:#fbbf24;text-transform:uppercase;margin-bottom:12px;">🚀 SRB 50×</div>
         <div class="breakdown-row" style="margin-bottom:6px;">
@@ -2227,15 +2106,11 @@
           <span class="breakdown-label" style="font-weight:700;color:#fef3c7;">Renta Total Mes</span>
           <span class="breakdown-value" style="color:#fbbf24;font-size:16px;font-weight:700;text-shadow:0 0 12px rgba(251,191,36,0.4);" id="b-event-total">$0.0000</span>
         </div>
-
       </div>
     </div>
-
-
   </div>
 
-
-  <!-- ===== COINS COUNTER ===== -->
+  <!-- COINS COUNTER -->
   <div class="coins-bar" id="coins-bar" style="margin-top:16px;margin-bottom:0;display:none;">
     <div class="coins-icon">🪙</div>
     <div class="coins-info">
@@ -2250,9 +2125,7 @@
       🏁 CHECK IN
     </button>
   </div>
-  <!-- ===== FIN COINS COUNTER ===== -->
 
-  <!-- Save bar + Auth bar alineados -->
   <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
     <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
     <div id="google-auth-bar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -2288,16 +2161,13 @@
         window._fbSignIn()
           .then(() => {
             if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
-            // Cargar coins al iniciar sesión
             if (window._fbUser && window._coinsLoad) window._coinsLoad(window._fbUser.uid);
           })
           .catch(err => console.warn('Sign-in error:', err));
       }
     }
 
-    // Parchamos saveData para también guardar en Firebase
     document.addEventListener('DOMContentLoaded', function() {
-      // Autoguardado en Firebase al cambiar inputs de calculadora
       ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('input', () => { if(window._fbUser && window._fbSaveAll) setTimeout(window._fbSaveAll, 800); });
@@ -2305,27 +2175,23 @@
     });
 
     // ── Sistema de Coins ─────────────────────────────────────────────
-    // Muestra los coins del usuario en el contador
     window._coinsUpdateDisplay = function(coins) {
       const el = document.getElementById('coins-display');
       if (el) {
         el.textContent = coins !== undefined && coins !== null ? coins : '0';
         el.classList.remove('pop-coin');
-        void el.offsetWidth; // reflow para reiniciar animación
+        void el.offsetWidth;
         el.classList.add('pop-coin');
         setTimeout(() => el.classList.remove('pop-coin'), 500);
       }
     };
 
-    // Obtiene la fecha actual de CDMX desde una API externa para evitar errores del navegador
     async function fechaCDMX() {
       try {
         const res  = await fetch('https://worldtimeapi.org/api/timezone/America/Mexico_City');
         const data = await res.json();
-        // data.datetime viene como "2026-02-23T20:15:00.000000-06:00"
-        return data.datetime.split('T')[0]; // "YYYY-MM-DD"
+        return data.datetime.split('T')[0];
       } catch(e) {
-        // Fallback: calcular con Intl si la API falla
         return new Intl.DateTimeFormat('en-CA', {
           timeZone: 'America/Mexico_City',
           year: 'numeric', month: '2-digit', day: '2-digit'
@@ -2333,7 +2199,6 @@
       }
     }
 
-    // Maneja el estado del botón check in
     function updateCheckInBtn(yaHizo) {
       const btn = document.getElementById('btn-checkin');
       if (!btn) return;
@@ -2348,7 +2213,6 @@
       }
     }
 
-    // Check In manual del usuario
     window.doCheckIn = async function() {
       const btn = document.getElementById('btn-checkin');
       if (!btn || btn.disabled) return;
@@ -2356,10 +2220,11 @@
       btn.textContent = '⏳ ...';
       await window._awardDailyCoin();
     };
+
     function playCoinSound() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do (octava alta)
+        const notes = [523.25, 659.25, 783.99, 1046.50];
         notes.forEach((freq, i) => {
           const osc  = ctx.createOscillator();
           const gain = ctx.createGain();
@@ -2375,7 +2240,6 @@
       } catch(e) {}
     }
 
-    // Muestra el toast de "+1 coin"
     function showCoinToast(total) {
       const toast = document.getElementById('coin-toast');
       if (!toast) return;
@@ -2384,13 +2248,11 @@
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Actualiza el texto de estado debajo del contador
     function setCoinStatus(html) {
       const el = document.getElementById('coins-status-text');
       if (el) el.outerHTML = `<span id="coins-status-text">${html}</span>`;
     }
 
-    // Otorga 1 coin al día usando Realtime Database
     window._awardDailyCoin = async function() {
       if (!window._fbUser) return;
       const uid = window._fbUser.uid;
@@ -2402,11 +2264,8 @@
       if (!_db || !_ref || !_get || !_upd) return;
 
       try {
-        // Verificar si el sistema está activo
         const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
         const coinsActivo = configSnap.exists() ? configSnap.val() : true;
-
-        // Solo disponible para México
         const pais = (window.userCountry || '').toLowerCase();
         const esMexico = pais === 'mexico' || pais === 'méxico';
 
@@ -2440,8 +2299,6 @@
       }
     };
 
-    // Carga los coins actuales del usuario — solo lee del servidor, nunca de localStorage
-    // serverDataPrefetch: datos ya leídos del servidor (para evitar doble lectura)
     window._coinsLoad = async function(uid, serverDataPrefetch) {
       if (!uid) return;
       const _db  = window._fbDb;
@@ -2450,7 +2307,6 @@
       if (!_db || !_ref || !_get) return;
 
       try {
-        // Verificar si el sistema de coins está activo
         const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
         const coinsActivo = configSnap.exists() ? configSnap.val() : true;
         const coinsBar = document.getElementById('coins-bar');
@@ -2460,7 +2316,6 @@
           return;
         }
 
-        // Usar datos prefetched si están disponibles, si no leer del servidor
         let serverData;
         if (serverDataPrefetch) {
           serverData = serverDataPrefetch;
@@ -2469,7 +2324,6 @@
           serverData = snap.exists() ? snap.val() : {};
         }
 
-        // Verificar país desde el servidor (no localStorage)
         const pais = (serverData.country || window.userCountry || '').toLowerCase();
         const esMexico = pais.includes('mexico') || pais.includes('méxico');
 
@@ -2497,15 +2351,12 @@
         console.warn('Coins load error:', e);
       }
     };
-    // ─────────────────────────────────────────────────────────────────
 
-    // Hook en el botón 💾 Guardar para que también suba a Firebase
     const _origShareData = typeof shareData === 'function' ? shareData : null;
     window.shareData = async function() {
       if (_origShareData) _origShareData();
       if (!window._fbUser || !window._fbSaveAll) return;
 
-      // Si no hay país detectado, intentar obtenerlo ahora
       if (!window.userCountry) {
         try {
           const res  = await fetch('https://freeipapi.com/api/json');
@@ -2546,7 +2397,6 @@
     legendary: 0.0000000044,
   };
 
-
   function getVal(id) {
     return Math.max(0, parseInt(document.getElementById(id).value) || 0);
   }
@@ -2580,7 +2430,6 @@
       desc.textContent = 'Inactivo: diamantes ÷ 5 giros de ruleta';
       badge.style.display = 'none';
     }
-    // Guardar estado automáticamente
     try {
       const saved = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
       saved.explorer = explorerActive;
@@ -2596,14 +2445,12 @@
     const l = getVal('legendary');
     const badges = getVal('badges');
     const diamonds = getVal('diamonds');
-    // Días de ruleta según Club de Explorador
     const ruletaDays = Math.floor(diamonds / (explorerActive ? 7 : 5));
     document.getElementById('explorer-days').textContent = ruletaDays;
     const ab = getVal('atlasbucks');
     const total = c + r + e + l;
     document.getElementById('total-parcels').textContent = total;
 
-    // Velocidad del donut segun total de parcelas (0 = 30s, 10000+ = 0.2s)
     let _segSpeed;
     if      (total === 0)    _segSpeed = 60;
     else if (total <= 25)    _segSpeed = 55;
@@ -2622,7 +2469,6 @@
     else                     _segSpeed = 0.8;
     window._donutSegSpeed = _segSpeed;
 
-    // % per rarity
     const types = { common: c, rare: r, epic: e, legendary: l };
     for (const [key, val] of Object.entries(types)) {
       const el = document.getElementById('pct-' + key);
@@ -2636,7 +2482,6 @@
       }
     }
 
-    // Ad Boost automático por parcelas según país
     let adBoost, adRange;
     const EUROPA_COUNTRIES = new Set(["Spain", "France", "Germany", "Italy", "Russia"]);
     if (EUROPA_COUNTRIES.has(userCountry)) {
@@ -2664,7 +2509,6 @@
       else if (total <= 1500) { adBoost = 3;  adRange = "1101–1500 parcelas"; }
       else                    { adBoost = 2;  adRange = "1501–3000 parcelas"; }
     } else {
-      // México y cualquier otro país no identificado
       if      (total <= 50)  { adBoost = 20; adRange = "1–50 parcelas"; }
       else if (total <= 85)  { adBoost = 15; adRange = "51–85 parcelas"; }
       else if (total <= 100) { adBoost = 12; adRange = "86–100 parcelas"; }
@@ -2678,10 +2522,8 @@
     document.getElementById('adboost-display').textContent = adBoost + '×';
     document.getElementById('adboost-range').textContent = adRange;
 
-    // Base rent per second
     const basePerSec = (c * RATES.common) + (r * RATES.rare) + (e * RATES.epic) + (l * RATES.legendary);
 
-    // Badge boost: tiered percentage
     let badgePct = 0;
     if (badges >= 1 && badges <= 10)        badgePct = 0.05;
     else if (badges >= 11 && badges <= 30)  badgePct = 0.10;
@@ -2690,12 +2532,10 @@
     else if (badges > 100)                  badgePct = 0.25;
     const badgeBoost = 1 + badgePct;
 
-    // Parcelas comprables con Atlas Bucks (100 AB cada una)
     const parcelsBuyable = Math.floor(ab / 100);
     document.getElementById('parcels-buyable').textContent = parcelsBuyable;
     document.getElementById('ab-total-display').textContent = ab.toLocaleString() + ' AB';
 
-    // Boosted per second
     const boostedPerSec = basePerSec * badgeBoost * adBoost;
 
     const perMin   = boostedPerSec * 60;
@@ -2703,15 +2543,11 @@
     const perDay   = boostedPerSec * 86400;
     const perWeek  = perDay * 7;
     const perMonth = perDay * 30;
-    // perYear se calcula más abajo incluyendo eventos SRB
 
-    // Base per month
     const basePerMonth = basePerSec * 86400 * 30;
     const badgeExtra = basePerMonth * (badgeBoost - 1);
     const adExtra = basePerMonth * badgeBoost * (adBoost - 1);
 
-    // Update display - table format
-    // Base values (no boost)
     const basePerMin  = basePerSec * 60;
     const basePerHour = basePerSec * 3600;
     const basePerDay  = basePerSec * 86400;
@@ -2727,13 +2563,12 @@
     document.getElementById('r-year-base').textContent  = fmt(basePerYear);
     document.getElementById('r-month-base').textContent = fmt(basePerMo);
 
-    // Boosted values
     document.getElementById('r-sec').textContent   = '$' + boostedPerSec.toFixed(12);
     document.getElementById('r-min').textContent   = '$' + (boostedPerSec * 60).toFixed(10);
     document.getElementById('r-hour').textContent  = '$' + (boostedPerSec * 3600).toFixed(8);
     document.getElementById('r-day').textContent   = fmt(perDay);
     document.getElementById('r-week').textContent  = fmt(perWeek);
-    document.getElementById('r-year').textContent   = fmt(perDay * 365); // se actualiza abajo con SRB
+    document.getElementById('r-year').textContent   = fmt(perDay * 365);
     document.getElementById('r-month').textContent = fmt(perMonth);
 
     document.getElementById('b-base').textContent      = '$' + basePerMonth.toFixed(4) + '/mes';
@@ -2748,15 +2583,12 @@
     document.getElementById('b-ad-x').textContent      = adBoost + '×';
     document.getElementById('b-ad').textContent        = '+$' + adExtra.toFixed(4) + '/mes';
     document.getElementById('b-total').textContent     = '$' + perMonth.toFixed(4);
-    // b-year se actualiza después del bloque SRB
 
-
-    // ── Evento quincenal: 2 × 32h con Ad Boost 50× ───────────────────────────
     const EVENT_BOOST  = 50;
     const EVENT_HOURS  = 32;
     const EVENTS_MONTH = 2;
     const MONTH_HOURS  = 30 * 24;
-    const TOTAL_EVT_H  = EVENT_HOURS * EVENTS_MONTH;       // 64 h
+    const TOTAL_EVT_H  = EVENT_HOURS * EVENTS_MONTH;
     const NORMAL_HOURS = MONTH_HOURS - TOTAL_EVT_H;
 
     const boostedPerHour   = boostedPerSec * 3600;
@@ -2778,20 +2610,14 @@
     document.getElementById('b-event-income').textContent      = fmt(incomeAllEvts);
     document.getElementById('b-event-total').textContent       = fmt(totalWithEvents);
 
-    // Renta anual: 12 meses, cada mes = horas normales + horas de evento
-    // Total horas año: 365 × 24 = 8,760h
-    // Horas de evento al año: 2 eventos × 32h × 12 meses = 768h
-    // Horas normales al año: 8,760 - 768 = 7,992h
-    const YEAR_HOURS    = 365 * 24;                             // 8,760h
-    const YEAR_EVT_H    = EVENT_HOURS * EVENTS_MONTH * 12;      // 768h
-    const YEAR_NORMAL_H = YEAR_HOURS - YEAR_EVT_H;              // 7,992h
+    const YEAR_HOURS    = 365 * 24;
+    const YEAR_EVT_H    = EVENT_HOURS * EVENTS_MONTH * 12;
+    const YEAR_NORMAL_H = YEAR_HOURS - YEAR_EVT_H;
     const perYear = (boostedPerHour * YEAR_NORMAL_H) + (eventPerHour * YEAR_EVT_H);
     document.getElementById('r-year').textContent = fmt(perYear);
     document.getElementById('r-year-base').textContent = fmt(basePerYear);
     document.getElementById('b-year').textContent = '$' + perYear.toFixed(4);
 
-
-    // Time to earn $1 with boost
     if (boostedPerSec > 0) {
       const secsFor1 = 1 / boostedPerSec;
       const d = Math.floor(secsFor1 / 86400);
@@ -2802,12 +2628,6 @@
       document.getElementById('t1-hours').textContent = String(h).padStart(2,'0');
       document.getElementById('t1-mins').textContent  = String(m).padStart(2,'0');
       document.getElementById('t1-secs').textContent  = String(s).padStart(2,'0');
-      // Human readable note
-      let note = 'Con boost activo · ';
-      if (d > 0) note += d + 'd ' + h + 'h ' + m + 'm ' + s + 's';
-      else if (h > 0) note += h + 'h ' + m + 'm ' + s + 's';
-      else if (m > 0) note += m + 'm ' + s + 's';
-      else note += s + ' segundos';
     } else {
       ['t1-days','t1-hours','t1-mins','t1-secs'].forEach(id => {
         document.getElementById(id).textContent = '—';
@@ -2816,7 +2636,6 @@
     autoSave();
     drawDonut(c, r, e, l, total);
 
-    // Parcelas por día
     const startDateVal = document.getElementById('start-date').value;
     const ppdCircle = document.getElementById('ppd-circle');
     if (ppdCircle) {
@@ -2848,9 +2667,6 @@
     const center = document.getElementById('donut-center');
     const cx = 50, cy = 50, strokeW = 5;
     const GAP_DEG = 6;
-    // Radios independientes por rareza: common, rare, epic, legendary
-    // rare y legendary sobresalen más
-    const BASE_DONUT_R = [50, 30, 15, 5]; // para calcular radio dinámico
 
     svg.querySelectorAll('.seg').forEach(el => el.remove());
 
@@ -2860,8 +2676,6 @@
 
     if (total === 0) {
       center.textContent = '—';
-      // Reset flechas a 0% con flecha abajo cuando no hay parcelas
-      const donutArrowIds0 = ["donut-arrow-c","donut-arrow-r","donut-arrow-e","donut-arrow-l"];
       pctIds.forEach((id, i) => {
         const div = document.getElementById(id);
         const arrow = div.querySelector('.donut-arrow');
@@ -2873,20 +2687,16 @@
     }
     center.textContent = total;
 
-    // Aplicar color del usuario al círculo de fondo
     const _donutBg = document.getElementById('donut-bg-circle');
     if (_donutBg && window._userThemeRgb) {
       _donutBg.setAttribute('stroke', `rgba(${window._userThemeRgb},0.15)`);
     }
 
     const activeCount = vals.filter(v => v > 0).length;
-
-    // Calcular ángulos usando radio base común para distribuir 360°
     const GAP_RAD = (GAP_DEG * Math.PI) / 180;
     const totalGap = activeCount > 1 ? GAP_RAD * activeCount : 0;
     const available = 2 * Math.PI - totalGap;
 
-    // Helper: genera path de arco dentado (efecto engrane)
     function arcPath(cx, cy, r, startAngle, endAngle) {
       const toothHeight = 5.5;
       const toothWidth  = 0.08;
@@ -2911,20 +2721,17 @@
         else         d += ` L ${p(a0, r)}`;
 
         d += ` A ${r} ${r} 0 0 1 ${p(a1, r)}`;
-        d += ` L ${p(a1, rOuter)}`;              // subir vertical
-        d += ` L ${p(a2, rOuter)}`;              // tope plano
-        d += ` L ${p(a3, r)}`;                   // bajar vertical
+        d += ` L ${p(a1, rOuter)}`;
+        d += ` L ${p(a2, rOuter)}`;
+        d += ` L ${p(a3, r)}`;
       }
       return d;
     }
 
-    // 4 radios fijos por rareza: common=más exterior, legendary=más interior
-    // Se solapan intencionalmente para que se crucen al girar
-    const RADIOS = [38, 30, 22, 14]; // common, rare, epic, legendary
-    // Sentido de giro alternado para que se crucen visualmente
+    const RADIOS = [38, 30, 22, 14];
     const SPIN_DIR = ['segSpinFwd', 'segSpinRev', 'segSpinFwd', 'segSpinRev'];
 
-    let angleOffset = -Math.PI / 2; // empezar arriba
+    let angleOffset = -Math.PI / 2;
 
     vals.forEach((val, i) => {
       if (val === 0) return;
@@ -2935,7 +2742,6 @@
       const midAngle = (startAngle + endAngle) / 2;
       const radius = RADIOS[i];
 
-      // Explode: desplazar el segmento hacia afuera desde el centro
       const EXPLODE = 2;
       const ex = cx + Math.cos(midAngle) * EXPLODE;
       const ey = cy + Math.sin(midAngle) * EXPLODE;
@@ -2948,12 +2754,9 @@
       seg.setAttribute('stroke-linecap', 'round');
       seg.setAttribute('filter', `drop-shadow(0 0 3px ${colors[i]})`);
 
-      // Giro individual: velocidad en función de la cantidad de parcelas de ese tipo
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.setAttribute('class', 'seg');
       g.style.transformOrigin = '50px 50px';
-      // Velocidad basada en cantidad propia: más parcelas = más rápido
-      // Rango: 60s (0 parcelas) → 0.5s (muchas parcelas)
       const segVal = vals[i];
       let segSpeed;
       if      (segVal === 0)    segSpeed = 60;
@@ -2975,7 +2778,6 @@
       angleOffset = endAngle + GAP_RAD;
     });
 
-    // Actualizar flechas — explícito para cada rareza
     function updateArrow(divId, arrowId, parcelas, base) {
       const pct = parseFloat(((parcelas / total) * 100).toFixed(1));
       const diff = pct - base;
@@ -2988,7 +2790,6 @@
     updateArrow('donut-pct-e', 'donut-arrow-e', e, 15);
     updateArrow('donut-pct-l', 'donut-arrow-l', l,  5);
   }
-
 
   const SAVE_KEY = 'atlas-earth-calc-data';
 
@@ -3005,31 +2806,6 @@
       startDate:  document.getElementById('start-date').value,
     };
     localStorage.setItem('atlas-earth-calc-data', JSON.stringify(data));
-  }
-
-  function saveData() {
-    const data = {
-      common:     document.getElementById('common').value,
-      rare:       document.getElementById('rare').value,
-      epic:       document.getElementById('epic').value,
-      legendary:  document.getElementById('legendary').value,
-      badges:     document.getElementById('badges').value,
-      diamonds:   document.getElementById('diamonds').value,
-      atlasbucks: document.getElementById('atlasbucks').value,
-      startDate:  document.getElementById('start-date').value,
-    };
-    try {
-      window.storage.set(SAVE_KEY, JSON.stringify(data)).then(() => {
-        showStatus();
-      }).catch(() => {
-        // fallback to localStorage if storage API unavailable
-        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-        showStatus();
-      });
-    } catch(e) {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(data));
-      showStatus();
-    }
   }
 
   function showStatus(msg) {
@@ -3059,8 +2835,6 @@
 
   async function loadData() {
     let data = null;
-
-    // 1. Prioridad: parámetros en la URL
     const params = new URLSearchParams(window.location.search);
     const urlKeys = ['common','rare','epic','legendary','badges','diamonds','atlasbucks','explorer'];
     if (urlKeys.some(k => params.has(k))) {
@@ -3069,21 +2843,10 @@
         if (params.has(k)) data[k] = k === 'explorer' ? params.get(k) === 'true' : params.get(k);
       });
     }
-
-    // 2. Fallback: localStorage
     if (!data) {
       const local = localStorage.getItem(SAVE_KEY);
       if (local) { try { data = JSON.parse(local); } catch(e) {} }
     }
-
-    // 3. Fallback: storage API
-    if (!data) {
-      try {
-        const result = await window.storage.get(SAVE_KEY);
-        if (result && result.value) data = JSON.parse(result.value);
-      } catch(e) {}
-    }
-
     if (!data) return;
     ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
       if (data[k] !== undefined) document.getElementById(k).value = data[k];
@@ -3101,27 +2864,10 @@
     calc();
   }
 
-  function buildShareURL() {
-    const base = window.location.href.split('?')[0];
-    const params = new URLSearchParams({
-      common:     document.getElementById('common').value     || 0,
-      rare:       document.getElementById('rare').value       || 0,
-      epic:       document.getElementById('epic').value       || 0,
-      legendary:  document.getElementById('legendary').value  || 0,
-      badges:     document.getElementById('badges').value     || 0,
-      diamonds:   document.getElementById('diamonds').value   || 0,
-      atlasbucks: document.getElementById('atlasbucks').value || 0,
-      explorer:   explorerActive,
-    });
-    return base + '?' + params.toString();
-  }
-
-  
   async function init() {
     await loadData();
     await loadProfile();
     adjustBadge();
-    // Solo activar el explorer visualmente si explorerActive es true (ya lo maneja loadData)
     if (explorerActive) {
       document.getElementById('explorer-check').classList.add('checked');
       document.getElementById('explorer-badge').style.display = 'block';
@@ -3129,77 +2875,39 @@
   }
   init();
 
-  // ── Eventos del avatar (separados para máxima compatibilidad móvil) ──
-  document.addEventListener('DOMContentLoaded', function() {
-    // Ya debería estar listo pero por si acaso
-  });
-
-  // Placeholder: abrir galería al hacer tap/click
   const avatarPlaceholder = document.getElementById('avatar-placeholder');
   const avatarEdit = document.getElementById('avatar-edit');
   const avatarInput = document.getElementById('avatar-input');
   const avatarWrapper = document.getElementById('avatar-wrapper');
   const avatarBorderColor = document.getElementById('avatar-border-color');
 
-  function openFilePicker() {
-    avatarInput.click();
-  }
-
-  function openColorPicker() {
-    avatarBorderColor.click();
-  }
+  function openFilePicker() { avatarInput.click(); }
+  function openColorPicker() { avatarBorderColor.click(); }
 
   if (avatarPlaceholder) {
-    avatarPlaceholder.addEventListener('click', function(e) {
-      e.stopPropagation();
-      openFilePicker();
-    });
-    // Touch explícito para Chrome Android
-    avatarPlaceholder.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openFilePicker();
-    });
+    avatarPlaceholder.addEventListener('click', function(e) { e.stopPropagation(); openFilePicker(); });
+    avatarPlaceholder.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); openFilePicker(); });
   }
 
   if (avatarEdit) {
-    avatarEdit.addEventListener('click', function(e) {
-      e.stopPropagation();
-      openFilePicker();
-    });
-    avatarEdit.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      openFilePicker();
-    });
+    avatarEdit.addEventListener('click', function(e) { e.stopPropagation(); openFilePicker(); });
+    avatarEdit.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); openFilePicker(); });
   }
 
-  // Botón color de borde
   const avatarColorBtn = document.getElementById('avatar-color-btn');
   if (avatarColorBtn) {
     avatarColorBtn.addEventListener('click', function(e) {
       e.stopPropagation();
-      if (isSafariIOS()) {
-        toggleSafariColorPalette();
-      } else {
-        openColorPicker();
-      }
+      if (isSafariIOS()) { toggleSafariColorPalette(); } else { openColorPicker(); }
     });
-    // pointerup en lugar de touchend para mejor compatibilidad con Safari iOS
     avatarColorBtn.addEventListener('pointerup', function(e) {
       if (e.pointerType === 'touch') {
         e.stopPropagation();
-        if (isSafariIOS()) {
-          toggleSafariColorPalette();
-        } else {
-          avatarBorderColor.click();
-        }
+        if (isSafariIOS()) { toggleSafariColorPalette(); } else { avatarBorderColor.click(); }
       }
     });
   }
-  // ─────────────────────────────────────────────────────────────────
 
-  // Reloj en tiempo real
   function updateClock() {
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
@@ -3209,8 +2917,6 @@
     document.getElementById('cl-hour').textContent  = pad(now.getHours());
     document.getElementById('cl-min').textContent   = pad(now.getMinutes());
     document.getElementById('cl-sec').textContent   = pad(now.getSeconds());
-
-    // Contador estilo NASA desde lanzamiento AEMX México (12 Jul 2024)
     const launch = new Date('2024-07-12T00:00:00');
     const diffMs = now - launch;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
@@ -3229,27 +2935,13 @@
   function applyThemeColor(color) {
     const rgb = hexToRgb(color);
     const root = document.documentElement;
-
-    // Borde del avatar
     document.querySelector('.profile-avatar-wrapper').style.setProperty('--avatar-border-color', color);
-
-    // Actualizar círculo preview del color
     const preview = document.getElementById('color-preview');
     if (preview) preview.style.background = color;
-
-    // Actualizar botones del avatar (✎ y 🎨)
     const avatarEditBtn = document.getElementById('avatar-edit');
-    const avatarColorBtn = document.getElementById('avatar-color-btn');
-    if (avatarEditBtn) {
-      avatarEditBtn.style.background = color;
-      avatarEditBtn.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`;
-    }
-    if (avatarColorBtn) {
-      avatarColorBtn.style.background = color;
-      avatarColorBtn.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`;
-    }
-
-    // Fondo oscuro según color seleccionado
+    const avatarColorBtn2 = document.getElementById('avatar-color-btn');
+    if (avatarEditBtn) { avatarEditBtn.style.background = color; avatarEditBtn.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
+    if (avatarColorBtn2) { avatarColorBtn2.style.background = color; avatarColorBtn2.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
     const [_r,_g,_b] = rgb.split(",").map(Number);
     const darkBg = `rgb(${Math.round(_r*0.04)},${Math.round(_g*0.04)},${Math.round(_b*0.04)})`;
     document.body.style.background = darkBg;
@@ -3258,20 +2950,14 @@
     const panel2Bg = `rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)})`;
     root.style.setProperty("--panel", panelBg);
     root.style.setProperty("--panel2", panel2Bg);
-
-    // CSS variables globales
     root.style.setProperty('--glow', color);
     root.style.setProperty('--accent', color);
-
-    // Donut center: color del usuario mezclado 50% con blanco
     const [_r2,_g2,_b2] = rgb.split(",").map(Number);
     const lightR = Math.round(_r2 + (255 - _r2) * 0.5);
     const lightG = Math.round(_g2 + (255 - _g2) * 0.5);
     const lightB = Math.round(_b2 + (255 - _b2) * 0.5);
     const donutCenter = document.getElementById('donut-center');
     if (donutCenter) donutCenter.style.color = `rgb(${lightR},${lightG},${lightB})`;
-
-    // PPD circle: fondo 50% más oscuro, texto del color del usuario
     const darkR = Math.round(_r2 * 0.5);
     const darkG = Math.round(_g2 * 0.5);
     const darkB = Math.round(_b2 * 0.5);
@@ -3282,32 +2968,17 @@
       ppdEl.style.boxShadow = `0 0 8px rgba(${rgb},0.5)`;
       ppdEl.style.textShadow = `0 0 8px rgba(${rgb},0.9), 2px 2px 0px rgba(0,0,0,0.6)`;
     }
-
-
-
-    // counter-btn: color del texto
     document.querySelectorAll('.counter-btn').forEach(btn => {
       btn.style.color = color;
       btn.style.borderColor = `rgba(${rgb},0.5)`;
     });
-    // Inputs de cantidades
     document.querySelectorAll('input[type="number"]').forEach(el => {
       el.style.background = `rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)})`;
       el.style.borderColor = `rgba(${rgb},0.4)`;
     });
-
-    // Títulos de secciones
-    document.querySelectorAll('.card-title').forEach(el => {
-      el.style.color = color;
-    });
-    document.querySelectorAll('.results-title, .breakdown-title').forEach(el => {
-      el.style.color = color;
-    });
-
-    // Bordes de todas las secciones
-    document.querySelectorAll('.card').forEach(el => {
-      el.style.borderColor = `rgba(${rgb},0.5)`;
-    });
+    document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
+    document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
+    document.querySelectorAll('.card').forEach(el => { el.style.borderColor = `rgba(${rgb},0.5)`; });
     document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
       el.style.borderColor = `rgba(${rgb},0.5)`;
       el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
@@ -3317,22 +2988,16 @@
       el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
       el.style.boxShadow = `0 0 40px rgba(${rgb},0.08), inset 0 0 40px rgba(${rgb},0.03)`;
     });
-    // Líneas separadoras (dividers)
     document.querySelectorAll('.divider').forEach(el => {
       el.style.background = `linear-gradient(90deg, transparent, rgba(${rgb},0.4), transparent)`;
     });
-    // Líneas separadoras en resultados de renta
     document.querySelectorAll('.breakdown-separator').forEach(el => {
       el.style.borderTopColor = `rgba(${rgb},0.35)`;
     });
-
-    // Círculo de fondo del donut con color del usuario al 15% de opacidad
     const donutBg = document.getElementById('donut-bg-circle');
     if (donutBg) donutBg.setAttribute('stroke', `rgba(${rgb},0.15)`);
-    // Guardar color para cuando se redibuje el donut
     window._userThemeRgb = rgb;
   }
-  // Exponer en window para que el módulo Firebase pueda accederla
   window.applyThemeColor = applyThemeColor;
 
   function showAvatarButtons() {
@@ -3353,34 +3018,57 @@
   function changeAvatarBorder(color) {
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
-    try { window.storage.set('atlas-avatar-border', color); } catch(e) {}
     if (window._fbUser && window._fbSaveAll) window._fbSaveAll();
   }
 
-  // Avatar upload
+  // ✅ FIX PRINCIPAL: loadAvatar ahora comprime la imagen Y sube a Firebase
   function loadAvatar(event) {
     const file = event.target.files[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = function(e) {
-      const img = document.getElementById('avatar-img');
-      const placeholder = document.getElementById('avatar-placeholder');
-      const editBtn = document.getElementById('avatar-edit');
-      img.src = e.target.result;
-      img.style.display = 'block';
-      placeholder.style.display = 'none';
-      editBtn.style.display = 'none';
-      const colorBtn = document.getElementById('avatar-color-btn');
-      if (colorBtn) colorBtn.style.display = 'none';
-      // Save to storage
-      localStorage.setItem('atlas-avatar', e.target.result);
-      try { window.storage.set('atlas-avatar', e.target.result); } catch(err) {}
+      // Comprimir imagen a 200x200 JPEG 75% para no exceder límites de Firebase
+      const tempImg = new Image();
+      tempImg.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+
+        // Recorte centrado (crop cuadrado)
+        const size = Math.min(tempImg.width, tempImg.height);
+        const offsetX = (tempImg.width - size) / 2;
+        const offsetY = (tempImg.height - size) / 2;
+        ctx.drawImage(tempImg, offsetX, offsetY, size, size, 0, 0, 200, 200);
+
+        const compressed = canvas.toDataURL('image/jpeg', 0.75);
+
+        // Actualizar UI
+        const img = document.getElementById('avatar-img');
+        const placeholder = document.getElementById('avatar-placeholder');
+        const editBtn = document.getElementById('avatar-edit');
+        const colorBtn = document.getElementById('avatar-color-btn');
+        img.src = compressed;
+        img.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+        if (editBtn) editBtn.style.display = 'none';
+        if (colorBtn) colorBtn.style.display = 'none';
+
+        // Guardar en localStorage
+        localStorage.setItem('atlas-avatar', compressed);
+
+        // ✅ FIX: Subir a Firebase inmediatamente después de guardar en localStorage
+        if (window._fbUser && window._fbSaveAll) {
+          setTimeout(window._fbSaveAll, 300);
+        }
+      };
+      tempImg.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
 
   function adjustBadge() {
-    // auto-resize input to fit text
     const input = document.getElementById('username');
     const tmp = document.createElement('span');
     tmp.style.font = getComputedStyle(input).font;
@@ -3397,35 +3085,18 @@
   function saveUsername() {
     const name = document.getElementById('username').value;
     localStorage.setItem('atlas-username', name);
-    try { window.storage.set('atlas-username', name); } catch(err) {}
   }
 
   function saveStartDate() {
     const date = document.getElementById('start-date').value;
     localStorage.setItem('atlas-start-date', date);
-    try { window.storage.set('atlas-start-date', date); } catch(err) {}
   }
 
-  // Load avatar and username on startup
   async function loadProfile() {
-    // Username - localStorage first
     let name = localStorage.getItem('atlas-username') || '';
-    if (!name) {
-      try {
-        const r = await window.storage.get('atlas-username');
-        if (r && r.value) name = r.value;
-      } catch(e) {}
-    }
     if (name) { document.getElementById('username').value = name; adjustBadge(); }
 
-    // Avatar - localStorage first
     let avatar = localStorage.getItem('atlas-avatar') || '';
-    if (!avatar) {
-      try {
-        const r = await window.storage.get('atlas-avatar');
-        if (r && r.value) avatar = r.value;
-      } catch(e) {}
-    }
     if (avatar) {
       const img = document.getElementById('avatar-img');
       const placeholder = document.getElementById('avatar-placeholder');
@@ -3438,121 +3109,28 @@
       if (colorBtn2) colorBtn2.style.display = 'none';
     }
 
-    // Border color
     let borderColor = localStorage.getItem('atlas-avatar-border') || '';
-    if (!borderColor) {
-      try {
-        const r = await window.storage.get('atlas-avatar-border');
-        if (r && r.value) borderColor = r.value;
-      } catch(e) {}
-    }
     if (borderColor) {
       applyThemeColor(borderColor);
       document.getElementById('avatar-border-color').value = borderColor;
-      const preview = document.getElementById('color-preview');
-      if (preview) preview.style.background = borderColor;
     }
 
-    // Fecha de inicio
     let startDate = localStorage.getItem('atlas-start-date') || '';
-    if (!startDate) {
-      try {
-        const r = await window.storage.get('atlas-start-date');
-        if (r && r.value) startDate = r.value;
-      } catch(e) {}
-    }
     if (startDate) document.getElementById('start-date').value = startDate;
   }
-
-
-
 
   function hayZoomActivo() {
     if (!window.visualViewport) return false;
     return window.visualViewport.scale > 1.05;
   }
 
-  function captureWithZoomReset(beforeCapture, onSuccess, onError) {
-    // Bloquear si hay zoom activo en móvil
-    if (hayZoomActivo()) {
-      alert('⚠️ Tienes zoom activo.\nPellizca la pantalla para regresar al zoom normal e intenta de nuevo.');
-      onError(new Error('zoom activo'));
-      return;
-    }
-    // Guardar viewport original y forzar zoom=1
-    const meta = document.querySelector('meta[name="viewport"]');
-    const orig = meta ? meta.getAttribute('content') : '';
-    if (meta) meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-    window.scrollTo(0, 0);
-
-    setTimeout(() => {
-      beforeCapture();
-      const container = document.querySelector('.container');
-      const W = Math.round(container.getBoundingClientRect().width);
-      const H = Math.round(container.getBoundingClientRect().height);
-      const scale = Math.max(Math.min(window.devicePixelRatio || 2, 3), 1);
-
-      html2canvas(container, {
-        backgroundColor: '#060b14',
-        scale: scale,
-        width: W,
-        height: H,
-        windowWidth: document.documentElement.clientWidth,
-        windowHeight: document.documentElement.clientHeight,
-        scrollX: 0,
-        scrollY: 0,
-        useCORS: true,
-        allowTaint: true,
-        imageTimeout: 0,
-        logging: false,
-        onclone: (doc) => {
-          doc.querySelectorAll('img').forEach(img => {
-            if (!img.complete || img.naturalWidth === 0) img.style.display = 'none';
-          });
-          doc.querySelectorAll('svg').forEach(svg => {
-            if (!svg.getAttribute('width')) svg.setAttribute('width', '180');
-            if (!svg.getAttribute('height')) svg.setAttribute('height', '180');
-            svg.style.animation = 'none';
-            svg.style.transform = 'rotate(-90deg)';
-          });
-          doc.querySelectorAll('.seg').forEach(g => { g.style.animation = 'none'; });
-          const styleEl = doc.createElement('style');
-          styleEl.textContent = `
-            .profile-avatar-wrapper { animation: none !important; background: none !important; }
-            .profile-avatar-wrapper::before { display: none !important; content: none !important; }
-            .profile-avatar-wrapper::after { display: none !important; content: none !important; }
-            .profile-avatar { border: 20px solid #00c8ff !important; animation: none !important; }
-            #visit-wrapper { display: none !important; }
-            @keyframes spinBorder { 0%,100% { transform: none; } }
-            @keyframes spinDonut { 0%,100% { transform: rotate(-90deg); } }
-            @keyframes glowCompass { 0%,100% { filter: none; } }
-          `;
-          doc.head.appendChild(styleEl);
-        }
-      }).then(canvas => {
-        if (meta && orig) meta.setAttribute('content', orig);
-        onSuccess(canvas);
-      }).catch(err => {
-        if (meta && orig) meta.setAttribute('content', orig);
-        onError(err);
-      });
-    }, 500);
-  }
-
-
-
-  // ── Ubicación ─────────────────────────────────────────────────────
   var userCountry = "";
   window.userCountry = "";
 
-  // Mapa de nombres en español/variantes → nombre normalizado
   var COUNTRY_MAP = {
-    // México
     "méxico": "Mexico", "mexico": "Mexico",
-    // Estados Unidos
     "estados unidos": "United States", "united states": "United States",
     "us": "United States", "usa": "United States",
-    // Europa
     "españa": "Spain", "spain": "Spain",
     "francia": "France", "france": "France",
     "alemania": "Germany", "germany": "Germany",
@@ -3589,10 +3167,8 @@
     var intentos = 0;
     var retry = setInterval(function() {
       intentos++;
-      if (window._fbSaveCity) {
-        clearInterval(retry);
-        window._fbSaveCity(texto);
-      } else if (intentos >= 20) { clearInterval(retry); }
+      if (window._fbSaveCity) { clearInterval(retry); window._fbSaveCity(texto); }
+      else if (intentos >= 20) { clearInterval(retry); }
     }, 500);
   }
 
@@ -3620,10 +3196,8 @@
     if (elLoc && elLoc.textContent === "...") elLoc.textContent = "—";
   }
 
-  // Siempre obtener país y ciudad por IP
   setTimeout(ubicacionPorIP, 300);
 
-  // Mejorar ciudad/estado con GPS si está disponible
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function(pos) {
@@ -3652,9 +3226,7 @@
       function() {}
     );
   }
-  // ─────────────────────────────────────────────────────────────────
 
-  // ── Contador de visitas (counterapi.dev) ─────────────────────────
   async function initVisitCounter() {
     const wrapper = document.createElement('div');
     wrapper.id = 'visit-wrapper';
@@ -3663,21 +3235,13 @@
       <span id="visit-count-display" style="font-family:'Share Tech Mono',monospace;font-size:15px;color:#4a6a8a;letter-spacing:3px;background:#0b1626;border:1px solid #1a3a5c;border-radius:6px;padding:3px 10px;">00000000</span>
     `;
     Object.assign(wrapper.style, {
-      position: 'fixed',
-      bottom: '14px',
-      right: '18px',
-      zIndex: '99999',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      opacity: '0.55',
-      transition: 'opacity 0.3s',
-      cursor: 'default',
+      position: 'fixed', bottom: '14px', right: '18px', zIndex: '99999',
+      display: 'flex', alignItems: 'center', gap: '8px',
+      opacity: '0.55', transition: 'opacity 0.3s', cursor: 'default',
     });
     wrapper.onmouseenter = () => wrapper.style.opacity = '0.85';
     wrapper.onmouseleave = () => wrapper.style.opacity = '0.55';
     document.body.appendChild(wrapper);
-
     try {
       const res = await fetch('https://api.counterapi.dev/v1/socram-13-gamertag/visits/up');
       const data = await res.json();
@@ -3687,14 +3251,11 @@
   }
   initVisitCounter();
 
-  // ── Bloquear botones si hay zoom activo (Chrome Android) ─────────
   function checkZoomButtons() {
     const scale = window.visualViewport ? window.visualViewport.scale : 1;
     const zoomActivo = scale > 1.05;
-    const btnPng   = document.getElementById('btn-screenshot');
     const btnShare = document.getElementById('btn-share-data');
-
-    [btnPng, btnShare].forEach(btn => {
+    [btnShare].forEach(btn => {
       if (!btn) return;
       btn.disabled = zoomActivo;
       btn.style.setProperty('opacity', zoomActivo ? '0.35' : '1', 'important');
@@ -3702,13 +3263,9 @@
       btn.style.setProperty('filter', zoomActivo ? 'grayscale(1)' : 'none', 'important');
     });
   }
-
-  // Polling cada 300ms — único método confiable en Chrome Android
   checkZoomButtons();
   setInterval(checkZoomButtons, 300);
-  // ─────────────────────────────────────────────────────────────────
 
-  // ── Safari iOS: detección y paleta de colores alternativa ────────
   function isSafariIOS() {
     return /iP(hone|od|ad)/.test(navigator.userAgent) &&
            /WebKit/.test(navigator.userAgent) &&
@@ -3723,38 +3280,19 @@
 
   function toggleSafariColorPalette() {
     let palette = document.getElementById('safari-color-palette');
-    if (palette) {
-      palette.remove();
-      return;
-    }
+    if (palette) { palette.remove(); return; }
     palette = document.createElement('div');
     palette.id = 'safari-color-palette';
     palette.style.cssText = `
-      position: fixed;
-      z-index: 9999;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #1a1a2e;
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 16px;
-      padding: 14px;
-      display: grid;
-      grid-template-columns: repeat(6, 36px);
-      gap: 10px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      position: fixed; z-index: 9999; bottom: 80px; left: 50%;
+      transform: translateX(-50%); background: #1a1a2e;
+      border: 1px solid rgba(255,255,255,0.15); border-radius: 16px;
+      padding: 14px; display: grid; grid-template-columns: repeat(6, 36px);
+      gap: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.6);
     `;
     SAFARI_PALETTE_COLORS.forEach(color => {
       const swatch = document.createElement('div');
-      swatch.style.cssText = `
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: ${color};
-        cursor: pointer;
-        border: 2px solid rgba(255,255,255,0.2);
-        transition: transform 0.15s;
-      `;
+      swatch.style.cssText = `width:36px;height:36px;border-radius:50%;background:${color};cursor:pointer;border:2px solid rgba(255,255,255,0.2);transition:transform 0.15s;`;
       swatch.addEventListener('click', function(e) {
         e.stopPropagation();
         changeAvatarBorder(color);
@@ -3764,23 +3302,18 @@
       palette.appendChild(swatch);
     });
     document.body.appendChild(palette);
-    // Cerrar si se toca fuera
     setTimeout(() => {
       document.addEventListener('pointerdown', function closePalette(e) {
-        if (!palette.contains(e.target)) {
-          palette.remove();
-          document.removeEventListener('pointerdown', closePalette);
-        }
+        if (!palette.contains(e.target)) { palette.remove(); document.removeEventListener('pointerdown', closePalette); }
       });
     }, 100);
   }
-  // ─────────────────────────────────────────────────────────────────
 
 </script>
-  <!-- Toast de coin ganado -->
+
   <div class="coin-toast" id="coin-toast">🪙 +1 COIN GANADO</div>
 
-  <!-- ===== CHAT WIDGET ===== -->
+  <!-- CHAT WIDGET -->
   <button id="chat-fab" onclick="toggleChat()" aria-label="Abrir chat">
     <svg class="icon-chat" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
     <svg class="icon-close" style="display:none" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
@@ -3796,31 +3329,21 @@
 
   <script>
     let chatOpen = false;
-
     const chatFrame = document.getElementById('chat-frame');
 
     function toggleChat() {
       chatOpen = !chatOpen;
       document.getElementById('chat-iframe-container').classList.toggle('open', chatOpen);
       document.getElementById('chat-fab').classList.toggle('open', chatOpen);
-
-      // Ocultar/mostrar contador de visitas
       const visitWrapper = document.getElementById('visit-wrapper');
       if (visitWrapper) visitWrapper.style.display = chatOpen ? 'none' : '';
-
-      // En móvil ocultar el botón cuando el chat está abierto
       if (window.innerWidth <= 480) {
         document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
       }
-
       if (chatOpen) {
-        // Empujar estado para interceptar el botón atrás
         history.pushState({ chatOpen: true }, '');
-        // Cargar iframe con username
         const username = localStorage.getItem('atlas-username') || '';
-        const avatar = localStorage.getItem('atlas-avatar') || '';
         const color = localStorage.getItem('atlas-avatar-border') || '';
-        sessionStorage.setItem('chat-avatar', avatar);
         document.getElementById('chat-frame').src = `chat-firebase.html?username=${encodeURIComponent(username)}&color=${encodeURIComponent(color)}`;
       }
     }
@@ -3832,9 +3355,7 @@
     }
     updateWidgetTime();
     setInterval(updateWidgetTime, 60000);
-    window.addEventListener('message', (e) => {
-      if (e.data && e.data.type === 'CLOSE_CHAT') closeChatWidget();
-    });
+    window.addEventListener('message', (e) => { if (e.data && e.data.type === 'CLOSE_CHAT') closeChatWidget(); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && chatOpen) closeChatWidget(); });
 
     function closeChatWidget() {
@@ -3843,16 +3364,10 @@
       document.getElementById('chat-fab').classList.remove('open');
       const visitWrapper = document.getElementById('visit-wrapper');
       if (visitWrapper) visitWrapper.style.display = '';
-      if (window.innerWidth <= 480) {
-        document.getElementById('chat-fab').style.display = 'flex';
-      }
+      if (window.innerWidth <= 480) document.getElementById('chat-fab').style.display = 'flex';
     }
 
-    // Interceptar botón "atrás" del móvil para cerrar el chat
-    window.addEventListener('popstate', () => {
-      if (chatOpen) closeChatWidget();
-    });
+    window.addEventListener('popstate', () => { if (chatOpen) closeChatWidget(); });
   </script>
-  <!-- ===== FIN CHAT WIDGET ===== -->
 </body>
 </html>
