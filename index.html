@@ -1987,6 +1987,7 @@
         });
 
         if(window.calc) window.calc();
+        window.clanMember = d.clanMember === true;
 
         const waitCoins = setInterval(() => {
           if (window._coinsLoad) {
@@ -2402,6 +2403,13 @@
             <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">CREL PERFECTO</div><div class="mbadge-tooltip-desc">Diversificación legendaria: 100C + 75R + 50E + 25L.</div></div>
           </div>
           <div class="mbadge-name">Portfolio Perfecto</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="clan_aemx">
+          <div class="mbadge-icon">🛡️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">MIEMBRO AEMX</div><div class="mbadge-tooltip-desc">Formas parte del clan oficial Atlas Earth México.</div></div>
+          </div>
+          <div class="mbadge-name">Miembro AEMX</div>
         </div>
 
         <div class="medals-section-label" id="medalShopSection">💰 SHOP (COINS)</div>
@@ -4076,6 +4084,7 @@
         case 'dios_atlas':       return total >= 8000;
         case 'coleccionista_leg':return p.l >= 100;
         case 'portfolio_perfecto':return p.c >= 100 && p.r >= 75 && p.e >= 50 && p.l >= 25;
+        case 'clan_aemx':         return window.clanMember === true;
         /* SHOP */
         default: return !!_ownedMedals[id];
       }
