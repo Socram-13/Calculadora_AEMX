@@ -397,52 +397,55 @@ function onLocalCollision(a, b) {
   }
 }
 
+
 function drawDonutRing(b, scale) {
   if (!b.statsLoaded) return;
   const t = totalStats(b.stats);
   if (t <= 0) return;
 
-  // Colores de rarezas (solo para distinguir)
-  const cCommon = 'rgba(180, 190, 205, 0.75)';
-  const cRare   = 'rgba( 56, 189, 248, 0.85)';  // azul
-  const cEpic   = 'rgba(192, 132, 252, 0.85)';  // morado
-  const cLeg    = 'rgba(255, 215,   0, 0.85)';  // dorado
+  const colors = {
+    common: 'rgba(74, 222, 128, 0.9)',
+    rare:   'rgba(56, 189, 248, 0.9)',
+    epic:   'rgba(192, 132, 252, 0.9)',
+    legendary: 'rgba(255, 215, 0, 0.9)'
+  };
 
   const ringR = (VISUAL_RADIUS + 16) * scale;
-  const lw    = 6 * scale;
-  const gap   = 0.04; // pequeño gap entre segmentos (rad)
-  let start   = -Math.PI / 2;
+  const teeth = 48; // dientes de la sierra
+  const amp = 4 * scale;
+  const lw = 2 * scale;
+
+  // Giro continuo
+  b._rot = (b._rot || 0) + 0.003;
+  ctx.rotate(b._rot);
 
   const segs = [
-    { key: 'common',    val: b.stats.common,    col: cCommon },
-    { key: 'rare',      val: b.stats.rare,      col: cRare   },
-    { key: 'epic',      val: b.stats.epic,      col: cEpic   },
-    { key: 'legendary', val: b.stats.legendary, col: cLeg    },
+    { key: 'common',    val: b.stats.common },
+    { key: 'rare',      val: b.stats.rare },
+    { key: 'epic',      val: b.stats.epic },
+    { key: 'legendary', val: b.stats.legendary },
   ];
 
-  // base tenue
-  ctx.beginPath();
-  ctx.arc(0, 0, ringR, 0, Math.PI * 2);
-  ctx.strokeStyle = 'rgba(0,200,255,0.08)';
-  ctx.lineWidth = lw;
-  ctx.lineCap = 'round';
-  ctx.stroke();
-
+  let start = 0;
   for (const s of segs) {
     if (!s.val) continue;
     const frac = s.val / t;
     const span = frac * Math.PI * 2;
 
-    const a1 = start + gap;
-    const a2 = start + span - gap;
-    if (a2 > a1) {
-      ctx.beginPath();
-      ctx.arc(0, 0, ringR, a1, a2);
-      ctx.strokeStyle = s.col;
-      ctx.lineWidth = lw;
-      ctx.lineCap = 'round';
-      ctx.stroke();
+    ctx.beginPath();
+    for (let i = 0; i <= teeth; i++) {
+      const a = start + (span * i / teeth);
+      const r = ringR + (i % 2 === 0 ? amp : -amp);
+      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
     }
+    ctx.strokeStyle = colors[s.key];
+    ctx.lineWidth = lw;
+    ctx.stroke();
+
+    start += span;
+  }
+}
+
     start += span;
   }
 
@@ -739,7 +742,7 @@ if (!oPinned) { o.vx += nx * force; o.vy += ny * force; }
       }
       ctx.shadowBlur = 0;
 
-      // Donut local alrededor del avatar
+      // Donut local alrededor del avatar (sin números globales)
       ctx.save();
       drawDonutRing(b, 1); // draw inside translated/scaled context
       ctx.restore();
