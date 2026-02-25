@@ -331,11 +331,18 @@
     window.addEventListener('resize', resize);
 
     // ── Constantes de física ──
-    const RADIUS   = 44;
+    // Tamaño visual del avatar: ~1/3 más pequeño (de 44 → ~29)
+    const AVATAR_RADIUS    = 29;
+
+    // Área para agarrar/arrastrar (más grande para móviles)
+    const HIT_RADIUS       = 42;
+
+    // Área de colisión (más grande que el visual, como “hitbox”)
+    const COLLISION_RADIUS = 52;
+
     const FRICTION = 0.88;
     const REPULSE  = 0.38;
-    const ATTRACT  = 0.09;
-    const TOP_PAD  = 60;
+const TOP_PAD  = 60;
     const BOT_PAD  = 56; // espacio para la barra de mensajes
 
     const bubbles  = new Map(); // uid → burbuja
@@ -364,8 +371,8 @@
         avatar:      data.avatar   || '',
         borderColor: data.borderColor || '#00c8ff',
         photoURL:    data.photoURL || '',
-        x: RADIUS + Math.random() * (canvas.width  - RADIUS * 2),
-        y: TOP_PAD + RADIUS + Math.random() * (canvas.height - TOP_PAD - BOT_PAD - RADIUS * 2),
+        x: COLLISION_RADIUS + Math.random() * (canvas.width  - COLLISION_RADIUS * 2),
+        y: TOP_PAD + COLLISION_RADIUS + Math.random() * (canvas.height - TOP_PAD - BOT_PAD - COLLISION_RADIUS * 2),
         vx: (Math.random() - 0.5) * 2,
         vy: (Math.random() - 0.5) * 2,
         ringAngle: Math.random() * Math.PI * 2,
@@ -393,7 +400,7 @@ function isOverBubble(b, px, py) {
   // Hit-test simple en coordenadas del canvas
   const dx = px - b.x;
   const dy = py - b.y;
-  return (dx * dx + dy * dy) <= (RADIUS * RADIUS);
+  return (dx * dx + dy * dy) <= (HIT_RADIUS * HIT_RADIUS);
 }
 
 function pointerPos(e) {
@@ -415,9 +422,6 @@ function pointerPos(e) {
     // Si estoy siendo arrastrado, no aplicamos atracción ni integración por velocidad aquí
     // (la posición se controla con el drag handler).
     if (!(isMe && drag.active)) {
-      // Suave centrado para que el room no se "vacíe" en las orillas
-      b.vx += (cx - b.x) * 0.002;
-      b.vy += (cy - b.y) * 0.002;
 
       b.vx *= FRICTION;
       b.vy *= FRICTION;
@@ -429,10 +433,10 @@ function pointerPos(e) {
     }
 
     // Límites del área jugable
-    if (b.x < RADIUS)                { b.x = RADIUS;                b.vx *= -0.5; }
-    if (b.x > canvas.width - RADIUS) { b.x = canvas.width - RADIUS; b.vx *= -0.5; }
-    if (b.y < TOP_PAD + RADIUS)      { b.y = TOP_PAD + RADIUS;      b.vy *= -0.5; }
-    if (b.y > canvasH - RADIUS)      { b.y = canvasH - RADIUS;      b.vy *= -0.5; }
+    if (b.x < COLLISION_RADIUS)                { b.x = COLLISION_RADIUS;                b.vx *= -0.5; }
+    if (b.x > canvas.width - COLLISION_RADIUS) { b.x = canvas.width - COLLISION_RADIUS; b.vx *= -0.5; }
+    if (b.y < TOP_PAD + COLLISION_RADIUS)      { b.y = TOP_PAD + COLLISION_RADIUS;      b.vy *= -0.5; }
+    if (b.y > canvasH - COLLISION_RADIUS)      { b.y = canvasH - COLLISION_RADIUS;      b.vy *= -0.5; }
 
     // Repulsión entre avatares
     for (let j = i + 1; j < bArr.length; j++) {
@@ -440,7 +444,7 @@ function pointerPos(e) {
       const dx = o.x - b.x;
       const dy = o.y - b.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const minDist = RADIUS * 2 + 8;
+      const minDist = COLLISION_RADIUS * 2 + 8;
 
       if (dist < minDist) {
         const force = (minDist - dist) / minDist * REPULSE;
@@ -524,7 +528,7 @@ function pointerPos(e) {
         // Posición del globo (arriba del avatar)
         const tailH  = 10;
         const bx     = x - boxW / 2;
-        const by     = y - RADIUS - tailH - boxH - 8;
+        const by     = y - AVATAR_RADIUS - tailH - boxH - 8;
 
         ctx.save();
         ctx.globalAlpha = alpha;
@@ -608,7 +612,7 @@ function pointerPos(e) {
     function drawBubble(b) {
       const { x, y, username, borderColor, avatar, photoURL, ringAngle, pulse } = b;
       const scale = 0.4 + pulse * 0.6;
-      const r = RADIUS * scale;
+      const r = AVATAR_RADIUS * scale;
       const isMe = b.uid === myUid;
 
       ctx.save();
@@ -618,7 +622,7 @@ function pointerPos(e) {
       ctx.shadowColor = borderColor;
       ctx.shadowBlur  = isMe ? 28 : 16;
 
-      const ringR    = RADIUS + 10;
+      const ringR    = AVATAR_RADIUS + 10;
       const segments = 12;
       for (let i = 0; i < segments; i++) {
         const a1 = ringAngle + (i / segments) * Math.PI * 2;
@@ -634,7 +638,7 @@ function pointerPos(e) {
       ctx.shadowBlur = 0;
 
       ctx.beginPath();
-      ctx.arc(0, 0, RADIUS, 0, Math.PI * 2);
+      ctx.arc(0, 0, AVATAR_RADIUS, 0, Math.PI * 2);
       ctx.clip();
 
       ctx.fillStyle = '#0b1626';
@@ -645,7 +649,7 @@ function pointerPos(e) {
         const img = loadImg(imgSrc);
         if (img && img.complete && img.naturalWidth > 0) {
           try {
-            ctx.drawImage(img, -RADIUS, -RADIUS, RADIUS * 2, RADIUS * 2);
+            ctx.drawImage(img, -AVATAR_RADIUS, -AVATAR_RADIUS, AVATAR_RADIUS * 2, AVATAR_RADIUS * 2);
           } catch(e) {
             drawInitial(ctx, username, borderColor);
           }
@@ -690,8 +694,8 @@ function pointerPos(e) {
     function drawInitial(ctx, username, color) {
       const letter = (username || '?').charAt(0).toUpperCase();
       ctx.fillStyle = hexToRgba(color, 0.18);
-      ctx.fillRect(-RADIUS, -RADIUS, RADIUS * 2, RADIUS * 2);
-      ctx.font         = `bold ${RADIUS * 0.9}px "Orbitron", monospace`;
+      ctx.fillRect(-AVATAR_RADIUS, -AVATAR_RADIUS, AVATAR_RADIUS * 2, AVATAR_RADIUS * 2);
+      ctx.font         = `bold ${AVATAR_RADIUS * 0.9}px "Orbitron", monospace`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillStyle    = color;
@@ -781,8 +785,8 @@ canvas.addEventListener('pointermove', (e) => {
   const nx = p.x + drag.offsetX;
   const ny = p.y + drag.offsetY;
 
-  me.x = clamp(nx, RADIUS, canvas.width - RADIUS);
-  me.y = clamp(ny, TOP_PAD + RADIUS, canvasH - RADIUS);
+  me.x = clamp(nx, COLLISION_RADIUS, canvas.width - COLLISION_RADIUS);
+  me.y = clamp(ny, TOP_PAD + COLLISION_RADIUS, canvasH - COLLISION_RADIUS);
   me.vx = 0;
   me.vy = 0;
 
