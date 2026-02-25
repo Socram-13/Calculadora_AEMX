@@ -135,7 +135,7 @@
         .ticker-bar.visible { display:flex; }
         .ticker-label { font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;color:#ffaa00;background:rgba(255,170,0,.2);border-right:1px solid rgba(255,170,0,.4);padding:0 10px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;text-shadow:0 0 8px rgba(255,170,0,.6); }
         .ticker-track { flex:1;overflow:hidden;position:relative;height:100%; }
-        .ticker-text { display:inline-block;white-space:nowrap;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;letter-spacing:1px;color:#ffe066;line-height:40px;animation:tickerScroll 20s linear infinite; }
+        .ticker-text { display:inline-block;white-space:nowrap;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;letter-spacing:1px;color:#ffe066;line-height:40px;animation:tickerScroll 60s linear infinite; }
         @keyframes tickerScroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
         ::-webkit-scrollbar { width:4px; }
         ::-webkit-scrollbar-track { background:var(--bg-panel); }
@@ -450,7 +450,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     <div class="message ${ownClass} ${adminClass}">
                         <div class="message-avatar" style="${borderStyle}">${avatarHTML}</div>
                         <div class="message-content">
-                            <div class="message-author">${author}${isAdmin ? ' <span class="admin-badge">ADMIN</span>' : ''}</div>
+                            <div class="message-author">${isAdmin && isOwn ? '' : author}${isAdmin ? ' <span class="admin-badge">ADMIN</span>' : ''}</div>
                             <div class="message-text">${escapeHtml(text)}</div>
                         </div>
                     </div>
@@ -477,7 +477,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 if (texto && texto.trim()) {
                     txt.textContent = texto.trim();
                     bar.classList.add('visible');
-                    txt.style.animationDuration = Math.max(5, texto.length * 0.06) + 's';
+                    txt.style.animationDuration = Math.max(15, texto.length * 0.18) + 's';
                 } else {
                     bar.classList.remove('visible');
                 }
