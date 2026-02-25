@@ -2944,7 +2944,7 @@
         const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
         const coinsActivo = configSnap.exists() ? configSnap.val() : true;
         const pais = (window.userCountry || '').toLowerCase();
-        const esMexico = pais === 'mexico' || pais === 'méxico';
+        const esMexico = pais.includes('mexico') || pais.includes('méxico');
 
         if (!coinsActivo || !esMexico) return;
 
