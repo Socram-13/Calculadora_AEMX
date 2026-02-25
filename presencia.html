@@ -297,7 +297,7 @@
     import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, onValue, onChildAdded, onDisconnect, serverTimestamp, remove, push, query, limitToLast }
+    import { getDatabase, ref, set, onValue, onChildAdded, onDisconnect, serverTimestamp, remove, push, query, limitToLast, get }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -341,6 +341,146 @@
 
     const bubbles  = new Map(); // uid → burbuja
     const imgCache = new Map(); // url → HTMLImageElement
+// ── Donut local (stats por usuario) ────────────────────────────────
+// Ligero: leemos users/{uid} UNA sola vez cuando aparece el usuario.
+// Luego, en PRESENCIA los valores se pueden ir restando por colisiones,
+// pero NO se escribe nada de vuelta a Firebase.
+const STATS_FIELDS = ['common','rare','epic','legendary'];
+const STATS_COOLDOWN_MS = 750; // cuánto debe pasar entre "golpes" para restar otra vez
+
+function sanitizeInt(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+}
+
+async function loadStatsOnce(uid) {
+  const b = bubbles.get(uid);
+  if (!b || b.statsLoaded) return;
+  b.statsLoaded = true; // evita doble fetch
+
+  try {
+    const snap = await get(ref(db, `users/${uid}`));
+    if (snap.exists()) {
+      const data = snap.val() || {};
+      b.stats.common    = sanitizeInt(data.common);
+      b.stats.rare      = sanitizeInt(data.rare);
+      b.stats.epic      = sanitizeInt(data.epic);
+      b.stats.legendary = sanitizeInt(data.legendary);
+    }
+  } catch (e) {
+    // Si falla, simplemente se queda en ceros (no rompemos la ROOM)
+    console.warn('No pude leer stats para donut:', uid, e);
+  }
+}
+
+function totalStats(s) {
+  return (s.common||0) + (s.rare||0) + (s.epic||0) + (s.legendary||0);
+}
+
+function decrementOne(s) {
+  // Prioridad: common → rare → epic → legendary (puedes invertir si prefieres)
+  if (s.common > 0) { s.common--; return true; }
+  if (s.rare > 0) { s.rare--; return true; }
+  if (s.epic > 0) { s.epic--; return true; }
+  if (s.legendary > 0) { s.legendary--; return true; }
+  return false;
+}
+
+function onLocalCollision(a, b) {
+  const now = performance.now();
+  // Restar con cooldown independiente por avatar
+  if (now - (a.lastHitAt || 0) > STATS_COOLDOWN_MS) {
+    if (decrementOne(a.stats)) a.lastHitAt = now;
+  }
+  if (now - (b.lastHitAt || 0) > STATS_COOLDOWN_MS) {
+    if (decrementOne(b.stats)) b.lastHitAt = now;
+  }
+}
+
+function drawDonutRing(b, scale) {
+  if (!b.statsLoaded) return;
+  const t = totalStats(b.stats);
+  if (t <= 0) return;
+
+  // Colores de rarezas (solo para distinguir)
+  const cCommon = 'rgba(180, 190, 205, 0.75)';
+  const cRare   = 'rgba( 56, 189, 248, 0.85)';  // azul
+  const cEpic   = 'rgba(192, 132, 252, 0.85)';  // morado
+  const cLeg    = 'rgba(255, 215,   0, 0.85)';  // dorado
+
+  const ringR = (VISUAL_RADIUS + 16) * scale;
+  const lw    = 6 * scale;
+  const gap   = 0.04; // pequeño gap entre segmentos (rad)
+  let start   = -Math.PI / 2;
+
+  const segs = [
+    { key: 'common',    val: b.stats.common,    col: cCommon },
+    { key: 'rare',      val: b.stats.rare,      col: cRare   },
+    { key: 'epic',      val: b.stats.epic,      col: cEpic   },
+    { key: 'legendary', val: b.stats.legendary, col: cLeg    },
+  ];
+
+  // base tenue
+  ctx.beginPath();
+  ctx.arc(0, 0, ringR, 0, Math.PI * 2);
+  ctx.strokeStyle = 'rgba(0,200,255,0.08)';
+  ctx.lineWidth = lw;
+  ctx.lineCap = 'round';
+  ctx.stroke();
+
+  for (const s of segs) {
+    if (!s.val) continue;
+    const frac = s.val / t;
+    const span = frac * Math.PI * 2;
+
+    const a1 = start + gap;
+    const a2 = start + span - gap;
+    if (a2 > a1) {
+      ctx.beginPath();
+      ctx.arc(0, 0, ringR, a1, a2);
+      ctx.strokeStyle = s.col;
+      ctx.lineWidth = lw;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+    start += span;
+  }
+
+  // numeritos alrededor (N,E,S,O)
+  const labels = [
+    { v: b.stats.common,    dx: 0,         dy: -(ringR + 14*scale) },
+    { v: b.stats.rare,      dx: (ringR + 18*scale), dy: 0 },
+    { v: b.stats.epic,      dx: 0,         dy: (ringR + 10*scale) },
+    { v: b.stats.legendary, dx: -(ringR + 18*scale), dy: 0 },
+  ];
+
+  ctx.font = `bold ${10*scale}px "Share Tech Mono", monospace`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (const p of labels) {
+    if (!p.v) continue;
+    const txt = String(p.v);
+    const tw = ctx.measureText(txt).width;
+    const pad = 6*scale;
+    const w = tw + pad*2;
+    const h = 16*scale;
+
+    ctx.save();
+    ctx.translate(p.dx, p.dy);
+    ctx.fillStyle = 'rgba(6,11,20,0.75)';
+    ctx.beginPath();
+    ctx.roundRect(-w/2, -h/2, w, h, 6*scale);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,200,255,0.18)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.fillStyle = '#e8f4ff';
+    ctx.fillText(txt, 0, 0);
+    ctx.restore();
+  }
+}
+
 
     // ── Globos de diálogo ──
     // Cada globo: { uid, text, born, duration, alpha, lines, boxW, boxH }
@@ -372,6 +512,11 @@
         ringAngle: Math.random() * Math.PI * 2,
         img: null,
         pulse: 0,
+        // Stats locales para donut (NO se escriben a Firebase)
+        statsLoaded: false,
+        stats: { common: 0, rare: 0, epic: 0, legendary: 0 },
+        // Cooldown local para evitar restar mil veces por segundo
+        lastHitAt: 0,
       };
     }
 
@@ -418,6 +563,9 @@ const oPinned = (o.uid === myUid && isDragging);
 // empuja a los demás, pero a mí no me empujan.
 if (!bPinned) { b.vx -= nx * force; b.vy -= ny * force; }
 if (!oPinned) { o.vx += nx * force; o.vy += ny * force; }
+
+              // Donut: restar 1 (local) por colisión (con cooldown)
+              onLocalCollision(b, o);
           }
         }
 
@@ -590,6 +738,11 @@ if (!oPinned) { o.vx += nx * force; o.vy += ny * force; }
         ctx.stroke();
       }
       ctx.shadowBlur = 0;
+
+      // Donut local alrededor del avatar
+      ctx.save();
+      drawDonutRing(b, 1); // draw inside translated/scaled context
+      ctx.restore();
 
       ctx.beginPath();
       ctx.arc(0, 0, VISUAL_RADIUS, 0, Math.PI * 2);
@@ -862,6 +1015,8 @@ window.addEventListener('pointerdown', (e) => {
               const b = createBubble(uid, data);
               b.img = loadImg((data.avatar || '') || (data.photoURL || ''));
               bubbles.set(uid, b);
+              // Cargar stats UNA vez para el donut (ligero)
+              loadStatsOnce(uid);
               if (uid !== myUid) showToast(`${data.username || 'Usuario'} se unió`);
             }
           });
