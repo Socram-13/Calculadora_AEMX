@@ -50,11 +50,11 @@
         @keyframes headerGlow { 0%,100%{opacity:.3} 50%{opacity:1} }
 
         /* ── Header row ── */
-        .chat-header-content { display:flex;justify-content:flex-start;align-items:center;gap:6px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px; }
+        .chat-header-content { display:flex;justify-content:center;align-items:center;gap:6px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px; }
         .chat-header-content::-webkit-scrollbar { display:none; }
 
         /* Spacer empuja cerrar a la derecha */
-        .header-spacer { flex:1;min-width:6px;flex-shrink:0; }
+        .header-spacer { flex:0;min-width:0; }
 
         /* ── BOTÓN CERRAR ── */
         .btn-close-chat { display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;background:rgba(255,60,80,.1);border:1px solid rgba(255,60,80,.45);border-radius:8px;color:#ff5566;font-size:16px;line-height:1;cursor:pointer;transition:all .2s ease; }
@@ -225,7 +225,7 @@
             <div class="chat-header">
                 <div class="chat-header-content">
                     <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
-                    <a class="btn-guias" href="guias.html" target="_top">📹 <span class="guias-text">GUÍAS</span></a>
+                    <a class="btn-guias" href="guias.html" target="_top">📚 <span class="guias-text">GUÍAS</span></a>
                     <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙 <span class="tx-text">COINS</span></a>
                     
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
