@@ -4058,7 +4058,7 @@
         case 'sembrador':        return total >= 25;
         case 'colono':           return total >= 50;
         case 'ubicado':          return loc !== '—' && loc !== '' && loc !== '...';
-        case 'mexicano':         return loc.toUpperCase().includes('MEXICO') || loc.toUpperCase().includes('MX') || loc.toUpperCase().includes('MÉXI');
+        case 'mexicano':         return (window.userCountry || '').toLowerCase().includes('mexico');
         case 'ahorrador':        return coins >= 50;
         case 'disciplinado':     return coins >= 100;
         case 'fundador':         return sd !== '' && sd <= '2024-09-26';
