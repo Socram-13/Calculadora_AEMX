@@ -609,21 +609,56 @@ const userRef = ref(database, 'chat_presence/' + userId);
     </script>
 
 <script>
-/* ANTI-TECLADO MÓVIL: evita foco automático al cargar (iOS/Android) */
-document.addEventListener('DOMContentLoaded', () => {
-  const msgInput = document.getElementById('messageInput');
-  const userInput = document.getElementById('usernameInput');
+/* ANTI-TECLADO MÓVIL (iOS/Android):
+   - Evita que el navegador abra teclado al cargar (focus restaurado / autofoco raro)
+   - Pone inputs en readonly hasta que el usuario toque el campo
+*/
+(function () {
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (!isTouch) return;
 
-  [msgInput, userInput].forEach((input) => {
+  function arm(input) {
     if (!input) return;
 
-    // Blindaje: asegúrate de que no quede enfocado por scripts previos o restauración de estado
+    // Evita teclado aunque el navegador intente enfocar
+    input.setAttribute('readonly', 'readonly');
     input.blur();
 
-    // En móviles, solo enfocar cuando el usuario toque el campo
-    input.addEventListener('touchstart', () => {
+    // Si algo lo enfoca, lo desenfocamos mientras siga readonly
+    input.addEventListener('focus', () => {
+      if (input.hasAttribute('readonly')) {
+        input.blur();
+      }
+    });
+
+    const enable = () => {
+      input.removeAttribute('readonly');
       input.focus();
-    }, { once: true, passive: true });
+    };
+
+    // Solo habilitar/enfocar con interacción del usuario
+    input.addEventListener('touchstart', enable, { once: true, passive: true });
+    input.addEventListener('click', enable, { once: true, passive: true });
+  }
+
+  function run() {
+    arm(document.getElementById('messageInput'));
+    arm(document.getElementById('usernameInput'));
+
+    // Blindaje extra: iOS a veces restaura focus al volver (bfcache)
+    setTimeout(() => {
+      const a = document.activeElement;
+      if (a && (a.id === 'messageInput' || a.id === 'usernameInput')) a.blur();
+    }, 0);
+    setTimeout(() => {
+      const a = document.activeElement;
+      if (a && (a.id === 'messageInput' || a.id === 'usernameInput')) a.blur();
+    }, 250);
+  }
+
+  document.addEventListener('DOMContentLoaded', run);
+  window.addEventListener('pageshow', run);
+})();
   });
 });
 </script>
