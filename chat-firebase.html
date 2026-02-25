@@ -371,6 +371,7 @@
                     lastMessageCount = total;
                     chatInitialized = true;
                     messages.slice(-50).forEach((msg) => {
+                        if (!msg.username || !msg.text) return; // ignorar mensajes corruptos
                         addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.avatar || '', msg.borderColor || '');
                     });
                     container.scrollTop = container.scrollHeight;
@@ -404,6 +405,8 @@
             function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
 
             function addMessageToUI(author, text, timestamp, isOwn = false, msgAvatar = '', msgBorderColor = '') {
+                // Protección: ignorar mensajes sin datos mínimos
+                if (!author || !text) return;
                 const container = document.getElementById('messagesContainer');
                 const ownClass = isOwn ? 'own' : '';
                 const avatar = isOwn ? (currentAvatar || msgAvatar) : msgAvatar;
