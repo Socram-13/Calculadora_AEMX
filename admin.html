@@ -2085,47 +2085,49 @@
     let pendingAction = null;
 
     async function loadUsers() {
-      const snapshot = await get(ref(db, 'users'));
-      {
-        allUsers = [];
-        snapshot.forEach((child) => {
-          const d = child.val();
-          if (!d.username) return;
-          const common    = parseInt(d.common)    || 0;
-          const rare      = parseInt(d.rare)      || 0;
-          const epic      = parseInt(d.epic)      || 0;
-          const legendary = parseInt(d.legendary) || 0;
-          allUsers.push({
-            uid:        child.key,
-            username:   d.username,
-            avatar:     d.avatar      || '',
-            borderColor:d.borderColor || '',
-            country:    d.country     || '',
-            city:       d.city        || '',
-            total:      common + rare + epic + legendary,
-            coins:      parseInt(d.coins) || 0,
-            updatedAt:  d.updatedAt   || null,
-            bannedChat:        !!d.bannedChat,
-            bannedLeaderboard: !!d.bannedLeaderboard,
-            clanMember:        !!d.clanMember,
-            countryHistory:    Array.isArray(d.countryHistory) ? d.countryHistory : [],
-          }
-    }
+  const snapshot = await get(ref(db, 'users'));
+  allUsers = [];
 
-        });
-        allUsers.sort((a, b) => b.total - a.total);
-        updateStats();
-        renderTable();
-        if (window.renderMiniMap) window.renderMiniMap(allUsers);
+  if (snapshot.exists()) {
+    snapshot.forEach((child) => {
+      const d = child.val() || {};
+      if (!d.username) return;
 
-        // Construir mapa uid → user y cargar códigos activos
-        const usersMap = {};
-        allUsers.forEach(u => { usersMap[u.uid] = u; });
-        loadActiveCodes(usersMap);
+      const common    = parseInt(d.common)    || 0;
+      const rare      = parseInt(d.rare)      || 0;
+      const epic      = parseInt(d.epic)      || 0;
+      const legendary = parseInt(d.legendary) || 0;
+
+      allUsers.push({
+        uid:              child.key,
+        username:         d.username,
+        avatar:           d.avatar || '',
+        borderColor:      d.borderColor || '',
+        country:          d.country || '',
+        city:             d.city || '',
+        total:            common + rare + epic + legendary,
+        coins:            parseInt(d.coins) || 0,
+        updatedAt:        d.updatedAt || null,
+        bannedChat:       !!d.bannedChat,
+        bannedLeaderboard:!!d.bannedLeaderboard,
+        clanMember:       !!d.clanMember,
+        countryHistory:   Array.isArray(d.countryHistory) ? d.countryHistory : []
       });
-    }
+    });
+  }
 
-    function updateStats() {
+  allUsers.sort((a, b) => b.total - a.total);
+  updateStats();
+  renderTable();
+  if (window.renderMiniMap) window.renderMiniMap(allUsers);
+
+  // Construir mapa uid → user y cargar códigos activos (limitado)
+  const usersMap = {};
+  allUsers.forEach(u => { usersMap[u.uid] = u; });
+  loadActiveCodes(usersMap);
+}
+
+function updateStats() {
       const bannedAny   = allUsers.filter(u => u.bannedChat || u.bannedLeaderboard).length;
       const clanMembers = allUsers.filter(u => u.clanMember).length;
       const totalCoins  = allUsers.reduce((sum, u) => sum + (u.coins || 0), 0);
