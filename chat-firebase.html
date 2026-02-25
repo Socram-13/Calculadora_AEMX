@@ -61,11 +61,11 @@
         .btn-close-chat:hover { background:rgba(255,60,80,.28);border-color:#ff5566;color:#fff;box-shadow:0 0 14px rgba(255,60,80,.5);transform:scale(1.1); }
         .btn-close-chat:active { transform:scale(.93); }
 
-        .btn-guias { display:flex;align-items:center;gap:6px;background:none;border:1px solid #00ff9d;border-radius:8px;color:#00ff9d;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;padding:6px 12px;cursor:pointer;transition:all .2s;white-space:nowrap;text-decoration:none; }
+        .btn-guias { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #00ff9d;border-radius:8px;color:#00ff9d;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;text-decoration:none;flex-shrink:0; }
         .btn-guias:hover { background:#00ff9d;color:#060b14;box-shadow:0 0 16px rgba(0,255,157,.4); }
-        .btn-leaderboard { display:flex;align-items:center;gap:6px;background:none;border:1px solid var(--primary-color);border-radius:8px;color:var(--primary-color);font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;padding:6px 12px;cursor:pointer;transition:all .2s;text-decoration:none;white-space:nowrap; }
+        .btn-leaderboard { display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--primary-color);border-radius:8px;color:var(--primary-color);font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;text-decoration:none;flex-shrink:0; }
         .btn-leaderboard:hover { background:var(--primary-color);color:#060b14;box-shadow:0 0 16px rgba(0,255,136,.4); }
-        .btn-transacciones { display:flex;align-items:center;gap:6px;background:none;border:1px solid #ffd700;border-radius:8px;color:#ffd700;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;padding:6px 12px;cursor:pointer;transition:all .2s;white-space:nowrap;text-decoration:none; }
+        .btn-transacciones { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #ffd700;border-radius:8px;color:#ffd700;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;text-decoration:none;flex-shrink:0; }
         .btn-transacciones:hover { background:#ffd700;color:#060b14;box-shadow:0 0 16px rgba(255,215,0,.4); }
         .btn-transacciones.hidden { display:none; }
         .btn-presencia { display:flex;align-items:center;gap:6px;background:none;border:1px solid #00ff9d;border-radius:8px;color:#00ff9d;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;padding:6px 12px;cursor:pointer;transition:all .2s;white-space:nowrap;text-decoration:none; }
@@ -155,16 +155,13 @@
             .chat-subtitle { font-size:10px; }
             .chat-header-content { gap:5px;padding-bottom:2px;-webkit-overflow-scrolling:touch; }
             .btn-presencia { order:-1; }
-            .btn-leaderboard .lb-text { display:none; }
-            .btn-leaderboard { padding:6px 9px;font-size:14px;flex-shrink:0; }
-            .btn-marco .marco-text { display:none; }
-            .btn-marco { padding:6px 9px;font-size:14px;flex-shrink:0; }
-            .btn-transacciones .tx-text { display:none; }
-            .btn-transacciones { padding:6px 9px;font-size:14px;flex-shrink:0; }
+            .btn-leaderboard { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-marco { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-transacciones { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
             .btn-presencia .pr-text { display:inline;font-size:8px;letter-spacing:1px; }
             .btn-presencia { padding:6px 10px;font-size:13px;flex-shrink:0;background:rgba(0,255,157,.12);box-shadow:0 0 10px rgba(0,255,157,.25); }
             .btn-mute { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
-            .btn-guias { flex-shrink:0; }
+            .btn-guias { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
             .menu-toggle { display:flex;flex-shrink:0; }
             .theme-selector { gap:6px; }
             .theme-btn { width:24px;height:24px; }
@@ -179,7 +176,7 @@
             .username-form { padding:28px 20px;width:92%; }
             .username-form h3 { font-size:18px; }
         }
-        .btn-marco { display:flex;align-items:center;gap:6px;background:none;border:1px solid #facc15;border-radius:8px;color:#facc15;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;padding:6px 12px;cursor:pointer;transition:all .2s;white-space:nowrap; }
+        .btn-marco { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #facc15;border-radius:8px;color:#facc15;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;flex-shrink:0; }
         .btn-marco:hover { background:#facc15;color:#060b14;box-shadow:0 0 16px rgba(250,204,21,.4); }
         .btn-marco:disabled { opacity:.3;cursor:not-allowed; }
         .denied-modal { display:none;position:fixed;inset:0;background:rgba(10,14,26,.92);z-index:3000;align-items:center;justify-content:center; }
@@ -224,11 +221,11 @@
 
             <div class="chat-header">
                 <div class="chat-header-content">
-                    <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
-                    <a class="btn-guias" href="guias.html" target="_top">📚 <span class="guias-text">GUÍAS</span></a>
-                    <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙 <span class="tx-text">COINS</span></a>
+                    <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆</a>
+                    <a class="btn-guias" href="guias.html" target="_top">📚</a>
+                    <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙</a>
                     
-                    <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
+                    <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️</button>
                     <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
                     <!-- spacer empuja cerrar al extremo derecho -->
                     <div class="header-spacer"></div>
