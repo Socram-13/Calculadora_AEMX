@@ -894,7 +894,7 @@ const serverNow = () => Date.now() + serverOffset;
 // El tiempo se calcula con el reloj del servidor para que todos vean lo mismo.
 const MSG_RECENT_MS = 30 * 1000; // 30s de ventana (la burbuja dura 6s)
 
-onChildAdded(query(ref(db, 'mensajes'), limitToLast(50)), (snap) => {
+onChildAdded(query(ref(db, 'messages'), limitToLast(50)), (snap) => {
   const msg = snap.val();
   if (!msg || !msg.uid || !msg.text) return;
 
@@ -921,7 +921,7 @@ loading.style.display = 'none';
       addSpeechBubble(myUid, text);
 
       // Guardar en Firebase para que todos los demás lo vean
-      const msgsRef = ref(db, 'mensajes');
+      const msgsRef = ref(db, 'messages');
       await push(msgsRef, {
         uid:       myUid,
         text,
