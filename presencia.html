@@ -316,18 +316,6 @@
     const canvas  = document.getElementById('canvas');
     const ctx     = canvas.getContext('2d');
     const loading = document.getElementById('loading');
-
-const loadingTextEl = loading ? loading.querySelector('.loading-text') : null;
-
-// Modo diagnóstico: si algo truena, no nos quedamos en "Conectando..." sin explicación.
-window.addEventListener('error', (ev) => {
-  console.error('JS error:', ev.error || ev.message);
-  if (loadingTextEl) loadingTextEl.textContent = 'ERROR: revisa la consola (F12)';
-});
-window.addEventListener('unhandledrejection', (ev) => {
-  console.error('Unhandled promise rejection:', ev.reason);
-  if (loadingTextEl) loadingTextEl.textContent = 'ERROR Firebase: revisa la consola (F12)';
-});
     const cursorEl= document.getElementById('cursor');
 
     function resize() {
@@ -907,7 +895,7 @@ if (b.statsLoaded) {
 // ── Interacción (drag con inercia) ──
 // Nota: ya NO se usa el puntero para "atraer" al avatar.
 let isDragging = false;
-        syncMyPos(true);
+        syncMyPosOnDrop();
 let dragUid = null;
 
 // Velocidad estimada durante el arrastre (para inercia al soltar)
@@ -994,7 +982,7 @@ function endDrag(e) {
     me.vy = dragVy;
   }
   isDragging = false;
-        syncMyPos(true);
+        syncMyPosOnDrop();
   dragUid = null;
   try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
 }
@@ -1020,7 +1008,6 @@ window.addEventListener('pointerdown', (e) => {
       }
 
       myUid = user.uid;
-      try {
       const snap = await get(ref(db, `users/${user.uid}`));
       const userData = snap.exists() ? snap.val() : {};
 
@@ -1119,12 +1106,6 @@ onChildAdded(query(ref(db, 'messages'), limitToLast(50)), (snap) => {
 });
 
 loading.style.display = 'none';
-      } catch (e) {
-        console.error('Error durante init:', e);
-        showToast('Error al conectar: ' + (e?.message || e));
-        if (loadingTextEl) loadingTextEl.textContent = 'ERROR al conectar';
-        loading.style.display = 'none';
-      }
       loop();
     });
 
