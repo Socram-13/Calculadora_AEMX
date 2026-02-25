@@ -364,7 +364,7 @@
         username:    data.username || '?',
         avatar:      data.avatar   || '',
         borderColor: data.borderColor || '#00c8ff',
-        photoURL:    data.photoURL || '',
+        photoURL:    (data.photoURL || ''),
         x: RADIUS + Math.random() * (canvas.width  - RADIUS * 2),
         y: TOP_PAD + RADIUS + Math.random() * (canvas.height - TOP_PAD - BOT_PAD - RADIUS * 2),
         vx: (Math.random() - 0.5) * 2,
@@ -598,7 +598,7 @@ if (!oPinned) { o.vx += nx * force; o.vy += ny * force; }
       ctx.fillStyle = '#0b1626';
       ctx.fill();
 
-      const imgSrc = photoURL || avatar;
+      const imgSrc = avatar || photoURL;
       if (imgSrc) {
         const img = loadImg(imgSrc);
         if (img && img.complete && img.naturalWidth > 0) {
@@ -818,7 +818,7 @@ window.addEventListener('pointerdown', (e) => {
       const myData = {
         username:    userData.username    || user.displayName || 'Usuario',
         avatar:      userData.avatar      || '',
-        photoURL:    user.photoURL        || '',
+        photoURL:    (userData.avatar ? '' : (user.photoURL || '')),
         borderColor: userData.borderColor || '#00c8ff',
         online: true,
         lastSeen: serverTimestamp(),
@@ -846,7 +846,7 @@ window.addEventListener('pointerdown', (e) => {
               b.borderColor = data.borderColor || b.borderColor;
             } else {
               const b = createBubble(uid, data);
-              b.img = loadImg(data.photoURL || data.avatar);
+              b.img = loadImg((data.avatar || '') || (data.photoURL || ''));
               bubbles.set(uid, b);
               if (uid !== myUid) showToast(`${data.username || 'Usuario'} se unió`);
             }
