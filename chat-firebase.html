@@ -220,7 +220,7 @@
                     <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
                     <a class="btn-guias" href="guias.html" target="_top">📹 <span class="guias-text">GUÍAS</span></a>
                     <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙 <span class="tx-text">COINS</span></a>
-                    <a class="btn-presencia" href="presencia.html" target="_top">⬡ <span class="pr-text">ROOM</span></a>
+                    <a class="btn-presencia" href="presencia.html" target="_top">⬡ <span class="pr-text">PRESENCIA</span></a>
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
                     <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
                     <!-- spacer empuja cerrar al extremo derecho -->
@@ -252,7 +252,7 @@
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
         import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
@@ -272,13 +272,25 @@
 
         function showAuthError(msg) { document.getElementById('authError').textContent = msg; }
 
+        // Detecta si estamos dentro de un iframe
+        const enIframe = window.self !== window.top;
+
         window.authWithGoogle = async function() {
             showAuthError('');
             try {
                 const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
+                if (enIframe) {
+                    // En iframe: abre Google Auth en ventana nueva para evitar bloqueos
+                    const result = await signInWithPopup(auth, provider).catch(async () => {
+                        // Si popup falla, redirige la ventana completa
+                        window.top.location.href = window.location.href;
+                    });
+                } else {
+                    await signInWithPopup(auth, provider);
+                }
             } catch(e) {
                 showAuthError('Error al iniciar con Google. Intenta de nuevo.');
+                console.error(e);
             }
         };
 

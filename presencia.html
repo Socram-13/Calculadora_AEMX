@@ -297,7 +297,7 @@
     import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, onValue, onChildAdded, onDisconnect, serverTimestamp, remove, push, query, limitToLast, get }
+    import { getDatabase, ref, set, update, onValue, onChildAdded, onDisconnect, serverTimestamp, remove, push, query, limitToLast, get }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -892,10 +892,17 @@ if (b.statsLoaded) {
     }
 
     
+// ── Sincroniza posición del avatar en Firebase al soltar ──
+function syncMyPosOnDrop() {
+  if (!myUid) return;
+  const me = bubbles.get(myUid);
+  if (!me) return;
+  update(ref(db, `presencia/${myUid}`), { x: me.x, y: me.y }).catch(() => {});
+}
+
 // ── Interacción (drag con inercia) ──
 // Nota: ya NO se usa el puntero para "atraer" al avatar.
 let isDragging = false;
-        syncMyPosOnDrop();
 let dragUid = null;
 
 // Velocidad estimada durante el arrastre (para inercia al soltar)
@@ -1002,7 +1009,14 @@ window.addEventListener('pointerdown', (e) => {
         try {
           await signInWithPopup(auth, new GoogleAuthProvider());
         } catch(e) {
-          showToast('Error al iniciar sesión');
+          if (e.code === 'auth/popup-blocked') {
+            showToast('Popup bloqueado — permite ventanas emergentes e intenta de nuevo');
+          } else if (e.code === 'auth/cancelled-popup-request' || e.code === 'auth/popup-closed-by-user') {
+            showToast('Inicio de sesión cancelado');
+          } else {
+            showToast('Error al iniciar sesión. Recarga la página.');
+          }
+          document.getElementById('loading').style.display = 'none';
         }
         return;
       }

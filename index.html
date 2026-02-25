@@ -3324,7 +3324,7 @@
       <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       <span id="widget-time">--:--</span>
     </div>
-    <iframe id="chat-frame" src="chat-firebase.html" title="Chat Atlas Earth México" loading="lazy" allow="clipboard-write"></iframe>
+    <iframe id="chat-frame" src="about:blank" title="Chat Atlas Earth México" allow="clipboard-write; popups" allowfullscreen></iframe>
   </div>
 
   <script>
@@ -3342,9 +3342,14 @@
       }
       if (chatOpen) {
         history.pushState({ chatOpen: true }, '');
-        const username = localStorage.getItem('atlas-username') || '';
-        const color = localStorage.getItem('atlas-avatar-border') || '';
-        document.getElementById('chat-frame').src = `chat-firebase.html?username=${encodeURIComponent(username)}&color=${encodeURIComponent(color)}`;
+        // ✅ Solo carga el iframe la PRIMERA vez — evita reinicios de Firebase
+        const frame = document.getElementById('chat-frame');
+        if (!frame.getAttribute('data-loaded')) {
+          const username = localStorage.getItem('atlas-username') || '';
+          const color = localStorage.getItem('atlas-avatar-border') || '';
+          frame.src = `chat-firebase.html?username=${encodeURIComponent(username)}&color=${encodeURIComponent(color)}`;
+          frame.setAttribute('data-loaded', '1');
+        }
       }
     }
 
