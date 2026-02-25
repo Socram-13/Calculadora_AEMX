@@ -544,7 +544,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
             setInterval(clearOldMessages, 60 * 60 * 1000);
 
             const urlParams = new URLSearchParams(window.location.search);
-            const urlAvatar = sessionStorage.getItem('chat-avatar') || firebaseUser.photoURL || '';
+            // ⚠️ Nunca usar photoURL de Google — priorizar avatar del perfil de la app
+            const localAvatar = (() => { try { return localStorage.getItem('atlas-avatar') || ''; } catch(e) { return ''; } })();
+            const urlAvatar = sessionStorage.getItem('chat-avatar') || localAvatar || '';
             const urlColor = urlParams.get('color') || '';
             if (urlColor) {
                 document.documentElement.style.setProperty('--primary-color', urlColor);
@@ -552,9 +554,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
 
             const urlUsername = (urlParams.get('username') || '').trim().toUpperCase();
-            const authDisplayName = (firebaseUser.displayName || '').trim().toUpperCase();
-            const authEmail = (firebaseUser.email || '').split('@')[0].trim().toUpperCase();
-            const resolvedUsername = urlUsername || authDisplayName || authEmail || '';
+            const localUsername = (() => { try { return (localStorage.getItem('atlas-username') || '').trim().toUpperCase(); } catch(e) { return ''; } })();
+            // ⚠️ Nunca usar displayName ni email de Google — siempre priorizar el nombre del perfil de la app
+            const resolvedUsername = urlUsername || localUsername || '';
 
             if (resolvedUsername && resolvedUsername.length >= 3) {
                 currentAvatar = urlAvatar;
