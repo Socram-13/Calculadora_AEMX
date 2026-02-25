@@ -6,6 +6,17 @@
   <title>Guía Completa Atlas Earth · AEMX México</title>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
+
+/* iOS-safe back/close button */
+.btn-back{
+  position:fixed; top:12px; left:12px; z-index:99999;
+  background:#111; color:#fff; border:none;
+  padding:10px 14px; border-radius:10px;
+  font-size:14px; line-height:1; cursor:pointer;
+  opacity:.92;
+}
+.btn-back:active{ transform:scale(.97); }
+
     :root {
       --bg: #060b14;
       --panel: #0b1626;
@@ -630,6 +641,8 @@
   </style>
 </head>
 <body>
+<button class="btn-back" type="button" onclick="goBack()">← Regresar</button>
+
 <div class="container">
 
   <!-- HEADER -->
@@ -1571,5 +1584,20 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 </script>
+
+<script>
+function goBack(){
+  try {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = "index.html";
+    }
+  } catch(e) {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
 </body>
 </html>

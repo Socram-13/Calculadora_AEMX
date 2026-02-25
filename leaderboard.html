@@ -587,8 +587,31 @@
       thead th { padding: 8px 12px; }
     }
   </style>
+
+<style>
+.btn-back {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 3000;
+  background: rgba(6, 11, 20, 0.9);
+  color: #9fe0ff;
+  border: 1px solid rgba(159,224,255,0.4);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.btn-back:active { transform: scale(0.96); }
+@media (min-width: 900px) { .btn-back { display:none; } }
+</style>
+
 </head>
 <body>
+<button class="btn-back" onclick="goBack()">← Regresar</button>
+
 
   <!-- Auth Overlay -->
   <div class="auth-overlay" id="authOverlay">
@@ -883,5 +906,16 @@
       } catch(e) {}
     }
   </script>
+
+<script>
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = "index.html";
+  }
+}
+</script>
+
 </body>
 </html>
