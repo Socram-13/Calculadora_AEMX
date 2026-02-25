@@ -2359,17 +2359,17 @@
 
       if (!window.userCountry) {
         try {
-          const res  = await fetch('https://freeipapi.com/api/json');
+          const res  = await fetch('https://get.geojs.io/v1/ip/geo.json');
           const data = await res.json();
-          if (data.countryName && typeof normalizarPais === 'function') {
-            window.userCountry = normalizarPais(data.countryName);
+          if (data.country && typeof normalizarPais === 'function') {
+            window.userCountry = normalizarPais(data.country);
           }
         } catch(e) {
           try {
-            const res2  = await fetch('https://ipapi.co/json/');
+            const res2  = await fetch('https://api.ip.sb/geoip');
             const data2 = await res2.json();
-            if (data2.country_name && typeof normalizarPais === 'function') {
-              window.userCountry = normalizarPais(data2.country_name);
+            if (data2.country && typeof normalizarPais === 'function') {
+              window.userCountry = normalizarPais(data2.country);
             }
           } catch(e2) {}
         }
@@ -3175,22 +3175,23 @@
   async function ubicacionPorIP() {
     var elLoc = document.getElementById("user-location");
     if (elLoc && elLoc.textContent === "—") elLoc.textContent = "...";
+    // APIs con soporte CORS compatible con GitHub Pages
     try {
-      var r1 = await fetch("https://freeipapi.com/api/json");
+      var r1 = await fetch("https://get.geojs.io/v1/ip/geo.json");
       var d1 = await r1.json();
-      if (d1.countryName) actualizarPais(d1.countryName);
-      if (d1.cityName && d1.regionName) { actualizarCiudad(d1.cityName, d1.regionName); return; }
+      if (d1.country) actualizarPais(d1.country);
+      if (d1.city && d1.region) { actualizarCiudad(d1.city, d1.region); return; }
     } catch(e) {}
     try {
-      var r2 = await fetch("https://ipapi.co/json/");
+      var r2 = await fetch("https://api.ip.sb/geoip");
       var d2 = await r2.json();
-      if (d2.country_name) actualizarPais(d2.country_name);
+      if (d2.country) actualizarPais(d2.country);
       if (d2.city && d2.region) { actualizarCiudad(d2.city, d2.region); return; }
     } catch(e) {}
     try {
-      var r3 = await fetch("https://ipwho.is/");
+      var r3 = await fetch("https://ipapi.co/json/", { headers: { "Accept": "application/json" } });
       var d3 = await r3.json();
-      if (d3.country) actualizarPais(d3.country);
+      if (d3.country_name) actualizarPais(d3.country_name);
       if (d3.city && d3.region) { actualizarCiudad(d3.city, d3.region); return; }
     } catch(e) {}
     if (elLoc && elLoc.textContent === "...") elLoc.textContent = "—";
@@ -3324,7 +3325,7 @@
       <div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
       <span id="widget-time">--:--</span>
     </div>
-    <iframe id="chat-frame" src="about:blank" title="Chat Atlas Earth México" allow="clipboard-write; popups" allowfullscreen></iframe>
+    <iframe id="chat-frame" src="about:blank" title="Chat Atlas Earth México" allow="clipboard-write" allowfullscreen></iframe>
   </div>
 
   <script>
