@@ -392,6 +392,13 @@ const drag = {
   pointerId: null,
   offsetX: 0,
   offsetY: 0,
+
+  // Inercia al soltar (px / frame aprox.)
+  vx: 0,
+  vy: 0,
+  lastX: 0,
+  lastY: 0,
+  lastT: 0,
 };
 
 function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
@@ -761,6 +768,12 @@ canvas.addEventListener('pointerdown', (e) => {
     drag.offsetY = me.y - p.y;
     me.vx = 0; me.vy = 0;
 
+    // Init inercia
+    drag.vx = 0; drag.vy = 0;
+    drag.lastX = me.x;
+    drag.lastY = me.y;
+    drag.lastT = performance.now();
+
     try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
     e.preventDefault();
   }
@@ -787,6 +800,23 @@ canvas.addEventListener('pointermove', (e) => {
 
   me.x = clamp(nx, COLLISION_RADIUS, canvas.width - COLLISION_RADIUS);
   me.y = clamp(ny, TOP_PAD + COLLISION_RADIUS, canvasH - COLLISION_RADIUS);
+
+  // Calcular velocidad de arrastre (para inercia al soltar)
+  const now = performance.now();
+  const dt  = Math.max(1, now - drag.lastT); // ms
+  const dx  = me.x - drag.lastX;
+  const dy  = me.y - drag.lastY;
+  const k   = 16.6667; // ms -> aprox. 1 frame a 60fps
+  const instVx = (dx / dt) * k;
+  const instVy = (dy / dt) * k;
+  // Suavizado para evitar "latigazos"
+  drag.vx = drag.vx * 0.75 + instVx * 0.25;
+  drag.vy = drag.vy * 0.75 + instVy * 0.25;
+  drag.lastX = me.x;
+  drag.lastY = me.y;
+  drag.lastT = now;
+
+  // Durante el drag, el avatar no tiene velocidad propia (solo posición directa)
   me.vx = 0;
   me.vy = 0;
 
@@ -797,10 +827,24 @@ function endDrag(e) {
   if (!drag.active) return;
   if (drag.pointerId !== null && e.pointerId !== undefined && e.pointerId !== drag.pointerId) return;
 
+  // Al soltar: aplicar inercia (trayectoria + rebote en bordes ya lo maneja la física)
+  const me = myUid ? bubbles.get(myUid) : null;
+  if (me) {
+    const maxV = 14; // límite para que no salga disparado
+    const minV = 0.15;
+    me.vx = clamp(drag.vx, -maxV, maxV);
+    me.vy = clamp(drag.vy, -maxV, maxV);
+    if (Math.abs(me.vx) < minV) me.vx = 0;
+    if (Math.abs(me.vy) < minV) me.vy = 0;
+  }
+
   drag.active = false;
   drag.pointerId = null;
   drag.offsetX = 0;
   drag.offsetY = 0;
+
+  drag.vx = 0; drag.vy = 0;
+  drag.lastX = 0; drag.lastY = 0; drag.lastT = 0;
 
   try { canvas.releasePointerCapture(e.pointerId); } catch(_) {}
 }
