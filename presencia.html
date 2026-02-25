@@ -829,14 +829,29 @@ if (b.statsLoaded) {
 
         // Física individual
         if (a.uid !== myUid) {
-          const cx = canvas.width / 2, cy = (TOP_PAD + canvasH) / 2;
-          a.vx += (cx - a.x) * 0.002;
-          a.vy += (cy - a.y) * 0.002;
+          // Si tiene posición objetivo desde Firebase, interpola suavemente hacia ella
+          if (a.tx !== null && a.ty !== null) {
+            const LERP = 0.12; // 0=no se mueve, 1=teletransporta
+            a.x += (a.tx - a.x) * LERP;
+            a.y += (a.ty - a.y) * LERP;
+            a.vx = 0; a.vy = 0; // sin inercia propia para remotos
+          } else {
+            // Fallback: deriva suavemente al centro si no hay datos de posición
+            const cx = canvas.width / 2, cy = (TOP_PAD + canvasH) / 2;
+            a.vx += (cx - a.x) * 0.002;
+            a.vy += (cy - a.y) * 0.002;
+            a.vx *= FRICTION;
+            a.vy *= FRICTION;
+            a.x  += a.vx;
+            a.y  += a.vy;
+          }
+        } else {
+          // Usuario local: física normal
+          a.vx *= FRICTION;
+          a.vy *= FRICTION;
+          a.x  += a.vx;
+          a.y  += a.vy;
         }
-        a.vx *= FRICTION;
-        a.vy *= FRICTION;
-        a.x  += a.vx;
-        a.y  += a.vy;
         if (a.x < RADIUS)                { a.x = RADIUS;                a.vx *= -WALL_BOUNCE; }
         if (a.x > canvas.width - RADIUS) { a.x = canvas.width - RADIUS; a.vx *= -WALL_BOUNCE; }
         if (a.y < TOP_PAD + RADIUS)      { a.y = TOP_PAD + RADIUS;       a.vy *= -WALL_BOUNCE; }
@@ -888,6 +903,18 @@ function syncMyPosOnDrop() {
   const me = bubbles.get(myUid);
   if (!me) return;
   update(ref(db, `presencia/${myUid}`), { x: me.x, y: me.y }).catch(() => {});
+}
+
+// ── Sincronización en tiempo real mientras se arrastra ──
+// Throttle a ~100ms para no saturar Firebase (máx ~10 writes/seg)
+let _lastSyncAt = 0;
+const SYNC_INTERVAL_MS = 100;
+
+function syncMyPosDrag() {
+  const now = performance.now();
+  if (now - _lastSyncAt < SYNC_INTERVAL_MS) return;
+  _lastSyncAt = now;
+  syncMyPosOnDrop();
 }
 
 // ── Interacción (drag con inercia) ──
@@ -968,6 +995,9 @@ canvas.addEventListener('pointermove', (e) => {
   me.vy = 0;
 
   lastPX = px; lastPY = py; lastPT = now;
+
+  // ✅ Envía posición en tiempo real (throttled)
+  syncMyPosDrag();
 });
 
 function endDrag(e) {
