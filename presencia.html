@@ -59,6 +59,7 @@
       inset: 0;
       z-index: 1;
       touch-action: none;
+      will-change: contents;
     }
 
     /* HUD superior */
@@ -297,7 +298,7 @@
     import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, update, onValue, onChildAdded, onDisconnect, serverTimestamp, remove, push, query, limitToLast, get }
+    import { getDatabase, ref, set, update, onValue, onChildAdded, onDisconnect, serverTimestamp, push, query, limitToLast, get }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -341,6 +342,7 @@
 
     const bubbles  = new Map(); // uid → burbuja
     const imgCache = new Map(); // url → HTMLImageElement
+    let myUid = null;
 // ── Donut local (stats por usuario) ────────────────────────────────
 // Ligero: leemos users/{uid} UNA sola vez cuando aparece el usuario.
 // Luego, en PRESENCIA los valores se pueden ir restando por colisiones,
@@ -463,15 +465,22 @@ function drawDonutRing(b, scale) {
     }
 
     function createBubble(uid, data) {
+      const borderColor = data.borderColor || '#00c8ff';
       return {
         uid,
         username:    data.username || '?',
         avatar:      data.avatar   || '',
-        borderColor: data.borderColor || '#00c8ff',
+        borderColor,
+        // Cache de color pre-computado — evita llamar hexToRgba cada frame
+        colorCache:  {
+          full:   hexToRgba(borderColor, 0.9),
+          dim:    hexToRgba(borderColor, 0.25),
+          border: hexToRgba(borderColor, 0.7),
+          ring:   hexToRgba(borderColor, 0.18),
+        },
         photoURL:    (data.photoURL || ''),
         x: (Number.isFinite(data.x) ? data.x : (RADIUS + Math.random() * (canvas.width  - RADIUS * 2))),
         y: (Number.isFinite(data.y) ? data.y : (TOP_PAD + RADIUS + Math.random() * (canvas.height - TOP_PAD - BOT_PAD - RADIUS * 2))),
-        // suavizado de red (para usuarios remotos)
         tx: (Number.isFinite(data.x) ? data.x : null),
         ty: (Number.isFinite(data.y) ? data.y : null),
         vx: (Math.random() - 0.5) * 2,
@@ -479,66 +488,10 @@ function drawDonutRing(b, scale) {
         ringAngle: Math.random() * Math.PI * 2,
         img: null,
         pulse: 0,
-        // Stats locales para donut (NO se escriben a Firebase)
         statsLoaded: false,
         stats: { common: 0, rare: 0, epic: 0, legendary: 0 },
-        // Cooldown local para evitar restar mil veces por segundo
         lastHitAt: 0,
       };
-    }
-
-    // ── Física ──
-    let myUid  = null;
-
-    function updatePhysics() {
-      const bArr = [...bubbles.values()];
-      const canvasH = canvas.height - BOT_PAD;
-
-      for (let i = 0; i < bArr.length; i++) {
-        const b = bArr[i];
-
-        if (b.uid !== myUid) {
-          const cx = canvas.width / 2, cy = (TOP_PAD + canvasH) / 2;
-          b.vx += (cx - b.x) * 0.002;
-          b.vy += (cy - b.y) * 0.002;
-        }
-
-        b.vx *= FRICTION;
-        b.vy *= FRICTION;
-        b.x += b.vx;
-        b.y += b.vy;
-
-        if (b.x < RADIUS)                 { b.x = RADIUS;                 b.vx *= -WALL_BOUNCE; }
-        if (b.x > canvas.width - RADIUS)  { b.x = canvas.width - RADIUS;  b.vx *= -WALL_BOUNCE; }
-        if (b.y < TOP_PAD + RADIUS)       { b.y = TOP_PAD + RADIUS;        b.vy *= -WALL_BOUNCE; }
-        if (b.y > canvasH - RADIUS)       { b.y = canvasH - RADIUS;        b.vy *= -WALL_BOUNCE; }
-
-        for (let j = i + 1; j < bArr.length; j++) {
-          const o  = bArr[j];
-          const dx = o.x - b.x;
-          const dy = o.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-          const minDist = RADIUS * 2 + 8;
-
-          if (dist < minDist) {
-            const force = (minDist - dist) / minDist * REPULSE;
-            const nx = dx / dist, ny = dy / dist;
-            const bPinned = (b.uid === myUid && isDragging);
-const oPinned = (o.uid === myUid && isDragging);
-
-// Si estoy arrastrando mi avatar, se comporta como "objeto fijo":
-// empuja a los demás, pero a mí no me empujan.
-if (!bPinned) { b.vx -= nx * force; b.vy -= ny * force; }
-if (!oPinned) { o.vx += nx * force; o.vy += ny * force; }
-
-              // Donut: restar 1 (local) por colisión (con cooldown)
-              onLocalCollision(b, o);
-          }
-        }
-
-        b.ringAngle += 0.008;
-        if (b.pulse < 1) b.pulse = Math.min(1, b.pulse + 0.04);
-      }
     }
 
     // ── Utilidades de texto ──
@@ -586,6 +539,7 @@ if (!oPinned) { o.vx += nx * force; o.vy += ny * force; }
 
         const { x, y } = bubble;
         const color = bubble.borderColor || '#00c8ff';
+        const bCache = bubble.colorCache;
 
         // Calcular dimensiones del box
         ctx.font = '12px "Share Tech Mono", monospace';
@@ -719,7 +673,7 @@ if (sb.uid === myUid && bubble.statsLoaded) {
 
     // ── Dibujar avatar ──
     function drawBubble(b) {
-      const { x, y, username, borderColor, avatar, photoURL, ringAngle, pulse } = b;
+      const { x, y, username, borderColor, avatar, photoURL, ringAngle, pulse, colorCache } = b;
       const scale = 0.4 + pulse * 0.6;
       const r = VISUAL_RADIUS * scale;
       const isMe = b.uid === myUid;
@@ -736,10 +690,9 @@ if (sb.uid === myUid && bubble.statsLoaded) {
       for (let i = 0; i < segments; i++) {
         const a1 = ringAngle + (i / segments) * Math.PI * 2;
         const a2 = a1 + (Math.PI * 2 / segments) * 0.6;
-        const alpha = (i % 2 === 0) ? 0.9 : 0.25;
         ctx.beginPath();
         ctx.arc(0, 0, ringR, a1, a2);
-        ctx.strokeStyle = hexToRgba(borderColor, alpha);
+        ctx.strokeStyle = (i % 2 === 0) ? colorCache.full : colorCache.dim;
         ctx.lineWidth   = isMe ? 3.5 : 2.5;
         ctx.lineCap     = 'round';
         ctx.stroke();
@@ -801,13 +754,13 @@ if (b.statsLoaded) {
           try {
             ctx.drawImage(img, -VISUAL_RADIUS, -VISUAL_RADIUS, VISUAL_RADIUS * 2, VISUAL_RADIUS * 2);
           } catch(e) {
-            drawInitial(ctx, username, borderColor);
+            drawInitial(ctx, username, borderColor, colorCache);
           }
         } else {
-          drawInitial(ctx, username, borderColor);
+          drawInitial(ctx, username, borderColor, colorCache);
         }
       } else {
-        drawInitial(ctx, username, borderColor);
+        drawInitial(ctx, username, borderColor, colorCache);
       }
 
       ctx.restore();
@@ -816,7 +769,7 @@ if (b.statsLoaded) {
       ctx.translate(x, y);
       ctx.beginPath();
       ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.strokeStyle = hexToRgba(borderColor, 0.7);
+      ctx.strokeStyle = colorCache.border;
       ctx.lineWidth   = 2;
       ctx.shadowColor = borderColor;
       ctx.shadowBlur  = 10;
@@ -841,9 +794,9 @@ if (b.statsLoaded) {
       ctx.restore();
     }
 
-    function drawInitial(ctx, username, color) {
+    function drawInitial(ctx, username, color, colorCache) {
       const letter = (username || '?').charAt(0).toUpperCase();
-      ctx.fillStyle = hexToRgba(color, 0.18);
+      ctx.fillStyle = colorCache ? colorCache.ring : hexToRgba(color, 0.18);
       ctx.fillRect(-RADIUS, -RADIUS, RADIUS * 2, RADIUS * 2);
       ctx.font         = `bold ${RADIUS * 0.9}px "Orbitron", monospace`;
       ctx.textAlign    = 'center';
@@ -866,14 +819,40 @@ if (b.statsLoaded) {
     function loop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      // Una sola copia del array por frame
       const bArr = [...bubbles.values()];
+
+      // Un único paso O(n²): líneas de conexión + colisiones físicas juntas
+      const canvasH = canvas.height - BOT_PAD;
       for (let i = 0; i < bArr.length; i++) {
+        const a = bArr[i];
+
+        // Física individual
+        if (a.uid !== myUid) {
+          const cx = canvas.width / 2, cy = (TOP_PAD + canvasH) / 2;
+          a.vx += (cx - a.x) * 0.002;
+          a.vy += (cy - a.y) * 0.002;
+        }
+        a.vx *= FRICTION;
+        a.vy *= FRICTION;
+        a.x  += a.vx;
+        a.y  += a.vy;
+        if (a.x < RADIUS)                { a.x = RADIUS;                a.vx *= -WALL_BOUNCE; }
+        if (a.x > canvas.width - RADIUS) { a.x = canvas.width - RADIUS; a.vx *= -WALL_BOUNCE; }
+        if (a.y < TOP_PAD + RADIUS)      { a.y = TOP_PAD + RADIUS;       a.vy *= -WALL_BOUNCE; }
+        if (a.y > canvasH - RADIUS)      { a.y = canvasH - RADIUS;       a.vy *= -WALL_BOUNCE; }
+        a.ringAngle += 0.008;
+        if (a.pulse < 1) a.pulse = Math.min(1, a.pulse + 0.04);
+
         for (let j = i + 1; j < bArr.length; j++) {
-          const a = bArr[i], b = bArr[j];
+          const b = bArr[j];
           const dx = b.x - a.x, dy = b.y - a.y;
-          const dist = Math.sqrt(dx*dx + dy*dy);
+          const dist2 = dx * dx + dy * dy;
           const maxDist = 180;
-          if (dist < maxDist) {
+
+          // Línea de conexión (sin sqrt si está muy lejos)
+          if (dist2 < maxDist * maxDist) {
+            const dist = Math.sqrt(dist2);
             const alpha = (1 - dist / maxDist) * 0.15;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -881,13 +860,24 @@ if (b.statsLoaded) {
             ctx.strokeStyle = `rgba(0,200,255,${alpha})`;
             ctx.lineWidth   = 1;
             ctx.stroke();
+
+            // Colisión física
+            const minDist = RADIUS * 2 + 8;
+            if (dist < minDist) {
+              const force = (minDist - dist) / minDist * REPULSE;
+              const nx = dx / dist, ny = dy / dist;
+              const bPinned = (b.uid === myUid && isDragging);
+              const aPinned = (a.uid === myUid && isDragging);
+              if (!aPinned) { a.vx -= nx * force; a.vy -= ny * force; }
+              if (!bPinned) { b.vx += nx * force; b.vy += ny * force; }
+              onLocalCollision(a, b);
+            }
           }
         }
       }
 
-      updatePhysics();
       bArr.forEach(drawBubble);
-      drawSpeechBubbles();  // globos encima de todo
+      drawSpeechBubbles();
       requestAnimationFrame(loop);
     }
 
@@ -1069,7 +1059,15 @@ window.addEventListener('pointerdown', (e) => {
               b.username    = data.username    || b.username;
               b.avatar      = data.avatar      || b.avatar;
               b.photoURL    = data.photoURL    || b.photoURL;
-              b.borderColor = data.borderColor || b.borderColor;
+              if (data.borderColor && data.borderColor !== b.borderColor) {
+                b.borderColor = data.borderColor;
+                b.colorCache = {
+                  full:   hexToRgba(b.borderColor, 0.9),
+                  dim:    hexToRgba(b.borderColor, 0.25),
+                  border: hexToRgba(b.borderColor, 0.7),
+                  ring:   hexToRgba(b.borderColor, 0.18),
+                };
+              }
               if (Number.isFinite(data.x) && Number.isFinite(data.y)) { b.tx = data.x; b.ty = data.y; }
             } else {
               const b = createBubble(uid, data);
