@@ -305,9 +305,19 @@
         // Se activa en cuanto carga el módulo, sin esperar login ni username
         onValue(ref(database, 'config/btnTransaccionesActivo'), (snap) => {
             const activo = snap.exists() ? snap.val() : false;
-            const btn = document.getElementById('btnTransacciones');
-            if (btn) btn.classList.toggle('hidden', !activo);
+            // Guardar estado de config para combinarlo con el clan check
+            window._transaccionesConfigActivo = activo;
+            actualizarBtnTransacciones();
         });
+
+        function actualizarBtnTransacciones() {
+            const btn = document.getElementById('btnTransacciones');
+            if (!btn) return;
+            const configActivo = window._transaccionesConfigActivo === true;
+            const esClan = window._userEsClan === true;
+            btn.classList.toggle('hidden', !(configActivo && esClan));
+        }
+        window._actualizarBtnTransacciones = actualizarBtnTransacciones;
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -317,13 +327,24 @@
                         document.getElementById('authError').textContent = '⛔ Tu cuenta ha sido bloqueada del chat.';
                         return;
                     }
+                    // ── Verificar clan para el botón de transacciones ──
+                    const data = snap.exists() ? snap.val() : {};
+                    const esClan = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
+                    window._userEsClan = esClan;
+                    actualizarBtnTransacciones();
+
                     authOverlay.classList.remove('visible');
                     initChat(user);
                 }).catch(() => {
+                    window._userEsClan = false;
+                    actualizarBtnTransacciones();
                     authOverlay.classList.remove('visible');
                     initChat(user);
                 });
             } else {
+                // Sin sesión: ocultar botón
+                window._userEsClan = false;
+                actualizarBtnTransacciones();
                 authOverlay.classList.add('visible');
             }
         });

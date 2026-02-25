@@ -613,6 +613,14 @@
     <button class="btn-signout-denied" onclick="signOutUser()">CERRAR SESIÓN</button>
   </div>
 
+  <!-- No Clan -->
+  <div class="no-mexico" id="noClan">
+    <span class="icon">🛡️</span>
+    <h2>SOLO CLAN AEMX</h2>
+    <p>Las transacciones son exclusivas<br>para miembros del clan oficial.</p>
+    <button class="btn-signout-denied" onclick="signOutUser()">CERRAR SESIÓN</button>
+  </div>
+
   <!-- Code image modal -->
   <div class="modal-overlay" id="codeModal">
     <div class="code-modal">
@@ -774,6 +782,9 @@
             const d = snap.val();
             userCountry = (d.country || '').toLowerCase();
             userCoins   = d.coins || 0;
+            // Guard de clan
+            const esClan = d.clanMember === true || d.role === 'admin' || d.role === 'moderator';
+            if (!esClan) { document.getElementById('noClan').classList.add('visible'); return; }
           }
           const esMexico = userCountry.includes('mexico') || userCountry.includes('méxico');
           if (!esMexico) { document.getElementById('noMexico').classList.add('visible'); return; }
@@ -788,12 +799,20 @@
           document.getElementById('txCards').style.display = on ? '' : 'none';
         });
 
-        // Verificar país desde Firebase
+        // Verificar país y clan desde Firebase
         const snap = await get(ref(db, `users/${user.uid}`));
         if (snap.exists()) {
           const d = snap.val();
           userCountry = (d.country || '').toLowerCase();
           userCoins   = d.coins || 0;
+        }
+
+        // ── Guard de clan ──
+        const dataClan = snap.exists() ? snap.val() : {};
+        const esClan = dataClan.clanMember === true || dataClan.role === 'admin' || dataClan.role === 'moderator';
+        if (!esClan) {
+          document.getElementById('noClan').classList.add('visible');
+          return;
         }
 
         const esMexico = userCountry.includes('mexico') || userCountry.includes('méxico');
