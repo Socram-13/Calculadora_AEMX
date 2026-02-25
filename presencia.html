@@ -254,6 +254,11 @@
       letter-spacing: 1px;
       white-space: nowrap;
     }
+  
+    @media (hover: none) {
+      #cursor { display: none !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -371,60 +376,99 @@
 
     // ── Física ──
     let mouseX = canvas.width  / 2;
-    let mouseY = canvas.height / 2;
-    let myUid  = null;
+let mouseY = canvas.height / 2;
+let myUid  = null;
+
+// ── Drag del avatar (solo arrastrar; ya NO sigue al mouse) ──
+const drag = {
+  active: false,
+  pointerId: null,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function isOverBubble(b, px, py) {
+  // Hit-test simple en coordenadas del canvas
+  const dx = px - b.x;
+  const dy = py - b.y;
+  return (dx * dx + dy * dy) <= (RADIUS * RADIUS);
+}
+
+function pointerPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
 
     function updatePhysics() {
-      const bArr = [...bubbles.values()];
-      const canvasH = canvas.height - BOT_PAD;
+  const bArr = [...bubbles.values()];
+  const canvasH = canvas.height - BOT_PAD;
 
-      for (let i = 0; i < bArr.length; i++) {
-        const b = bArr[i];
+  const cx = canvas.width / 2;
+  const cy = (TOP_PAD + canvasH) / 2;
 
-        if (b.uid === myUid) {
-          const dx = mouseX - b.x;
-          const dy = mouseY - b.y;
-          b.vx += dx * ATTRACT;
-          b.vy += dy * ATTRACT;
+  for (let i = 0; i < bArr.length; i++) {
+    const b = bArr[i];
+    const isMe = (b.uid === myUid);
+
+    // Si estoy siendo arrastrado, no aplicamos atracción ni integración por velocidad aquí
+    // (la posición se controla con el drag handler).
+    if (!(isMe && drag.active)) {
+      // Suave centrado para que el room no se "vacíe" en las orillas
+      b.vx += (cx - b.x) * 0.002;
+      b.vy += (cy - b.y) * 0.002;
+
+      b.vx *= FRICTION;
+      b.vy *= FRICTION;
+      b.x += b.vx;
+      b.y += b.vy;
+    } else {
+      b.vx = 0;
+      b.vy = 0;
+    }
+
+    // Límites del área jugable
+    if (b.x < RADIUS)                { b.x = RADIUS;                b.vx *= -0.5; }
+    if (b.x > canvas.width - RADIUS) { b.x = canvas.width - RADIUS; b.vx *= -0.5; }
+    if (b.y < TOP_PAD + RADIUS)      { b.y = TOP_PAD + RADIUS;      b.vy *= -0.5; }
+    if (b.y > canvasH - RADIUS)      { b.y = canvasH - RADIUS;      b.vy *= -0.5; }
+
+    // Repulsión entre avatares
+    for (let j = i + 1; j < bArr.length; j++) {
+      const o  = bArr[j];
+      const dx = o.x - b.x;
+      const dy = o.y - b.y;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const minDist = RADIUS * 2 + 8;
+
+      if (dist < minDist) {
+        const force = (minDist - dist) / minDist * REPULSE;
+        const nx = dx / dist, ny = dy / dist;
+
+        // Si estoy arrastrando mi avatar, lo tratamos como "inmóvil":
+        // empuja al otro, pero no me empuja a mí.
+        if (b.uid === myUid && drag.active) {
+          o.vx += nx * force * 2;
+          o.vy += ny * force * 2;
+        } else if (o.uid === myUid && drag.active) {
+          b.vx -= nx * force * 2;
+          b.vy -= ny * force * 2;
         } else {
-          const cx = canvas.width / 2, cy = (TOP_PAD + canvasH) / 2;
-          b.vx += (cx - b.x) * 0.002;
-          b.vy += (cy - b.y) * 0.002;
+          b.vx -= nx * force;
+          b.vy -= ny * force;
+          o.vx += nx * force;
+          o.vy += ny * force;
         }
-
-        b.vx *= FRICTION;
-        b.vy *= FRICTION;
-        b.x += b.vx;
-        b.y += b.vy;
-
-        if (b.x < RADIUS)                 { b.x = RADIUS;                 b.vx *= -0.5; }
-        if (b.x > canvas.width - RADIUS)  { b.x = canvas.width - RADIUS;  b.vx *= -0.5; }
-        if (b.y < TOP_PAD + RADIUS)       { b.y = TOP_PAD + RADIUS;        b.vy *= -0.5; }
-        if (b.y > canvasH - RADIUS)       { b.y = canvasH - RADIUS;        b.vy *= -0.5; }
-
-        for (let j = i + 1; j < bArr.length; j++) {
-          const o  = bArr[j];
-          const dx = o.x - b.x;
-          const dy = o.y - b.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-          const minDist = RADIUS * 2 + 8;
-
-          if (dist < minDist) {
-            const force = (minDist - dist) / minDist * REPULSE;
-            const nx = dx / dist, ny = dy / dist;
-            b.vx -= nx * force;
-            b.vy -= ny * force;
-            o.vx += nx * force;
-            o.vy += ny * force;
-          }
-        }
-
-        b.ringAngle += 0.008;
-        if (b.pulse < 1) b.pulse = Math.min(1, b.pulse + 0.04);
       }
     }
 
-    // ── Utilidades de texto ──
+    b.ringAngle += 0.008;
+    if (b.pulse < 1) b.pulse = Math.min(1, b.pulse + 0.04);
+  }
+}
+
+// ── Utilidades de texto ──
     function wrapText(text, maxWidth) {
       ctx.font = '12px "Share Tech Mono", monospace';
       const words = text.split(' ');
@@ -693,28 +737,81 @@
       requestAnimationFrame(loop);
     }
 
-    // ── Cursor ──
-    window.addEventListener('mousemove', e => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-      cursorEl.style.left = e.clientX + 'px';
-      cursorEl.style.top  = e.clientY + 'px';
-    });
+    // ── Puntero + Drag ──
+// Nota: usamos Pointer Events para soportar mouse y touch con el mismo código.
+canvas.addEventListener('pointerdown', (e) => {
+  const p = pointerPos(e);
+  mouseX = p.x;
+  mouseY = p.y;
 
-    window.addEventListener('touchmove', e => {
-      e.preventDefault();
-      const t = e.touches[0];
-      mouseX = t.clientX;
-      mouseY = t.clientY;
-    }, { passive: false });
+  if (e.pointerType === 'mouse') {
+    cursorEl.style.left = e.clientX + 'px';
+    cursorEl.style.top  = e.clientY + 'px';
+  }
 
-    window.addEventListener('touchstart', e => {
-      const t = e.touches[0];
-      mouseX = t.clientX;
-      mouseY = t.clientY;
-    }, { passive: true });
+  const me = myUid ? bubbles.get(myUid) : null;
+  if (me && isOverBubble(me, p.x, p.y)) {
+    drag.active = true;
+    drag.pointerId = e.pointerId;
+    drag.offsetX = me.x - p.x;
+    drag.offsetY = me.y - p.y;
+    me.vx = 0; me.vy = 0;
 
-    // ── Firebase Auth + ROOM ──
+    try { canvas.setPointerCapture(e.pointerId); } catch(_) {}
+    e.preventDefault();
+  }
+}, { passive: false });
+
+canvas.addEventListener('pointermove', (e) => {
+  const p = pointerPos(e);
+  mouseX = p.x;
+  mouseY = p.y;
+
+  if (e.pointerType === 'mouse') {
+    cursorEl.style.left = e.clientX + 'px';
+    cursorEl.style.top  = e.clientY + 'px';
+  }
+
+  if (!drag.active || drag.pointerId !== e.pointerId) return;
+
+  const me = myUid ? bubbles.get(myUid) : null;
+  if (!me) return;
+
+  const canvasH = canvas.height - BOT_PAD;
+  const nx = p.x + drag.offsetX;
+  const ny = p.y + drag.offsetY;
+
+  me.x = clamp(nx, RADIUS, canvas.width - RADIUS);
+  me.y = clamp(ny, TOP_PAD + RADIUS, canvasH - RADIUS);
+  me.vx = 0;
+  me.vy = 0;
+
+  e.preventDefault();
+}, { passive: false });
+
+function endDrag(e) {
+  if (!drag.active) return;
+  if (drag.pointerId !== null && e.pointerId !== undefined && e.pointerId !== drag.pointerId) return;
+
+  drag.active = false;
+  drag.pointerId = null;
+  drag.offsetX = 0;
+  drag.offsetY = 0;
+
+  try { canvas.releasePointerCapture(e.pointerId); } catch(_) {}
+}
+
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+window.addEventListener('pointerup', endDrag);
+
+// Mantener cursor visible solo para mouse
+window.addEventListener('mousemove', (e) => {
+  cursorEl.style.left = e.clientX + 'px';
+  cursorEl.style.top  = e.clientY + 'px';
+});
+
+// ── Firebase Auth + ROOM ──
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
         try {
