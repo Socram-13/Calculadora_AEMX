@@ -298,7 +298,7 @@
     import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, update, onValue, onChildAdded, onDisconnect, serverTimestamp, push, query, limitToLast, get }
+    import { getDatabase, ref, set, update, onValue, onChildAdded, onDisconnect, serverTimestamp, push, query, limitToLast, get, runTransaction }
                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -343,112 +343,82 @@
     const bubbles  = new Map(); // uid → burbuja
     const imgCache = new Map(); // url → HTMLImageElement
     let myUid = null;
-// ── Donut local (stats por usuario) ────────────────────────────────
-// Ligero: leemos users/{uid} UNA sola vez cuando aparece el usuario.
-// Luego, en PRESENCIA los valores se pueden ir restando por colisiones,
-// pero NO se escribe nada de vuelta a Firebase.
-const STATS_FIELDS = ['common','rare','epic','legendary'];
-const STATS_COOLDOWN_MS = 750; // cuánto debe pasar entre "golpes" para restar otra vez
+// ── ROOM STATS (estado compartido) ────────────────────────────────
+// En vez de restar localmente (cada navegador), guardamos un estado temporal en Firebase
+// para que TODOS vean el mismo contador mientras el usuario esté en la ROOM.
+const STATS_COOLDOWN_MS = 750; // ms entre “golpes” para evitar spam
+const ROOM_STATS_PATH = 'roomStats';
 
 function sanitizeInt(v) {
   const n = Number(v);
   return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
 }
 
-async function loadStatsOnce(uid) {
-  const b = bubbles.get(uid);
-  if (!b || b.statsLoaded) return;
-  b.statsLoaded = true; // evita doble fetch
-
-  try {
-    const snap = await get(ref(db, `users/${uid}`));
-    if (snap.exists()) {
-      const data = snap.val() || {};
-      b.stats.common    = sanitizeInt(data.common);
-      b.stats.rare      = sanitizeInt(data.rare);
-      b.stats.epic      = sanitizeInt(data.epic);
-      b.stats.legendary = sanitizeInt(data.legendary);
-    }
-  } catch (e) {
-    // Si falla, simplemente se queda en ceros (no rompemos la ROOM)
-    console.warn('No pude leer stats para donut:', uid, e);
-  }
-}
-
 function totalStats(s) {
   return (s.common||0) + (s.rare||0) + (s.epic||0) + (s.legendary||0);
 }
 
-function decrementOne(s) {
-  // Prioridad: common → rare → epic → legendary (puedes invertir si prefieres)
-  if (s.common > 0) { s.common--; return true; }
-  if (s.rare > 0) { s.rare--; return true; }
-  if (s.epic > 0) { s.epic--; return true; }
-  if (s.legendary > 0) { s.legendary--; return true; }
-  return false;
-}
+// Inicializa stats de ROOM para un uid (si aún no existen) tomando base de users/{uid}
+async function ensureRoomStats(uid) {
+  const roomRef = ref(db, `${ROOM_STATS_PATH}/${uid}`);
+  const snap = await get(roomRef);
+  if (snap.exists()) return;
 
-function onLocalCollision(a, b) {
-  const now = performance.now();
-  // Restar con cooldown independiente por avatar
-  if (now - (a.lastHitAt || 0) > STATS_COOLDOWN_MS) {
-    if (decrementOne(a.stats)) a.lastHitAt = now;
-  }
-  if (now - (b.lastHitAt || 0) > STATS_COOLDOWN_MS) {
-    if (decrementOne(b.stats)) b.lastHitAt = now;
-  }
-}
-
-function drawDonutRing(b, scale) {
-  if (!b.statsLoaded) return;
-  const t = totalStats(b.stats);
-  if (t <= 0) return;
-
-  const colors = {
-    common:    'rgba(74, 222, 128, 0.9)',  // verde
-    rare:      'rgba(56, 189, 248, 0.9)',
-    epic:      'rgba(192, 132, 252, 0.9)',
-    legendary: 'rgba(255, 215, 0, 0.9)'
+  const uSnap = await get(ref(db, `users/${uid}`));
+  const data = uSnap.exists() ? (uSnap.val() || {}) : {};
+  const base = {
+    common: sanitizeInt(data.common),
+    rare: sanitizeInt(data.rare),
+    epic: sanitizeInt(data.epic),
+    legendary: sanitizeInt(data.legendary),
+    updatedAt: Date.now()
   };
-
-  const ringR = (VISUAL_RADIUS + 16) * scale;
-  const teeth = 52;          // “sierra” (más dientes = más fino)
-  const amp   = 4.5 * scale; // profundidad del diente
-  const lw    = 2.2 * scale;
-
-  // Giro continuo por avatar (local)
-  b._rot = (b._rot || 0) + 0.004;
-  ctx.rotate(b._rot);
-
-  const segs = [
-    { key: 'common',    val: b.stats.common },
-    { key: 'rare',      val: b.stats.rare },
-    { key: 'epic',      val: b.stats.epic },
-    { key: 'legendary', val: b.stats.legendary },
-  ];
-
-  let startA = 0;
-  for (const s of segs) {
-    if (!s.val) continue;
-    const span = (s.val / t) * Math.PI * 2;
-
-    ctx.beginPath();
-    for (let i = 0; i <= teeth; i++) {
-      const a = startA + (span * i / teeth);
-      const r = ringR + (i % 2 === 0 ? amp : -amp);
-      ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
-    }
-    ctx.strokeStyle = colors[s.key];
-    ctx.lineWidth = lw;
-    ctx.lineJoin = 'round';
-    ctx.stroke();
-
-    startA += span;
-  }
+  await set(roomRef, base);
 }
 
+// Resta 1 de manera atómica (para que todos vean lo mismo)
+async function decrementRoomStat(uid) {
+  const roomRef = ref(db, `${ROOM_STATS_PATH}/${uid}`);
 
-    // ── Globos de diálogo ──
+  await runTransaction(roomRef, (cur) => {
+    if (!cur) return cur;
+
+    const s = {
+      common: sanitizeInt(cur.common),
+      rare: sanitizeInt(cur.rare),
+      epic: sanitizeInt(cur.epic),
+      legendary: sanitizeInt(cur.legendary),
+      updatedAt: Date.now()
+    };
+
+    // Prioridad: common → rare → epic → legendary
+    if (s.common > 0) s.common--;
+    else if (s.rare > 0) s.rare--;
+    else if (s.epic > 0) s.epic--;
+    else if (s.legendary > 0) s.legendary--;
+
+    return s;
+  });
+}
+
+// Autoridad “sin juez”: cada usuario SOLO descuenta su propio contador cuando participa en colisión.
+// El cambio se escribe en Firebase (roomStats/{uid}) y todos lo ven igual.
+function onLocalCollision(a, b) {
+  if (!myUid) return;
+  const meA = (a.uid === myUid);
+  const meB = (b.uid === myUid);
+  if (!meA && !meB) return;
+
+  const me = bubbles.get(myUid);
+  if (!me) return;
+
+  const now = performance.now();
+  if (now - (me.lastHitAt || 0) < STATS_COOLDOWN_MS) return;
+  me.lastHitAt = now;
+
+  decrementRoomStat(myUid).catch(() => {});
+}
+// ── Globos de diálogo ──
     // Cada globo: { uid, text, born, duration, alpha, lines, boxW, boxH }
     const speechBubbles = [];
     const BUBBLE_DURATION = 6000; // ms que dura el globo
@@ -1073,6 +1043,27 @@ window.addEventListener('pointerdown', (e) => {
       const presRef = ref(db, `presencia/${user.uid}`);
       await set(presRef, myData);
       onDisconnect(presRef).remove();
+// ── ROOM STATS (compartidos) ──
+// Inicializa mis stats temporales de ROOM y bórralos al desconectar
+await ensureRoomStats(myUid);
+onDisconnect(ref(db, `${ROOM_STATS_PATH}/${myUid}`)).remove();
+
+// Listener global: aplica roomStats a las burbujas (todos verán lo mismo)
+onValue(ref(db, ROOM_STATS_PATH), (s2) => {
+  if (!s2.exists()) return;
+  s2.forEach(child => {
+    const uid = child.key;
+    const data = child.val() || {};
+    const b = bubbles.get(uid);
+    if (!b) return;
+    b.stats.common    = sanitizeInt(data.common);
+    b.stats.rare      = sanitizeInt(data.rare);
+    b.stats.epic      = sanitizeInt(data.epic);
+    b.stats.legendary = sanitizeInt(data.legendary);
+    b.statsLoaded = true;
+  });
+});
+
 
       // Escuchar presencia
       onValue(ref(db, 'presencia'), (snap) => {
@@ -1103,8 +1094,7 @@ window.addEventListener('pointerdown', (e) => {
               const b = createBubble(uid, data);
               b.img = loadImg((data.avatar || '') || (data.photoURL || ''));
               bubbles.set(uid, b);
-              // Cargar stats UNA vez para el donut (ligero)
-              loadStatsOnce(uid);
+              // stats se sincronizan desde roomStats (listener global)
               if (uid !== myUid) showToast(`${data.username || 'Usuario'} se unió`);
             }
           });
