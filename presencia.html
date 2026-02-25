@@ -815,10 +815,24 @@ window.addEventListener('pointerdown', (e) => {
       const snap = await get(ref(db, `users/${user.uid}`));
       const userData = snap.exists() ? snap.val() : {};
 
+      const storedAvatar = (localStorage.getItem('atlas-avatar') || '').trim();
+
+      // Prioridad de avatar (igual que en index):
+      // 1) Firebase users/{uid}/avatar
+      // 2) localStorage 'atlas-avatar'
+      // 3) Google photoURL (solo fallback)
+      const resolvedAvatar = (userData.avatar && String(userData.avatar).trim().length > 0)
+        ? String(userData.avatar).trim()
+        : (storedAvatar.length > 0 ? storedAvatar : '');
+
+      const resolvedPhotoURL = (!resolvedAvatar)
+        ? (String(userData.photoURL || '').trim() || String(user.photoURL || '').trim() || '')
+        : '';
+
       const myData = {
         username:    userData.username    || user.displayName || 'Usuario',
-        avatar:      userData.avatar      || '',
-        photoURL:    (userData.avatar ? '' : (user.photoURL || '')),
+        avatar:      resolvedAvatar,
+        photoURL:    resolvedPhotoURL,
         borderColor: userData.borderColor || '#00c8ff',
         online: true,
         lastSeen: serverTimestamp(),
