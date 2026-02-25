@@ -303,6 +303,14 @@
         window.showEmailForm = undefined;
         window.hideEmailForm = undefined;
 
+        // ✅ Listener de visibilidad del botón COINS fuera de initChat
+        // Se activa en cuanto carga el módulo, sin esperar login ni username
+        onValue(ref(database, 'config/btnTransaccionesActivo'), (snap) => {
+            const activo = snap.exists() ? snap.val() : false;
+            const btn = document.getElementById('btnTransacciones');
+            if (btn) btn.classList.toggle('hidden', !activo);
+        });
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 get(ref(database, `users/${user.uid}`)).then(snap => {
@@ -479,10 +487,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                 // Aviso ticker
                 loadTicker(cfg.aviso || '');
-
-                // Botón transacciones
-                const btn = document.getElementById('btnTransacciones');
-                if (btn) btn.classList.toggle('hidden', !cfg.btnTransaccionesActivo);
 
                 // TTL del chat
                 const nuevoTTL = cfg.chatTTL !== undefined ? cfg.chatTTL : 24;
