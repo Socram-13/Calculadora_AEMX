@@ -390,7 +390,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     if (!window._lastNewestTs) window._lastNewestTs = 0;
 
                     if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
-                        if (newest.username !== currentUsername) playPopSound();
+                        if (newest.username !== currentUsername) window.playPopSound();
                     }
                     window._lastNewestKey = newestKey;
                     window._lastNewestTs  = newestTs;
@@ -606,6 +606,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 osc.stop(audioCtx.currentTime + 0.15);
             } catch(e) {}
         }
+        window.playPopSound = playPopSound;
 
         function toggleMute() {
             soundMuted = !soundMuted;
