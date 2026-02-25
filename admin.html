@@ -1626,7 +1626,7 @@
 
       <!-- Botón transacciones en chat -->
       <div class="coins-toggle-wrap" style="border-color:rgba(255,215,0,0.35);border-top-color:#ffd700;">
-        <span class="coins-toggle-label" style="color:#ffd700;font-size:8px;">🪙 COINS EN CHAT</span>
+        <span class="coins-toggle-label" style="color:#ffd700;font-size:8px;">🪙 BTN COINS EN CHAT</span>
         <label class="toggle-switch">
           <input type="checkbox" id="btnTransToggle" onchange="toggleBtnTransacciones(this.checked)">
           <span class="toggle-slider"></span>
@@ -1943,7 +1943,7 @@
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getDatabase, ref, onValue, update, set, get }
+    import { getDatabase, ref, onValue, update, set, get, query, limitToLast }
                                from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
     const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
@@ -2084,8 +2084,9 @@
     let searchQuery   = '';
     let pendingAction = null;
 
-    function loadUsers() {
-      onValue(ref(db, 'users'), (snapshot) => {
+    async function loadUsers() {
+      const snapshot = await get(ref(db, 'users'));
+      {
         allUsers = [];
         snapshot.forEach((child) => {
           const d = child.val();
@@ -2108,7 +2109,9 @@
             bannedLeaderboard: !!d.bannedLeaderboard,
             clanMember:        !!d.clanMember,
             countryHistory:    Array.isArray(d.countryHistory) ? d.countryHistory : [],
-          });
+          }
+    }
+
         });
         allUsers.sort((a, b) => b.total - a.total);
         updateStats();
@@ -2333,8 +2336,9 @@
     }
 
     // ── Códigos activos en tránsito ──
-    function loadActiveCodes(usersMap) {
-      onValue(ref(db, 'codes'), (snap) => {
+    async function loadActiveCodes(usersMap) {
+      const snap = await get(query(ref(db, 'codes'), limitToLast(250)));
+      {
         const tbody = document.getElementById('activeCodesBody');
         const acCount = document.getElementById('acCount');
         const acTotal = document.getElementById('acTotal');
@@ -2351,7 +2355,9 @@
         const codes = [];
         snap.forEach(child => {
           codes.push({ ...child.val() });
-        });
+        }
+    }
+
 
         // Ordenar del más reciente al más antiguo
         codes.sort((a, b) => b.createdAt - a.createdAt);

@@ -220,7 +220,7 @@
                     <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆 <span class="lb-text">RANKING</span></a>
                     <a class="btn-guias" href="guias.html" target="_top">📹 <span class="guias-text">GUÍAS</span></a>
                     <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙 <span class="tx-text">COINS</span></a>
-                    
+                    <a class="btn-presencia" href="presencia.html" target="_top">⬡ <span class="pr-text">ROOM</span></a>
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️ <span class="marco-text">MARCO</span></button>
                     <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
                     <!-- spacer empuja cerrar al extremo derecho -->
@@ -251,7 +251,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get, query, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         const firebaseConfig = {
@@ -355,19 +355,31 @@
 
             function loadMessages() {
                 const messagesRef = ref(database, 'messages');
+                // ✅ Limitar descarga: solo los últimos 50 mensajes
+                const recentMessagesQuery = query(messagesRef, limitToLast(50));
                 let lastMessageCount = 0;
                 let chatInitialized = false;
-                onValue(messagesRef, (snapshot) => {
+                onValue(recentMessagesQuery, (snapshot) => {
                     const container = document.getElementById('messagesContainer');
                     container.innerHTML = '';
                     const messages = [];
                     snapshot.forEach((childSnapshot) => { messages.push({ key: childSnapshot.key, ...childSnapshot.val() }); });
                     messages.sort((a, b) => a.timestamp - b.timestamp);
                     const total = messages.length;
-                    if (chatInitialized && total > lastMessageCount) {
-                        const nuevos = messages.slice(lastMessageCount);
-                        if (nuevos.some(m => m.username !== currentUsername)) playPopSound();
+                    // ✅ Con lista limitada, detectamos novedad por el último mensaje
+                    const newest = total ? messages[total - 1] : null;
+                    const newestKey = newest ? newest.key : null;
+                    const newestTs  = newest && newest.timestamp ? newest.timestamp : 0;
+
+                    if (!window._lastNewestKey) window._lastNewestKey = null;
+                    if (!window._lastNewestTs) window._lastNewestTs = 0;
+
+                    if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
+                        if (newest.username !== currentUsername) playPopSound();
                     }
+                    window._lastNewestKey = newestKey;
+                    window._lastNewestTs  = newestTs;
+
                     lastMessageCount = total;
                     chatInitialized = true;
                     messages.slice(-50).forEach((msg) => {

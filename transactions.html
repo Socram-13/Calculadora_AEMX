@@ -714,7 +714,7 @@
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, get, update, remove, set, onValue, push }
+    import { equalTo, get, getDatabase, onValue, orderByChild, push, query, ref, remove, set, update }
                                from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -978,17 +978,23 @@
     };
 
     // ── Cargar mis códigos activos ──
-    function loadMyCodes() {
-      if (!currentUser) return;
-      onValue(ref(db, 'codes'), (snap) => {
-        activeCodes = [];
-        if (snap.exists()) {
-          snap.forEach((child) => {
-            const d = child.val();
-            if (d.createdBy === currentUser.uid) {
-              activeCodes.push({ code: child.key, ...d });
-            }
-          });
+    async function loadMyCodes() {
+  if (!currentUser) return;
+
+  // ✅ Descargar SOLO mis códigos (evita bajar todo el nodo "codes")
+  const q = query(ref(db, 'codes'), orderByChild('createdBy'), equalTo(currentUser.uid));
+  const snap = await get(q);
+
+  activeCodes = [];
+  if (snap.exists()) {
+    snap.forEach((child) => {
+      const d = child.val();
+      activeCodes.push({ code: child.key, ...d });
+    });
+  }
+  renderCodes();
+}
+});
         }
         renderCodes();
       });
