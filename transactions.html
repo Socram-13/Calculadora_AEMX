@@ -977,10 +977,11 @@
       }
     };
 
-    // ── Cargar mis códigos activos ──
-    function loadMyCodes() {
+    // ✅ get() en lugar de onValue — solo descarga cuando se necesita
+    async function loadMyCodes() {
       if (!currentUser) return;
-      onValue(ref(db, 'codes'), (snap) => {
+      try {
+        const snap = await get(ref(db, 'codes'));
         activeCodes = [];
         if (snap.exists()) {
           snap.forEach((child) => {
@@ -991,7 +992,9 @@
           });
         }
         renderCodes();
-      });
+      } catch(e) {
+        console.error('Error cargando códigos:', e);
+      }
     }
 
     function renderCodes() {

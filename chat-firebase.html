@@ -251,7 +251,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get, query, limitToLast } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get, query, limitToLast, orderByChild, endAt } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         const firebaseConfig = {
@@ -347,7 +347,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     onDisconnect(userRef).remove();
                     loadMessages();
                     loadUsers();
-                    loadTicker();
                 } else {
                     alert('Por favor ingresa un nombre de al menos 3 caracteres');
                 }
@@ -448,48 +447,64 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             document.getElementById('usernameInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') setUsername(); });
 
-            function loadTicker() {
-                onValue(ref(database, 'config/aviso'), (snap) => {
-                    const texto = snap.exists() ? snap.val() : '';
-                    const bar = document.getElementById('tickerBar');
-                    const txt = document.getElementById('tickerText');
-                    if (texto && texto.trim()) {
-                        txt.textContent = texto.trim();
-                        bar.classList.add('visible');
-                        txt.style.animationDuration = Math.max(5, texto.length * 0.06) + 's';
-                    } else {
-                        bar.classList.remove('visible');
-                    }
-                });
-            }
-
-            onValue(ref(database, 'config/btnTransaccionesActivo'), (snap) => {
-                const activo = snap.exists() ? snap.val() : false;
-                const btn = document.getElementById('btnTransacciones');
-                if (btn) btn.classList.toggle('hidden', !activo);
-            });
-
+            // ✅ Un solo listener para todo el nodo config (ahorra 2 lecturas en tiempo real)
             let chatTTL = null;
             let ttlLoaded = false;
-            onValue(ref(database, 'config/chatTTL'), (snap) => {
-                chatTTL = snap.exists() ? snap.val() : 24;
-                if (!ttlLoaded) { ttlLoaded = true; clearOldMessages(); }
+
+            function loadTicker(texto) {
+                const bar = document.getElementById('tickerBar');
+                const txt = document.getElementById('tickerText');
+                if (texto && texto.trim()) {
+                    txt.textContent = texto.trim();
+                    bar.classList.add('visible');
+                    txt.style.animationDuration = Math.max(5, texto.length * 0.06) + 's';
+                } else {
+                    bar.classList.remove('visible');
+                }
+            }
+
+            onValue(ref(database, 'config'), (snap) => {
+                const cfg = snap.exists() ? snap.val() : {};
+
+                // Aviso ticker
+                loadTicker(cfg.aviso || '');
+
+                // Botón transacciones
+                const btn = document.getElementById('btnTransacciones');
+                if (btn) btn.classList.toggle('hidden', !cfg.btnTransaccionesActivo);
+
+                // TTL del chat
+                const nuevoTTL = cfg.chatTTL !== undefined ? cfg.chatTTL : 24;
+                if (!ttlLoaded) {
+                    chatTTL = nuevoTTL;
+                    ttlLoaded = true;
+                    clearOldMessages();
+                } else {
+                    chatTTL = nuevoTTL;
+                }
             });
 
+            // ✅ clearOldMessages solo descarga mensajes viejos (no todo el nodo)
             async function clearOldMessages() {
                 if (!ttlLoaded) return;
                 if (chatTTL === 0) return;
-                const snapshot = await get(ref(database, 'messages'));
-                if (!snapshot.exists()) return;
                 const now = Date.now();
                 const cutoff = now - chatTTL * 60 * 60 * 1000;
-                const deletePromises = [];
-                snapshot.forEach((child) => {
-                    const ts = child.val().timestamp;
-                    if (!ts || ts <= 0 || ts > now) return;
-                    if (ts < cutoff) deletePromises.push(remove(child.ref));
-                });
-                if (deletePromises.length > 0) await Promise.all(deletePromises);
+                try {
+                    const oldQuery = query(
+                        ref(database, 'messages'),
+                        orderByChild('timestamp'),
+                        endAt(cutoff)
+                    );
+                    const snapshot = await get(oldQuery);
+                    if (!snapshot.exists()) return;
+                    const deletePromises = [];
+                    snapshot.forEach((child) => {
+                        const ts = child.val().timestamp;
+                        if (ts && ts > 0 && ts <= cutoff) deletePromises.push(remove(child.ref));
+                    });
+                    if (deletePromises.length > 0) await Promise.all(deletePromises);
+                } catch(e) { console.error('clearOldMessages error:', e); }
             }
 
             setInterval(clearOldMessages, 60 * 60 * 1000);
@@ -517,7 +532,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 // document.getElementById('usernameInput').focus(); // (desactivado para evitar teclado automático en móvil)
 }
 
-            loadTicker();
         } // fin initChat
 
         // ── Botón Marco ──
@@ -659,8 +673,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
   document.addEventListener('DOMContentLoaded', run);
   window.addEventListener('pageshow', run);
 })();
-  });
-});
 </script>
 
 </body>

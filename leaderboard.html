@@ -405,7 +405,26 @@
       letter-spacing: 3px;
     }
 
-    .live-dot {
+    .btn-refresh {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1px;
+      padding: 5px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-refresh:hover { border-color: var(--glow); color: var(--glow); }
+    .btn-refresh.loading { opacity: 0.5; pointer-events: none; }
+    .btn-refresh .spin { display: inline-block; animation: spin 0.8s linear infinite; }
+
+    
       display: inline-flex;
       align-items: center;
       gap: 6px;
@@ -670,7 +689,7 @@
     <div class="table-wrap">
       <div class="table-header">
         <span class="table-title">RANKING COMPLETO</span>
-        <span class="live-dot">EN VIVO</span>
+        <button class="btn-refresh" id="btnRefresh" onclick="refreshRanking()">↻ ACTUALIZAR</button>
       </div>
       <table>
         <thead>
@@ -751,9 +770,25 @@
     });
 
     // ── Ranking ──
+    let currentUidGlobal = null;
+
     function loadRanking(currentUid) {
-      const usersRef = ref(db, 'users');
-      onValue(usersRef, (snapshot) => {
+      currentUidGlobal = currentUid;
+      fetchRanking(currentUid);
+    }
+
+    window.refreshRanking = function() {
+      const btn = document.getElementById('btnRefresh');
+      if (btn) { btn.classList.add('loading'); btn.innerHTML = '<span class="spin">↻</span> CARGANDO'; }
+      fetchRanking(currentUidGlobal);
+    };
+
+    // ✅ get() en lugar de onValue — solo descarga cuando el usuario lo pide
+    async function fetchRanking(currentUid) {
+      const btn = document.getElementById('btnRefresh');
+      try {
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
         const players = [];
         snapshot.forEach((child) => {
           const d = child.val();
@@ -781,7 +816,11 @@
         updateStats(players);
         renderPodium(players.slice(0, 3));
         renderTable(players);
-      });
+      } catch(e) {
+        console.error('Error cargando ranking:', e);
+      } finally {
+        if (btn) { btn.classList.remove('loading'); btn.innerHTML = '↻ ACTUALIZAR'; }
+      }
     }
 
     function updateStats(players) {
