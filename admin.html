@@ -2340,7 +2340,7 @@ function updateStats() {
     // ── Códigos activos en tránsito ──
     async function loadActiveCodes(usersMap) {
       const snap = await get(query(ref(db, 'codes'), limitToLast(250)));
-      {
+      
         const tbody = document.getElementById('activeCodesBody');
         const acCount = document.getElementById('acCount');
         const acTotal = document.getElementById('acTotal');
@@ -2357,9 +2357,7 @@ function updateStats() {
         const codes = [];
         snap.forEach(child => {
           codes.push({ ...child.val() });
-        }
-    }
-
+        });
 
         // Ordenar del más reciente al más antiguo
         codes.sort((a, b) => b.createdAt - a.createdAt);
