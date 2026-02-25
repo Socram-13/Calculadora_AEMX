@@ -327,6 +327,8 @@
             let userId = '';
             let currentAvatar = '';
             let currentBorderColor = '';
+            const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
+            const currentUserIsAdmin = firebaseUser.email === ADMIN_EMAIL;
 
             window.setUsername = setUsername;
             window.sendMessage = sendMessage;
@@ -388,8 +390,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     lastMessageCount = total;
                     chatInitialized = true;
                     messages.slice(-20).forEach((msg) => {
-                        if (!msg.username || !msg.text) return; // ignorar mensajes corruptos
-                        addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.avatar || '', msg.borderColor || '', msg.isAdmin || false);
+                        if (!msg.username || !msg.text) return;
+                        const isAdminMsg = msg.isAdmin === true || (currentUserIsAdmin && msg.username === currentUsername);
+                        addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.avatar || '', msg.borderColor || '', isAdminMsg);
                     });
                     container.scrollTop = container.scrollHeight;
                 });
@@ -403,20 +406,17 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 });
             }
 
-            const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
-
             function sendMessage() {
                 const input = document.getElementById('messageInput');
                 const message = input.value.trim();
                 if (message && currentUsername) {
-                    const isAdmin = firebaseUser.email === ADMIN_EMAIL;
                     push(ref(database, 'messages'), {
                         username: currentUsername,
                         text: message,
                         timestamp: serverTimestamp(),
                         avatar: currentAvatar || '',
                         borderColor: currentBorderColor || '',
-                        ...(isAdmin && { isAdmin: true }),
+                        ...(currentUserIsAdmin && { isAdmin: true }),
                     });
                     input.value = '';
                     input.focus();
