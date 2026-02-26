@@ -1121,26 +1121,28 @@
     <!-- QR button: always visible, fixed bottom-right -->
     <div id="btnQR" style="
       position:fixed;
-      bottom: calc(18px + env(safe-area-inset-bottom));
-      right: calc(16px + env(safe-area-inset-right));
+      top: calc(10px + env(safe-area-inset-top) + 96px);
+      left: 10px;
       z-index: 25;
       pointer-events:auto;
       display:flex;
       align-items:center;
       gap:6px;
-      padding:10px 16px;
-      border-radius:12px;
+      padding:8px 14px;
+      border-radius:10px;
       border:1px solid rgba(250,204,21,.45);
       background:rgba(5,10,20,.72);
       color:#facc15;
       font-family:Orbitron,system-ui;
       font-weight:900;
-      font-size:11px;
+      font-size:10px;
       letter-spacing:2px;
       cursor:pointer;
       backdrop-filter:blur(10px);
       box-shadow:0 0 14px rgba(250,204,21,.20);
       user-select:none;
+      transform: translateX(-120%);
+      transition: transform .3s cubic-bezier(.22,.68,0,1.2);
     ">
       <span style="width:7px;height:7px;border-radius:50%;background:#facc15;box-shadow:0 0 6px #facc15;flex-shrink:0;display:inline-block;"></span>
       QR
@@ -1328,106 +1330,162 @@
       const instance = { wrap, canvas, rend, sc, cam, group, rafId, rarity };
       parcelInstances.push(instance);
 
-      // Close
+      // ── Close button: hidden, shows on touch ─────────────
+      closeBtn.style.opacity = '0';
+      closeBtn.style.transition = 'opacity .2s ease';
+      let closeBtnTimer = null;
+      function showCloseBtn(){
+        closeBtn.style.opacity = '1';
+        if(closeBtnTimer) clearTimeout(closeBtnTimer);
+        closeBtnTimer = setTimeout(()=>{ closeBtn.style.opacity='0'; }, 2000);
+      }
       closeBtn.addEventListener('pointerdown', e=>{
         e.stopPropagation();
         destroyInstance(instance);
       });
 
-      // ── Interaction: drag + pinch-scale + rotate ────────
+      // ── Interaction state ─────────────────────────────────
       let currentScale = 1.0;
-      let currentRotate = 0;  // degrees
       let posLeft = parseFloat(wrap.style.left) || 0;
       let posTop  = parseFloat(wrap.style.top)  || 0;
 
-      function applyTransform(){
-        wrap.style.transformOrigin = 'center center';
-        wrap.style.transform = `rotate(${currentRotate}deg) scale(${currentScale})`;
+      // 3D orbit state (camera orbits around model center)
+      let orbitTheta = Math.PI/4;   // horizontal angle (Y axis)
+      let orbitPhi   = Math.PI/4;   // vertical angle
+      const ORBIT_R  = 7.5;         // camera distance
+      const ORBIT_TARGET = new THREE.Vector3(0, 0.5, 0);
+
+      function updateCamera(){
+        cam.position.x = ORBIT_TARGET.x + ORBIT_R * Math.sin(orbitPhi) * Math.sin(orbitTheta);
+        cam.position.y = ORBIT_TARGET.y + ORBIT_R * Math.cos(orbitPhi);
+        cam.position.z = ORBIT_TARGET.z + ORBIT_R * Math.sin(orbitPhi) * Math.cos(orbitTheta);
+        cam.lookAt(ORBIT_TARGET);
       }
+      updateCamera();
 
       // Active pointers map
       const pointers = new Map();
       let lastPinchDist = null;
-      let lastPinchAngle = null;
-
-      function getPinchDist(a, b){ return Math.hypot(b.x-a.x, b.y-a.y); }
-      function getPinchAngle(a, b){ return Math.atan2(b.y-a.y, b.x-a.x) * 180/Math.PI; }
-      function getPinchCenter(a, b){ return { x:(a.x+b.x)/2, y:(a.y+b.y)/2 }; }
-
+      let rotStartX = 0, rotStartY = 0;
+      let rotStartTheta = orbitTheta, rotStartPhi = orbitPhi;
       let dragStartX = 0, dragStartY = 0;
       let dragOrigLeft = 0, dragOrigTop = 0;
-      let isDragging = false;
+      let mode = 'idle'; // 'rotate' | 'pinch' | 'drag'
+      // drag threshold: small move = rotate, larger = drag
+      let totalMove = 0;
+
+      function getPinchDist(a,b){ return Math.hypot(b.x-a.x, b.y-a.y); }
 
       wrap.addEventListener('pointerdown', e=>{
         if(e.target === closeBtn){ e.stopPropagation(); return; }
         pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
         wrap.setPointerCapture(e.pointerId);
+        showCloseBtn();
 
         if(pointers.size === 1){
-          // Single finger: prepare drag
-          isDragging = true;
-          dragStartX = e.clientX;
-          dragStartY = e.clientY;
+          mode = 'rotate';
+          rotStartX = e.clientX; rotStartY = e.clientY;
+          rotStartTheta = orbitTheta; rotStartPhi = orbitPhi;
+          dragStartX = e.clientX; dragStartY = e.clientY;
           dragOrigLeft = parseFloat(wrap.style.left) || 0;
           dragOrigTop  = parseFloat(wrap.style.top)  || 0;
-          wrap.classList.add('dragging');
+          totalMove = 0;
         } else if(pointers.size === 2){
-          // Two fingers: init pinch
-          isDragging = false;
+          mode = 'pinch';
           const pts = [...pointers.values()];
-          lastPinchDist  = getPinchDist(pts[0], pts[1]);
-          lastPinchAngle = getPinchAngle(pts[0], pts[1]);
+          lastPinchDist = getPinchDist(pts[0], pts[1]);
         }
         e.preventDefault();
       }, {passive:false});
 
       wrap.addEventListener('pointermove', e=>{
         if(!pointers.has(e.pointerId)) return;
+        const prev = pointers.get(e.pointerId);
         pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
 
-        if(pointers.size === 1 && isDragging){
+        if(mode === 'rotate' && pointers.size === 1){
+          const dx = e.clientX - rotStartX;
+          const dy = e.clientY - rotStartY;
+          totalMove += Math.abs(e.clientX - prev.x) + Math.abs(e.clientY - prev.y);
+
+          // Rotate model via orbit camera
+          const sensitivity = 0.008;
+          orbitTheta = rotStartTheta - dx * sensitivity;
+          orbitPhi   = Math.max(0.1, Math.min(Math.PI - 0.1, rotStartPhi - dy * sensitivity));
+          updateCamera();
+
+        } else if(mode === 'pinch' && pointers.size === 2){
+          const pts = [...pointers.values()];
+          const dist = getPinchDist(pts[0], pts[1]);
+          if(lastPinchDist !== null){
+            currentScale = Math.max(0.3, Math.min(4, currentScale * (dist / lastPinchDist)));
+            wrap.style.transformOrigin = 'center center';
+            wrap.style.transform = `scale(${currentScale})`;
+          }
+          lastPinchDist = dist;
+
+          // Move parcel with two-finger drag (center point)
+          const cx = (pts[0].x + pts[1].x) / 2;
+          const cy = (pts[0].y + pts[1].y) / 2;
+          // (optional: could track center movement too)
+        }
+        e.preventDefault();
+      }, {passive:false});
+
+      function onPointerUp(e){
+        // On single finger release after small move: might be a tap → show close
+        if(mode === 'rotate' && pointers.size === 1 && totalMove < 8){
+          // tap — already showed close btn above
+        }
+        // If was rotating, allow dragging next touch
+        pointers.delete(e.pointerId);
+        if(pointers.size === 0){
+          mode = 'idle';
+          lastPinchDist = null;
+          wrap.classList.remove('dragging');
+        } else if(pointers.size === 1){
+          // dropped one finger from pinch → switch to rotate
+          mode = 'rotate';
+          const remaining = [...pointers.values()][0];
+          rotStartX = remaining.x; rotStartY = remaining.y;
+          rotStartTheta = orbitTheta; rotStartPhi = orbitPhi;
+          lastPinchDist = null;
+        }
+      }
+      wrap.addEventListener('pointerup',    onPointerUp);
+      wrap.addEventListener('pointercancel',onPointerUp);
+
+      // Long-press to drag (300ms hold without moving)
+      let longPressTimer = null;
+      wrap.addEventListener('pointerdown', e=>{
+        if(e.target===closeBtn) return;
+        longPressTimer = setTimeout(()=>{
+          mode = 'drag';
+          wrap.classList.add('dragging');
+          dragStartX = e.clientX; dragStartY = e.clientY;
+          dragOrigLeft = parseFloat(wrap.style.left)||0;
+          dragOrigTop  = parseFloat(wrap.style.top)||0;
+        }, 300);
+      }, {passive:true});
+      wrap.addEventListener('pointermove', e=>{
+        if(longPressTimer && pointers.size === 1){
+          const dx = Math.abs(e.clientX - dragStartX);
+          const dy = Math.abs(e.clientY - dragStartY);
+          if(dx > 8 || dy > 8) { clearTimeout(longPressTimer); longPressTimer=null; }
+        }
+        if(mode === 'drag' && pointers.size === 1){
           const dx = e.clientX - dragStartX;
           const dy = e.clientY - dragStartY;
           posLeft = dragOrigLeft + dx;
           posTop  = dragOrigTop  + dy;
           wrap.style.left = posLeft + 'px';
           wrap.style.top  = posTop  + 'px';
-        } else if(pointers.size === 2){
-          const pts = [...pointers.values()];
-          const dist  = getPinchDist(pts[0], pts[1]);
-          const angle = getPinchAngle(pts[0], pts[1]);
-          if(lastPinchDist !== null){
-            currentScale  = Math.max(0.3, Math.min(4, currentScale * (dist / lastPinchDist)));
-            currentRotate += angle - lastPinchAngle;
-            applyTransform();
-          }
-          lastPinchDist  = dist;
-          lastPinchAngle = angle;
         }
-        e.preventDefault();
-      }, {passive:false});
-
-      function onPointerUp(e){
-        pointers.delete(e.pointerId);
-        if(pointers.size === 0){
-          isDragging = false;
-          lastPinchDist = null;
-          lastPinchAngle = null;
-          wrap.classList.remove('dragging');
-        } else if(pointers.size === 1){
-          // Back to 1 finger after pinch — reset drag origin
-          const remaining = [...pointers.values()][0];
-          dragStartX = remaining.x;
-          dragStartY = remaining.y;
-          dragOrigLeft = parseFloat(wrap.style.left) || 0;
-          dragOrigTop  = parseFloat(wrap.style.top)  || 0;
-          isDragging = true;
-          lastPinchDist = null;
-          lastPinchAngle = null;
-        }
-      }
-      wrap.addEventListener('pointerup',    onPointerUp);
-      wrap.addEventListener('pointercancel',onPointerUp);
+      }, {passive:true});
+      wrap.addEventListener('pointerup', ()=>{
+        if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
+        if(mode==='drag'){ mode='idle'; wrap.classList.remove('dragging'); }
+      }, {passive:true});
 
       return instance;
     }
@@ -1744,6 +1802,8 @@
       uiHidden = false;
       topbar.classList.remove('hidden');
       tapHint.classList.remove('show');
+      const _btnQR = document.getElementById('btnQR');
+      if(_btnQR) _btnQR.style.transform = 'translateX(0)';
       if(uiTimer) clearTimeout(uiTimer);
       if(temp){
         uiTimer = setTimeout(() => hideUI(), 2600);
@@ -1753,6 +1813,8 @@
       uiHidden = true;
       topbar.classList.add('hidden');
       tapHint.classList.add('show');
+      const _btnQR = document.getElementById('btnQR');
+      if(_btnQR) _btnQR.style.transform = 'translateX(-120%)';
     }
 
     // start hidden (requested)
