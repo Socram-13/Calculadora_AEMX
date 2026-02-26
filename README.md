@@ -1,4 +1,4 @@
-[README.md](https://github.com/user-attachments/files/25569258/README.md)
+[README.md](https://github.com/user-attachments/files/25569330/README.md)
 # 🌎 Atlas Earth AEMX — Gamertag Platform V2.0
 
 <p align="center">
@@ -7,12 +7,11 @@
 
 <p align="center">
   <strong>Plataforma web del clan Atlas Earth México</strong><br/>
-  Perfiles de jugador · Rankings · Mapa · Chat · Admin · Coins
+  Perfiles de jugador · Rankings · Chat · Admin · Coins
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Firebase-10.12.2-orange?logo=firebase" />
-  <img src="https://img.shields.io/badge/Leaflet.js-1.9.4-green?logo=leaflet" />
   <img src="https://img.shields.io/badge/GitHub%20Pages-Hosting-blue?logo=github" />
   <img src="https://img.shields.io/badge/Atlas%20Earth-México-red" />
 </p>
@@ -21,7 +20,7 @@
 
 ## 📋 Descripción
 
-**AEMX Gamertag Platform** es una aplicación web estática multi-módulo para los miembros del clan **Atlas Earth México (AEMX)**. Permite gestionar perfiles de jugador, ver rankings en tiempo real, ubicar a miembros en el mapa, chatear, y administrar el clan, todo desde el navegador sin necesidad de servidor propio.
+**AEMX Gamertag Platform** es una aplicación web estática multi-módulo para los miembros del clan **Atlas Earth México (AEMX)**. Permite gestionar perfiles de jugador, ver rankings en tiempo real, chatear, y administrar el clan, todo desde el navegador sin necesidad de servidor propio.
 
 ---
 
@@ -31,7 +30,6 @@
 |---|---|---|
 | `index.html` | **Perfil / GAMERTAG** | Perfil de jugador, medallas, AEMX Coins, exportación PNG |
 | `leaderboard.html` | **Ranking** | Clasificación de miembros por parcelas en tiempo real |
-| `mapa.html` | **Mapa** | Mapa interactivo de miembros con Leaflet.js |
 | `guias.html` | **Guías** | Documentación y estrategias del juego |
 | `chat-firebase.html` | **Chat** | Mensajería grupal en tiempo real |
 | `admin.html` | **Admin** | Panel de gestión del clan (solo administradores) |
@@ -44,7 +42,6 @@
 
 - **Frontend:** HTML5, CSS3, JavaScript ES6+ (módulos nativos)
 - **Backend:** [Firebase](https://firebase.google.com/) — Auth (Google Sign-In) + Realtime Database
-- **Mapas:** [Leaflet.js](https://leafletjs.com/) 1.9.4 + OpenStreetMap
 - **Captura de imagen:** [html2canvas](https://html2canvas.hertzen.com/) 1.4.1
 - **Tipografías:** Orbitron · Rajdhani · Inter (Google Fonts)
 - **Hosting:** GitHub Pages
