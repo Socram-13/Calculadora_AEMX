@@ -11,21 +11,23 @@
 
   <style>
     :root{
-      
-      --hud-scale: .78;
---primary:#00ff88;
-      --secondary:#00ffff;
-      --danger:#ff4466;
-      --text:#ffffff;
-      --muted:rgba(255,255,255,.65);
-      --glass:rgba(5,10,20,.38);
-      --glass2:rgba(5,10,20,.55);
-      --stroke:rgba(0,255,136,.35);
-      --shadow:0 0 18px rgba(0,255,136,.15);
-      --safe-top: env(safe-area-inset-top);
-      --safe-right: env(safe-area-inset-right);
+      --primary: #00c8ff;
+      --glow:    #00c8ff;
+      --gold:    #facc15;
+      --green:   #4ade80;
+      --blue:    #60a5fa;
+      --purple:  #a855f7;
+      --yellow:  #facc15;
+      --danger:  #ff4466;
+      --text:    #ffffff;
+      --glass:   rgba(5,10,20,.52);
+      --glass2:  rgba(5,10,20,.72);
+      --stroke:  rgba(0,200,255,.30);
+      --shadow:  0 0 20px rgba(0,200,255,.15);
+      --safe-top:    env(safe-area-inset-top);
+      --safe-right:  env(safe-area-inset-right);
       --safe-bottom: env(safe-area-inset-bottom);
-      --safe-left: env(safe-area-inset-left);
+      --safe-left:   env(safe-area-inset-left);
     }
 
     *{ box-sizing:border-box; }
@@ -37,9 +39,23 @@
         linear-gradient(var(--primary) 1px,transparent 1px),
         linear-gradient(90deg,var(--primary) 1px,transparent 1px);
       background-size:52px 52px;
-      opacity:.06;
+      opacity:.18;
       pointer-events:none;
       z-index:0;
+      -webkit-mask-image: radial-gradient(
+        ellipse 72% 100% at 50% 50%,
+        rgba(0,0,0,1)   38%,
+        rgba(0,0,0,0.7) 58%,
+        rgba(0,0,0,0.2) 76%,
+        rgba(0,0,0,0)   100%
+      );
+      mask-image: radial-gradient(
+        ellipse 72% 100% at 50% 50%,
+        rgba(0,0,0,1)   38%,
+        rgba(0,0,0,0.7) 58%,
+        rgba(0,0,0,0.2) 76%,
+        rgba(0,0,0,0)   100%
+      );
     }
 
     /* Stage */
@@ -61,12 +77,7 @@
       position:absolute; inset:0;
       pointer-events:none;
     }
-    .hudScale{
-      position:absolute; inset:0;
-      transform: scale(var(--hud-scale));
-      transform-origin: top left;
-      pointer-events:none;
-    }
+
     .hud::before{
       content:"";
       position:absolute; inset:0;
@@ -107,8 +118,8 @@
       display:flex; align-items:center; gap:8px;
       padding:9px 12px;
       border-radius:12px;
-      border:1px solid var(--stroke);
-      background:rgba(5,10,20,.55);
+      border:1px solid rgba(0,200,255,.28);
+      background:rgba(5,10,20,.70);
       backdrop-filter: blur(8px);
       box-shadow: var(--shadow);
       font-family:Orbitron,system-ui;
@@ -134,118 +145,151 @@
       position:absolute;
       top: calc(10px + var(--safe-top));
       right: calc(10px + var(--safe-right));
-      width: 190px;
-      padding:10px 12px;
+      width: 210px;
+      padding:10px 14px 12px;
       border-radius:14px;
-      background:var(--glass);
-      border:1px solid rgba(0,255,255,.25);
-      backdrop-filter: blur(10px);
-      box-shadow:0 0 18px rgba(0,255,255,.10);
+      background: transparent;
+      border: none;
+      backdrop-filter: none;
+      box-shadow: none;
       pointer-events:none;
+      z-index:5;
     }
     .battery .title{
       display:flex; justify-content:space-between; align-items:center;
       font-family:Orbitron,system-ui;
       font-weight:900;
       letter-spacing:2px;
-      font-size:10px;
+      font-size:9px;
       text-transform:uppercase;
-      color:rgba(255,255,255,.85);
-      margin-bottom:8px;
+      color:rgba(0,200,255,.75);
+      margin-bottom:4px;
     }
     .battery .value{
       font-family:Orbitron,system-ui;
       font-weight:900;
-      font-size:16px;
-      letter-spacing:1px;
-      color:#e8fff6;
-      text-shadow:0 0 14px rgba(0,255,136,.25);
+      font-size:13px;
+      letter-spacing:1.5px;
+      color:rgba(255,255,255,.80);
+      text-shadow:0 0 10px rgba(0,200,255,.40);
     }
-    .batteryShell{
-      display:flex; align-items:center; gap:8px;
-    }
-    .batteryBody{
-      flex:1;
-      border-radius:10px;
-      border:1px solid rgba(0,255,136,.30);
-      background:rgba(255,255,255,.04);
-      padding:6px;
-    }
-    .cells{
-      display:grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap:4px;
-    }
-    .cell{
-      height:12px;
+    .batteryBar{
+      position:relative;
+      height:14px;
       border-radius:4px;
-      background:rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.06);
+      background: rgba(255,255,255,.05);
+      border:1px solid rgba(0,200,255,.18);
+      overflow:hidden;
+      direction: rtl;
     }
-    .cell.on{
-      background:linear-gradient(135deg, var(--primary), var(--secondary));
-      border-color:rgba(0,255,136,.15);
-      box-shadow:0 0 12px rgba(0,255,136,.22);
+    .batteryFill{
+      position:absolute; right:0; top:0; bottom:0;
+      width:0%;
+      border-radius:3px;
+      background: linear-gradient(270deg, #00c8ff, #60a5fa, #a855f7);
+      box-shadow: 0 0 14px rgba(0,200,255,.50);
+      transition: width 0.8s ease;
+      overflow:hidden;
     }
-    .batteryTip{
-      width:10px; height:18px;
-      border-radius:4px;
-      background:rgba(0,255,136,.35);
-      box-shadow:0 0 12px rgba(0,255,136,.12);
+    .batteryFill::before{
+      content:'';
+      position:absolute; top:0; bottom:0;
+      width:28%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      animation: barScan 3.0s ease-in-out infinite;
+      z-index:3;
+      pointer-events:none;
     }
-
-    /* Badges cards (top center) */
+    .batteryFill::after{
+      content:'';
+      position:absolute; top:-10%; bottom:-10%;
+      width:22%;
+      background: linear-gradient(105deg, transparent, rgba(255,255,255,.20), transparent);
+      animation: shimmer 5.0s ease-in-out infinite;
+      z-index:4;
+      pointer-events:none;
+    }
+    .batterySpark{
+      position:absolute;
+      right:-3px; top:50%;
+      transform:translateY(-50%);
+      width:7px; height:7px;
+      border-radius:50%;
+      z-index:5;
+      pointer-events:none;
+      animation: spark 2.0s ease-in-out infinite;
+      background:#00c8ff;
+      box-shadow:0 0 10px #00c8ff;
+    }
+    .batteryBar::after{
+      content:'';
+      position:absolute; inset:0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(10% - 1px),
+        rgba(0,0,0,.35) calc(10% - 1px),
+        rgba(0,0,0,.35) 10%
+      );
+      pointer-events:none;
+      z-index:2;
+    }
+    .batteryShell,.batteryBody,.cells,.cell,.batteryTip{ display:none; }
+        /* Badges cards (top-right, below battery) */
     .badges{
       position:absolute;
-      top: calc(62px + var(--safe-top));
+      top: calc(10px + var(--safe-top));
       left: calc(10px + var(--safe-left));
-      transform:none;
-      width: 210px;
-      height: 70px;
+      width: 80px;
+      height: 88px;
       pointer-events:none;
+      z-index:5;
     }
     .cardStack{
       position:relative; width:100%; height:100%;
     }
     .badgeCard{
       position:absolute; inset:auto;
-      width: 210px; height: 56px;
-      border-radius:16px;
-      background: rgba(5,10,20,.38);
-      border: 1px solid rgba(0,255,136,.22);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 20px rgba(0,255,136,.10);
+      width: 62px; height: 62px;
+      border-radius:10px;
+      background: rgba(5,10,20,.42);
+      border: 1px solid rgba(0,200,255,.22);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 14px rgba(0,200,255,.12), inset 0 1px 0 rgba(255,255,255,.05);
       display:flex;
+      flex-direction:column;
       align-items:center;
-      justify-content:space-between;
-      padding:10px 14px;
+      justify-content:center;
+      gap:3px;
       font-family:Orbitron,system-ui;
       letter-spacing:1px;
     }
-    .badgeCard:nth-child(1){ top:0; left:0; transform:rotate(-2deg); opacity:.60; }
-    .badgeCard:nth-child(2){ top:7px; left:6px; transform:rotate(1deg); opacity:.75; }
-    .badgeCard:nth-child(3){ top:14px; left:12px; opacity:1; border-color:rgba(0,255,255,.25); }
-    .badgeLabel{ font-size:10px; font-weight:900; text-transform:uppercase; color:rgba(255,255,255,.85); }
-    .badgeValue{ font-size:22px; font-weight:900; color:#e8fff6; text-shadow:0 0 12px rgba(0,255,136,.25); }
+    .badgeCard:nth-child(1){ top:0; left:2px; transform:rotate(-6deg) translate(-5px, 3px); opacity:.40; }
+    .badgeCard:nth-child(2){ top:5px; left:10px; transform:rotate(4deg) translate(4px, -3px); opacity:.62; }
+    .badgeCard:nth-child(3){ top:16px; left:2px; transform:rotate(-1.5deg); opacity:1; border-color:rgba(0,200,255,.38); }
+        .badgeLabel{ font-size:8px; font-weight:900; text-transform:uppercase; color:rgba(0,200,255,.80); letter-spacing:1.5px; }
+    .badgeValue{ font-size:28px; font-weight:900; color:#ffffff; text-shadow:0 0 14px rgba(0,200,255,.60); line-height:1; }
 
     /* Krill bars (bottom-left) */
     .krill{
       position:absolute;
       bottom: calc(10px + var(--safe-bottom));
       left: calc(10px + var(--safe-left));
-      width: 260px;
-      height: 170px;
-      padding:12px 12px 10px;
+      width: 270px;
+      height: auto;
+      padding:12px 14px 12px;
       border-radius:16px;
-      background:var(--glass2);
-      border:1px solid rgba(0,255,136,.24);
-      backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
+      background: transparent;
+      border: none;
+      backdrop-filter: none;
+      box-shadow: none;
       pointer-events:none;
     }
     .krillHeader{
       display:flex; justify-content:space-between; align-items:center;
       margin-bottom:10px;
+      padding-bottom:6px;
+      border-bottom:1px solid rgba(0,200,255,.14);
     }
     .krillHeader .t{
       font-family:Orbitron,system-ui;
@@ -253,59 +297,151 @@
       font-weight:900;
       letter-spacing:2px;
       text-transform:uppercase;
-      color:rgba(255,255,255,.85);
+      color:rgba(0,200,255,.90);
+    }
+    .krillTitle{
+      font-family:Orbitron,system-ui;
+      font-size:9px;
+      font-weight:900;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color:rgba(0,200,255,.75);
+    }
+    .krillFooter{
+      font-family:Orbitron,system-ui;
+      font-size:9px;
+      font-weight:900;
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.60);
+      margin-top:6px;
+      text-align:left;
     }
     .krillHeader .total{
       font-family:Orbitron,system-ui;
       font-size:10px;
       font-weight:900;
       letter-spacing:1px;
-      color:rgba(255,255,255,.75);
+      color:#ffffff;
+      text-shadow:0 0 10px rgba(0,200,255,.40);
     }
 
+    /* Horizontal stacked bars */
     .bars{
-      height:120px;
-      display:flex;
-      align-items:flex-end;
-      gap:10px;
-    }
-    .barCol{
-      flex:1;
       display:flex;
       flex-direction:column;
-      align-items:center;
-      gap:6px;
-    }
-    .bar{
+      gap:7px;
       width:100%;
-      height:100%;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.08);
-      background:rgba(255,255,255,.05);
+    }
+    .barRow{
       display:flex;
-      align-items:flex-end;
-      overflow:hidden;
-    }
-    .fill{
+      align-items:center;
+      gap:7px;
       width:100%;
-      height:10%;
-      background:linear-gradient(180deg, var(--secondary), var(--primary));
-      opacity:.92;
-      box-shadow:0 0 14px rgba(0,255,136,.16);
     }
     .lbl{
       font-family:Orbitron,system-ui;
       font-weight:900;
-      font-size:9px;
+      font-size:8px;
       letter-spacing:1px;
       text-transform:uppercase;
-      color:rgba(255,255,255,.75);
+      width:22px;
+      text-align:right;
+      flex-shrink:0;
     }
+    .barRow.common   .lbl{ color:rgba(74,222,128,.90); }
+    .barRow.rare     .lbl{ color:rgba(96,165,250,.90); }
+    .barRow.epic     .lbl{ color:rgba(168,85,247,.90); }
+    .barRow.legendary .lbl{ color:rgba(250,204,21,.90); }
+
+    .bar{
+      flex:1;
+      height:14px;
+      border-radius:4px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      overflow:hidden;
+      position:relative;
+    }
+    .barRow.common   .bar{ border-color:rgba(74,222,128,.18); }
+    .barRow.rare     .bar{ border-color:rgba(96,165,250,.18); }
+    .barRow.epic     .bar{ border-color:rgba(168,85,247,.18); }
+    .barRow.legendary .bar{ border-color:rgba(250,204,21,.20); }
+
+    /* segmented ticks overlay */
+    .bar::after{
+      content:'';
+      position:absolute; inset:0;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(10% - 1px),
+        rgba(0,0,0,.35) calc(10% - 1px),
+        rgba(0,0,0,.35) 10%
+      );
+      pointer-events:none;
+      z-index:2;
+    }
+    /* scan line sweeping over fill */
+    .fill::before{
+      content:'';
+      position:absolute; top:0; bottom:0;
+      width:28%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      animation: barScan 2.8s ease-in-out infinite;
+      z-index:3;
+      pointer-events:none;
+      border-radius:4px;
+    }
+    /* shimmer diagonal */
+    .fill::after{
+      content:'';
+      position:absolute; top:-10%; bottom:-10%;
+      width:22%;
+      background: linear-gradient(105deg, transparent, rgba(255,255,255,.20), transparent);
+      animation: shimmer 4.5s ease-in-out infinite;
+      z-index:4;
+      pointer-events:none;
+    }
+    /* spark at tip */
+    .spark{
+      position:absolute;
+      left:-3px; top:50%;
+      transform:translateY(-50%);
+      width:7px; height:7px;
+      border-radius:50%;
+      z-index:5;
+      pointer-events:none;
+      animation: spark 1.8s ease-in-out infinite;
+    }
+    .barRow.common   .spark{ background:#4ade80; box-shadow:0 0 8px #4ade80; }
+    .barRow.rare     .spark{ background:#60a5fa; box-shadow:0 0 8px #60a5fa; }
+    .barRow.epic     .spark{ background:#a855f7; box-shadow:0 0 8px #a855f7; }
+    .barRow.legendary .spark{ background:#facc15; box-shadow:0 0 8px #facc15; }
+    .fill{
+      height:100%;
+      width:0%;
+      min-width:3px;
+      border-radius:3px;
+      opacity:.95;
+      transition: width 0.7s cubic-bezier(.22,.68,0,1.2);
+      position:relative;
+      z-index:1;
+    }
+    .barRow.common   .fill{ background:linear-gradient(90deg,#2a9d60,#4ade80,#6ee7a0); box-shadow:0 0 10px rgba(74,222,128,.40); }
+    .barRow.rare     .fill{ background:linear-gradient(90deg,#1d6fa8,#60a5fa,#93c5fd); box-shadow:0 0 10px rgba(96,165,250,.40); }
+    .barRow.epic     .fill{ background:linear-gradient(90deg,#6b21a8,#a855f7,#c084fc); box-shadow:0 0 10px rgba(168,85,247,.40); }
+    .barRow.legendary .fill{ background:linear-gradient(90deg,#b45309,#facc15,#fde68a); box-shadow:0 0 10px rgba(250,204,21,.45); }
+
     .num{
       font-family:Orbitron,system-ui;
       font-weight:900;
-      font-size:12px;
-      color:#e8fff6;
+      font-size:9px;
+      color:#ffffff;
+      width:28px;
+      text-align:right;
+      flex-shrink:0;
+      opacity:.85;
     }
 
     /* HUD chat (bottom-right) */
@@ -315,12 +451,12 @@
       right: calc(10px + var(--safe-right));
       width: 320px;
       max-width: calc(100vw - 24px);
-      padding:10px 12px;
+      padding:10px 14px 12px;
       border-radius:16px;
-      background:rgba(5,10,20,.50);
-      border:1px solid rgba(0,200,255,.28);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 18px rgba(0,200,255,.12);
+      background: var(--glass2);
+      border:1px solid rgba(0,200,255,.25);
+      backdrop-filter: blur(14px);
+      box-shadow: 0 0 22px rgba(0,200,255,.14), inset 0 1px 0 rgba(255,255,255,.05);
       pointer-events:none;
     }
     .hudChatTitle{
@@ -380,8 +516,8 @@
       .battery{ width:170px; }
       .hudChat{ width: 280px; }
       .krill{ width: 240px; }
-      .badges{ width: 190px; }
-      .badgeCard{ width:190px; }
+      .badges{ width: 80px; }
+      .badgeCard{ width:80px; height:80px; }
     }
 
 
@@ -395,21 +531,24 @@
     }
     .tapHint{
       position:absolute;
-      top: calc(48px + var(--safe-top));
-      right: calc(10px + var(--safe-right));
+      top: calc(14px + var(--safe-top));
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
       font-family: Orbitron, system-ui;
       font-weight:900;
       font-size:9px;
       letter-spacing:2px;
       text-transform:uppercase;
       color: rgba(255,255,255,.65);
-      background: rgba(5,10,20,.35);
-      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(5,10,20,.45);
+      border: 1px solid rgba(255,255,255,.12);
       border-radius: 12px;
-      padding: 7px 10px;
+      padding: 7px 14px;
       backdrop-filter: blur(8px);
       display:none;
       pointer-events:none;
+      z-index:15;
     }
     .tapHint.show{ display:block; }
     .miniBtn{
@@ -424,8 +563,8 @@
       align-items:center;
     }
     .miniBtn button{
-      border:1px solid rgba(0,255,136,.25);
-      background: rgba(5,10,20,.55);
+      border:1px solid rgba(0,200,255,.30);
+      background: rgba(5,10,20,.70);
       color:#e8fff6;
       border-radius: 14px;
       padding: 10px 14px;
@@ -465,6 +604,83 @@
     }
     .rotateHint .big{ font-size:14px; font-weight:900; margin-bottom:10px; }
     .rotateHint .small{ font-family:Rajdhani,system-ui; font-size:14px; letter-spacing:0; text-transform:none; opacity:.85; }
+
+    /* ── ANIMATIONS ── */
+    @keyframes barGlow {
+      0%, 100% { opacity: .95; filter: brightness(1); }
+      50%       { opacity: 1;   filter: brightness(1.25); }
+    }
+    /* 1. Scan line sweeping left to right */
+    @keyframes barScan {
+      0%   { left: -30%; opacity: .7; }
+      100% { left: 110%; opacity: .0; }
+    }
+    /* 2. Particle spark at tip */
+    @keyframes spark {
+      0%         { opacity: 0; transform: scale(0.4); }
+      20%, 60%   { opacity: 1; transform: scale(1.2); }
+      100%       { opacity: 0; transform: scale(0.6) translateY(-4px); }
+    }
+    /* 4. Shimmer diagonal */
+    @keyframes shimmer {
+      0%   { left: -60%; }
+      100% { left: 130%; }
+    }
+    /* 3. Fill from zero on load */
+    @keyframes fillIn {
+      from { width: 0% !important; }
+    }
+    @keyframes batteryPulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(0,200,255,.40); }
+      50%       { box-shadow: 0 0 22px rgba(0,200,255,.85); }
+    }
+    @keyframes batteryLow {
+      0%, 100% { box-shadow: 0 0 10px rgba(255,68,102,.40); }
+      50%       { box-shadow: 0 0 22px rgba(255,68,102,.90); }
+    }
+    @keyframes badgeFloat {
+      0%, 100% { transform: rotate(-1.5deg) translateY(0px); }
+      50%       { transform: rotate(-1.5deg) translateY(-4px); }
+    }
+    @keyframes badgeBorderPulse {
+      0%, 100% { border-color: rgba(0,200,255,.38); box-shadow: 0 0 14px rgba(0,200,255,.12); }
+      50%       { border-color: rgba(0,200,255,.75); box-shadow: 0 0 20px rgba(0,200,255,.35); }
+    }
+    @keyframes scanPulse {
+      0%, 100% { opacity: .22; }
+      50%       { opacity: .32; }
+    }
+
+    /* Apply animations */
+    .fill{
+      animation: barGlow 2.8s ease-in-out infinite, fillIn 1.2s ease-out 1;
+    }
+    .barRow.legendary .fill{ animation: barGlow 2.2s ease-in-out infinite, fillIn 1.2s ease-out 1; }
+    .barRow.legendary .fill::before{ animation-duration: 2.4s; animation-delay: 0s; }
+    .barRow.legendary .fill::after { animation-duration: 4.0s; animation-delay: 0s; }
+    .barRow.epic      .fill{ animation: barGlow 3.0s ease-in-out infinite, fillIn 1.4s ease-out 1; }
+    .barRow.epic      .fill::before{ animation-duration: 3.1s; animation-delay: .4s; }
+    .barRow.epic      .fill::after { animation-duration: 5.0s; animation-delay: .5s; }
+    .barRow.rare      .fill{ animation: barGlow 2.6s ease-in-out infinite, fillIn 1.6s ease-out 1; }
+    .barRow.rare      .fill::before{ animation-duration: 2.7s; animation-delay: .7s; }
+    .barRow.rare      .fill::after { animation-duration: 4.5s; animation-delay: .3s; }
+    .barRow.common    .fill{ animation: barGlow 3.2s ease-in-out infinite, fillIn 1.8s ease-out 1; }
+    .barRow.common    .fill::before{ animation-duration: 3.3s; animation-delay: .9s; }
+    .barRow.common    .fill::after { animation-duration: 5.5s; animation-delay: .8s; }
+
+    .batteryFill{
+      animation: batteryPulse 2.4s ease-in-out infinite;
+    }
+    .batteryFill.low{
+      animation: batteryLow 1.0s ease-in-out infinite;
+    }
+
+    .badgeCard:nth-child(3){
+      animation: badgeFloat 3.5s ease-in-out infinite, badgeBorderPulse 3.5s ease-in-out infinite;
+    }
+    .scanlines{
+      animation: scanPulse 4s ease-in-out infinite;
+    }
   </style>
 </head>
 
@@ -485,11 +701,6 @@
         <div class="chip secondary" id="btnFlip">
           ⇄ ESPEJO
         </div>
-
-        <div class="chip secondary" id="btnFullscreen">
-          ⛶ FULL
-        </div>
-
         <div class="spacer"></div>
 
         <div class="chip" id="btnReloadStats" title="Refrescar stats desde localStorage">
@@ -497,30 +708,26 @@
         </div>
       </div>
 
-      <div class="hudScale">
       <!-- Diamonds battery -->
       <div class="battery" aria-label="Diamantes">
-        <div class="title">
-          <span>💎 DIAMANTES</span>
+        <div class="batteryBar">
+          <div class="batteryFill" id="batteryFill"></div><div class="batterySpark" id="batterySpark"></div>
+        </div>
+        <div class="title" style="margin-top:4px;">
+          <span>⚡ BATERÍA</span>
           <span class="value" id="diamondsVal">0</span>
         </div>
-        <div class="batteryShell">
-          <div class="batteryBody">
-            <div class="cells" id="diamondCells"></div>
-          </div>
-          <div class="batteryTip"></div>
-        </div>
+        <!-- keep old cells hidden for JS compat -->
+        <div style="display:none"><div class="cells" id="diamondCells"></div></div>
       </div>
 
       <!-- Badges cards -->
       <div class="badges" aria-label="Insignias">
         <div class="cardStack">
           <div class="badgeCard">
-            <span class="badgeLabel">INSIGNIAS</span>
             <span class="badgeValue" id="badgesValGhost1">0</span>
           </div>
           <div class="badgeCard">
-            <span class="badgeLabel">INSIGNIAS</span>
             <span class="badgeValue" id="badgesValGhost2">0</span>
           </div>
           <div class="badgeCard">
@@ -532,33 +739,25 @@
 
       <!-- Krill bars -->
       <div class="krill" aria-label="Parcela por rareza">
-        <div class="krillHeader">
-          <div class="t">📊 PARCELAS</div>
-          <div class="total">TOTAL: <span id="totalParcels">0</span></div>
-        </div>
-
         <div class="bars">
-          <div class="barCol">
-            <div class="bar"><div class="fill" id="fillCommon"></div></div>
-            <div class="num" id="numCommon">0</div>
-            <div class="lbl">COM</div>
-          </div>
-          <div class="barCol">
-            <div class="bar"><div class="fill" id="fillRare"></div></div>
-            <div class="num" id="numRare">0</div>
-            <div class="lbl">RAR</div>
-          </div>
-          <div class="barCol">
-            <div class="bar"><div class="fill" id="fillEpic"></div></div>
-            <div class="num" id="numEpic">0</div>
-            <div class="lbl">ÉPI</div>
-          </div>
-          <div class="barCol">
-            <div class="bar"><div class="fill" id="fillLegendary"></div></div>
+          <div class="barRow legendary">
             <div class="num" id="numLegendary">0</div>
-            <div class="lbl">LEG</div>
+            <div class="bar"><div class="fill" id="fillLegendary"></div><div class="spark"></div></div>
+          </div>
+          <div class="barRow epic">
+            <div class="num" id="numEpic">0</div>
+            <div class="bar"><div class="fill" id="fillEpic"></div><div class="spark"></div></div>
+          </div>
+          <div class="barRow rare">
+            <div class="num" id="numRare">0</div>
+            <div class="bar"><div class="fill" id="fillRare"></div><div class="spark"></div></div>
+          </div>
+          <div class="barRow common">
+            <div class="num" id="numCommon">0</div>
+            <div class="bar"><div class="fill" id="fillCommon"></div><div class="spark"></div></div>
           </div>
         </div>
+        <div class="krillFooter"><span class="krillTitle">STATS</span> &nbsp;·&nbsp; TOTAL: <span id="totalParcels">0</span></div>
       </div>
 
       <!-- Last 5 chat messages -->
@@ -591,7 +790,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getDatabase, ref, query, limitToLast, orderByChild, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-    import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
     // ─────────────────────────────────────────────────────────────
     // 1) Stats source (GamerTag localStorage)
@@ -637,11 +836,13 @@
 
       const total = Math.max(0, s.common + s.rare + s.epic + s.legendary);
       document.getElementById('totalParcels').textContent = total;
-      const pct = (v) => total ? Math.round((v / total) * 100) : 0;
-      document.getElementById('fillCommon').style.height = pct(s.common) + '%';
-      document.getElementById('fillRare').style.height = pct(s.rare) + '%';
-      document.getElementById('fillEpic').style.height = pct(s.epic) + '%';
-      document.getElementById('fillLegendary').style.height = pct(s.legendary) + '%';
+      // 100% = next hundred above commons (e.g. 1450 → 1500)
+      const refMax = s.common > 0 ? Math.ceil(s.common / 100) * 100 : 100;
+      const pct = (v) => Math.min(100, Math.round((v / refMax) * 100));
+      document.getElementById('fillCommon').style.width = pct(s.common) + '%';
+      document.getElementById('fillRare').style.width = pct(s.rare) + '%';
+      document.getElementById('fillEpic').style.width = pct(s.epic) + '%';
+      document.getElementById('fillLegendary').style.width = pct(s.legendary) + '%';
 
       // badges cards
       document.getElementById('badgesVal').textContent = s.badges;
@@ -652,22 +853,14 @@
       const d = Math.min(9999, s.diamonds);
       document.getElementById('diamondsVal').textContent = d.toLocaleString('es-MX');
 
-      const cells = document.getElementById('diamondCells');
-      if(!cells.dataset.ready){
-        // build 10 cells
-        cells.innerHTML = '';
-        for(let i=0;i<10;i++){
-          const div = document.createElement('div');
-          div.className = 'cell';
-          div.id = 'cell' + i;
-          cells.appendChild(div);
-        }
-        cells.dataset.ready = '1';
-      }
-      const level = Math.round((d / 9999) * 10); // 0..10
-      for(let i=0;i<10;i++){
-        const el = document.getElementById('cell' + i);
-        el.classList.toggle('on', i < level);
+      // New battery bar
+      const battFill = document.getElementById('batteryFill');
+      const battSpark = document.getElementById('batterySpark');
+      if(battFill){
+        const pctBatt = Math.round((d / 9999) * 100);
+        battFill.style.width = pctBatt + '%';
+        battFill.classList.toggle('low', pctBatt < 20);
+        if(battSpark) battSpark.style.right = (100 - pctBatt) + '%';
       }
     }
 
@@ -922,19 +1115,13 @@
         });
       };
 
-      // If your DB rules require auth, anonymous sign-in usually satisfies "auth != null"
-      onAuthStateChanged(auth, async (user) => {
+      // Reutiliza la sesión Google activa del index.html (misma app Firebase)
+      onAuthStateChanged(auth, (user) => {
         if(user){
           attachListener();
-          return;
-        }
-        try{
-          setChatState(false, 'AUTH');
-          await signInAnonymously(auth);
-          // onAuthStateChanged will re-fire, attaching listener
-        }catch(e){
-          console.error('Anonymous auth failed:', e);
-          setChatState(false, 'AUTH-ERR');
+        } else {
+          setChatState(false, 'SIN SESIÓN');
+          renderChat([]);
         }
       });
 
