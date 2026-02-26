@@ -4326,7 +4326,7 @@
         document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
       }
       if (chatOpen) {
-        history.pushState({ chatOpen: true }, '');
+        history.pushState({ chatOpen: true }, '', window.location.pathname + window.location.search + '#chat');
         // ✅ Solo carga el iframe la PRIMERA vez — evita reinicios de Firebase
         const frame = document.getElementById('chat-frame');
         if (!frame.getAttribute('data-loaded')) {
@@ -4357,7 +4357,12 @@
       if (window.innerWidth <= 480) document.getElementById('chat-fab').style.display = 'flex';
     }
 
-    window.addEventListener('popstate', () => { if (chatOpen) closeChatWidget(); });
+    window.addEventListener('popstate', (e) => {
+      if (chatOpen) {
+        e.preventDefault && e.preventDefault();
+        closeChatWidget();
+      }
+    });
   </script>
 </body>
 </html>
