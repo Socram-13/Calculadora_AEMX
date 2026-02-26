@@ -1863,6 +1863,76 @@
     .medal-modal-icon { width: 52px; height: 52px; font-size: 24px; }
     .medal-modal-name { font-size: 11px; }
   }
+
+  /* ── Preview fila de medallas (sección comprimida) ─────────── */
+  .medals-preview-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 18px 10px;
+    overflow: hidden;
+    flex-wrap: nowrap;
+  }
+  .medals-body.open .medals-preview-row { display: none; }
+
+  .mprev {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 36px;
+    flex-shrink: 0;
+  }
+  .mprev-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    border: 1.5px solid transparent;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .mprev-icon img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 5px;
+  }
+  .mprev-name {
+    font-family: 'Orbitron', monospace;
+    font-size: 5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--text2);
+    text-align: center;
+    text-transform: uppercase;
+    line-height: 1.2;
+    max-width: 36px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .mprev.legendary .mprev-icon { background: rgba(255,215,0,0.12); border-color: rgba(255,215,0,0.5); animation: mLegendaryGlow 2s ease-in-out infinite; }
+  .mprev.epic      .mprev-icon { background: rgba(192,132,252,0.12); border-color: rgba(192,132,252,0.5); }
+  .mprev.rare      .mprev-icon { background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.5); }
+  .mprev.common    .mprev-icon { background: rgba(74,222,128,0.12); border-color: rgba(74,222,128,0.5); }
+  .mprev.coins     .mprev-icon { background: rgba(255,170,0,0.12); border-color: rgba(255,170,0,0.5); }
+
+  .mprev-more {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: rgba(0,200,255,0.07);
+    border: 1.5px dashed rgba(0,200,255,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 7px;
+    color: var(--text2);
+    flex-shrink: 0;
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -2211,6 +2281,7 @@
       <span class="medals-arrow">▼</span>
     </button>
 
+    <div class="medals-preview-row" id="medalsPreviewRow"></div>
     <div class="medals-body" id="medalsBody">
       <div class="medals-grid" id="medalsGrid">
         <div class="medals-section-label">🟢 COMUNES</div>
@@ -2349,14 +2420,6 @@
 
         <div class="medals-section-label">🟡 LEGENDARIAS</div>
 
-        <div class="mbadge m-legendary" data-medal-id="clan_aemx">
-          <div class="mbadge-icon" style="overflow:hidden;padding:0;">
-            <img src="imagen_2.png" alt="AEMX" style="width:100%;height:100%;object-fit:contain;border-radius:8px;display:block;">
-            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">MIEMBRO AEMX</div><div class="mbadge-tooltip-desc">Formas parte del clan oficial Atlas Earth México.</div></div>
-          </div>
-          <div class="mbadge-name">AEMX</div>
-        </div>
-
         <div class="mbadge m-legendary" data-medal-id="titan">
           <div class="mbadge-icon">🌌
             <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">TITÁN</div><div class="mbadge-tooltip-desc">Nivel élite: 3000 parcelas.</div></div>
@@ -2411,6 +2474,13 @@
             <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">CREL PERFECTO</div><div class="mbadge-tooltip-desc">Diversificación legendaria: 100C + 75R + 50E + 25L.</div></div>
           </div>
           <div class="mbadge-name">Portfolio Perfecto</div>
+        </div>
+
+        <div class="mbadge m-legendary" data-medal-id="clan_aemx">
+          <div class="mbadge-icon">🛡️
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">MIEMBRO AEMX</div><div class="mbadge-tooltip-desc">Formas parte del clan oficial Atlas Earth México.</div></div>
+          </div>
+          <div class="mbadge-name">AEMX</div>
         </div>
 
         <div class="medals-section-label" id="medalShopSection">💰 SHOP (COINS)</div>
@@ -4022,6 +4092,58 @@
       body.classList.toggle('open');
     }
 
+    /* ── Fila de preview medallas (comprimida) ───────────────── */
+    const RARITY_ORDER = ['legendary','epic','rare','common','coins'];
+
+    function buildPreviewRow() {
+      const row = document.getElementById('medalsPreviewRow');
+      if (!row) return;
+
+      const esMx = _esMexico();
+      const earned = [];
+
+      document.querySelectorAll('.mbadge[data-medal-id]').forEach(b => {
+        const isShop   = b.classList.contains('m-coins');
+        if (isShop && !esMx) return;
+        const id       = b.dataset.medalId;
+        const unlocked = isShop ? !!_ownedMedals[id] : isMedalEarned(id);
+        if (!unlocked) return;
+
+        let rarity = 'common';
+        if (b.classList.contains('m-legendary')) rarity = 'legendary';
+        else if (b.classList.contains('m-epic'))  rarity = 'epic';
+        else if (b.classList.contains('m-rare'))  rarity = 'rare';
+        else if (b.classList.contains('m-coins')) rarity = 'coins';
+
+        // Obtener icono: imagen o emoji
+        const iconEl = b.querySelector('.mbadge-icon');
+        const img    = iconEl ? iconEl.querySelector('img') : null;
+        const iconHTML = img
+          ? `<img src="${img.src}" alt="" style="width:100%;height:100%;object-fit:contain;display:block;border-radius:5px;">`
+          : (iconEl ? (iconEl.childNodes[0]?.textContent?.trim() || '🏅') : '🏅');
+
+        const nameEl = b.querySelector('.mbadge-name');
+        const name   = nameEl ? nameEl.textContent.trim() : '';
+
+        earned.push({ rarity, iconHTML, name, isImg: !!img });
+      });
+
+      // Ordenar por rareza
+      earned.sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity));
+
+      const MAX = 8;
+      const shown = earned.slice(0, MAX);
+      const extra = earned.length - MAX;
+
+      row.innerHTML = shown.map(m => `
+        <div class="mprev ${m.rarity}">
+          <div class="mprev-icon">${m.iconHTML}</div>
+          <div class="mprev-name">${m.name}</div>
+        </div>`).join('') +
+        (extra > 0 ? `<div class="mprev"><div class="mprev-more">+${extra}</div></div>` : '') +
+        (earned.length === 0 ? '<span style="font-size:11px;color:var(--text2);letter-spacing:1px;font-family:Rajdhani,sans-serif;">Sin medallas aún</span>' : '');
+    }
+
     const _ownedMedals = {};
 
     /* ── Leer valores actuales del gamertag ─────────────────── */
@@ -4135,6 +4257,7 @@
 
       const counter = document.getElementById('medalsCount');
       if (counter) counter.textContent = `${earned} / ${total}`;
+      buildPreviewRow();
     }
 
     /* ── Compra de medallas shop ─────────────────────────────── */
