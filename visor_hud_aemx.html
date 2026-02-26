@@ -1459,24 +1459,19 @@
       );
     }
 
-    // ── Scanline animation ──
-    function animateScanline(){
-      const svg = document.getElementById('hudGrid');
-      if(!svg) return;
-      const H = window.innerHeight;
-      const line = svg.querySelector('#hudScanline');
-      if(!line) return;
-      let y = -80;
-      const speed = 1.8;
-      function step(){
-        y += speed;
-        if(y > H) y = -80;
-        line.setAttribute('y', y);
-        requestAnimationFrame(step);
+    // ── Scanline animation (always re-queries element so survives rebuilds) ──
+    let _scanY = -80;
+    function scanlineLoop(){
+      const line = document.querySelector('#hudScanline');
+      if(line){
+        const H = window.innerHeight;
+        _scanY += 1.8;
+        if(_scanY > H) _scanY = -80;
+        line.setAttribute('y', _scanY);
       }
-      requestAnimationFrame(step);
+      requestAnimationFrame(scanlineLoop);
     }
-    animateScanline();
+    scanlineLoop();
 
     // ── Glitch animation ──
     function triggerGlitch(){
