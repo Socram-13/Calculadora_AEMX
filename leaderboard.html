@@ -759,10 +759,10 @@
         document.getElementById('userNameHeader').textContent = user.displayName || user.email;
         const avatarEl = document.getElementById('userAvatarHeader');
         if (user.photoURL) { avatarEl.src = user.photoURL; } else { avatarEl.style.display = 'none'; }
-        // Cargar ranking inmediatamente (no esperar detección de país)
+        // Detectar y guardar país si está vacío
+        detectarYGuardarPais(user.uid);
+        // Cargar ranking
         loadRanking(user.uid);
-        // Detectar país en paralelo sin bloquear
-        detectarYGuardarPais(user.uid).catch(() => {});
       } else {
         document.getElementById('authOverlay').classList.remove('hidden');
         document.getElementById('userInfo').style.display = 'none';
@@ -783,92 +783,41 @@
       fetchRanking(currentUidGlobal);
     };
 
-    const CACHE_KEY   = 'aemx_leaderboard_cache';
-    const CACHE_TTL   = 5 * 60 * 1000; // 5 minutos
-
-    function loadFromCache(currentUid) {
-      try {
-        const raw = localStorage.getItem(CACHE_KEY);
-        if (!raw) return null;
-        const { ts, players } = JSON.parse(raw);
-        if (Date.now() - ts > CACHE_TTL) return null;
-        // Marcar isYou según uid actual
-        players.forEach(p => { p.isYou = p.uid === currentUid; });
-        return players;
-      } catch(e) { return null; }
-    }
-
-    function saveToCache(players) {
-      try {
-        // Guardar sin avatares para ahorrar espacio
-        const slim = players.map(p => ({
-          uid: p.uid, username: p.username, borderColor: p.borderColor,
-          common: p.common, rare: p.rare, epic: p.epic, legendary: p.legendary, total: p.total
-        }));
-        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), players: slim }));
-      } catch(e) {}
-    }
-
+    // ✅ get() en lugar de onValue — solo descarga cuando el usuario lo pide
     async function fetchRanking(currentUid) {
       const btn = document.getElementById('btnRefresh');
-
-      // 1. Mostrar caché inmediatamente si existe
-      const cached = loadFromCache(currentUid);
-      if (cached) {
-        updateStats(cached);
-        renderPodium(cached.slice(0, 3));
-        renderTable(cached);
-        // Quitar spinner pero dejar el botón en estado normal
-        if (btn) { btn.classList.remove('loading'); btn.innerHTML = '↻ ACTUALIZAR'; }
-      }
-
-      // 2. Fetch real con timeout de 10 segundos
       try {
-        const fetchPromise = (async () => {
-          const usersRef = ref(db, 'users');
-          const snapshot = await get(usersRef);
-          const players = [];
-          snapshot.forEach((child) => {
-            const d = child.val();
-            if (!d.username) return;
-            if (!(d.country || '').toLowerCase().includes('mexico')) return;
-            if (d.bannedLeaderboard) return;
-            const common    = parseInt(d.common)    || 0;
-            const rare      = parseInt(d.rare)      || 0;
-            const epic      = parseInt(d.epic)      || 0;
-            const legendary = parseInt(d.legendary) || 0;
-            const total = common + rare + epic + legendary;
-            players.push({
-              uid: child.key,
-              username:    d.username,
-              avatar:      d.avatar      || '',
-              borderColor: d.borderColor || '',
-              common, rare, epic, legendary, total,
-              isYou: child.key === currentUid,
-            });
+        const usersRef = ref(db, 'users');
+        const snapshot = await get(usersRef);
+        const players = [];
+        snapshot.forEach((child) => {
+          const d = child.val();
+          if (!d.username) return;
+          if (!(d.country || '').toLowerCase().includes('mexico')) return; // solo México
+          if (d.bannedLeaderboard) return; // bloqueado del ranking
+          const common    = parseInt(d.common)    || 0;
+          const rare      = parseInt(d.rare)      || 0;
+          const epic      = parseInt(d.epic)      || 0;
+          const legendary = parseInt(d.legendary) || 0;
+          const total = common + rare + epic + legendary;
+          players.push({
+            uid: child.key,
+            username:  d.username,
+            avatar:    d.avatar    || '',
+            borderColor: d.borderColor || '',
+            common, rare, epic, legendary, total,
+            isYou: child.key === currentUid,
           });
-          return players;
-        })();
+        });
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 10000)
-        );
-
-        const players = await Promise.race([fetchPromise, timeoutPromise]);
+        // Ordenar por total desc
         players.sort((a, b) => b.total - a.total);
 
-        saveToCache(players);
         updateStats(players);
         renderPodium(players.slice(0, 3));
         renderTable(players);
-
       } catch(e) {
-        console.warn('fetchRanking error:', e.message);
-        // Si hay caché ya se mostró arriba — si no, mostrar error
-        if (!cached) {
-          const tbody = document.getElementById('rankingBody');
-          if (tbody) tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">⚠️ Error al cargar. Verifica tu conexión y actualiza.</div></td></tr>';
-        }
+        console.error('Error cargando ranking:', e);
       } finally {
         if (btn) { btn.classList.remove('loading'); btn.innerHTML = '↻ ACTUALIZAR'; }
       }
@@ -889,7 +838,9 @@
       if (player.avatar && player.avatar.startsWith('data:image')) {
         return `<div class="avatar" style="width:${size}px;height:${size}px;border-color:${player.borderColor||'var(--border)'}"><img src="${player.avatar}" alt="${letter}"></div>`;
       }
-      return `<div class="avatar" style="width:${size}px;height:${size}px;background:${bg};border-color:${player.borderColor||bg}">${letter}</div>`;
+      // Sin avatar: mostrar 👤 como placeholder mientras carga
+      const fontSize = Math.round(size * 0.55);
+      return `<div class="avatar" style="width:${size}px;height:${size}px;background:rgba(0,200,255,0.07);border-color:${player.borderColor||'var(--border)'};font-size:${fontSize}px;display:flex;align-items:center;justify-content:center;">👤</div>`;
     }
 
     // ── Podium ──
