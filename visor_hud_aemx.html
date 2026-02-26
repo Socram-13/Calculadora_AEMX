@@ -865,6 +865,9 @@
         <div class="chip secondary" id="btnFlip">
           ⇄ ESPEJO
         </div>
+        <div class="chip secondary" id="btnCamSwitch">
+          ◉ FRONTAL
+        </div>
         <div class="spacer"></div>
 
         <div class="chip" id="btnReloadStats" title="Refrescar stats desde localStorage">
@@ -1136,6 +1139,7 @@
 
     let camStream = null;
     let mirrored = true;
+    let facingMode = 'environment';
 
     function setCamState(on){
       camDot.classList.toggle('ok', on);
@@ -1149,7 +1153,7 @@
         camStream = await navigator.mediaDevices.getUserMedia({
           audio:false,
           video:{
-            facingMode:{ ideal:'environment' },
+            facingMode:{ ideal: facingMode },
             width:{ ideal:1280 },
             height:{ ideal:720 }
           }
@@ -1179,6 +1183,19 @@
     btnFlip.addEventListener('click', () => {
       mirrored = !mirrored;
       camVideo.style.transform = mirrored ? 'scaleX(-1)' : 'scaleX(1)';
+    });
+
+    const btnCamSwitch = document.getElementById('btnCamSwitch');
+    btnCamSwitch.addEventListener('click', async () => {
+      facingMode = facingMode === 'environment' ? 'user' : 'environment';
+      btnCamSwitch.textContent = facingMode === 'environment' ? '◉ FRONTAL' : '◉ TRASERA';
+      // Auto-mirror front camera, unmirror back
+      mirrored = facingMode === 'user';
+      camVideo.style.transform = mirrored ? 'scaleX(-1)' : 'scaleX(1)';
+      if(camStream){
+        stopCamera();
+        await startCamera();
+      }
     });
 
     async function requestLandscapeLock(){
