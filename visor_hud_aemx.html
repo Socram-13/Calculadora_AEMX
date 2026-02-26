@@ -39,23 +39,34 @@
         linear-gradient(var(--primary) 1px,transparent 1px),
         linear-gradient(90deg,var(--primary) 1px,transparent 1px);
       background-size:52px 52px;
-      opacity:.18;
+      opacity:.38;
       pointer-events:none;
       z-index:0;
-      -webkit-mask-image: radial-gradient(
-        ellipse 72% 100% at 50% 50%,
-        rgba(0,0,0,1)   38%,
-        rgba(0,0,0,0.7) 58%,
-        rgba(0,0,0,0.2) 76%,
-        rgba(0,0,0,0)   100%
-      );
-      mask-image: radial-gradient(
-        ellipse 72% 100% at 50% 50%,
-        rgba(0,0,0,1)   38%,
-        rgba(0,0,0,0.7) 58%,
-        rgba(0,0,0,0.2) 76%,
-        rgba(0,0,0,0)   100%
-      );
+      animation: gridEnergy 3.5s ease-in-out infinite;
+      -webkit-mask-image:
+        radial-gradient(ellipse 60% 90% at 50% 50%,
+          black 30%, transparent 100%),
+        radial-gradient(ellipse 100% 40% at 50% 50%,
+          black 40%, transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-image:
+        radial-gradient(ellipse 60% 90% at 50% 50%,
+          black 30%, transparent 100%),
+        radial-gradient(ellipse 100% 40% at 50% 50%,
+          black 40%, transparent 100%);
+      mask-composite: intersect;
+    }
+    body::after{
+      content:"";
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(var(--primary) 1px,transparent 1px),
+        linear-gradient(90deg,var(--primary) 1px,transparent 1px);
+      background-size:52px 52px;
+      opacity:.12;
+      pointer-events:none;
+      z-index:0;
+      animation: gridEnergy 3.5s ease-in-out infinite reverse;
     }
 
     /* Stage */
@@ -606,6 +617,11 @@
     .rotateHint .small{ font-family:Rajdhani,system-ui; font-size:14px; letter-spacing:0; text-transform:none; opacity:.85; }
 
     /* ── ANIMATIONS ── */
+    @keyframes gridEnergy {
+      0%, 100% { opacity: .38; filter: brightness(1) hue-rotate(0deg); }
+      33%       { opacity: .55; filter: brightness(1.4) hue-rotate(15deg); }
+      66%       { opacity: .30; filter: brightness(0.8) hue-rotate(-10deg); }
+    }
     @keyframes barGlow {
       0%, 100% { opacity: .95; filter: brightness(1); }
       50%       { opacity: 1;   filter: brightness(1.25); }
