@@ -1241,6 +1241,18 @@
 
     function buildBase(bc){
       const g = new THREE.Group();
+      // Shadow blob underneath the parcel
+      const shadowGeo = new THREE.PlaneGeometry(5.5, 5.5);
+      const shadowMat = new THREE.MeshBasicMaterial({
+        color: 0x000000,
+        transparent: true,
+        opacity: 0.38,
+        depthWrite: false,
+      });
+      const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+      shadow.rotation.x = -Math.PI / 2;
+      shadow.position.y = -0.12;
+      g.add(shadow);
       const geo = new THREE.BoxGeometry(4,.18,4,4,1,4);
       const pos = geo.attributes.position;
       for(let i=0;i<pos.count;i++) if(Math.abs(pos.getY(i)-.09)<.01) pos.setY(i,pos.getY(i)+(Math.random()-.5)*.06);
@@ -1253,6 +1265,15 @@
       bm.position.y=-.04; g.add(bm);
       [{x:0,z:2.06,sx:4.22,sz:.11},{x:0,z:-2.06,sx:4.22,sz:.11},{x:2.06,z:0,sx:.11,sz:4.22},{x:-2.06,z:0,sx:.11,sz:4.22}]
         .forEach(s=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(s.sx,.14,s.sz),mat(bc)); m.position.set(s.x,.05,s.z); g.add(m); });
+      // Drop shadow — ellipse below base
+      const shd = new THREE.Mesh(
+        new THREE.CircleGeometry(3.0, 32),
+        new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:0.38, depthWrite:false })
+      );
+      shd.rotation.x = -Math.PI/2;
+      shd.position.y = -0.12;
+      shd.scale.set(1, 0.5, 1);
+      g.add(shd);
       return g;
     }
     function buildCommon(){ return buildBase(C.borderCommon); }
@@ -1737,125 +1758,91 @@
     const btnStop = document.getElementById('btnStop');
     const btnSnap = document.getElementById('btnSnap');
 
-    // Screenshot: compose camera + 3D parcelas onto an offscreen canvas
-    function captureFrame(){
-      const W = window.innerWidth, H = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio, 2);
-      const oc = document.createElement('canvas');
-      oc.width = W * dpr; oc.height = H * dpr;
-      const ctx = oc.getContext('2d');
-      ctx.scale(dpr, dpr);
-
-      // 1. Draw camera video
-      const vid = document.getElementById('cam');
-      if(vid && vid.readyState >= 2){
-        // Match object-fit:cover
-        const vw = vid.videoWidth, vh = vid.videoHeight;
-        if(vw && vh){
-          const scale = Math.max(W/vw, H/vh);
-          const sw = vw*scale, sh = vh*scale;
-          const ox = (W-sw)/2, oy = (H-sh)/2;
-          // mirror if needed
-          const mirrored = vid.style.transform.includes('scaleX(-1)');
-          if(mirrored){ ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); ctx.drawImage(vid, -ox-(W-sw), oy, sw, sh); ctx.restore(); }
-          else ctx.drawImage(vid, ox, oy, sw, sh);
-        }
-      }
-
-      // 2. Draw each parcel canvas
-      parcelInstances.forEach(inst=>{
-        const rect = inst.wrap.getBoundingClientRect();
-        ctx.save();
-        ctx.translate(rect.left + rect.width/2, rect.top + rect.height/2);
-        // apply same transform (scale)
-        const sc = inst._scale || 1;
-        ctx.scale(sc, sc);
-        ctx.drawImage(inst.canvas, -inst.canvas.width/2/dpr, -inst.canvas.height/2/dpr,
-                      inst.canvas.width/dpr, inst.canvas.height/dpr);
-        ctx.restore();
-      });
-
-      return oc;
-    }
-
-    // Snapshot
-    btnSnap.addEventListener('click', ()=>{
-      try{
-        const oc = captureFrame();
-        oc.toBlob(blob=>{
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'aemx-' + Date.now() + '.png';
-          a.click();
-          setTimeout(()=> URL.revokeObjectURL(url), 5000);
-        }, 'image/png');
-      }catch(e){ alert('Error al capturar: ' + e.message); }
-    });
-
-    // Recording
+    // ── Captura de pantalla con getDisplayMedia ───────────
+    // Captura exactamente lo que se ve: cámara + cuadrícula + HUD + parcelas
+    let displayStream = null;
     let mediaRecorder = null;
     let recChunks = [];
-    let recStream = null;
 
+    async function getScreen(){
+      if(displayStream && displayStream.active) return displayStream;
+      displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video:{ frameRate:30, displaySurface:'window' },
+        audio:false
+      });
+      displayStream.getVideoTracks()[0].addEventListener('ended', ()=>{
+        // User stopped sharing
+        displayStream = null;
+        if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        btnRec.classList.remove('recording');
+        btnStop.style.display='none';
+        btnRec.style.display='';
+      });
+      return displayStream;
+    }
+
+    // Snapshot: get one frame from screen capture
+    btnSnap.addEventListener('click', async ()=>{
+      try{
+        const stream = await getScreen();
+        const track = stream.getVideoTracks()[0];
+        // Use ImageCapture if available, fallback to video element
+        if('ImageCapture' in window){
+          const ic = new ImageCapture(track);
+          const bitmap = await ic.grabFrame();
+          const oc = document.createElement('canvas');
+          oc.width = bitmap.width; oc.height = bitmap.height;
+          oc.getContext('2d').drawImage(bitmap, 0, 0);
+          oc.toBlob(blob=>{
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href=url; a.download='aemx-'+Date.now()+'.png'; a.click();
+            setTimeout(()=>URL.revokeObjectURL(url),5000);
+          },'image/png');
+        } else {
+          // Fallback: render single frame via video element
+          const vid = document.createElement('video');
+          vid.srcObject = stream;
+          await vid.play();
+          const oc = document.createElement('canvas');
+          oc.width = vid.videoWidth; oc.height = vid.videoHeight;
+          oc.getContext('2d').drawImage(vid, 0, 0);
+          vid.pause(); vid.srcObject = null;
+          oc.toBlob(blob=>{
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href=url; a.download='aemx-'+Date.now()+'.png'; a.click();
+            setTimeout(()=>URL.revokeObjectURL(url),5000);
+          },'image/png');
+        }
+      }catch(e){ if(e.name!=='NotAllowedError') alert('Error: '+e.message); }
+    });
+
+    // Grabar
     btnRec.addEventListener('click', async ()=>{
       if(mediaRecorder) return;
       try{
-        // Capture the whole screen via captureStream on a composed canvas
-        // We use a live canvas that composites every frame
-        const W = window.innerWidth, H = window.innerHeight;
-        const dpr = Math.min(window.devicePixelRatio, 2);
-        const liveCanvas = document.createElement('canvas');
-        liveCanvas.width = W * dpr; liveCanvas.height = H * dpr;
-        const lctx = liveCanvas.getContext('2d');
-        lctx.scale(dpr, dpr);
-
-        let recActive = true;
-        function drawFrame(){
-          if(!recActive) return;
-          const vid = document.getElementById('cam');
-          lctx.clearRect(0, 0, W, H);
-          if(vid && vid.readyState >= 2){
-            const vw=vid.videoWidth, vh=vid.videoHeight;
-            if(vw && vh){
-              const scale=Math.max(W/vw,H/vh);
-              const sw=vw*scale, sh=vh*scale;
-              const ox=(W-sw)/2, oy=(H-sh)/2;
-              const mirrored=vid.style.transform.includes('scaleX(-1)');
-              if(mirrored){lctx.save();lctx.translate(W,0);lctx.scale(-1,1);lctx.drawImage(vid,-ox-(W-sw),oy,sw,sh);lctx.restore();}
-              else lctx.drawImage(vid,ox,oy,sw,sh);
-            }
-          }
-          parcelInstances.forEach(inst=>{
-            const rect=inst.wrap.getBoundingClientRect();
-            lctx.save();
-            lctx.translate(rect.left+rect.width/2, rect.top+rect.height/2);
-            const sc=inst._scale||1; lctx.scale(sc,sc);
-            lctx.drawImage(inst.canvas,-inst.canvas.width/2/dpr,-inst.canvas.height/2/dpr,inst.canvas.width/dpr,inst.canvas.height/dpr);
-            lctx.restore();
-          });
-          requestAnimationFrame(drawFrame);
-        }
-        drawFrame();
-
-        recStream = liveCanvas.captureStream(30);
+        const stream = await getScreen();
         recChunks = [];
-        mediaRecorder = new MediaRecorder(recStream, { mimeType: 'video/webm;codecs=vp9' });
+        // Pick best supported codec
+        const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4']
+          .find(m=> MediaRecorder.isTypeSupported(m)) || '';
+        mediaRecorder = new MediaRecorder(stream, mime ? {mimeType:mime} : {});
         mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) recChunks.push(e.data); };
         mediaRecorder.onstop = ()=>{
-          recActive = false;
-          const blob = new Blob(recChunks, {type:'video/webm'});
+          const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+          const blob = new Blob(recChunks, {type: mime || 'video/webm'});
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
-          a.href=url; a.download='aemx-'+Date.now()+'.webm'; a.click();
+          a.href=url; a.download='aemx-'+Date.now()+'.'+ext; a.click();
           setTimeout(()=>URL.revokeObjectURL(url),10000);
-          recChunks=[]; mediaRecorder=null; recStream=null;
+          recChunks=[]; mediaRecorder=null;
         };
         mediaRecorder.start(200);
         btnRec.classList.add('recording');
         btnRec.style.display='none';
         btnStop.style.display='';
-      }catch(e){ alert('Error al grabar: '+e.message); }
+      }catch(e){ if(e.name!=='NotAllowedError') alert('Error al grabar: '+e.message); }
     });
 
     btnStop.addEventListener('click', ()=>{
