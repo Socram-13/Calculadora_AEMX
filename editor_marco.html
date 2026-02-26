@@ -116,13 +116,13 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
   font-family:'Orbitron',monospace; font-size:9px;
   letter-spacing:2px; color:var(--text2); text-align:center;
 }
-/* frame layers via CSS filter */
-#layer1-img, #layer2-img{
+/* frame layers — canvas tint */
+#layer1-canvas, #layer2-canvas{
   position:absolute; inset:0; width:100%; height:100%;
-  pointer-events:none; object-fit:cover;
+  pointer-events:none;
 }
-#layer1-img{z-index:2;}
-#layer2-img{z-index:3;}
+#layer1-canvas{z-index:2;}
+#layer2-canvas{z-index:3;}
 /* logo layer — top, no tint */
 #logo-layer{
   position:absolute; inset:0; width:100%; height:100%;
@@ -329,9 +329,9 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
     </div>
   </div>
   <!-- Capa 1: anillo oscuro -->
-  <img id="layer1-img" src="" alt="" crossorigin="anonymous"/>
+  <canvas id="layer1-canvas"></canvas>
   <!-- Capa 2: anillo metálico -->
-  <img id="layer2-img" src="" alt="" crossorigin="anonymous"/>
+  <canvas id="layer2-canvas"></canvas>
   <!-- Capa 3: logo fijo -->
   <div class="layer" id="logo-layer">
     <img id="logo-img" src="" alt="AEMX Logo"/>
@@ -355,102 +355,116 @@ const LAYER1_SRC = 'https://raw.githubusercontent.com/socram-13/GamerTag_AEMX/ma
 const LAYER2_SRC = 'https://raw.githubusercontent.com/socram-13/GamerTag_AEMX/main/marco_metalico.png';
 const LAYER3_SRC = 'https://raw.githubusercontent.com/socram-13/GamerTag_AEMX/main/marco_logo.png';
 
-const layer1 = document.getElementById('layer1-img');
-const layer2 = document.getElementById('layer2-img');
-
-layer1.src = LAYER1_SRC;
-layer2.src = LAYER2_SRC;
 document.getElementById('logo-img').src = LAYER3_SRC;
 
-// ── Convierte hex a HSL ───────────────────────────────────────────────────────
-function hexToHsl(hex) {
-  let r = parseInt(hex.slice(1,3),16)/255;
-  let g = parseInt(hex.slice(3,5),16)/255;
-  let b = parseInt(hex.slice(5,7),16)/255;
-  const max = Math.max(r,g,b), min = Math.min(r,g,b);
-  let h, s, l = (max+min)/2;
-  if (max === min) { h = s = 0; }
-  else {
-    const d = max - min;
-    s = l > 0.5 ? d/(2-max-min) : d/(max+min);
-    switch(max){
-      case r: h = ((g-b)/d + (g<b?6:0))/6; break;
-      case g: h = ((b-r)/d + 2)/6; break;
-      case b: h = ((r-g)/d + 4)/6; break;
-    }
-  }
-  return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) };
+// ── Sistema de colorización por multiplicación de píxeles ────────────────────
+// Guarda la ImageData original de cada capa para no perderla al re-renderizar
+const layerData = { 1: null, 2: null };
+const layerImg  = { 1: new Image(), 2: new Image() };
+layerImg[1].crossOrigin = 'anonymous';
+layerImg[2].crossOrigin = 'anonymous';
+
+// Convierte hex "#rrggbb" a {r,g,b} 0-255
+function hexToRgb(hex) {
+  return {
+    r: parseInt(hex.slice(1,3), 16),
+    g: parseInt(hex.slice(3,5), 16),
+    b: parseInt(hex.slice(5,7), 16)
+  };
 }
 
-// ── Aplica CSS filter: hue-rotate + saturate + brightness ────────────────────
-// El PNG de cada capa tiene sus propios colores base.
-// Usamos hue-rotate para cambiar el matiz y saturate para la saturación.
-// intensity (0-100): qué tan saturado se ve el color aplicado.
-function applyFilter(el, hexColor, intensity) {
-  if (intensity === 0) {
-    el.style.filter = 'saturate(0) brightness(0.9)';
-    return;
-  }
-  const hsl = hexToHsl(hexColor);
-  // hue-rotate: giramos desde el matiz original de la imagen
-  // El marco_oscuro tiene tonos cyan (~190°), el metálico blanco/gris (~0°)
-  // Calculamos cuánto rotar para llegar al color elegido
-  const hueRotate = hsl.h; // rotamos al matiz del color elegido
-  const saturate  = 0.2 + (intensity / 100) * 3.5; // 0.2 a 3.7
-  const brightness = 0.7 + (hsl.l / 100) * 0.8;    // ajuste por luminosidad del color elegido
-  el.style.filter = `hue-rotate(${hueRotate}deg) saturate(${saturate.toFixed(2)}) brightness(${brightness.toFixed(2)})`;
-}
-
-function render1() {
-  const color = document.getElementById('color1').value;
-  const int   = parseInt(document.getElementById('int1').value);
-  applyFilter(layer1, color, int);
-}
-
-function render2() {
-  const color = document.getElementById('color2').value;
-  const int   = parseInt(document.getElementById('int2').value);
-  applyFilter(layer2, color, int);
-}
-
-// ── Samplea el color dominante de un PNG (solo píxeles opacos) ───────────────
+// Samplea el color dominante del PNG original (píxeles saturados)
 function sampleDominantColor(imgEl) {
   const c = document.createElement('canvas');
   c.width = c.height = 128;
   const ctx = c.getContext('2d');
   ctx.drawImage(imgEl, 0, 0, 128, 128);
   const data = ctx.getImageData(0, 0, 128, 128).data;
-
-  // Solo procesamos píxeles opacos con alta saturación (los colores reales del marco)
-  // Ignoramos grises, negros y blancos que distorsionan el promedio
   let r = 0, g = 0, b = 0, count = 0;
   for (let i = 0; i < data.length; i += 4) {
-    if (data[i + 3] < 128) continue; // transparente
+    if (data[i+3] < 128) continue;
     const ri = data[i], gi = data[i+1], bi = data[i+2];
-    const max = Math.max(ri, gi, bi), min = Math.min(ri, gi, bi);
-    const sat = max === 0 ? 0 : (max - min) / max; // saturación HSV 0-1
+    const max = Math.max(ri,gi,bi), min = Math.min(ri,gi,bi);
+    const sat = max === 0 ? 0 : (max - min) / max;
     const lum = (ri + gi + bi) / 3;
-    // Solo píxeles saturados (>30%) y no demasiado oscuros ni blancos
     if (sat > 0.30 && lum > 30 && lum < 240) {
-      // Peso proporcional a la saturación para que los colores vivos dominen
-      const w = sat;
-      r += ri * w; g += gi * w; b += bi * w; count += w;
+      r += ri*sat; g += gi*sat; b += bi*sat; count += sat;
     }
   }
-  if (!count) return '#888888'; // fallback gris si no hay píxeles saturados
-  r = Math.round(r / count); g = Math.round(g / count); b = Math.round(b / count);
-  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+  if (!count) return '#888888';
+  return '#' + [r,g,b].map(v => Math.round(v/count).toString(16).padStart(2,'0')).join('');
 }
 
-// Al cargar cada capa: detectar color real del PNG y sincronizar el picker
-layer1.onload = () => {
-  document.getElementById('color1').value = sampleDominantColor(layer1);
-  render1();
-};
-layer2.onload = () => {
-  document.getElementById('color2').value = sampleDominantColor(layer2);
-  render2();
-};
+// Aplica colorización por píxel al canvas de la capa
+// Técnica: luminancia del pixel original × color elegido (colorize real)
+// intensity 0-100: mezcla entre original y colorizado
+function applyTint(layerNum, hexColor, intensity) {
+  const canvas = document.getElementById('layer' + layerNum + '-canvas');
+  const orig   = layerData[layerNum];
+  if (!orig) return;
+
+  const w = orig.width, h = orig.height;
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  const tint  = hexToRgb(hexColor);
+  const mix   = intensity / 100; // 0.0 → original, 1.0 → colorizado
+
+  // Copia mutable de la data original
+  const src = orig.data;
+  const out = ctx.createImageData(w, h);
+  const dst = out.data;
+
+  for (let i = 0; i < src.length; i += 4) {
+    const ro = src[i], go = src[i+1], bo = src[i+2], ao = src[i+3];
+    // Luminancia perceptual del pixel original (0-255)
+    const lum = 0.299*ro + 0.587*go + 0.114*bo;
+    const l   = lum / 255;
+    // Pixel colorizado = luminancia × color del picker
+    const cr = l * tint.r;
+    const cg = l * tint.g;
+    const cb = l * tint.b;
+    // Mezcla lineal entre original y colorizado
+    dst[i]   = Math.round(ro + (cr - ro) * mix);
+    dst[i+1] = Math.round(go + (cg - go) * mix);
+    dst[i+2] = Math.round(bo + (cb - bo) * mix);
+    dst[i+3] = ao; // preservar alpha original
+  }
+  ctx.putImageData(out, 0, 0);
+}
+
+function render1() {
+  const color = document.getElementById('color1').value;
+  const int   = parseInt(document.getElementById('int1').value);
+  applyTint(1, color, int);
+}
+
+function render2() {
+  const color = document.getElementById('color2').value;
+  const int   = parseInt(document.getElementById('int2').value);
+  applyTint(2, color, int);
+}
+
+// Cargar PNG → guardar ImageData original → init picker → render
+function loadLayer(num, src) {
+  const img = layerImg[num];
+  img.onload = () => {
+    // Capturar ImageData original a resolución completa
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth; c.height = img.naturalHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    layerData[num] = ctx.getImageData(0, 0, c.width, c.height);
+    // Sincronizar picker con color real del PNG
+    document.getElementById('color' + num).value = sampleDominantColor(img);
+    // Primer render
+    num === 1 ? render1() : render2();
+  };
+  img.src = src;
+}
+
+loadLayer(1, LAYER1_SRC);
+loadLayer(2, LAYER2_SRC);
 
 // ── Events ───────────────────────────────────────────────────────────────────
 document.getElementById('color1').addEventListener('input', render1);
@@ -589,85 +603,37 @@ wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add(
 wrap.addEventListener('dragleave', () => wrap.classList.remove('dragover'));
 wrap.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('dragover'); loadPhoto(e.dataTransfer.files[0]); });
 
-// ── Dibuja una imagen con CSS filter preservando transparencia ───────────────
-// El problema: ctx.filter trabaja con alpha premultiplicado. Al aplicar
-// hue-rotate/saturate, los píxeles semitransparentes de los bordes del PNG
-// quedan con RGB contaminado de negro. No hay forma de corregirlo después
-// porque el daño ocurre durante la multiplicación interna del canvas.
-//
-// Solución: aplicar el filtro en un canvas B, luego usar destination-in con
-// el alpha original limpio (canvas A) para "recortar" exactamente los bordes.
-// destination-in conserva solo los píxeles donde A tiene alpha > 0, eliminando
-// cualquier borde negro que haya generado el filtro.
-function drawFiltered(ctx, imgEl, size) {
-  const filterStr = imgEl.style.filter || '';
-
-  // Canvas A — imagen original sin filtro (alpha limpio)
-  const canvasA = document.createElement('canvas');
-  canvasA.width = canvasA.height = size;
-  const ctxA = canvasA.getContext('2d');
-  ctxA.drawImage(imgEl, 0, 0, size, size);
-
-  if (!filterStr || filterStr === 'none') {
-    ctx.drawImage(canvasA, 0, 0);
-    return;
-  }
-
-  // Canvas B — imagen con filtro aplicado (puede tener bordes negros)
-  const canvasB = document.createElement('canvas');
-  canvasB.width = canvasB.height = size;
-  const ctxB = canvasB.getContext('2d');
-  ctxB.filter = filterStr;
-  ctxB.drawImage(imgEl, 0, 0, size, size);
-  ctxB.filter = 'none';
-
-  // Canvas C — aplicamos destination-in: los colores de B quedan enmascarados
-  // por el alpha de A. Resultado: colores filtrados + alpha original limpio.
-  const canvasC = document.createElement('canvas');
-  canvasC.width = canvasC.height = size;
-  const ctxC = canvasC.getContext('2d');
-  ctxC.drawImage(canvasB, 0, 0);                    // paso 1: dibujar imagen filtrada
-  ctxC.globalCompositeOperation = 'destination-in'; // paso 2: recortar con alpha original
-  ctxC.drawImage(canvasA, 0, 0);
-  ctxC.globalCompositeOperation = 'source-over';    // restaurar modo por defecto
-
-  // Composite final sobre el canvas principal
-  ctx.drawImage(canvasC, 0, 0);
-}
-
-// ── Download: composite all layers preservando transparencia ─────────────────
+// ── Download: composite all layers ──────────────────────────────────────────
+// Las capas 1 y 2 ya son canvas con la colorización aplicada —
+// se dibujan directamente sin filtros adicionales.
 function descargar() {
   const size = 1024;
   const tmp  = document.createElement('canvas');
   tmp.width = tmp.height = size;
   const tCtx = tmp.getContext('2d');
-
-  // Fondo transparente explícito (sin relleno negro)
   tCtx.clearRect(0, 0, size, size);
 
-  // Layer 0: foto del usuario aplicando el mismo zoom/pan que en preview
+  // Layer 0: foto del usuario con zoom/pan
   const photoImg = document.querySelector('#photo-layer img');
   if (photoImg) {
     const nw = photoImg.naturalWidth, nh = photoImg.naturalHeight;
-    // Escala base (object-fit:cover) para cubrir 1024x1024
     const baseScale = Math.max(size / nw, size / nh);
     const bw = nw * baseScale, bh = nh * baseScale;
-    // Ratio px-preview → px-canvas para traducir el offset del usuario
     const previewSize = document.getElementById('editor-wrap').offsetWidth;
     const ratio = size / previewSize;
-    // Aplicar zoom centrado + offset de pan
     const fw = bw * photoState.zoom, fh = bh * photoState.zoom;
     const fx = (size - fw) / 2 + photoState.x * ratio;
     const fy = (size - fh) / 2 + photoState.y * ratio;
     tCtx.drawImage(photoImg, fx, fy, fw, fh);
   }
-  // Sin foto → fondo transparente
 
-  // Layer 1 (anillo oscuro) y Layer 2 (anillo metálico)
-  // Usamos drawFiltered para no perder el canal alpha del PNG
-  [layer1, layer2].forEach(imgEl => drawFiltered(tCtx, imgEl, size));
+  // Layer 1 y 2: canvas ya colorizados, escalar a 1024x1024
+  ['layer1-canvas', 'layer2-canvas'].forEach(id => {
+    const c = document.getElementById(id);
+    if (c && c.width) tCtx.drawImage(c, 0, 0, size, size);
+  });
 
-  // Layer 3: logo fijo — tamaño completo 1024x1024
+  // Layer 3: logo fijo
   const logoImg = document.getElementById('logo-img');
   if (logoImg.complete && logoImg.naturalWidth) {
     tCtx.drawImage(logoImg, 0, 0, size, size);
