@@ -80,8 +80,7 @@
         .message { align-self:flex-start;flex-direction:row; }
         .message.own { align-self:flex-end;flex-direction:row-reverse; }
         @keyframes messageSlide { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        .message-avatar { width:32px;height:32px;min-width:32px;min-height:32px;aspect-ratio:1/1;border-radius:50%;border:2px solid var(--primary-color);background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;box-shadow:0 0 8px rgba(0,255,136,.3);overflow:hidden; }
-        .message-avatar img { width:100%;height:100%;object-fit:cover;border-radius:50%;display:block; }
+        .message-avatar { width:32px;height:32px;min-width:32px;min-height:32px;aspect-ratio:1/1;border-radius:50%;border:2px solid var(--primary-color);background:rgba(0,255,136,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 0 8px rgba(0,255,136,.3);overflow:hidden; }
         .message-content { display:flex;flex-direction:column;gap:2px; }
         .message.own .message-content { align-items:flex-end; }
         .message-author { font-weight:700;font-size:11px;color:var(--primary-color);text-transform:uppercase;letter-spacing:.5px;padding:0 4px; }
@@ -376,8 +375,6 @@
 const userRef = ref(database, 'chat_presence/' + userId);
                     set(userRef, {
                         username: currentUsername,
-                        avatar: currentAvatar || '',
-                        borderColor: sessionStorage.getItem('chat-avatar-border') || localStorage.getItem('atlas-avatar-border') || '',
                         timestamp: serverTimestamp()
                     });
                     onDisconnect(userRef).remove();
@@ -442,8 +439,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
                         username: currentUsername,
                         text: message,
                         timestamp: serverTimestamp(),
-                        avatar: currentAvatar || '',
-                        borderColor: currentBorderColor || '',
                         ...(currentUserIsAdmin && { isAdmin: true }),
                     });
                     input.value = '';
@@ -462,9 +457,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 const avatar = isOwn ? (currentAvatar || msgAvatar) : msgAvatar;
                 const borderColor = isAdmin ? '#ff4466' : (isOwn ? (currentBorderColor || msgBorderColor) : msgBorderColor);
                 const borderStyle = borderColor ? `border:2px solid ${borderColor};box-shadow:0 0 8px ${borderColor}40;` : '';
-                const avatarHTML = avatar
-                    ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">`
-                    : author.charAt(0).toUpperCase();
+                const avatarHTML = isAdmin ? '👾' : '🧑🏻‍🚀';
                 container.insertAdjacentHTML('beforeend', `
                     <div class="message ${ownClass} ${adminClass}">
                         <div class="message-avatar" style="${borderStyle}">${avatarHTML}</div>
