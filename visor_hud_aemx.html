@@ -509,7 +509,7 @@
       text-transform:uppercase;
       color:rgba(0,200,255,.75);
       margin-bottom:6px;
-      justify-content:flex-end;
+      justify-content:flex-start;
     }
     .hudChatUser .lamp{
       width:7px; height:7px; border-radius:50%;
@@ -527,15 +527,15 @@
       gap:5px;
       font-size:15px;
       line-height:1.4;
-      margin:4px 0;
+      margin:3px 0;
       opacity:.95;
-      overflow:hidden;
-      justify-content:flex-end;
-      text-align:right;
+      justify-content:flex-start;
+      text-align:left;
       text-shadow: 0 1px 8px rgba(0,0,0,.95);
+      align-items:baseline;
     }
     .msg .a{
-      color:#4ade80;
+      color:rgba(96,165,250,.65);
       font-weight:700;
       flex:0 0 auto;
       max-width:38%;
@@ -551,9 +551,7 @@
     }
     .msg .t{
       color:rgba(255,255,255,.90);
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
+      word-break:break-word;
       flex:1;
       min-width:0;
     }
@@ -602,21 +600,29 @@
       align-items:center;
     }
     .miniBtn button{
-      border:1px solid rgba(0,200,255,.30);
-      background: rgba(5,10,20,.70);
-      color:#e8fff6;
-      border-radius: 14px;
-      padding: 10px 14px;
+      border:none;
+      background: rgba(5,10,20,.35);
+      color:rgba(232,255,246,.80);
+      padding: 8px 18px 10px;
       font-family: Orbitron, system-ui;
       font-weight:900;
       letter-spacing:2px;
       font-size:10px;
       text-transform:uppercase;
       cursor:pointer;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 18px rgba(0,255,136,.10);
+      backdrop-filter: blur(8px);
+      outline: 1px solid rgba(0,200,255,.18);
+      outline-offset: -1px;
     }
-    .miniBtn button:active{ transform: scale(.98); }
+    /* HUD = left button: trapezoid wider at bottom, clipped top-right */
+    .miniBtn button:first-child{
+      clip-path: polygon(12px 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+    /* FULL = right button: trapezoid wider at bottom, clipped top-left */
+    .miniBtn button:last-child{
+      clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 100%, 0% 100%);
+    }
+    .miniBtn button:active{ opacity:.7; }
 
     /* Safe overlay for “rotate device” */
     .rotateHint{
@@ -1317,7 +1323,7 @@
         if(user){
           hideLoginOverlay();
           // Show first name in chat status
-          const firstName = (user.displayName || localStorage.getItem('atlas-username') || 'USER').split(' ')[0].toUpperCase();
+          const firstName = (localStorage.getItem('atlas-username') || user.displayName || 'USER').split(' ')[0].toUpperCase();
           window._hudUsername = firstName;
           setChatState(true, firstName);
           attachListener();
