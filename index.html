@@ -2336,7 +2336,7 @@
         </div>
 
         <div class="mbadge m-common" data-medal-id="fundador">
-          <div class="mbadge-icon">🌄
+          <div class="mbadge-icon"><img src="oldaemx.jpg" alt="Fundador" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">
             <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">FUNDADOR</div><div class="mbadge-tooltip-desc">Cuenta iniciada el 26-sep-2024 o antes.</div></div>
           </div>
           <div class="mbadge-name">Fundador</div>
@@ -3993,12 +3993,31 @@
     wrapper.onmouseenter = () => wrapper.style.opacity = '0.85';
     wrapper.onmouseleave = () => wrapper.style.opacity = '0.55';
     document.body.appendChild(wrapper);
+    // Esperar a que Firebase esté listo (máx 3s)
+    await new Promise(resolve => {
+      let tries = 0;
+      const wait = setInterval(() => {
+        tries++;
+        if (window._fbDb && window._fbRef || tries > 30) { clearInterval(wait); resolve(); }
+      }, 100);
+    });
     try {
-      const res = await fetch('https://api.counterapi.dev/v1/socram-13-gamertag/visits/up');
-      const data = await res.json();
+      const db  = window._fbDb;
+      const ref = window._fbRef;
+      const get = window._fbGet;
+      if (!db || !ref || !get) throw new Error('Firebase no disponible');
+      const visitsRef = ref(db, 'visits/total');
+      const snap = await get(visitsRef);
+      const current = snap.exists() ? (snap.val() || 0) : 0;
+      const newCount = current + 1;
+      // Usar set directo (tráfico mínimo: 1 lectura + 1 escritura por visita)
+      await window._fbSet(visitsRef, newCount);
       const el = document.getElementById('visit-count-display');
-      if (el && data.count !== undefined) el.textContent = String(data.count).padStart(8, '0');
-    } catch(e) {}
+      if (el) el.textContent = String(newCount).padStart(8, '0');
+    } catch(e) {
+      const el = document.getElementById('visit-count-display');
+      if (el) el.textContent = '--------';
+    }
   }
   initVisitCounter();
 
@@ -4184,7 +4203,7 @@
         case 'mexicano':         return (window.userCountry || '').toLowerCase().includes('mexico');
         case 'ahorrador':        return coins >= 50;
         case 'disciplinado':     return coins >= 100;
-        case 'fundador':         return sd !== '' && sd <= '2024-09-26';
+        case 'fundador':         return window.clanMember === true && sd !== '' && sd <= '2024-09-26';
         /* RARAS */
         case 'terrateniente':    return total >= 100;
         case 'urbanista':        return total >= 250;
