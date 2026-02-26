@@ -74,9 +74,24 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
 .btn.download:hover{background:var(--glow2); color:#060b14;}
 
 /* ── Canvas editor ── */
-.editor-wrap{
+.editor-outer{
   position:relative; width:min(500px,92vw); height:min(500px,92vw);
-  border-radius:50%; overflow:hidden; z-index:1;
+  z-index:1; flex-shrink:0;
+}
+.corner{
+  position:absolute; width:18px; height:18px;
+  border-color:var(--glow); border-style:solid;
+  opacity:0.5; pointer-events:none; z-index:10;
+  transition:opacity 0.2s;
+}
+.editor-outer:hover .corner{ opacity:1; }
+.corner.tl{ top:-6px;    left:-6px;  border-width:2px 0 0 2px; border-radius:3px 0 0 0;}
+.corner.tr{ top:-6px;    right:-6px; border-width:2px 2px 0 0; border-radius:0 3px 0 0;}
+.corner.bl{ bottom:-6px; left:-6px;  border-width:0 0 2px 2px; border-radius:0 0 0 3px;}
+.corner.br{ bottom:-6px; right:-6px; border-width:0 2px 2px 0; border-radius:0 0 3px 0;}
+.editor-wrap{
+  position:relative; width:100%; height:100%;
+  border-radius:50%; overflow:hidden;
   box-shadow:0 0 60px rgba(0,200,255,0.15), 0 20px 60px rgba(0,0,0,0.8);
   cursor:pointer;
 }
@@ -283,7 +298,12 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
 </div>
 
 <!-- Editor -->
-<div class="editor-wrap" id="editor-wrap">
+<div class="editor-outer">
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
+  <div class="editor-wrap" id="editor-wrap">
   <!-- Capa 0: foto usuario -->
   <div class="layer" id="photo-layer">
     <div class="upload-hint" id="upload-hint">
@@ -300,6 +320,7 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
   <!-- Capa 3: logo fijo -->
   <div class="layer" id="logo-layer">
     <img id="logo-img" src="" alt="AEMX Logo"/>
+  </div>
   </div>
 </div>
 
@@ -477,12 +498,10 @@ function descargar() {
   // Usamos drawFiltered para no perder el canal alpha del PNG
   [layer1, layer2].forEach(imgEl => drawFiltered(tCtx, imgEl, size));
 
-  // Layer 3: logo fijo (sin filtro, directo)
+  // Layer 3: logo fijo — tamaño completo 1024x1024
   const logoImg = document.getElementById('logo-img');
   if (logoImg.complete && logoImg.naturalWidth) {
-    const lw = size * 0.42;
-    const lh = logoImg.naturalHeight * (lw / logoImg.naturalWidth);
-    tCtx.drawImage(logoImg, (size - lw) / 2, size * (-0.02), lw, lh);
+    tCtx.drawImage(logoImg, 0, 0, size, size);
   }
 
   const link = document.createElement('a');
