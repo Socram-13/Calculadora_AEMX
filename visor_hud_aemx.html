@@ -80,7 +80,7 @@
       position:absolute; inset:0;
       width:100%; height:100%;
       object-fit:cover;
-      transform:scaleX(-1); /* espejo por defecto; se puede cambiar */
+      transform:scaleX(1); /* sin espejo por defecto */
       background:#000;
     }
     /* HUD Overlay */
@@ -986,13 +986,13 @@
 
     /* ── DRAGGABLE PARCEL INSTANCES ── */
     .parcelInstance{
-      position:fixed;
-      z-index:2;
+      position:absolute;
+      z-index:0;
       cursor:grab;
       touch-action:none;
       user-select:none;
     }
-    .parcelInstance.dragging{ cursor:grabbing; z-index:3; }
+    .parcelInstance.dragging{ cursor:grabbing; z-index:0; }
     .parcelInstance canvas{
       display:block;
       border-radius:12px;
@@ -1012,7 +1012,7 @@
       cursor:pointer;
       backdrop-filter:blur(6px);
       pointer-events:auto;
-      z-index:4;
+      z-index:1;
       line-height:1;
     }
   </style>
@@ -1294,7 +1294,8 @@
       closeBtn.textContent = '✕';
       wrap.appendChild(closeBtn);
 
-      document.body.appendChild(wrap);
+      const _hud = document.querySelector('.stage .hud');
+      _hud ? _hud.parentNode.insertBefore(wrap, _hud) : document.querySelector('.stage').appendChild(wrap);
 
       // Three.js per-instance
       const rend = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
@@ -1340,6 +1341,7 @@
       let posTop  = parseFloat(wrap.style.top)  || 0;
 
       function applyTransform(){
+        wrap.style.transformOrigin = 'center center';
         wrap.style.transform = `rotate(${currentRotate}deg) scale(${currentScale})`;
       }
 
@@ -1568,7 +1570,7 @@
     // Creates illusion of being anchored in space
     let gyroEnabled = false;
     let lastBeta = null, lastGamma = null;
-    const GYRO_SENSITIVITY = 0.8; // px per degree
+    const GYRO_SENSITIVITY = 3.5; // px per degree
 
     function onDeviceOrientation(e){
       if(lastBeta === null){ lastBeta = e.beta; lastGamma = e.gamma; return; }
@@ -1796,7 +1798,7 @@
 
 
     let camStream = null;
-    let mirrored = true;
+    let mirrored = false;
     let facingMode = 'environment';
 
     function setCamState(on){
