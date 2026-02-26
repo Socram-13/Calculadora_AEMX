@@ -60,8 +60,12 @@
     .hud{
       position:absolute; inset:0;
       pointer-events:none;
+    }
+    .hudScale{
+      position:absolute; inset:0;
       transform: scale(var(--hud-scale));
       transform-origin: top left;
+      pointer-events:none;
     }
     .hud::before{
       content:"";
@@ -493,6 +497,7 @@
         </div>
       </div>
 
+      <div class="hudScale">
       <!-- Diamonds battery -->
       <div class="battery" aria-label="Diamantes">
         <div class="title">
@@ -719,11 +724,13 @@
     hideUI();
 
     // Tap anywhere to show controls briefly
-    document.addEventListener('pointerdown', (e) => {
-      // avoid stealing taps from controls
-      if(e.target.closest('.topbar') || e.target.closest('.miniBtn')) return;
+    const reveal = (e) => {
+      if(e && (e.target?.closest?.('.topbar') || e.target?.closest?.('.miniBtn'))) return;
       showUI(true);
-    });
+    };
+    document.addEventListener('pointerdown', reveal, {passive:true});
+    document.addEventListener('touchstart', reveal, {passive:true});
+    document.addEventListener('click', reveal);
 
     btnUI.addEventListener('click', () => {
       if(uiHidden) showUI(false);
