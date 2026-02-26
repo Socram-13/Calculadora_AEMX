@@ -1904,7 +1904,7 @@
             ESTADO_COORDS_MINI[estado][0] + (Math.random()-0.5)*0.8,
             ESTADO_COORDS_MINI[estado][1] + (Math.random()-0.5)*0.8,
           ];
-        } else if ((p.country || '').toLowerCase().includes('mexico') || !p.city) {
+        } else if (p.country === 'Mexico' || !p.city) {
           // Sin ciudad: posición aleatoria sobre México
           coords = [
             23.6345 + (Math.random()-0.5)*6,
@@ -1940,11 +1940,11 @@
   </script>
 
   <script type="module">
-    import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
-                               from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import { getDatabase, ref, onValue, update, set, get, query, limitToLast }
-                               from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+                               from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
 
@@ -1984,64 +1984,32 @@
         document.getElementById('headerRight').style.display = 'flex';
         document.getElementById('adminEmail').textContent = user.displayName || user.email;
         loadUsers();
-        // Cargar aviso actual
-        onValue(ref(db, 'config/aviso'), (snap) => {
-          const txt = snap.exists() ? snap.val() : '';
+        // Cargar toda la config de una sola vez — sin sockets permanentes
+        get(ref(db, 'config')).then((snap) => {
+          const cfg = snap.exists() ? snap.val() : {};
+          const txt = cfg.aviso || '';
           document.getElementById('avisoInput').value = txt;
           document.getElementById('avisoPreview').textContent = txt || '(sin aviso activo)';
           document.getElementById('avisoClear').style.display = txt ? 'inline-flex' : 'none';
-        });
-        // Cargar TTL actual
-        onValue(ref(db, 'config/chatTTL'), (snap) => {
-          const val = snap.exists() ? snap.val() : null;
-          const input  = document.getElementById('ttlInput');
-          const status = document.getElementById('ttlStatus');
+          const val = cfg.chatTTL ?? null;
+          const input = document.getElementById('ttlInput');
+          const ttlStatus = document.getElementById('ttlStatus');
           const disBtn = document.getElementById('ttlDisableBtn');
-          if (val === 0 || val === null) {
-            input.value = '';
-            status.textContent = '⏹ Apagado';
-            status.style.color = 'var(--danger)';
-            disBtn.style.opacity = '0.4';
-          } else {
-            input.value = val;
-            status.textContent = `✔ Activo · ${val}h`;
-            status.style.color = 'var(--glow2)';
-            disBtn.style.opacity = '1';
-          }
-        });
-        // Cargar estado de coins
-        onValue(ref(db, 'config/coinsActivo'), (snap) => {
-          const activo = snap.exists() ? snap.val() : true;
-          const checkbox = document.getElementById('coinsToggle');
-          const status   = document.getElementById('coinsToggleStatus');
-          if (checkbox) checkbox.checked = activo;
-          if (status) {
-            status.textContent = activo ? 'ENCENDIDO' : 'APAGADO';
-            status.className = `coins-toggle-status ${activo ? 'on' : 'off'}`;
-          }
-        });
-        // Cargar estado de transacciones
-        onValue(ref(db, 'config/transaccionesActivo'), (snap) => {
-          const activo = snap.exists() ? snap.val() : true;
-          const checkbox = document.getElementById('transToggle');
-          const status   = document.getElementById('transToggleStatus');
-          if (checkbox) checkbox.checked = activo;
-          if (status) {
-            status.textContent = activo ? 'ENCENDIDO' : 'APAGADO';
-            status.className = `coins-toggle-status ${activo ? 'trans-status-on' : 'trans-status-off'}`;
-          }
-        });
-        // Cargar estado del botón de transacciones en chat
-        onValue(ref(db, 'config/btnTransaccionesActivo'), (snap) => {
-          const activo = snap.exists() ? snap.val() : false;
-          const checkbox = document.getElementById('btnTransToggle');
-          const status   = document.getElementById('btnTransToggleStatus');
-          if (checkbox) checkbox.checked = activo;
-          if (status) {
-            status.textContent = activo ? 'VISIBLE' : 'OCULTO';
-            status.className = `coins-toggle-status ${activo ? 'on' : 'off'}`;
-          }
-        });
+          if (val === 0 || val === null) { input.value = ''; ttlStatus.textContent = '⏹ Apagado'; ttlStatus.style.color = 'var(--danger)'; disBtn.style.opacity = '0.4'; }
+          else { input.value = val; ttlStatus.textContent = `✔ Activo · ${val}h`; ttlStatus.style.color = 'var(--glow2)'; disBtn.style.opacity = '1'; }
+          const coinsActivo = cfg.coinsActivo !== false;
+          const coinsChk = document.getElementById('coinsToggle'); const coinsSt = document.getElementById('coinsToggleStatus');
+          if (coinsChk) coinsChk.checked = coinsActivo;
+          if (coinsSt) { coinsSt.textContent = coinsActivo ? 'ENCENDIDO' : 'APAGADO'; coinsSt.className = `coins-toggle-status ${coinsActivo ? 'on' : 'off'}`; }
+          const transActivo = cfg.transaccionesActivo !== false;
+          const transChk = document.getElementById('transToggle'); const transSt = document.getElementById('transToggleStatus');
+          if (transChk) transChk.checked = transActivo;
+          if (transSt) { transSt.textContent = transActivo ? 'ENCENDIDO' : 'APAGADO'; transSt.className = `coins-toggle-status ${transActivo ? 'trans-status-on' : 'trans-status-off'}`; }
+          const btnTransActivo = !!cfg.btnTransaccionesActivo;
+          const btnTransChk = document.getElementById('btnTransToggle'); const btnTransSt = document.getElementById('btnTransToggleStatus');
+          if (btnTransChk) btnTransChk.checked = btnTransActivo;
+          if (btnTransSt) { btnTransSt.textContent = btnTransActivo ? 'VISIBLE' : 'OCULTO'; btnTransSt.className = `coins-toggle-status ${btnTransActivo ? 'on' : 'off'}`; }
+        }).catch(e => console.warn('Config load error:', e));
       } else {
       }
     });
@@ -2099,19 +2067,18 @@
       const legendary = parseInt(d.legendary) || 0;
 
       allUsers.push({
-        uid:              child.key,
-        username:         d.username,
-        avatar:           d.avatar || '',
-        borderColor:      d.borderColor || '',
-        country:          d.country || '',
-        city:             d.city || '',
-        total:            common + rare + epic + legendary,
-        coins:            parseInt(d.coins) || 0,
-        updatedAt:        d.updatedAt || null,
-        bannedChat:       !!d.bannedChat,
-        bannedLeaderboard:!!d.bannedLeaderboard,
-        clanMember:       !!d.clanMember,
-        countryHistory:   Array.isArray(d.countryHistory) ? d.countryHistory : []
+        uid:               child.key,
+        username:          d.username,
+        borderColor:       d.borderColor || '',
+        country:           d.country || '',
+        city:              d.city || '',
+        total:             common + rare + epic + legendary,
+        coins:             parseInt(d.coins) || 0,
+        updatedAt:         d.updatedAt || null,
+        bannedChat:        !!d.bannedChat,
+        bannedLeaderboard: !!d.bannedLeaderboard,
+        clanMember:        !!d.clanMember,
+        countryHistory:    Array.isArray(d.countryHistory) ? d.countryHistory : []
       });
     });
   }
@@ -2119,7 +2086,11 @@
   allUsers.sort((a, b) => b.total - a.total);
   updateStats();
   renderTable();
-  if (window.renderMiniMap) window.renderMiniMap(allUsers);
+  // Mapa solo se renderiza una vez al cargar o al actualizar manualmente
+  if (window.renderMiniMap && !window._miniMapRendered) {
+    window.renderMiniMap(allUsers);
+    window._miniMapRendered = true;
+  }
 
   // Construir mapa uid → user y cargar códigos activos (limitado)
   const usersMap = {};
@@ -2163,11 +2134,8 @@ function updateStats() {
     function avatarHTML(u) {
       const letter = (u.username || '?').charAt(0).toUpperCase();
       const colors = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#4ade80','#f472b6'];
-      const bg = colors[letter.charCodeAt(0) % colors.length];
-      if (u.avatar && u.avatar.startsWith('data:image')) {
-        return `<div class="avatar" style="border-color:${u.borderColor||'var(--border)'}"><img src="${u.avatar}" alt="${letter}"></div>`;
-      }
-      return `<div class="avatar" style="background:${bg};border-color:${u.borderColor||bg}">${letter}</div>`;
+      const bg = u.borderColor || colors[letter.charCodeAt(0) % colors.length];
+      return `<div class="avatar" style="background:${bg};border-color:${bg}">${letter}</div>`;
     }
 
     function renderTable() {
