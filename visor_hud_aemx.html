@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content" />
+  <title>AEMX Visor HUD (Cámara + Stats + Últimos 5 mensajes)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --primary:#00ff88;
+      --secondary:#00ffff;
+      --danger:#ff4466;
+      --text:#ffffff;
+      --muted:rgba(255,255,255,.65);
+      --glass:rgba(5,10,20,.38);
+      --glass2:rgba(5,10,20,.55);
+      --stroke:rgba(0,255,136,.35);
+      --shadow:0 0 18px rgba(0,255,136,.15);
+      --safe-top: env(safe-area-inset-top);
+      --safe-right: env(safe-area-inset-right);
+      --safe-bottom: env(safe-area-inset-bottom);
+      --safe-left: env(safe-area-inset-left);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; margin:0; background:#060b14; color:var(--text); font-family:Rajdhani,system-ui,-apple-system,Segoe UI,Roboto,Arial; overflow:hidden; }
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(var(--primary) 1px,transparent 1px),
+        linear-gradient(90deg,var(--primary) 1px,transparent 1px);
+      background-size:52px 52px;
+      opacity:.06;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    /* Stage */
+    .stage{
+      position:fixed; inset:0;
+      z-index:1;
+      display:block;
+      background:#000;
+    }
+    video#cam{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      transform:scaleX(-1); /* espejo por defecto; se puede cambiar */
+      background:#000;
+    }
+    /* HUD Overlay */
+    .hud{
+      position:absolute; inset:0;
+      pointer-events:none;
+    }
+    .hud::before{
+      content:"";
+      position:absolute; inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 38px 38px;
+      opacity:.25;
+      mix-blend-mode:screen;
+      pointer-events:none;
+    }
+    .scanlines{
+      position:absolute; inset:0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.03),
+        rgba(255,255,255,.03) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+      opacity:.22;
+      pointer-events:none;
+    }
+
+    /* Top controls (clickable) */
+    .topbar{
+      position:absolute;
+      top: calc(10px + var(--safe-top));
+      left: calc(10px + var(--safe-left));
+      right: calc(10px + var(--safe-right));
+      display:flex;
+      gap:10px;
+      align-items:center;
+      pointer-events:auto;
+      z-index:10;
+    }
+    .chip{
+      display:flex; align-items:center; gap:8px;
+      padding:9px 12px;
+      border-radius:12px;
+      border:1px solid var(--stroke);
+      background:rgba(5,10,20,.55);
+      backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+      font-family:Orbitron,system-ui;
+      font-weight:800;
+      letter-spacing:1px;
+      font-size:11px;
+      text-transform:uppercase;
+      cursor:pointer;
+      user-select:none;
+    }
+    .chip:active{ transform:scale(.98); }
+    .chip .dot{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--danger);
+      box-shadow:0 0 10px rgba(255,68,102,.65);
+    }
+    .chip.ok .dot{ background:var(--primary); box-shadow:0 0 10px rgba(0,255,136,.65); }
+    .chip.secondary{ border-color: rgba(0,255,255,.25); }
+    .spacer{ flex:1; }
+
+    /* Diamonds battery (top-right) */
+    .battery{
+      position:absolute;
+      top: calc(10px + var(--safe-top));
+      right: calc(10px + var(--safe-right));
+      width: 190px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:var(--glass);
+      border:1px solid rgba(0,255,255,.25);
+      backdrop-filter: blur(10px);
+      box-shadow:0 0 18px rgba(0,255,255,.10);
+      pointer-events:none;
+    }
+    .battery .title{
+      display:flex; justify-content:space-between; align-items:center;
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      letter-spacing:2px;
+      font-size:10px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.85);
+      margin-bottom:8px;
+    }
+    .battery .value{
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      font-size:16px;
+      letter-spacing:1px;
+      color:#e8fff6;
+      text-shadow:0 0 14px rgba(0,255,136,.25);
+    }
+    .batteryShell{
+      display:flex; align-items:center; gap:8px;
+    }
+    .batteryBody{
+      flex:1;
+      border-radius:10px;
+      border:1px solid rgba(0,255,136,.30);
+      background:rgba(255,255,255,.04);
+      padding:6px;
+    }
+    .cells{
+      display:grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap:4px;
+    }
+    .cell{
+      height:12px;
+      border-radius:4px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.06);
+    }
+    .cell.on{
+      background:linear-gradient(135deg, var(--primary), var(--secondary));
+      border-color:rgba(0,255,136,.15);
+      box-shadow:0 0 12px rgba(0,255,136,.22);
+    }
+    .batteryTip{
+      width:10px; height:18px;
+      border-radius:4px;
+      background:rgba(0,255,136,.35);
+      box-shadow:0 0 12px rgba(0,255,136,.12);
+    }
+
+    /* Badges cards (top center) */
+    .badges{
+      position:absolute;
+      top: calc(64px + var(--safe-top));
+      left:50%;
+      transform:translateX(-50%);
+      width: 210px;
+      height: 70px;
+      pointer-events:none;
+    }
+    .cardStack{
+      position:relative; width:100%; height:100%;
+    }
+    .badgeCard{
+      position:absolute; inset:auto;
+      width: 210px; height: 56px;
+      border-radius:16px;
+      background: rgba(5,10,20,.38);
+      border: 1px solid rgba(0,255,136,.22);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(0,255,136,.10);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 14px;
+      font-family:Orbitron,system-ui;
+      letter-spacing:1px;
+    }
+    .badgeCard:nth-child(1){ top:0; left:0; transform:rotate(-2deg); opacity:.60; }
+    .badgeCard:nth-child(2){ top:7px; left:6px; transform:rotate(1deg); opacity:.75; }
+    .badgeCard:nth-child(3){ top:14px; left:12px; opacity:1; border-color:rgba(0,255,255,.25); }
+    .badgeLabel{ font-size:10px; font-weight:900; text-transform:uppercase; color:rgba(255,255,255,.85); }
+    .badgeValue{ font-size:22px; font-weight:900; color:#e8fff6; text-shadow:0 0 12px rgba(0,255,136,.25); }
+
+    /* Krill bars (bottom-left) */
+    .krill{
+      position:absolute;
+      bottom: calc(10px + var(--safe-bottom));
+      left: calc(10px + var(--safe-left));
+      width: 260px;
+      height: 170px;
+      padding:12px 12px 10px;
+      border-radius:16px;
+      background:var(--glass2);
+      border:1px solid rgba(0,255,136,.24);
+      backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+      pointer-events:none;
+    }
+    .krillHeader{
+      display:flex; justify-content:space-between; align-items:center;
+      margin-bottom:10px;
+    }
+    .krillHeader .t{
+      font-family:Orbitron,system-ui;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.85);
+    }
+    .krillHeader .total{
+      font-family:Orbitron,system-ui;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:1px;
+      color:rgba(255,255,255,.75);
+    }
+
+    .bars{
+      height:120px;
+      display:flex;
+      align-items:flex-end;
+      gap:10px;
+    }
+    .barCol{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+    }
+    .bar{
+      width:100%;
+      height:100%;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.08);
+      background:rgba(255,255,255,.05);
+      display:flex;
+      align-items:flex-end;
+      overflow:hidden;
+    }
+    .fill{
+      width:100%;
+      height:10%;
+      background:linear-gradient(180deg, var(--secondary), var(--primary));
+      opacity:.92;
+      box-shadow:0 0 14px rgba(0,255,136,.16);
+    }
+    .lbl{
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      font-size:9px;
+      letter-spacing:1px;
+      text-transform:uppercase;
+      color:rgba(255,255,255,.75);
+    }
+    .num{
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      font-size:12px;
+      color:#e8fff6;
+    }
+
+    /* HUD chat (bottom-right) */
+    .hudChat{
+      position:absolute;
+      bottom: calc(10px + var(--safe-bottom));
+      right: calc(10px + var(--safe-right));
+      width: 320px;
+      max-width: calc(100vw - 24px);
+      padding:10px 12px;
+      border-radius:16px;
+      background:rgba(5,10,20,.50);
+      border:1px solid rgba(0,200,255,.28);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 18px rgba(0,200,255,.12);
+      pointer-events:none;
+    }
+    .hudChatTitle{
+      display:flex; align-items:center; justify-content:space-between;
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      font-size:9px;
+      color:rgba(255,255,255,.85);
+      margin-bottom:8px;
+    }
+    .hudChatTitle .status{
+      display:flex; align-items:center; gap:6px;
+      font-family:Orbitron,system-ui;
+      font-size:9px;
+      letter-spacing:1px;
+      color:rgba(255,255,255,.70);
+    }
+    .hudChatTitle .lamp{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--danger);
+      box-shadow:0 0 10px rgba(255,68,102,.45);
+    }
+    .hudChatTitle .lamp.ok{
+      background:var(--primary);
+      box-shadow:0 0 10px rgba(0,255,136,.45);
+    }
+
+    .msg{
+      display:flex;
+      gap:6px;
+      font-size:12px;
+      line-height:1.2;
+      margin:4px 0;
+      opacity:.92;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .msg .a{
+      color:#4ade80;
+      font-weight:700;
+      flex:0 0 auto;
+      max-width:38%;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .msg .t{
+      color:rgba(255,255,255,.88);
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* Mobile friendliness */
+    @media (max-width: 420px){
+      .battery{ width:170px; }
+      .hudChat{ width: 280px; }
+      .krill{ width: 240px; }
+      .badges{ width: 190px; }
+      .badgeCard{ width:190px; }
+    }
+
+    /* Safe overlay for “rotate device” */
+    .rotateHint{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center; justify-content:center;
+      text-align:center;
+      padding:24px;
+      background:rgba(6,11,20,.88);
+      z-index:999;
+      pointer-events:none;
+      font-family:Orbitron,system-ui;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color:#fff;
+    }
+    .rotateHint .box{
+      max-width:520px;
+      border:1px solid rgba(0,255,136,.25);
+      border-radius:18px;
+      padding:20px 18px;
+      background:rgba(5,10,20,.45);
+      box-shadow:0 0 22px rgba(0,255,136,.15);
+    }
+    .rotateHint .big{ font-size:14px; font-weight:900; margin-bottom:10px; }
+    .rotateHint .small{ font-family:Rajdhani,system-ui; font-size:14px; letter-spacing:0; text-transform:none; opacity:.85; }
+  </style>
+</head>
+
+<body>
+  <div class="stage">
+    <video id="cam" autoplay playsinline muted></video>
+
+    <div class="hud">
+      <div class="scanlines"></div>
+
+      <!-- clickable controls -->
+      <div class="topbar">
+        <div class="chip" id="btnStart">
+          <span class="dot" id="camDot"></span>
+          <span id="camLabel">CÁMARA: OFF</span>
+        </div>
+
+        <div class="chip secondary" id="btnFlip">
+          ⇄ ESPEJO
+        </div>
+
+        <div class="chip secondary" id="btnFullscreen">
+          ⛶ FULL
+        </div>
+
+        <div class="spacer"></div>
+
+        <div class="chip" id="btnReloadStats" title="Refrescar stats desde localStorage">
+          ↻ STATS
+        </div>
+      </div>
+
+      <!-- Diamonds battery -->
+      <div class="battery" aria-label="Diamantes">
+        <div class="title">
+          <span>💎 DIAMANTES</span>
+          <span class="value" id="diamondsVal">0</span>
+        </div>
+        <div class="batteryShell">
+          <div class="batteryBody">
+            <div class="cells" id="diamondCells"></div>
+          </div>
+          <div class="batteryTip"></div>
+        </div>
+      </div>
+
+      <!-- Badges cards -->
+      <div class="badges" aria-label="Insignias">
+        <div class="cardStack">
+          <div class="badgeCard">
+            <span class="badgeLabel">INSIGNIAS</span>
+            <span class="badgeValue" id="badgesValGhost1">0</span>
+          </div>
+          <div class="badgeCard">
+            <span class="badgeLabel">INSIGNIAS</span>
+            <span class="badgeValue" id="badgesValGhost2">0</span>
+          </div>
+          <div class="badgeCard">
+            <span class="badgeLabel">INSIGNIAS</span>
+            <span class="badgeValue" id="badgesVal">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Krill bars -->
+      <div class="krill" aria-label="Parcela por rareza">
+        <div class="krillHeader">
+          <div class="t">📊 PARCELAS</div>
+          <div class="total">TOTAL: <span id="totalParcels">0</span></div>
+        </div>
+
+        <div class="bars">
+          <div class="barCol">
+            <div class="bar"><div class="fill" id="fillCommon"></div></div>
+            <div class="num" id="numCommon">0</div>
+            <div class="lbl">COM</div>
+          </div>
+          <div class="barCol">
+            <div class="bar"><div class="fill" id="fillRare"></div></div>
+            <div class="num" id="numRare">0</div>
+            <div class="lbl">RAR</div>
+          </div>
+          <div class="barCol">
+            <div class="bar"><div class="fill" id="fillEpic"></div></div>
+            <div class="num" id="numEpic">0</div>
+            <div class="lbl">ÉPI</div>
+          </div>
+          <div class="barCol">
+            <div class="bar"><div class="fill" id="fillLegendary"></div></div>
+            <div class="num" id="numLegendary">0</div>
+            <div class="lbl">LEG</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Last 5 chat messages -->
+      <div class="hudChat" aria-label="Últimos 5 mensajes">
+        <div class="hudChatTitle">
+          <span>💬 CHAT AEMX (ÚLTIMOS 5)</span>
+          <span class="status"><span class="lamp" id="chatLamp"></span><span id="chatState">OFF</span></span>
+        </div>
+        <div id="chatLines">
+          <div class="msg"><span class="a">—</span><span class="t">Conecta la cámara y Firebase para ver actividad.</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rotateHint" id="rotateHint">
+      <div class="box">
+        <div class="big">GIRA EL TELÉFONO A HORIZONTAL</div>
+        <div class="small">Tip: en iPhone, Safari es medio terco… pero con FULL + girar, queda 👌</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ─────────────────────────────────────────────────────────────
+    // 1) Stats source (GamerTag localStorage)
+    // SAVE_KEY identificado en tu index: 'atlas-earth-calc-data'
+    // ─────────────────────────────────────────────────────────────
+    const SAVE_KEY = 'atlas-earth-calc-data';
+
+    function toInt(x){
+      const n = Number(String(x ?? '').replace(/[^\d.-]/g,''));
+      return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+    }
+
+    function readStats(){
+      // 1) Preferir JSON del SAVE_KEY
+      let d = null;
+      try{
+        const raw = localStorage.getItem(SAVE_KEY);
+        if(raw) d = JSON.parse(raw);
+      }catch(e){ d = null; }
+
+      // 2) Fallback: leer claves sueltas si existieran
+      const fallback = (k) => {
+        try { return localStorage.getItem(k); } catch(e){ return null; }
+      };
+
+      const common     = toInt(d?.common     ?? fallback('common'));
+      const rare       = toInt(d?.rare       ?? fallback('rare'));
+      const epic       = toInt(d?.epic       ?? fallback('epic'));
+      const legendary  = toInt(d?.legendary  ?? fallback('legendary'));
+      const badges     = toInt(d?.badges     ?? fallback('badges'));
+      const diamonds   = toInt(d?.diamonds   ?? fallback('diamonds'));
+      const atlasbucks = toInt(d?.atlasbucks ?? fallback('atlasbucks'));
+
+      return { common, rare, epic, legendary, badges, diamonds, atlasbucks };
+    }
+
+    function renderStats(s){
+      // numbers
+      document.getElementById('numCommon').textContent = s.common;
+      document.getElementById('numRare').textContent = s.rare;
+      document.getElementById('numEpic').textContent = s.epic;
+      document.getElementById('numLegendary').textContent = s.legendary;
+
+      const total = s.common + s.rare + s.epic + s.legendary;
+      document.getElementById('totalParcels').textContent = total;
+
+      // bars scale by max value (nice visual)
+      const max = Math.max(1, s.common, s.rare, s.epic, s.legendary);
+      const pct = (v) => Math.max(4, Math.round((v / max) * 100)); // min fill so no invisible bar
+      document.getElementById('fillCommon').style.height = pct(s.common) + '%';
+      document.getElementById('fillRare').style.height = pct(s.rare) + '%';
+      document.getElementById('fillEpic').style.height = pct(s.epic) + '%';
+      document.getElementById('fillLegendary').style.height = pct(s.legendary) + '%';
+
+      // badges cards
+      document.getElementById('badgesVal').textContent = s.badges;
+      document.getElementById('badgesValGhost1').textContent = s.badges;
+      document.getElementById('badgesValGhost2').textContent = s.badges;
+
+      // diamonds battery (0..9999)
+      const d = Math.min(9999, s.diamonds);
+      document.getElementById('diamondsVal').textContent = d.toLocaleString('es-MX');
+
+      const cells = document.getElementById('diamondCells');
+      if(!cells.dataset.ready){
+        // build 10 cells
+        cells.innerHTML = '';
+        for(let i=0;i<10;i++){
+          const div = document.createElement('div');
+          div.className = 'cell';
+          div.id = 'cell' + i;
+          cells.appendChild(div);
+        }
+        cells.dataset.ready = '1';
+      }
+      const level = Math.round((d / 9999) * 10); // 0..10
+      for(let i=0;i<10;i++){
+        const el = document.getElementById('cell' + i);
+        el.classList.toggle('on', i < level);
+      }
+    }
+
+    function refreshStats(){
+      renderStats(readStats());
+    }
+
+    // update on load + on storage changes
+    refreshStats();
+    window.addEventListener('storage', (e) => {
+      if(e.key === SAVE_KEY || ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].includes(e.key)) {
+        refreshStats();
+      }
+    });
+    // also poll (mobile Safari sometimes doesn’t dispatch storage reliably across tabs)
+    setInterval(refreshStats, 1200);
+
+    document.getElementById('btnReloadStats').addEventListener('click', refreshStats);
+
+    // ─────────────────────────────────────────────────────────────
+    // 2) Camera
+    // ─────────────────────────────────────────────────────────────
+    const camVideo = document.getElementById('cam');
+    const btnStart = document.getElementById('btnStart');
+    const camDot = document.getElementById('camDot');
+    const camLabel = document.getElementById('camLabel');
+    const btnFlip = document.getElementById('btnFlip');
+    const btnFullscreen = document.getElementById('btnFullscreen');
+    const rotateHint = document.getElementById('rotateHint');
+
+    let camStream = null;
+    let mirrored = true;
+
+    function setCamState(on){
+      camDot.classList.toggle('ok', on);
+      btnStart.classList.toggle('ok', on);
+      camLabel.textContent = on ? 'CÁMARA: ON' : 'CÁMARA: OFF';
+    }
+
+    async function startCamera(){
+      if(camStream) return;
+      try{
+        camStream = await navigator.mediaDevices.getUserMedia({
+          audio:false,
+          video:{
+            facingMode:{ ideal:'environment' },
+            width:{ ideal:1280 },
+            height:{ ideal:720 }
+          }
+        });
+        camVideo.srcObject = camStream;
+        setCamState(true);
+      }catch(e){
+        console.error('getUserMedia error:', e);
+        alert('No se pudo abrir la cámara. Revisa permisos del navegador.');
+        setCamState(false);
+      }
+    }
+
+    function stopCamera(){
+      if(!camStream) return;
+      camStream.getTracks().forEach(t => t.stop());
+      camStream = null;
+      camVideo.srcObject = null;
+      setCamState(false);
+    }
+
+    btnStart.addEventListener('click', async () => {
+      if(camStream) stopCamera();
+      else await startCamera();
+    });
+
+    btnFlip.addEventListener('click', () => {
+      mirrored = !mirrored;
+      camVideo.style.transform = mirrored ? 'scaleX(-1)' : 'scaleX(1)';
+    });
+
+    async function requestLandscapeLock(){
+      try{
+        if(screen.orientation && screen.orientation.lock){
+          await screen.orientation.lock('landscape');
+        }
+      }catch(e){
+        // iOS Safari: no soporta lock (ignorar)
+      }
+    }
+
+    btnFullscreen.addEventListener('click', async () => {
+      try{
+        // must be user gesture
+        await document.documentElement.requestFullscreen?.();
+      }catch(e){}
+      await requestLandscapeLock();
+      checkOrientationHint();
+    });
+
+    function checkOrientationHint(){
+      // show hint if portrait (best-effort)
+      const isPortrait = window.matchMedia && window.matchMedia("(orientation: portrait)").matches;
+      rotateHint.style.display = isPortrait ? 'flex' : 'none';
+    }
+    window.addEventListener('resize', checkOrientationHint);
+    window.addEventListener('orientationchange', checkOrientationHint);
+    checkOrientationHint();
+
+    // ─────────────────────────────────────────────────────────────
+    // 3) Firebase: last 5 messages (read-only HUD)
+    // Config copiada del chat-firebase.html
+    // ─────────────────────────────────────────────────────────────
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getDatabase, ref, query, limitToLast, orderByChild, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
+      authDomain: "aemx-chat.firebaseapp.com",
+      databaseURL: "https://aemx-chat-default-rtdb.firebaseio.com",
+      projectId: "aemx-chat",
+      storageBucket: "aemx-chat.firebasestorage.app",
+      messagingSenderId: "267113002594",
+      appId: "1:267113002594:web:4099e7537d950f5753433b",
+      measurementId: "G-K84EVPE46R"
+    };
+
+    const chatLamp = document.getElementById('chatLamp');
+    const chatState = document.getElementById('chatState');
+    const chatLines = document.getElementById('chatLines');
+
+    function setChatState(on, label){
+      chatLamp.classList.toggle('ok', on);
+      chatState.textContent = label || (on ? 'ON' : 'OFF');
+    }
+
+    function safeStr(x, max=140){
+      const s = String(x ?? '').replace(/\s+/g,' ').trim();
+      if(!s) return '';
+      return s.length > max ? s.slice(0, max-1) + '…' : s;
+    }
+
+    function renderChat(list){
+      chatLines.innerHTML = '';
+      if(!list.length){
+        chatLines.innerHTML = '<div class="msg"><span class="a">—</span><span class="t">Sin mensajes recientes.</span></div>';
+        return;
+      }
+      for(const m of list){
+        const row = document.createElement('div');
+        row.className = 'msg';
+
+        const a = document.createElement('span');
+        a.className = 'a';
+        a.textContent = safeStr(m.username || m.author || 'ANÓNIMO', 22);
+
+        const t = document.createElement('span');
+        t.className = 't';
+        t.textContent = safeStr(m.text || m.message || '', 120) || '…';
+
+        row.appendChild(a);
+        row.appendChild(t);
+        chatLines.appendChild(row);
+      }
+    }
+
+    try{
+      const app = initializeApp(firebaseConfig, 'hud-app');
+      const db  = getDatabase(app);
+
+      // order by timestamp to keep last 5 in correct chronological order
+      const q = query(ref(db, 'messages'), orderByChild('timestamp'), limitToLast(5));
+
+      onValue(q, (snap) => {
+        const arr = [];
+        if(snap.exists()){
+          snap.forEach(child => arr.push(child.val()));
+          // ensure chronological (firebase may already be, but be safe)
+          arr.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+        }
+        renderChat(arr);
+        setChatState(true, 'LIVE');
+      }, (err) => {
+        console.error('HUD chat onValue error:', err);
+        setChatState(false, 'ERR');
+        renderChat([]);
+      });
+
+    }catch(e){
+      console.error('Firebase init error:', e);
+      setChatState(false, 'ERR');
+    }
+
+    // Start camera automatically? -> NO (avoid instant permission prompt)
+    setCamState(false);
+  </script>
+</body>
+</html>
