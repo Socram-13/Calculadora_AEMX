@@ -171,14 +171,14 @@
     .chip.secondary{ border-color: rgba(0,255,255,.18); }
     .spacer{ display:none; }
 
-    /* Diamonds battery (top-right) */
+    /* Diamonds battery (top-right) — forma de batería */
     .battery{
       position:absolute;
       top: calc(10px + var(--safe-top));
       right: calc(10px + var(--safe-right));
       width: 210px;
-      padding:10px 14px 12px;
-      border-radius:14px;
+      padding:8px 14px 10px;
+      border-radius:0;
       background: transparent;
       border: none;
       backdrop-filter: none;
@@ -193,79 +193,88 @@
       letter-spacing:2px;
       font-size:9px;
       text-transform:uppercase;
-      color:rgba(0,200,255,.75);
-      margin-bottom:4px;
+      color:rgba(0,200,255,.80);
+      margin-bottom:7px;
     }
     .battery .value{
       font-family:Orbitron,system-ui;
       font-weight:900;
       font-size:13px;
-      letter-spacing:1.5px;
-      color:rgba(255,255,255,.80);
-      text-shadow:0 0 10px rgba(0,200,255,.40);
+      letter-spacing:2px;
+      color:#fff;
+      text-shadow: 0 0 10px rgba(0,200,255,.60);
     }
+    /* Contenedor con forma de batería: cuerpo + tip */
     .batteryBar{
       position:relative;
-      height:14px;
-      border-radius:4px;
-      background: rgba(255,255,255,.05);
-      border:1px solid rgba(0,200,255,.18);
-      overflow:hidden;
-      direction: rtl;
+      display:flex;
+      align-items:center;
+      height:22px;
+    }
+    /* Cuerpo principal */
+    .batteryBar::before{
+      content:'';
+      position:absolute;
+      left:0; top:0; bottom:0;
+      right:8px;
+      border-radius:5px 3px 3px 5px;
+      background: rgba(0,0,0,.50);
+      border: 1.5px solid rgba(255,255,255,.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+    }
+    /* Tip (polo positivo) */
+    .batteryBar::after{
+      content:'';
+      position:absolute;
+      right:0; top:50%;
+      transform:translateY(-50%);
+      width:6px; height:10px;
+      border-radius:0 3px 3px 0;
+      background: rgba(255,255,255,.18);
+      border: 1.5px solid rgba(255,255,255,.18);
+      border-left:none;
     }
     .batteryFill{
-      position:absolute; right:0; top:0; bottom:0;
-      width:0%;
-      border-radius:3px;
-      background: linear-gradient(270deg, #00c8ff, #60a5fa, #a855f7);
-      box-shadow: 0 0 14px rgba(0,200,255,.50);
-      transition: width 0.8s ease;
+      position:absolute;
+      left:2px; top:2px; bottom:2px;
+      right:10px; /* respeta el tip */
+      border-radius:3px 2px 2px 3px;
+      width:0%; /* se sobreescribe con JS como % del espacio disponible */
+      background: linear-gradient(90deg, #4ade80, #4ade80);
+      box-shadow: 0 0 14px rgba(74,222,128,.65);
+      transition: width 0.8s cubic-bezier(.22,.68,0,1.2), background 0.8s ease, box-shadow 0.8s ease;
       overflow:hidden;
+      /* width se controla desde JS como porcentaje del contenedor interno */
     }
     .batteryFill::before{
       content:'';
       position:absolute; top:0; bottom:0;
-      width:28%;
+      width:35%;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
-      animation: barScan 3.0s ease-in-out infinite;
+      animation: barScan 2.6s ease-in-out infinite;
       z-index:3;
       pointer-events:none;
     }
     .batteryFill::after{
       content:'';
-      position:absolute; top:-10%; bottom:-10%;
-      width:22%;
-      background: linear-gradient(105deg, transparent, rgba(255,255,255,.20), transparent);
-      animation: shimmer 5.0s ease-in-out infinite;
+      position:absolute; left:0; right:0; top:0; height:40%;
+      background: rgba(255,255,255,.15);
+      border-radius:3px 2px 0 0;
       z-index:4;
       pointer-events:none;
     }
     .batterySpark{
       position:absolute;
-      right:-3px; top:50%;
+      top:50%;
       transform:translateY(-50%);
-      width:7px; height:7px;
+      width:8px; height:8px;
       border-radius:50%;
-      z-index:5;
+      z-index:6;
       pointer-events:none;
-      animation: spark 2.0s ease-in-out infinite;
-      background:#00c8ff;
-      box-shadow:0 0 10px #00c8ff;
+      animation: spark 1.8s ease-in-out infinite;
+      background: #fff;
+      box-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
     }
-    .batteryBar::after{
-      content:'';
-      position:absolute; inset:0;
-      background: repeating-linear-gradient(
-        90deg,
-        transparent,
-        transparent calc(10% - 1px),
-        rgba(0,0,0,.35) calc(10% - 1px),
-        rgba(0,0,0,.35) 10%
-      );
-      pointer-events:none;
-      z-index:2;
-    }
-    .batteryShell,.batteryBody,.cells,.cell,.batteryTip{ display:none; }
         /* Badges cards (top-right, below battery) */
     .badges{
       position:absolute;
@@ -554,6 +563,43 @@
       .badgeCard{ width:80px; height:80px; }
     }
 
+
+
+    /* Botón salir */
+    #btnExit{
+      position:fixed;
+      bottom: calc(10px + var(--safe-bottom));
+      right: calc(10px + var(--safe-right));
+      z-index:20;
+      pointer-events:auto;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding: 9px 16px 11px;
+      border-radius:10px;
+      border: 1px solid rgba(255,68,102,.35);
+      background: rgba(5,10,20,.55);
+      color: rgba(255,100,120,.90);
+      font-family: Orbitron, system-ui;
+      font-weight:900;
+      letter-spacing:2px;
+      font-size:10px;
+      text-transform:uppercase;
+      cursor:pointer;
+      user-select:none;
+      backdrop-filter:blur(10px);
+      box-shadow: 0 0 14px rgba(255,68,102,.15);
+      transition: box-shadow .2s ease, border-color .2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #btnExit:hover{ border-color:rgba(255,68,102,.65); box-shadow: 0 0 22px rgba(255,68,102,.35); }
+    #btnExit:active{ transform:scale(.96); }
+    #btnExit .exitDot{
+      width:6px; height:6px; border-radius:50%;
+      background:rgba(255,68,102,.80);
+      box-shadow:0 0 7px rgba(255,68,102,.70);
+      flex-shrink:0;
+    }
 
     .topbar.hidden{
       opacity:0;
@@ -1142,6 +1188,7 @@
       <button id="btnFS">FULL</button>
       </div>
     <div class="tapHint" id="tapHint"></div>
+    <button id="btnExit"><span class="exitDot"></span>SALIR</button>
     <!-- Invisible tap area center-top: reveals camera+QR controls -->
     <div id="topbarTapArea" style="
       position:fixed;
@@ -1393,6 +1440,7 @@
       // Instance object
       const instance = { wrap, canvas, rend, sc, cam, group, rafId, rarity, _scale:1, _theta:Math.PI/4, _phi:Math.PI/4 };
       parcelInstances.push(instance);
+      updateZIndices();
 
       // ── Close button: hidden, shows on touch ─────────────
       closeBtn.style.opacity = '0';
@@ -1417,7 +1465,7 @@
 
       // 3D orbit state (camera orbits around model center)
       let orbitTheta = opts.orbitTheta !== undefined ? opts.orbitTheta : Math.PI/4;
-      let orbitPhi   = opts.orbitPhi   !== undefined ? opts.orbitPhi   : Math.PI/4;
+      let orbitPhi   = opts.orbitPhi   !== undefined ? opts.orbitPhi   : Math.PI/3;
       const ORBIT_R  = 7.5;         // camera distance
       const ORBIT_TARGET = new THREE.Vector3(0, 0.5, 0);
 
@@ -1510,6 +1558,7 @@
         // Snap + settle on drag release
         if(mode === 'drag' && pointers.size <= 1){
           snapToNeighbor(instance);
+          updateZIndices();
           wrap.classList.add('settling');
           wrap.addEventListener('animationend', () => wrap.classList.remove('settling'), { once:true });
           saveParcelState();
@@ -1555,6 +1604,7 @@
           posTop  = dragOrigTop  + dy;
           wrap.style.left = posLeft + 'px';
           wrap.style.top  = posTop  + 'px';
+          updateZIndices();
         }
       }, {passive:true});
       return instance;
@@ -1564,6 +1614,20 @@
     // ── Snap to neighbor — base corner to base corner ────
     const SNAP_DIST  = 120; // px threshold to trigger snap
     const BASE_OFFSET = 125; // px between div origins so bases touch edge-to-edge
+
+    // Z-index dinámico: la parcela más abajo en pantalla (top + height) va al frente
+    function updateZIndices(){
+      if(parcelInstances.length === 0) return;
+      // Ordenar por posición Y + mitad del tamaño (centro visual)
+      const sorted = [...parcelInstances].sort((a, b) => {
+        const ay = parseFloat(a.wrap.style.top  || 0) + PARCEL_SIZE * 0.5;
+        const by = parseFloat(b.wrap.style.top  || 0) + PARCEL_SIZE * 0.5;
+        return ay - by; // más arriba = z-index menor
+      });
+      sorted.forEach((inst, i) => {
+        inst.wrap.style.zIndex = 10 + i;
+      });
+    }
 
     function snapToNeighbor(inst){
       const left = parseFloat(inst.wrap.style.left) || 0;
@@ -1778,30 +1842,40 @@
     loadParcelState();
 
     // ── Gyroscope: shift parcelas slightly when device moves ──
-    // Creates illusion of being anchored in space
     let gyroEnabled = false;
     let lastBeta = null, lastGamma = null;
-    const GYRO_SENSITIVITY = 3.5; // px per degree
+    const GYRO_SENSITIVITY = 3.5;
 
     function onDeviceOrientation(e){
       if(lastBeta === null){ lastBeta = e.beta; lastGamma = e.gamma; return; }
-      const db = (e.beta  - lastBeta)  * GYRO_SENSITIVITY;
-      const dg = (e.gamma - lastGamma) * GYRO_SENSITIVITY;
+
+      // Detectar orientación: en landscape beta y gamma se intercambian
+      const isLandscape = window.innerWidth > window.innerHeight;
+      let dx, dy;
+      if(isLandscape){
+        // En horizontal: gamma mueve X, beta mueve Y (invertido)
+        dx = (e.beta  - lastBeta)  * GYRO_SENSITIVITY;
+        dy = (e.gamma - lastGamma) * GYRO_SENSITIVITY * -1;
+      } else {
+        // En vertical: gamma mueve X, beta mueve Y
+        dx = (e.gamma - lastGamma) * GYRO_SENSITIVITY;
+        dy = (e.beta  - lastBeta)  * GYRO_SENSITIVITY;
+      }
       lastBeta  = e.beta;
       lastGamma = e.gamma;
-      // Shift all parcel instances opposite to device tilt
+
       parcelInstances.forEach(inst=>{
         const left = parseFloat(inst.wrap.style.left) || 0;
         const top  = parseFloat(inst.wrap.style.top)  || 0;
-        inst.wrap.style.left = (left - dg) + 'px';
-        inst.wrap.style.top  = (top  - db) + 'px';
+        inst.wrap.style.left = (left - dx) + 'px';
+        inst.wrap.style.top  = (top  - dy) + 'px';
       });
     }
 
-    // Request permission on iOS 13+, auto-enable on Android
     function enableGyro(){
       if(typeof DeviceOrientationEvent !== 'undefined' &&
          typeof DeviceOrientationEvent.requestPermission === 'function'){
+        // iOS 13+ requiere gesto del usuario para pedir permiso
         DeviceOrientationEvent.requestPermission().then(state=>{
           if(state === 'granted'){
             window.addEventListener('deviceorientation', onDeviceOrientation);
@@ -1813,18 +1887,23 @@
         gyroEnabled = true;
       }
     }
-    // Auto-enable gyro when first parcel is placed
+
+    // Activar al cargar (Android) o al primer tap en iOS
     let gyroInitialized = false;
-    document.querySelectorAll('.pmBtn').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        if(!gyroInitialized){ enableGyro(); gyroInitialized=true; }
-      }, true);
-    });
+    function tryEnableGyro(){
+      if(gyroInitialized) return;
+      gyroInitialized = true;
+      enableGyro();
+    }
+    // Android: activar directo
+    tryEnableGyro();
+    // iOS: necesita gesto — activar en primer tap
+    document.addEventListener('pointerdown', tryEnableGyro, { once:true });
 
     </script>
 
     <!-- LOGIN OVERLAY -->
-    <div class="loginOverlay" id="loginOverlay">
+    <div class="loginOverlay hidden" id="loginOverlay">
       <div class="loginBox">
         <div class="loginTitle">AEMX HUD</div>
         <div class="loginSub">Inicia sesión para ver el chat en vivo</div>
@@ -1838,10 +1917,7 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getDatabase, ref, query, limitToLast, orderByChild, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, browserLocalPersistence, setPersistence } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  <script>
 
     // ─────────────────────────────────────────────────────────────
     // 1) Stats source (GamerTag localStorage)
@@ -1902,16 +1978,39 @@
 
       // diamonds battery (0..9999)
       const d = Math.min(9999, s.diamonds);
-      document.getElementById('diamondsVal').textContent = d.toLocaleString('es-MX');
+      const pctDisplay = Math.round((d / 9999) * 100);
+      document.getElementById('diamondsVal').textContent = pctDisplay + '%';
 
-      // New battery bar
+      // Battery shape — color verde→azul→amarillo→naranja→rojo
       const battFill = document.getElementById('batteryFill');
       const battSpark = document.getElementById('batterySpark');
       if(battFill){
         const pctBatt = Math.round((d / 9999) * 100);
+
+        // El fill vive dentro del cuerpo (left:2px right:10px), así que width = pct%
         battFill.style.width = pctBatt + '%';
-        battFill.classList.toggle('low', pctBatt < 20);
-        if(battSpark) battSpark.style.right = (100 - pctBatt) + '%';
+
+        // Color según nivel
+        let color1, color2, glowColor;
+        if(pctBatt >= 75){
+          color1='#16a34a'; color2='#4ade80'; glowColor='rgba(74,222,128,.70)';
+        } else if(pctBatt >= 50){
+          color1='#0369a1'; color2='#38bdf8'; glowColor='rgba(56,189,248,.70)';
+        } else if(pctBatt >= 30){
+          color1='#a16207'; color2='#facc15'; glowColor='rgba(250,204,21,.70)';
+        } else if(pctBatt >= 15){
+          color1='#c2410c'; color2='#fb923c'; glowColor='rgba(251,146,60,.70)';
+        } else {
+          color1='#9f1239'; color2='#ff4466'; glowColor='rgba(255,68,102,.70)';
+        }
+        battFill.style.background = `linear-gradient(90deg, ${color1}, ${color2})`;
+        battFill.style.boxShadow = `0 0 14px ${glowColor}`;
+        if(battSpark){
+          battSpark.style.left = pctBatt + '%';
+          battSpark.style.color = color2;
+          battSpark.style.background = color2;
+          battSpark.style.boxShadow = `0 0 10px ${glowColor}, 0 0 20px ${glowColor}`;
+        }
       }
     }
 
@@ -1954,6 +2053,7 @@
       uiHidden = false;
       topbar.classList.remove('hidden');
       tapHint.classList.remove('show');
+      if(topbarTapArea) topbarTapArea.style.pointerEvents = 'none';
       const _btnQR = document.getElementById('btnQR');
       if(_btnQR) _btnQR.style.transform = 'translateX(0)';
       if(uiTimer) clearTimeout(uiTimer);
@@ -1965,6 +2065,7 @@
       uiHidden = true;
       topbar.classList.add('hidden');
       tapHint.classList.add('show');
+      if(topbarTapArea) topbarTapArea.style.pointerEvents = 'auto';
       const _btnQR = document.getElementById('btnQR');
       if(_btnQR) _btnQR.style.transform = 'translateX(-120%)';
     }
@@ -2005,6 +2106,8 @@
     }
 
     btnFS.addEventListener('click', toggleFullscreen);
+
+    document.getElementById('btnExit').addEventListener('click', () => { history.back(); });
     document.addEventListener('fullscreenchange', syncFSLabel);
     syncFSLabel();
 
@@ -2101,8 +2204,28 @@
 
     // ─────────────────────────────────────────────────────────────
     // 3) Firebase: last 5 messages (read-only HUD)
-    // Config copiada del chat-firebase.html
+    // Cargado dinámicamente para no bloquear cámara/botones
     // ─────────────────────────────────────────────────────────────
+
+    // btnSkipLogin funciona siempre, independiente de Firebase
+    document.getElementById('btnSkipLogin').addEventListener('click', () => {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      setChatState(false, 'SIN SESIÓN');
+      renderChat([{ username: 'AEMX', text: 'Chat no disponible sin sesión.' }]);
+    });
+
+    (async () => {
+      let initializeApp, getDatabase, ref, query, limitToLast, orderByChild, onValue,
+          getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, browserLocalPersistence, setPersistence;
+      try {
+        ({ initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'));
+        ({ getDatabase, ref, query, limitToLast, orderByChild, onValue } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'));
+        ({ getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, browserLocalPersistence, setPersistence } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'));
+      } catch(importErr) {
+        console.warn('Firebase no disponible:', importErr);
+        setChatState(false, 'ERR');
+        return;
+      }
 
     const firebaseConfig = {
       apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
@@ -2179,12 +2302,6 @@
         loginOverlay.classList.add('hidden');
       }
 
-      document.getElementById('btnSkipLogin').addEventListener('click', () => {
-        hideLoginOverlay();
-        setChatState(false, 'SIN SESIÓN');
-        renderChat([{ username: 'AEMX', text: 'Chat no disponible sin sesión.' }]);
-      });
-
       btnLogin.addEventListener('click', async () => {
         btnLogin.disabled = true;
         btnLogin.textContent = 'CONECTANDO…';
@@ -2249,6 +2366,7 @@
       console.error('Firebase init error:', e);
       setChatState(false, 'ERR');
     }
+    })(); // fin async IIFE Firebase
 
     // ── Curved HUD grid + scanline + glitch ─────────────────
     const NS = 'http://www.w3.org/2000/svg';
