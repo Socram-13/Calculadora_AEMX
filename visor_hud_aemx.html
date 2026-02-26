@@ -589,6 +589,10 @@
   </div>
 
   <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getDatabase, ref, query, limitToLast, orderByChild, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+    import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
     // ─────────────────────────────────────────────────────────────
     // 1) Stats source (GamerTag localStorage)
     // SAVE_KEY identificado en tu index: 'atlas-earth-calc-data'
@@ -631,11 +635,8 @@
       document.getElementById('numEpic').textContent = s.epic;
       document.getElementById('numLegendary').textContent = s.legendary;
 
-      const total = s.common + s.rare + s.epic + s.legendary;
-      document.getElementById('totalParcels').textContent = total;
-
-      // bars scale by TOTAL parcels (real proportions)
       const total = Math.max(0, s.common + s.rare + s.epic + s.legendary);
+      document.getElementById('totalParcels').textContent = total;
       const pct = (v) => total ? Math.round((v / total) * 100) : 0;
       document.getElementById('fillCommon').style.height = pct(s.common) + '%';
       document.getElementById('fillRare').style.height = pct(s.rare) + '%';
@@ -842,16 +843,13 @@
     // 3) Firebase: last 5 messages (read-only HUD)
     // Config copiada del chat-firebase.html
     // ─────────────────────────────────────────────────────────────
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getDatabase, ref, query, limitToLast, orderByChild, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-    import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
       authDomain: "aemx-chat.firebaseapp.com",
       databaseURL: "https://aemx-chat-default-rtdb.firebaseio.com",
       projectId: "aemx-chat",
-      storageBucket: "aemx-chat.firebasestorage.app",
+      storageBucket: "aemx-chat.appspot.com",
       messagingSenderId: "267113002594",
       appId: "1:267113002594:web:4099e7537d950f5753433b",
       measurementId: "G-K84EVPE46R"
