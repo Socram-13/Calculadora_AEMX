@@ -922,78 +922,7 @@
     }
     .qrClose:hover{ background:rgba(0,200,255,.18); }
 
-    /* ── 3D PARCEL PANEL ── */
-    .parcelPanel{
-      position:fixed;
-      top:50%; left:50%;
-      transform: translate(-50%, -50%) scale(0.85);
-      z-index:300;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:0;
-      pointer-events:auto;
-      opacity:0;
-      transition: opacity .4s ease, transform .4s ease;
-    }
-    .parcelPanel.show{
-      opacity:1;
-      transform: translate(-50%, -50%) scale(1);
-    }
-    .parcelPanel.hidden{ display:none; }
-    .parcelCanvas{
-      display:block;
-      border-radius:16px 16px 0 0;
-      background:#000;
-    }
-    .parcelInfo{
-      width:100%;
-      padding:12px 20px 16px;
-      border-radius:0 0 16px 16px;
-      background: rgba(5,10,20,.92);
-      border: 1px solid rgba(0,200,255,.22);
-      border-top: none;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:4px;
-    }
-    .parcelRarity{
-      font-family:Orbitron,system-ui;
-      font-weight:900;
-      font-size:18px;
-      letter-spacing:4px;
-      text-transform:uppercase;
-      text-shadow: 0 0 18px currentColor;
-    }
-    .parcelRarity.common   { color:#9ca3af; }
-    .parcelRarity.rare     { color:#60a5fa; }
-    .parcelRarity.epic     { color:#a855f7; }
-    .parcelRarity.legendary{ color:#facc15; }
-    .parcelCode{
-      font-family:Rajdhani,system-ui;
-      font-size:11px;
-      letter-spacing:2px;
-      color:rgba(255,255,255,.40);
-      text-transform:uppercase;
-    }
-    .parcelDismiss{
-      margin-top:6px;
-      padding:6px 18px;
-      border-radius:7px;
-      border:1px solid rgba(255,255,255,.15);
-      background:rgba(255,255,255,.05);
-      color:rgba(255,255,255,.55);
-      font-family:Orbitron,system-ui;
-      font-size:8px;
-      font-weight:800;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      cursor:pointer;
-    }
-    .parcelDismiss:hover{ background:rgba(255,255,255,.10); color:#fff; }
-
-    .chip.qrChip{ border-color:rgba(250,204,21,.30); background:rgba(250,204,21,.07); }
+        .chip.qrChip{ border-color:rgba(250,204,21,.30); background:rgba(250,204,21,.07); }
     .chip.qrChip .dot{ background:#facc15; box-shadow:0 0 6px rgba(250,204,21,.65); }
     .chip.qrChip.active{ background:rgba(250,204,21,.18); border-color:rgba(250,204,21,.60); }
   </style>
@@ -1125,23 +1054,17 @@
       </div>
     </div>
 
-    <!-- 3D PARCEL PANEL -->
-    <div class="parcelPanel hidden" id="parcelPanel">
-      <canvas class="parcelCanvas" id="parcelCanvas" width="320" height="320"></canvas>
-      <div class="parcelInfo">
-        <div class="parcelRarity" id="parcelRarity">COMMON</div>
-        <div class="parcelCode" id="parcelCode">AEMX-COMMON</div>
-        <button class="parcelDismiss" id="btnParcelDismiss">✕ CERRAR</button>
-      </div>
-    </div>
+    <!-- AR CANVAS (transparent, over camera) -->
+    <canvas id="arCanvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50;display:none;"></canvas>
+    <!-- AR CLOSE BUTTON -->
+    <button id="btnARClose" style="display:none;position:fixed;z-index:60;width:44px;height:44px;border-radius:50%;border:1.5px solid rgba(255,255,255,.40);background:rgba(5,10,20,.70);color:#fff;font-size:20px;cursor:pointer;backdrop-filter:blur(8px);pointer-events:auto;align-items:center;justify-content:center;line-height:1;">✕</button>
 
     <!-- THREE.JS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
     // ══════════════════════════════════════════════════════
-    // AEMX 3D PARCEL SYSTEM
+    // AEMX AR PARCEL SYSTEM — anchored on QR in camera feed
     // ══════════════════════════════════════════════════════
-
     const RARITY_MAP = {
       'AEMX-COMMON':    'common',
       'AEMX-RARE':      'rare',
@@ -1149,417 +1072,282 @@
       'AEMX-LEGENDARY': 'legendary',
     };
 
-    // ── Three.js scene setup ─────────────────────────────
-    const canvas3d = document.getElementById('parcelCanvas');
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias:true, alpha:true });
+    // ── AR canvas & Three.js renderer ────────────────────
+    const arCanvas = document.getElementById('arCanvas');
+    const btnARClose = document.getElementById('btnARClose');
+
+    const renderer = new THREE.WebGLRenderer({ canvas: arCanvas, antialias: true, alpha: true });
+    renderer.setClearColor(0x000000, 0); // fully transparent background
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setSize(320, 320);
-    renderer.shadowMap.enabled = true;
 
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x040810);
+    // NO scene.background → transparent
 
-    // Isometric-style camera
-    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-    camera.position.set(5.5, 5.5, 5.5);
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(4.5, 4.5, 4.5);
     camera.lookAt(0, 0.5, 0);
 
     // Lights
-    const ambLight = new THREE.AmbientLight(0xffffff, 0.55);
-    scene.add(ambLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.60));
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
     dirLight.position.set(5, 8, 5);
-    dirLight.castShadow = true;
     scene.add(dirLight);
-    const fillLight = new THREE.DirectionalLight(0x4080ff, 0.3);
-    fillLight.position.set(-4, 2, -4);
-    scene.add(fillLight);
+    scene.add(Object.assign(new THREE.DirectionalLight(0x6699ff, 0.25), { position: new THREE.Vector3(-4,2,-4) }));
 
-    // Current parcel group
     let parcelGroup = null;
-    let animReq = null;
+    let arRafId = null;
 
-    // ── Color palettes ───────────────────────────────────
+    // ── Colors ───────────────────────────────────────────
     const C = {
-      grassLight: 0x5aaf3a,
-      grassDark:  0x3d8a27,
-      grassTile:  0x4d9c30,
-      borderCommon:    0x9ca3af,
-      borderRare:      0x60a5fa,
-      borderEpic:      0xa855f7,
-      borderLegendary: 0xf59e0b,
-      trunk:      0x7c4a1e,
-      trunkDark:  0x5a3412,
-      pineGreen1: 0x2d7a3a,
-      pineGreen2: 0x1e5c2a,
-      leafGreen1: 0x3a9e2a,
-      leafGreen2: 0x2d8020,
-      leafGreen3: 0x4ab830,
-      rockGray:   0x6b7280,
-      rockDark:   0x4b5563,
-      flowerYellow: 0xfbbf24,
-      weedGreen:  0x166534,
-      weedDark:   0x14532d,
+      grassLight:0x5aaf3a, grassDark:0x3d8a27, grassTile:0x4d9c30,
+      borderCommon:0x9ca3af, borderRare:0x60a5fa, borderEpic:0xa855f7, borderLegendary:0xf59e0b,
+      trunk:0x7c4a1e, trunkDark:0x5a3412,
+      pineGreen1:0x2d7a3a, pineGreen2:0x1e5c2a,
+      leafGreen1:0x3a9e2a, leafGreen2:0x2d8020, leafGreen3:0x4ab830,
+      rockGray:0x6b7280, rockDark:0x4b5563,
+      flowerYellow:0xfbbf24, weedGreen:0x166534, weedDark:0x14532d,
     };
+    const mat = (color, opts={}) => new THREE.MeshLambertMaterial({ color, flatShading:true, ...opts });
 
-    // ── Flat shading material helper ──────────────────────
-    function mat(color, opts={}){
-      return new THREE.MeshLambertMaterial({ color, flatShading: true, ...opts });
-    }
-
-    // ── Build grass tile base ─────────────────────────────
+    // ── Grass base ───────────────────────────────────────
     function buildBase(borderColor){
       const g = new THREE.Group();
-
-      // Ground tile (subdivided for flat shading variety)
       const geo = new THREE.BoxGeometry(4, 0.18, 4, 4, 1, 4);
-      // Randomize Y vertices slightly for minecraft look
       const pos = geo.attributes.position;
       for(let i=0; i<pos.count; i++){
-        if(Math.abs(pos.getY(i) - 0.09) < 0.01){
-          pos.setY(i, pos.getY(i) + (Math.random()-0.5)*0.06);
-        }
+        if(Math.abs(pos.getY(i) - 0.09) < 0.01) pos.setY(i, pos.getY(i)+(Math.random()-.5)*.06);
       }
       geo.computeVertexNormals();
-      // Color variation across faces
-      const colors = [];
-      const col = new THREE.Color();
-      for(let i=0; i<geo.attributes.position.count; i++){
-        const t = Math.random();
-        col.setHex(t > 0.5 ? C.grassLight : (t > 0.25 ? C.grassTile : C.grassDark));
-        colors.push(col.r, col.g, col.b);
+      const colors=[], col=new THREE.Color();
+      for(let i=0;i<pos.count;i++){
+        const t=Math.random();
+        col.setHex(t>.5?C.grassLight:t>.25?C.grassTile:C.grassDark);
+        colors.push(col.r,col.g,col.b);
       }
-      geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
-      const grassMat = new THREE.MeshLambertMaterial({ vertexColors:true, flatShading:true });
-      const ground = new THREE.Mesh(geo, grassMat);
-      ground.receiveShadow = true;
-      g.add(ground);
-
-      // Border frame
-      const borderGeo = new THREE.BoxGeometry(4.22, 0.12, 4.22);
-      const borderMesh = new THREE.Mesh(borderGeo, mat(borderColor));
-      borderMesh.position.y = -0.04;
-      g.add(borderMesh);
-
-      // Border inner cutout effect — 4 strips
-      const bW = 0.11;
-      const strips = [
-        {x:0,   z:2.06, rx:0, rz:0, sx:4.22, sz:bW},
-        {x:0,   z:-2.06,rx:0, rz:0, sx:4.22, sz:bW},
-        {x:2.06,z:0,    rx:0, rz:0, sx:bW, sz:4.22},
-        {x:-2.06,z:0,   rx:0, rz:0, sx:bW, sz:4.22},
-      ];
-      strips.forEach(s=>{
-        const sg = new THREE.BoxGeometry(s.sx, 0.14, s.sz);
-        const sm = new THREE.Mesh(sg, mat(borderColor));
-        sm.position.set(s.x, 0.05, s.z);
-        g.add(sm);
-      });
-
+      geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors),3));
+      g.add(Object.assign(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true})), {receiveShadow:true}));
+      const border = new THREE.Mesh(new THREE.BoxGeometry(4.22,0.12,4.22), mat(borderColor));
+      border.position.y=-0.04; g.add(border);
+      [{x:0,z:2.06,sx:4.22,sz:.11},{x:0,z:-2.06,sx:4.22,sz:.11},{x:2.06,z:0,sx:.11,sz:4.22},{x:-2.06,z:0,sx:.11,sz:4.22}]
+        .forEach(s=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(s.sx,.14,s.sz),mat(borderColor)); m.position.set(s.x,.05,s.z); g.add(m); });
       return g;
     }
 
-    // ── COMMON: just base ─────────────────────────────────
-    function buildCommon(){
-      const g = new THREE.Group();
-      g.add(buildBase(C.borderCommon));
-      return g;
-    }
+    function buildCommon(){ return buildBase(C.borderCommon); }
 
-    // ── RARE: base + weeds/reeds ──────────────────────────
     function buildRare(){
-      const g = new THREE.Group();
-      g.add(buildBase(C.borderRare));
-
-      // Cluster of 4-5 reeds
-      const reedPositions = [
-        {x:-0.6, z:-0.4, h:0.9, lean:0.12},
-        {x:-0.3, z:-0.2, h:1.1, lean:-0.08},
-        {x:-0.7, z:-0.1, h:0.75, lean:0.15},
-        {x:-0.45, z:0.25, h:1.0, lean:0.05},
-        {x:-0.2, z:0.1, h:0.65, lean:-0.12},
-      ];
-      reedPositions.forEach(r=>{
-        const geo = new THREE.CylinderGeometry(0.025, 0.04, r.h, 5);
-        const reed = new THREE.Mesh(geo, mat(Math.random()>0.5 ? C.weedGreen : C.weedDark));
-        reed.position.set(r.x, r.h/2 + 0.09, r.z);
-        reed.rotation.z = r.lean;
-        reed.rotation.x = (Math.random()-0.5)*0.1;
-        reed.castShadow = true;
-        g.add(reed);
-
-        // Tip blade
-        const tipGeo = new THREE.ConeGeometry(0.06, 0.18, 4);
-        const tip = new THREE.Mesh(tipGeo, mat(C.weedGreen));
-        tip.position.set(r.x, r.h + 0.15, r.z);
-        g.add(tip);
-      });
+      const g=buildBase(C.borderRare);
+      [{x:-.6,z:-.4,h:.9,l:.12},{x:-.3,z:-.2,h:1.1,l:-.08},{x:-.7,z:-.1,h:.75,l:.15},{x:-.45,z:.25,h:1.0,l:.05},{x:-.2,z:.1,h:.65,l:-.12}]
+        .forEach(r=>{
+          const reed=new THREE.Mesh(new THREE.CylinderGeometry(.025,.04,r.h,5),mat(Math.random()>.5?C.weedGreen:C.weedDark));
+          reed.position.set(r.x,r.h/2+.09,r.z); reed.rotation.z=r.l; g.add(reed);
+          const tip=new THREE.Mesh(new THREE.ConeGeometry(.06,.18,4),mat(C.weedGreen));
+          tip.position.set(r.x,r.h+.15,r.z); g.add(tip);
+        });
       return g;
     }
 
-    // ── EPIC: base + cypress/pine ─────────────────────────
     function buildEpic(){
-      const g = new THREE.Group();
-      g.add(buildBase(C.borderEpic));
-
-      // Trunk
-      const trunkGeo = new THREE.CylinderGeometry(0.1, 0.15, 0.55, 6);
-      const trunk = new THREE.Mesh(trunkGeo, mat(C.trunk));
-      trunk.position.set(0.2, 0.09 + 0.275, 0.1);
-      trunk.castShadow = true;
-      g.add(trunk);
-
-      // Pine cone shape: 3 stacked cones, decreasing size
-      const coneLayers = [
-        {ry:0.55, rx:0.0, y:0.64, r:0.75, h:1.1},
-        {ry:0.55, rx:0.0, y:1.35, r:0.55, h:0.9},
-        {ry:0.55, rx:0.0, y:1.95, r:0.35, h:0.75},
-        {ry:0.55, rx:0.0, y:2.45, r:0.18, h:0.55},
-      ];
-      coneLayers.forEach((l,i)=>{
-        const cGeo = new THREE.ConeGeometry(l.r, l.h, 7+i);
-        const cMesh = new THREE.Mesh(cGeo, mat(i%2===0 ? C.pineGreen1 : C.pineGreen2));
-        cMesh.position.set(0.2, l.y, 0.1);
-        cMesh.castShadow = true;
-        g.add(cMesh);
-      });
+      const g=buildBase(C.borderEpic);
+      const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.1,.15,.55,6),mat(C.trunk));
+      trunk.position.set(.2,.36,.1); g.add(trunk);
+      [{y:.64,r:.75,h:1.1},{y:1.35,r:.55,h:.9},{y:1.95,r:.35,h:.75},{y:2.45,r:.18,h:.55}]
+        .forEach((l,i)=>{
+          const c=new THREE.Mesh(new THREE.ConeGeometry(l.r,l.h,7+i),mat(i%2===0?C.pineGreen1:C.pineGreen2));
+          c.position.set(.2,l.y,.1); g.add(c);
+        });
       return g;
     }
 
-    // ── LEGENDARY: base + leafy tree + rock + flowers ────
     function buildLegendary(){
-      const g = new THREE.Group();
-      g.add(buildBase(C.borderLegendary));
-
-      // Trunk — thick branching shape
-      const trunkGeo = new THREE.CylinderGeometry(0.13, 0.2, 1.1, 6);
-      const trunk = new THREE.Mesh(trunkGeo, mat(C.trunk));
-      trunk.position.set(-0.1, 0.09 + 0.55, -0.1);
-      trunk.castShadow = true;
-      g.add(trunk);
-
-      // Branch
-      const brGeo = new THREE.CylinderGeometry(0.07, 0.10, 0.7, 5);
-      const branch = new THREE.Mesh(brGeo, mat(C.trunkDark));
-      branch.position.set(0.22, 1.05, -0.1);
-      branch.rotation.z = -0.6;
-      g.add(branch);
-
-      // Leafy canopy: multiple icosahedra
-      const leafClusters = [
-        {x:-0.1,  y:2.1,  z:-0.1,  s:0.9,  c:C.leafGreen1},
-        {x: 0.55, y:1.75, z: 0.1,  s:0.65, c:C.leafGreen2},
-        {x:-0.65, y:1.85, z: 0.15, s:0.60, c:C.leafGreen3},
-        {x: 0.1,  y:2.65, z: 0.2,  s:0.55, c:C.leafGreen1},
-        {x:-0.3,  y:2.35, z:-0.55, s:0.50, c:C.leafGreen2},
-        {x: 0.4,  y:2.3,  z:-0.3,  s:0.45, c:C.leafGreen3},
-      ];
-      leafClusters.forEach(l=>{
-        const lGeo = new THREE.IcosahedronGeometry(l.s, 0); // detail=0 → faceted
-        const lMesh = new THREE.Mesh(lGeo, mat(l.c));
-        lMesh.position.set(l.x, l.y, l.z);
-        lMesh.rotation.y = Math.random()*Math.PI;
-        lMesh.castShadow = true;
-        g.add(lMesh);
+      const g=buildBase(C.borderLegendary);
+      const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.13,.2,1.1,6),mat(C.trunk));
+      trunk.position.set(-.1,.64,-.1); g.add(trunk);
+      const br=new THREE.Mesh(new THREE.CylinderGeometry(.07,.10,.7,5),mat(C.trunkDark));
+      br.position.set(.22,1.05,-.1); br.rotation.z=-.6; g.add(br);
+      [{x:-.1,y:2.1,z:-.1,s:.9,c:C.leafGreen1},{x:.55,y:1.75,z:.1,s:.65,c:C.leafGreen2},
+       {x:-.65,y:1.85,z:.15,s:.60,c:C.leafGreen3},{x:.1,y:2.65,z:.2,s:.55,c:C.leafGreen1},
+       {x:-.3,y:2.35,z:-.55,s:.50,c:C.leafGreen2},{x:.4,y:2.3,z:-.3,s:.45,c:C.leafGreen3}]
+        .forEach(l=>{ const m=new THREE.Mesh(new THREE.IcosahedronGeometry(l.s,0),mat(l.c)); m.position.set(l.x,l.y,l.z); m.rotation.y=Math.random()*Math.PI; g.add(m); });
+      const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.28,0),mat(C.rockGray));
+      rock.position.set(.9,.18,-.5); rock.rotation.y=1.2; rock.scale.set(1,.65,.9); g.add(rock);
+      const rock2=new THREE.Mesh(new THREE.DodecahedronGeometry(.18,0),mat(C.rockDark));
+      rock2.position.set(1.15,.12,-.2); rock2.scale.set(.9,.55,1); g.add(rock2);
+      [{x:.7,z:.5},{x:.5,z:.8},{x:1.0,z:.65},{x:.3,z:.9}].forEach(fp=>{
+        const stem=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,.22,4),mat(C.weedGreen));
+        stem.position.set(fp.x,.2,fp.z); g.add(stem);
+        const petal=new THREE.Mesh(new THREE.ConeGeometry(.07,.06,5),mat(C.flowerYellow));
+        petal.position.set(fp.x,.33,fp.z); g.add(petal);
       });
-
-      // Rock
-      const rockGeo = new THREE.DodecahedronGeometry(0.28, 0);
-      const rock = new THREE.Mesh(rockGeo, mat(C.rockGray));
-      rock.position.set(0.9, 0.18, -0.5);
-      rock.rotation.y = 1.2;
-      rock.scale.set(1, 0.65, 0.9);
-      rock.castShadow = true;
-      g.add(rock);
-
-      const rock2Geo = new THREE.DodecahedronGeometry(0.18, 0);
-      const rock2 = new THREE.Mesh(rock2Geo, mat(C.rockDark));
-      rock2.position.set(1.15, 0.12, -0.2);
-      rock2.rotation.y = 0.6;
-      rock2.scale.set(0.9, 0.55, 1);
-      g.add(rock2);
-
-      // Flowers
-      const flowerPos = [
-        {x:0.7, z:0.5}, {x:0.5, z:0.8}, {x:1.0, z:0.65}, {x:0.3, z:0.9},
-      ];
-      flowerPos.forEach(fp=>{
-        const stemGeo = new THREE.CylinderGeometry(0.015, 0.02, 0.22, 4);
-        const stem = new THREE.Mesh(stemGeo, mat(C.weedGreen));
-        stem.position.set(fp.x, 0.09+0.11, fp.z);
-        g.add(stem);
-        const petalGeo = new THREE.ConeGeometry(0.07, 0.06, 5);
-        const petal = new THREE.Mesh(petalGeo, mat(C.flowerYellow));
-        petal.position.set(fp.x, 0.09+0.24, fp.z);
-        g.add(petal);
-      });
-
       return g;
     }
 
-    // ── Load a parcel by rarity ───────────────────────────
     function loadParcel(rarity){
-      if(parcelGroup){ scene.remove(parcelGroup); parcelGroup = null; }
-      switch(rarity){
-        case 'common':    parcelGroup = buildCommon();    break;
-        case 'rare':      parcelGroup = buildRare();      break;
-        case 'epic':      parcelGroup = buildEpic();      break;
-        case 'legendary': parcelGroup = buildLegendary(); break;
-        default: return;
-      }
-      scene.add(parcelGroup);
+      if(parcelGroup){ scene.remove(parcelGroup); parcelGroup=null; }
+      const builders = { common:buildCommon, rare:buildRare, epic:buildEpic, legendary:buildLegendary };
+      if(builders[rarity]){ parcelGroup=builders[rarity](); scene.add(parcelGroup); }
     }
 
-    // ── Animate loop ──────────────────────────────────────
-    function startRender(){
-      if(animReq) return;
-      let t = 0;
-      function loop(){
-        animReq = requestAnimationFrame(loop);
-        t += 0.008;
-        if(parcelGroup){
-          parcelGroup.rotation.y = t;
-        }
-        renderer.render(scene, camera);
-      }
-      loop();
+    // ── AR state ──────────────────────────────────────────
+    let arActive = false;
+    let arTarget = { x:0, y:0, size:200 }; // screen position of QR center
+    let arSmooth = { x:0, y:0, size:200 }; // smoothed
+    let qrLostFrames = 0;
+    const QR_LOST_THRESHOLD = 20; // frames before hiding
+
+    function resizeAR(){
+      const W = window.innerWidth, H = window.innerHeight;
+      arCanvas.width = W * Math.min(window.devicePixelRatio, 2);
+      arCanvas.height = H * Math.min(window.devicePixelRatio, 2);
+      arCanvas.style.width = W + 'px';
+      arCanvas.style.height = H + 'px';
+      renderer.setSize(W, H);
+      camera.aspect = 1;
+      camera.updateProjectionMatrix();
     }
-    function stopRender(){
-      if(animReq){ cancelAnimationFrame(animReq); animReq = null; }
+    window.addEventListener('resize', resizeAR);
+    resizeAR();
+
+    function arRenderLoop(){
+      if(!arActive){ arRafId=null; return; }
+      arRafId = requestAnimationFrame(arRenderLoop);
+
+      // Smooth position
+      const lerpK = 0.18;
+      arSmooth.x += (arTarget.x - arSmooth.x) * lerpK;
+      arSmooth.y += (arTarget.y - arSmooth.y) * lerpK;
+      arSmooth.size += (arTarget.size - arSmooth.size) * lerpK;
+
+      const W = window.innerWidth, H = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio, 2);
+
+      // Render 3D to offscreen then blit at QR position
+      // Use scissor/viewport trick: render into a square centered on QR
+      const renderSize = Math.round(arSmooth.size * 2.2); // model slightly bigger than QR
+      const cx = Math.round(arSmooth.x); // screen center X
+      const cy = Math.round(arSmooth.y); // screen center Y
+
+      // WebGL viewport: bottom-left origin, Y flipped
+      const vpX = Math.round((cx - renderSize/2) * dpr);
+      const vpY = Math.round((H - cy - renderSize/2) * dpr);
+      const vpW = Math.round(renderSize * dpr);
+      const vpH = Math.round(renderSize * dpr);
+
+      renderer.setScissorTest(true);
+      renderer.setScissor(vpX, vpY, vpW, vpH);
+      renderer.setViewport(vpX, vpY, vpW, vpH);
+
+      camera.aspect = 1;
+      camera.updateProjectionMatrix();
+
+      renderer.clear(true, true, true);
+      renderer.render(scene, camera);
+      renderer.setScissorTest(false);
     }
 
-    // ── Show parcel panel ─────────────────────────────────
-    function showParcel(code){
-      const rarity = RARITY_MAP[code.toUpperCase()];
-      if(!rarity) return false;
-
+    // ── Show/hide AR ──────────────────────────────────────
+    function showAR(rarity){
       loadParcel(rarity);
-      startRender();
-
-      const panel = document.getElementById('parcelPanel');
-      const rarityEl = document.getElementById('parcelRarity');
-      const codeEl = document.getElementById('parcelCode');
-
-      rarityEl.textContent = rarity.toUpperCase();
-      rarityEl.className = 'parcelRarity ' + rarity;
-      codeEl.textContent = code.toUpperCase();
-
-      panel.classList.remove('hidden');
-      requestAnimationFrame(()=> panel.classList.add('show'));
-      return true;
+      arCanvas.style.display = 'block';
+      btnARClose.style.display = 'flex';
+      // Position close button top-right
+      btnARClose.style.top = 'calc(14px + env(safe-area-inset-top))';
+      btnARClose.style.right = 'calc(14px + env(safe-area-inset-right))';
+      arActive = true;
+      qrLostFrames = 0;
+      if(!arRafId) arRenderLoop();
     }
 
-    function hideParcel(){
-      const panel = document.getElementById('parcelPanel');
-      panel.classList.remove('show');
-      setTimeout(()=>{
-        panel.classList.add('hidden');
-        stopRender();
-        if(parcelGroup){ scene.remove(parcelGroup); parcelGroup = null; }
-      }, 400);
+    function hideAR(){
+      arActive = false;
+      arCanvas.style.display = 'none';
+      btnARClose.style.display = 'none';
+      if(parcelGroup){ scene.remove(parcelGroup); parcelGroup=null; }
     }
 
-    document.getElementById('btnParcelDismiss').addEventListener('click', hideParcel);
+    btnARClose.addEventListener('click', ()=>{ hideAR(); closeQR(); });
 
-    // ── QR Scanner (BarcodeDetector nativo + fallback manual) ──
+    // ── QR Scanner with AR anchor ────────────────────────
     let qrStream = null;
     let qrScanning = false;
     let qrDetector = null;
     let qrLoopTimer = null;
+    let detectedRarity = null;
     const qrOverlay = document.getElementById('qrOverlay');
     const qrVideo   = document.getElementById('qrVideo');
     const qrStatus  = document.getElementById('qrStatus');
     const btnQR     = document.getElementById('btnQR');
 
-    // Check BarcodeDetector support (Chrome 83+, Android WebView, Edge)
     const hasBarcodeDetector = ('BarcodeDetector' in window);
     if(hasBarcodeDetector){
-      try{ qrDetector = new BarcodeDetector({ formats:['qr_code'] }); }catch(e){ qrDetector = null; }
+      try{ qrDetector = new BarcodeDetector({ formats:['qr_code'] }); }catch(e){ qrDetector=null; }
     }
 
-    // Manual input fallback UI (injected if no BarcodeDetector)
-    let manualInput = null;
+    // Manual fallback
     if(!qrDetector){
-      // Add manual input inside qrBox
       const qrBox = document.querySelector('.qrBox');
-      manualInput = document.createElement('input');
-      manualInput.type = 'text';
-      manualInput.placeholder = 'AEMX-COMMON / RARE / EPIC / LEGENDARY';
-      manualInput.style.cssText = `
-        background:rgba(5,10,20,.85);border:1px solid rgba(0,200,255,.35);
-        color:#fff;padding:8px 12px;border-radius:8px;width:100%;
-        font-family:Orbitron,system-ui;font-size:10px;letter-spacing:1.5px;
-        text-transform:uppercase;outline:none;text-align:center;
-      `;
-      const manualBtn = document.createElement('button');
-      manualBtn.textContent = 'CONFIRMAR';
-      manualBtn.style.cssText = `
-        padding:7px 22px;border-radius:8px;border:1px solid rgba(0,200,255,.30);
-        background:rgba(0,200,255,.10);color:#fff;font-family:Orbitron,system-ui;
-        font-weight:800;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%;
-      `;
-      manualBtn.addEventListener('click', ()=>{
-        const code = manualInput.value.trim().toUpperCase();
-        if(RARITY_MAP[code]){
+      const inp = document.createElement('input');
+      inp.type='text'; inp.placeholder='AEMX-COMMON / RARE / EPIC / LEGENDARY';
+      inp.style.cssText='background:rgba(5,10,20,.85);border:1px solid rgba(0,200,255,.35);color:#fff;padding:8px 12px;border-radius:8px;width:100%;font-family:Orbitron,system-ui;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;outline:none;text-align:center;margin-top:8px;';
+      const btn = document.createElement('button');
+      btn.textContent='CONFIRMAR';
+      btn.style.cssText='margin-top:6px;padding:7px 22px;border-radius:8px;border:1px solid rgba(0,200,255,.30);background:rgba(0,200,255,.10);color:#fff;font-family:Orbitron,system-ui;font-weight:800;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%;';
+      const confirm = ()=>{
+        const code=inp.value.trim().toUpperCase();
+        const rarity=RARITY_MAP[code];
+        if(rarity){
+          // Position in center screen when manual
+          arTarget = { x: window.innerWidth/2, y: window.innerHeight/2, size: Math.min(window.innerWidth,window.innerHeight)*0.35 };
+          arSmooth = { ...arTarget };
           closeQR();
-          setTimeout(()=>showParcel(code),150);
+          showAR(rarity);
         } else {
-          qrStatus.textContent = '⚠ CÓDIGO NO VÁLIDO';
+          qrStatus.textContent='⚠ CÓDIGO NO VÁLIDO';
         }
-      });
-      manualInput.addEventListener('keydown', e=>{ if(e.key==='Enter') manualBtn.click(); });
-      qrBox.insertBefore(manualInput, qrBox.querySelector('.qrStatus'));
-      qrBox.insertBefore(manualBtn, qrBox.querySelector('.qrStatus'));
+      };
+      btn.addEventListener('click', confirm);
+      inp.addEventListener('keydown', e=>{ if(e.key==='Enter') confirm(); });
+      qrBox.appendChild(inp); qrBox.appendChild(btn);
     }
 
     async function openQR(){
       qrOverlay.classList.remove('hidden');
       btnQR.classList.add('active');
-
       if(!qrDetector){
-        // No BarcodeDetector: show manual input, hide video
-        qrVideo.style.display='none';
         document.querySelector('.qrFrame').style.display='none';
-        document.querySelector('.qrScanLine') && (document.querySelector('.qrScanLine').style.display='none');
-        qrStatus.textContent = 'INGRESA EL CÓDIGO MANUALMENTE';
-        if(manualInput) setTimeout(()=>manualInput.focus(),200);
+        qrStatus.textContent='INGRESA EL CÓDIGO MANUALMENTE';
         return;
       }
-
-      qrStatus.textContent = 'INICIANDO CÁMARA…';
+      qrStatus.textContent='INICIANDO CÁMARA…';
       try{
-        qrStream = await navigator.mediaDevices.getUserMedia({
-          video:{ facingMode:{ ideal:'environment' }, width:{ideal:1280}, height:{ideal:720} },
-          audio:false
-        });
-        qrVideo.srcObject = qrStream;
-        await qrVideo.play();
+        // Use the MAIN camera stream if already running
+        const mainCam = document.getElementById('cam');
+        if(mainCam && mainCam.srcObject){
+          qrStream = mainCam.srcObject;
+          qrVideo.srcObject = qrStream;
+          qrVideo.play().catch(()=>{});
+        } else {
+          qrStream = await navigator.mediaDevices.getUserMedia({
+            video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
+            audio:false
+          });
+          qrVideo.srcObject = qrStream;
+          await qrVideo.play();
+        }
         qrScanning = true;
-        qrStatus.textContent = 'APUNTA AL CÓDIGO QR';
+        qrStatus.textContent='APUNTA AL CÓDIGO QR';
         scanLoop();
       }catch(e){
-        qrStatus.textContent = 'PERMISO DENEGADO — INGRESA CÓDIGO:';
-        // fallback: show text input even if BarcodeDetector exists
-        if(!manualInput){
-          const qrBox = document.querySelector('.qrBox');
-          const inp = document.createElement('input');
-          inp.type='text'; inp.placeholder='AEMX-COMMON';
-          inp.style.cssText='background:rgba(5,10,20,.85);border:1px solid rgba(0,200,255,.35);color:#fff;padding:8px 12px;border-radius:8px;width:100%;font-family:Orbitron,system-ui;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;outline:none;text-align:center;';
-          const btn = document.createElement('button');
-          btn.textContent='CONFIRMAR';
-          btn.style.cssText='padding:7px 22px;border-radius:8px;border:1px solid rgba(0,200,255,.30);background:rgba(0,200,255,.10);color:#fff;font-family:Orbitron,system-ui;font-weight:800;font-size:9px;letter-spacing:2px;cursor:pointer;width:100%;';
-          btn.onclick=()=>{ const c=inp.value.trim().toUpperCase(); if(RARITY_MAP[c]){closeQR();setTimeout(()=>showParcel(c),150);} else qrStatus.textContent='⚠ CÓDIGO NO VÁLIDO'; };
-          qrBox.appendChild(inp); qrBox.appendChild(btn);
-          setTimeout(()=>inp.focus(),200);
-        }
+        qrStatus.textContent='ERROR DE CÁMARA';
       }
     }
 
     function closeQR(){
       qrScanning = false;
       if(qrLoopTimer){ clearTimeout(qrLoopTimer); qrLoopTimer=null; }
-      if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream=null; }
+      // Don't stop stream — we might need it for AR tracking
       qrVideo.srcObject = null;
+      qrStream = null;
       qrOverlay.classList.add('hidden');
       btnQR.classList.remove('active');
     }
@@ -1569,31 +1357,109 @@
       try{
         const barcodes = await qrDetector.detect(qrVideo);
         if(barcodes.length > 0){
-          const code = barcodes[0].rawValue.trim().toUpperCase();
-          if(RARITY_MAP[code]){
-            qrStatus.textContent = '✓ ' + code;
-            closeQR();
-            setTimeout(()=>showParcel(code),200);
-            return;
+          const barcode = barcodes[0];
+          const code = barcode.rawValue.trim().toUpperCase();
+          const rarity = RARITY_MAP[code];
+          if(rarity){
+            // Get QR bounding box in the qrVideo element's coordinate space
+            // then map to screen coordinates
+            const vw = qrVideo.videoWidth || qrVideo.offsetWidth;
+            const vh = qrVideo.videoHeight || qrVideo.offsetHeight;
+            const rect = qrVideo.getBoundingClientRect();
+
+            // Corner points from BarcodeDetector
+            const pts = barcode.cornerPoints;
+            const cx_vid = (pts[0].x + pts[1].x + pts[2].x + pts[3].x) / 4;
+            const cy_vid = (pts[0].y + pts[1].y + pts[2].y + pts[3].y) / 4;
+
+            // QR size in video pixels
+            const qrW = Math.hypot(pts[1].x-pts[0].x, pts[1].y-pts[0].y);
+            const qrH = Math.hypot(pts[3].x-pts[0].x, pts[3].y-pts[0].y);
+            const qrSize_vid = (qrW + qrH) / 2;
+
+            // Scale to screen (video element might be scaled/cropped)
+            const scaleX = rect.width / vw;
+            const scaleY = rect.height / vh;
+            const scale = Math.min(scaleX, scaleY); // object-fit:cover uses max actually
+            // For cover: scale = max, and centered
+            const coverScale = Math.max(scaleX, scaleY);
+            const offsetX = (rect.width  - vw * coverScale) / 2;
+            const offsetY = (rect.height - vh * coverScale) / 2;
+
+            const screen_cx = rect.left + offsetX + cx_vid * coverScale;
+            const screen_cy = rect.top  + offsetY + cy_vid * coverScale;
+            const screen_size = qrSize_vid * coverScale;
+
+            arTarget = { x: screen_cx, y: screen_cy, size: screen_size };
+
+            if(!arActive){
+              arSmooth = { ...arTarget };
+              detectedRarity = rarity;
+              qrStatus.textContent = '✓ ' + code;
+              // Switch: close overlay, start AR on MAIN camera
+              // Reuse main camera for AR tracking
+              closeQR();
+              showAR(rarity);
+              // Start AR tracking loop using main camera
+              startARTracking(rarity);
+              return;
+            }
           } else {
             qrStatus.textContent = 'QR NO RECONOCIDO';
           }
         }
       }catch(e){}
-      if(qrScanning) qrLoopTimer = setTimeout(scanLoop, 250);
+      if(qrScanning) qrLoopTimer = setTimeout(scanLoop, 150);
     }
 
-    document.getElementById('btnQRClose').addEventListener('click', closeQR);
-    btnQR.addEventListener('click', ()=>{
-      if(qrOverlay.classList.contains('hidden')) openQR();
-      else closeQR();
-    });
+    // ── AR tracking: keep detecting QR on main camera ────
+    let arTrackTimer = null;
+    let arTrackDetector = null;
 
-    // ── DEV: tap canvas to cycle rarities (debug) ────────
-    // canvas3d.addEventListener('click', ()=>{
-    //   const r = ['common','rare','epic','legendary'];
-    //   loadParcel(r[Math.floor(Math.random()*r.length)]);
-    // });
+    async function startARTracking(rarity){
+      if(arTrackDetector) return;
+      try{ arTrackDetector = new BarcodeDetector({ formats:['qr_code'] }); }catch(e){ return; }
+
+      const mainCam = document.getElementById('cam');
+      if(!mainCam) return;
+
+      async function trackLoop(){
+        if(!arActive){ arTrackDetector=null; return; }
+        try{
+          const barcodes = await arTrackDetector.detect(mainCam);
+          if(barcodes.length > 0){
+            const barcode = barcodes[0];
+            const vw = mainCam.videoWidth || mainCam.offsetWidth;
+            const vh = mainCam.videoHeight || mainCam.offsetHeight;
+            const rect = mainCam.getBoundingClientRect();
+
+            const pts = barcode.cornerPoints;
+            const cx_vid = (pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4;
+            const cy_vid = (pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
+            const qrW = Math.hypot(pts[1].x-pts[0].x, pts[1].y-pts[0].y);
+            const qrH = Math.hypot(pts[3].x-pts[0].x, pts[3].y-pts[0].y);
+            const qrSize_vid = (qrW+qrH)/2;
+
+            const coverScale = Math.max(rect.width/vw, rect.height/vh);
+            const offsetX = (rect.width  - vw*coverScale)/2;
+            const offsetY = (rect.height - vh*coverScale)/2;
+
+            arTarget.x = rect.left + offsetX + cx_vid*coverScale;
+            arTarget.y = rect.top  + offsetY + cy_vid*coverScale;
+            arTarget.size = qrSize_vid * coverScale;
+            qrLostFrames = 0;
+          } else {
+            qrLostFrames++;
+            if(qrLostFrames > QR_LOST_THRESHOLD){
+              // QR lost — keep last position (don't hide, just freeze)
+            }
+          }
+        }catch(e){}
+        if(arActive) arTrackTimer = setTimeout(trackLoop, 100);
+        else arTrackDetector = null;
+      }
+      trackLoop();
+    }
     </script>
 
     <!-- LOGIN OVERLAY -->
