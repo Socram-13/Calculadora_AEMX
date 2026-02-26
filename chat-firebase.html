@@ -283,15 +283,16 @@
             showAuthError('');
             try {
                 const provider = new GoogleAuthProvider();
-                if (enIframe) {
-                    // En iframe: abre Google Auth en ventana nueva para evitar bloqueos
-                    const result = await signInWithPopup(auth, provider).catch(async () => {
-                        // Si popup falla, redirige la ventana completa
-                        window.top.location.href = window.location.href;
-                    });
-                } else {
-                    await signInWithPopup(auth, provider);
-                }
+                // Siempre popup — nunca redirigir window.top para no destruir la sesión del padre
+                await signInWithPopup(auth, provider).catch((err) => {
+                    // Si el popup fue bloqueado, abrir el chat en ventana nueva
+                    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+                        window.open(window.location.href, '_blank');
+                        showAuthError('Popup bloqueado. Se abrió el chat en una ventana nueva.');
+                    } else {
+                        throw err;
+                    }
+                });
             } catch(e) {
                 showAuthError('Error al iniciar con Google. Intenta de nuevo.');
                 console.error(e);

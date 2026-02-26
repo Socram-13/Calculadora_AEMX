@@ -1904,7 +1904,7 @@
             ESTADO_COORDS_MINI[estado][0] + (Math.random()-0.5)*0.8,
             ESTADO_COORDS_MINI[estado][1] + (Math.random()-0.5)*0.8,
           ];
-        } else if (p.country === 'Mexico' || !p.city) {
+        } else if ((p.country || '').toLowerCase().includes('mexico') || !p.city) {
           // Sin ciudad: posición aleatoria sobre México
           coords = [
             23.6345 + (Math.random()-0.5)*6,
