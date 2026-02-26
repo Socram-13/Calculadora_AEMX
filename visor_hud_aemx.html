@@ -1118,7 +1118,7 @@
       }
     }
 
-    btnFullscreen.addEventListener('click', async () => {
+    if(btnFullscreen) btnFullscreen.addEventListener('click', async () => {
       if (typeof toggleFullscreen === 'function') {
         await toggleFullscreen();
         return;
