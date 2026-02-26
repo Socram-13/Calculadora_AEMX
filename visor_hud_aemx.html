@@ -603,14 +603,17 @@
       outline: 1px solid rgba(0,200,255,.18);
       outline-offset: -1px;
     }
-    /* HUD = left button: trapezoid wider at bottom, clipped top-right */
+    /* first button: clipped top-right */
     .miniBtn button:first-child{
       clip-path: polygon(12px 0%, 100% 0%, 100% 100%, 0% 100%);
     }
-    /* FULL = right button: trapezoid wider at bottom, clipped top-left */
+    /* last button: clipped top-left */
     .miniBtn button:last-child{
       clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 100%, 0% 100%);
     }
+    /* REC button active state */
+    #btnRec.recording{ color:#ff4466; outline-color:rgba(255,68,102,.55); animation: recPulse 1s ease-in-out infinite; }
+    @keyframes recPulse{ 0%,100%{opacity:1} 50%{opacity:.5} }
     .miniBtn button:active{ opacity:.7; }
 
     /* Safe overlay for “rotate device” */
@@ -1113,10 +1116,24 @@
 
     
     <div class="miniBtn">
+      <button id="btnRec" title="Grabar">⏺ REC</button>
+      <button id="btnStop" title="Detener" style="display:none;">⏹ STOP</button>
       <button id="btnUI">HUD</button>
       <button id="btnFS">FULL</button>
+      <button id="btnSnap" title="Captura">📷</button>
     </div>
     <div class="tapHint" id="tapHint"></div>
+    <!-- Invisible tap area center-top: reveals camera+QR controls -->
+    <div id="topbarTapArea" style="
+      position:fixed;
+      top:0; left:50%;
+      transform:translateX(-50%);
+      width:220px; height:54px;
+      z-index:25;
+      pointer-events:auto;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+    "></div>
 
     <!-- QR button: always visible, fixed bottom-right -->
     <div id="btnQR" style="
@@ -1269,7 +1286,7 @@
     const PARCEL_SIZE = 180; // px, base size
     let parcelInstances = []; // array of active instances
 
-    function createParcelInstance(rarity){
+    function createParcelInstance(rarity, opts={}){
       // Wrapper div (draggable)
       const wrap = document.createElement('div');
       wrap.className = 'parcelInstance';
@@ -1327,7 +1344,7 @@
       renderLoop();
 
       // Instance object
-      const instance = { wrap, canvas, rend, sc, cam, group, rafId, rarity };
+      const instance = { wrap, canvas, rend, sc, cam, group, rafId, rarity, _scale:1, _theta:Math.PI/4, _phi:Math.PI/4 };
       parcelInstances.push(instance);
 
       // ── Close button: hidden, shows on touch ─────────────
@@ -1345,13 +1362,15 @@
       });
 
       // ── Interaction state ─────────────────────────────────
-      let currentScale = 1.0;
-      let posLeft = parseFloat(wrap.style.left) || 0;
-      let posTop  = parseFloat(wrap.style.top)  || 0;
+      let currentScale = opts.scale || 1.0;
+      let posLeft = opts.left !== undefined ? opts.left : (parseFloat(wrap.style.left) || 0);
+      let posTop  = opts.top  !== undefined ? opts.top  : (parseFloat(wrap.style.top)  || 0);
+      if(opts.left !== undefined){ wrap.style.left = posLeft + 'px'; }
+      if(opts.top  !== undefined){ wrap.style.top  = posTop  + 'px'; }
 
       // 3D orbit state (camera orbits around model center)
-      let orbitTheta = Math.PI/4;   // horizontal angle (Y axis)
-      let orbitPhi   = Math.PI/4;   // vertical angle
+      let orbitTheta = opts.orbitTheta !== undefined ? opts.orbitTheta : Math.PI/4;
+      let orbitPhi   = opts.orbitPhi   !== undefined ? opts.orbitPhi   : Math.PI/4;
       const ORBIT_R  = 7.5;         // camera distance
       const ORBIT_TARGET = new THREE.Vector3(0, 0.5, 0);
 
@@ -1413,6 +1432,8 @@
           orbitTheta = rotStartTheta - dx * sensitivity;
           orbitPhi   = Math.max(0.1, Math.min(Math.PI - 0.1, rotStartPhi - dy * sensitivity));
           updateCamera();
+          instance._theta = orbitTheta;
+          instance._phi   = orbitPhi;
 
         } else if(mode === 'pinch' && pointers.size === 2){
           const pts = [...pointers.values()];
@@ -1421,6 +1442,8 @@
             currentScale = Math.max(0.3, Math.min(4, currentScale * (dist / lastPinchDist)));
             wrap.style.transformOrigin = 'center center';
             wrap.style.transform = `scale(${currentScale})`;
+            instance._scale = currentScale;
+            saveParcelState();
           }
           lastPinchDist = dist;
 
@@ -1484,7 +1507,7 @@
       }, {passive:true});
       wrap.addEventListener('pointerup', ()=>{
         if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
-        if(mode==='drag'){ mode='idle'; wrap.classList.remove('dragging'); }
+        if(mode==='drag'){ mode='idle'; wrap.classList.remove('dragging'); saveParcelState(); }
       }, {passive:true});
 
       return instance;
@@ -1495,6 +1518,38 @@
       inst.rend.dispose();
       inst.wrap.remove();
       parcelInstances = parcelInstances.filter(i=>i!==inst);
+      saveParcelState();
+    }
+
+    // ── localStorage persistence ──────────────────────────
+    const PARCELS_KEY = 'aemx-parcelas-v1';
+
+    function saveParcelState(){
+      try{
+        const data = parcelInstances.map(inst => ({
+          rarity:      inst.rarity,
+          left:        parseFloat(inst.wrap.style.left)  || 0,
+          top:         parseFloat(inst.wrap.style.top)   || 0,
+          scale:       inst._scale  || 1,
+          orbitTheta:  inst._theta  || Math.PI/4,
+          orbitPhi:    inst._phi    || Math.PI/4,
+        }));
+        localStorage.setItem(PARCELS_KEY, JSON.stringify(data));
+      }catch(e){}
+    }
+
+    function loadParcelState(){
+      try{
+        const raw = localStorage.getItem(PARCELS_KEY);
+        if(!raw) return;
+        const data = JSON.parse(raw);
+        data.forEach(d=>{
+          const inst = createParcelInstance(d.rarity, {
+            left: d.left, top: d.top,
+            scale: d.scale, orbitTheta: d.orbitTheta, orbitPhi: d.orbitPhi
+          });
+        });
+      }catch(e){}
     }
 
     // ── Parcel menu toggle ───────────────────────────────
@@ -1509,6 +1564,12 @@
       btnParcelToggle.classList.toggle('open', menuOpen);
       // no text to update
     });
+
+    // Invisible topbar tap area → show camera/QR controls
+    const topbarTapArea = document.getElementById('topbarTapArea');
+    if(topbarTapArea){
+      topbarTapArea.addEventListener('click', ()=> showUI(true));
+    }
 
     document.querySelectorAll('.pmBtn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
@@ -1624,6 +1685,9 @@
     const oldARClose = document.getElementById('btnARClose');
     if(oldARClose) oldARClose.remove();
 
+    // ── Restore saved parcelas on load ───────────────────
+    loadParcelState();
+
     // ── Gyroscope: shift parcelas slightly when device moves ──
     // Creates illusion of being anchored in space
     let gyroEnabled = false;
@@ -1661,13 +1725,146 @@
       }
     }
     // Auto-enable gyro when first parcel is placed
-    const _origCreate = createParcelInstance;
-    // Patch: enable gyro on first create
     let gyroInitialized = false;
     document.querySelectorAll('.pmBtn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         if(!gyroInitialized){ enableGyro(); gyroInitialized=true; }
       }, true);
+    });
+
+    // ── Screen capture & recording ───────────────────────
+    const btnRec  = document.getElementById('btnRec');
+    const btnStop = document.getElementById('btnStop');
+    const btnSnap = document.getElementById('btnSnap');
+
+    // Screenshot: compose camera + 3D parcelas onto an offscreen canvas
+    function captureFrame(){
+      const W = window.innerWidth, H = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio, 2);
+      const oc = document.createElement('canvas');
+      oc.width = W * dpr; oc.height = H * dpr;
+      const ctx = oc.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // 1. Draw camera video
+      const vid = document.getElementById('cam');
+      if(vid && vid.readyState >= 2){
+        // Match object-fit:cover
+        const vw = vid.videoWidth, vh = vid.videoHeight;
+        if(vw && vh){
+          const scale = Math.max(W/vw, H/vh);
+          const sw = vw*scale, sh = vh*scale;
+          const ox = (W-sw)/2, oy = (H-sh)/2;
+          // mirror if needed
+          const mirrored = vid.style.transform.includes('scaleX(-1)');
+          if(mirrored){ ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); ctx.drawImage(vid, -ox-(W-sw), oy, sw, sh); ctx.restore(); }
+          else ctx.drawImage(vid, ox, oy, sw, sh);
+        }
+      }
+
+      // 2. Draw each parcel canvas
+      parcelInstances.forEach(inst=>{
+        const rect = inst.wrap.getBoundingClientRect();
+        ctx.save();
+        ctx.translate(rect.left + rect.width/2, rect.top + rect.height/2);
+        // apply same transform (scale)
+        const sc = inst._scale || 1;
+        ctx.scale(sc, sc);
+        ctx.drawImage(inst.canvas, -inst.canvas.width/2/dpr, -inst.canvas.height/2/dpr,
+                      inst.canvas.width/dpr, inst.canvas.height/dpr);
+        ctx.restore();
+      });
+
+      return oc;
+    }
+
+    // Snapshot
+    btnSnap.addEventListener('click', ()=>{
+      try{
+        const oc = captureFrame();
+        oc.toBlob(blob=>{
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'aemx-' + Date.now() + '.png';
+          a.click();
+          setTimeout(()=> URL.revokeObjectURL(url), 5000);
+        }, 'image/png');
+      }catch(e){ alert('Error al capturar: ' + e.message); }
+    });
+
+    // Recording
+    let mediaRecorder = null;
+    let recChunks = [];
+    let recStream = null;
+
+    btnRec.addEventListener('click', async ()=>{
+      if(mediaRecorder) return;
+      try{
+        // Capture the whole screen via captureStream on a composed canvas
+        // We use a live canvas that composites every frame
+        const W = window.innerWidth, H = window.innerHeight;
+        const dpr = Math.min(window.devicePixelRatio, 2);
+        const liveCanvas = document.createElement('canvas');
+        liveCanvas.width = W * dpr; liveCanvas.height = H * dpr;
+        const lctx = liveCanvas.getContext('2d');
+        lctx.scale(dpr, dpr);
+
+        let recActive = true;
+        function drawFrame(){
+          if(!recActive) return;
+          const vid = document.getElementById('cam');
+          lctx.clearRect(0, 0, W, H);
+          if(vid && vid.readyState >= 2){
+            const vw=vid.videoWidth, vh=vid.videoHeight;
+            if(vw && vh){
+              const scale=Math.max(W/vw,H/vh);
+              const sw=vw*scale, sh=vh*scale;
+              const ox=(W-sw)/2, oy=(H-sh)/2;
+              const mirrored=vid.style.transform.includes('scaleX(-1)');
+              if(mirrored){lctx.save();lctx.translate(W,0);lctx.scale(-1,1);lctx.drawImage(vid,-ox-(W-sw),oy,sw,sh);lctx.restore();}
+              else lctx.drawImage(vid,ox,oy,sw,sh);
+            }
+          }
+          parcelInstances.forEach(inst=>{
+            const rect=inst.wrap.getBoundingClientRect();
+            lctx.save();
+            lctx.translate(rect.left+rect.width/2, rect.top+rect.height/2);
+            const sc=inst._scale||1; lctx.scale(sc,sc);
+            lctx.drawImage(inst.canvas,-inst.canvas.width/2/dpr,-inst.canvas.height/2/dpr,inst.canvas.width/dpr,inst.canvas.height/dpr);
+            lctx.restore();
+          });
+          requestAnimationFrame(drawFrame);
+        }
+        drawFrame();
+
+        recStream = liveCanvas.captureStream(30);
+        recChunks = [];
+        mediaRecorder = new MediaRecorder(recStream, { mimeType: 'video/webm;codecs=vp9' });
+        mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) recChunks.push(e.data); };
+        mediaRecorder.onstop = ()=>{
+          recActive = false;
+          const blob = new Blob(recChunks, {type:'video/webm'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href=url; a.download='aemx-'+Date.now()+'.webm'; a.click();
+          setTimeout(()=>URL.revokeObjectURL(url),10000);
+          recChunks=[]; mediaRecorder=null; recStream=null;
+        };
+        mediaRecorder.start(200);
+        btnRec.classList.add('recording');
+        btnRec.style.display='none';
+        btnStop.style.display='';
+      }catch(e){ alert('Error al grabar: '+e.message); }
+    });
+
+    btnStop.addEventListener('click', ()=>{
+      if(mediaRecorder && mediaRecorder.state !== 'inactive'){
+        mediaRecorder.stop();
+        btnRec.classList.remove('recording');
+        btnStop.style.display='none';
+        btnRec.style.display='';
+      }
     });
     </script>
 
@@ -1825,9 +2022,7 @@
       if(e && (e.target?.closest?.('.topbar') || e.target?.closest?.('.miniBtn'))) return;
       showUI(true);
     };
-    document.addEventListener('pointerdown', reveal, {passive:true});
-    document.addEventListener('touchstart', reveal, {passive:true});
-    document.addEventListener('click', reveal);
+    // reveal only via topbar tap area (btnParcelToggle area) — removed global listeners
 
     btnUI.addEventListener('click', () => {
       if(uiHidden) showUI(false);
