@@ -98,13 +98,13 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
   font-family:'Orbitron',monospace; font-size:9px;
   letter-spacing:2px; color:var(--text2); text-align:center;
 }
-/* frame canvases */
-#canvas1, #canvas2{
+/* frame layers via CSS filter */
+#layer1-img, #layer2-img{
   position:absolute; inset:0; width:100%; height:100%;
-  pointer-events:none;
+  pointer-events:none; object-fit:cover;
 }
-#canvas1{z-index:2;}
-#canvas2{z-index:3;}
+#layer1-img{z-index:2;}
+#layer2-img{z-index:3;}
 /* logo layer — top, no tint */
 #logo-layer{
   position:absolute; inset:0; width:100%; height:100%;
@@ -293,10 +293,10 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
       <p>TOCA PARA<br/>SUBIR FOTO</p>
     </div>
   </div>
-  <!-- Capa 1: anillo oscuro (canvas recolorizable) -->
-  <canvas id="canvas1"></canvas>
-  <!-- Capa 2: anillo metálico (canvas recolorizable) -->
-  <canvas id="canvas2"></canvas>
+  <!-- Capa 1: anillo oscuro -->
+  <img id="layer1-img" src="" alt="" crossorigin="anonymous"/>
+  <!-- Capa 2: anillo metálico -->
+  <img id="layer2-img" src="" alt="" crossorigin="anonymous"/>
   <!-- Capa 3: logo fijo -->
   <div class="layer" id="logo-layer">
     <img id="logo-img" src="" alt="AEMX Logo"/>
@@ -306,96 +306,72 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
 <p class="hint">Toca el círculo para subir tu foto · Arrastra también funciona</p>
 
 <script>
-// ── Imágenes embebidas (base64) ──────────────────────────────────────────────
+// ── URLs de GitHub ────────────────────────────────────────────────────────────
 const LAYER1_SRC = 'https://raw.githubusercontent.com/socram-13/GamerTag_AEMX/main/marco_oscuro.png';
 const LAYER2_SRC = 'https://raw.githubusercontent.com/socram-13/GamerTag_AEMX/main/marco_metalico.png';
 const LAYER3_SRC = 'https://raw.githubusercontent.com/socram-13/GamerTag_AEMX/main/marco_logo.png';
 
-// ── Canvas setup ─────────────────────────────────────────────────────────────
-const canvas1 = document.getElementById('canvas1');
-const canvas2 = document.getElementById('canvas2');
-const ctx1    = canvas1.getContext('2d');
-const ctx2    = canvas2.getContext('2d');
+const layer1 = document.getElementById('layer1-img');
+const layer2 = document.getElementById('layer2-img');
 
-let imgData1 = null;
-let imgData2 = null;
-
-// Load logo (no recolor)
+layer1.src = LAYER1_SRC;
+layer2.src = LAYER2_SRC;
 document.getElementById('logo-img').src = LAYER3_SRC;
 
-// Load layer 1
-const img1 = new Image();
-img1.onload = () => {
-  canvas1.width  = img1.naturalWidth;
-  canvas1.height = img1.naturalHeight;
-  ctx1.drawImage(img1, 0, 0);
-  imgData1 = ctx1.getImageData(0, 0, canvas1.width, canvas1.height);
-  render1();
-};
-img1.src = LAYER1_SRC;
-
-// Load layer 2
-const img2 = new Image();
-img2.onload = () => {
-  canvas2.width  = img2.naturalWidth;
-  canvas2.height = img2.naturalHeight;
-  ctx2.drawImage(img2, 0, 0);
-  imgData2 = ctx2.getImageData(0, 0, canvas2.width, canvas2.height);
-  render2();
-};
-img2.src = LAYER2_SRC;
-
-// ── Utilities ────────────────────────────────────────────────────────────────
-function hexToRgb(hex) {
-  return {
-    r: parseInt(hex.slice(1,3),16),
-    g: parseInt(hex.slice(3,5),16),
-    b: parseInt(hex.slice(5,7),16)
-  };
-}
-function lum(r,g,b) { return (0.299*r + 0.587*g + 0.114*b) / 255; }
-
-// ── Tint recolor: preserve luminosity, shift hue toward chosen color ─────────
-function tintLayer(imgData, hexColor, intensity) {
-  const tint  = hexToRgb(hexColor);
-  const alpha = intensity / 100;
-  const src   = imgData.data;
-  const out   = new Uint8ClampedArray(src.length);
-
-  for (let i = 0; i < src.length; i += 4) {
-    const r = src[i], g = src[i+1], b = src[i+2], a = src[i+3];
-    out[i+3] = a;
-    if (a === 0) { out[i]=out[i+1]=out[i+2]=0; continue; }
-
-    // Luminosity of original pixel
-    const l = lum(r,g,b);
-
-    // Target: tint color scaled by luminosity
-    const tr = Math.min(255, tint.r * l * 1.8);
-    const tg = Math.min(255, tint.g * l * 1.8);
-    const tb = Math.min(255, tint.b * l * 1.8);
-
-    // Blend original with tinted
-    out[i]   = Math.round(r * (1-alpha) + tr * alpha);
-    out[i+1] = Math.round(g * (1-alpha) + tg * alpha);
-    out[i+2] = Math.round(b * (1-alpha) + tb * alpha);
+// ── Convierte hex a HSL ───────────────────────────────────────────────────────
+function hexToHsl(hex) {
+  let r = parseInt(hex.slice(1,3),16)/255;
+  let g = parseInt(hex.slice(3,5),16)/255;
+  let b = parseInt(hex.slice(5,7),16)/255;
+  const max = Math.max(r,g,b), min = Math.min(r,g,b);
+  let h, s, l = (max+min)/2;
+  if (max === min) { h = s = 0; }
+  else {
+    const d = max - min;
+    s = l > 0.5 ? d/(2-max-min) : d/(max+min);
+    switch(max){
+      case r: h = ((g-b)/d + (g<b?6:0))/6; break;
+      case g: h = ((b-r)/d + 2)/6; break;
+      case b: h = ((r-g)/d + 4)/6; break;
+    }
   }
-  return new ImageData(out, imgData.width, imgData.height);
+  return { h: Math.round(h*360), s: Math.round(s*100), l: Math.round(l*100) };
+}
+
+// ── Aplica CSS filter: hue-rotate + saturate + brightness ────────────────────
+// El PNG de cada capa tiene sus propios colores base.
+// Usamos hue-rotate para cambiar el matiz y saturate para la saturación.
+// intensity (0-100): qué tan saturado se ve el color aplicado.
+function applyFilter(el, hexColor, intensity) {
+  if (intensity === 0) {
+    el.style.filter = 'saturate(0) brightness(0.9)';
+    return;
+  }
+  const hsl = hexToHsl(hexColor);
+  // hue-rotate: giramos desde el matiz original de la imagen
+  // El marco_oscuro tiene tonos cyan (~190°), el metálico blanco/gris (~0°)
+  // Calculamos cuánto rotar para llegar al color elegido
+  const hueRotate = hsl.h; // rotamos al matiz del color elegido
+  const saturate  = 0.2 + (intensity / 100) * 3.5; // 0.2 a 3.7
+  const brightness = 0.7 + (hsl.l / 100) * 0.8;    // ajuste por luminosidad del color elegido
+  el.style.filter = `hue-rotate(${hueRotate}deg) saturate(${saturate.toFixed(2)}) brightness(${brightness.toFixed(2)})`;
 }
 
 function render1() {
-  if (!imgData1) return;
   const color = document.getElementById('color1').value;
   const int   = parseInt(document.getElementById('int1').value);
-  ctx1.putImageData(tintLayer(imgData1, color, int), 0, 0);
+  applyFilter(layer1, color, int);
 }
 
 function render2() {
-  if (!imgData2) return;
   const color = document.getElementById('color2').value;
   const int   = parseInt(document.getElementById('int2').value);
-  ctx2.putImageData(tintLayer(imgData2, color, int), 0, 0);
+  applyFilter(layer2, color, int);
 }
+
+// Aplicar valores iniciales cuando carguen las imágenes
+layer1.onload = render1;
+layer2.onload = render2;
 
 // ── Events ───────────────────────────────────────────────────────────────────
 document.getElementById('color1').addEventListener('input', render1);
@@ -422,7 +398,7 @@ function loadPhoto(file) {
 
 document.getElementById('photo-input').addEventListener('change', e => loadPhoto(e.target.files[0]));
 document.getElementById('editor-wrap').addEventListener('click', e => {
-  if (e.target.closest('#logo-layer') || e.target.closest('canvas')) return;
+  if (e.target.closest('#logo-layer') || e.target.tagName === 'IMG') return;
   document.getElementById('photo-input').click();
 });
 
@@ -431,14 +407,14 @@ wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add(
 wrap.addEventListener('dragleave', () => wrap.classList.remove('dragover'));
 wrap.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('dragover'); loadPhoto(e.dataTransfer.files[0]); });
 
-// ── Download: composite all layers ───────────────────────────────────────────
+// ── Download: composite all layers con CSS filter ─────────────────────────────
 function descargar() {
   const size = 1024;
   const tmp  = document.createElement('canvas');
   tmp.width = tmp.height = size;
   const tCtx = tmp.getContext('2d');
 
-  // Layer 0: photo
+  // Layer 0: foto
   const photoImg = document.querySelector('#photo-layer img');
   if (photoImg) {
     const nw = photoImg.naturalWidth, nh = photoImg.naturalHeight;
@@ -449,15 +425,17 @@ function descargar() {
     tCtx.fillStyle = '#111'; tCtx.fillRect(0,0,size,size);
   }
 
-  // Layer 1: dark ring (tinted canvas)
-  tCtx.drawImage(canvas1, 0, 0, size, size);
+  // Layer 1 y 2: aplicar el mismo CSS filter que tiene el <img> en pantalla
+  [layer1, layer2].forEach(imgEl => {
+    const f = imgEl.style.filter || '';
+    tCtx.filter = f;
+    tCtx.drawImage(imgEl, 0, 0, size, size);
+    tCtx.filter = 'none';
+  });
 
-  // Layer 2: metal ring (tinted canvas)
-  tCtx.drawImage(canvas2, 0, 0, size, size);
-
-  // Layer 3: logo fixed
+  // Layer 3: logo fijo
   const logoImg = document.getElementById('logo-img');
-  if (logoImg.complete) {
+  if (logoImg.complete && logoImg.naturalWidth) {
     const lw = size * 0.42;
     const lh = logoImg.naturalHeight * (lw / logoImg.naturalWidth);
     tCtx.drawImage(logoImg, (size-lw)/2, size*(-0.02), lw, lh);
