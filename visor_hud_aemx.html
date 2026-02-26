@@ -844,6 +844,158 @@
     .scanlines{
       animation: scanPulse 4s ease-in-out infinite;
     }
+
+    /* ── QR SCANNER OVERLAY ── */
+    .qrOverlay{
+      position:fixed; inset:0;
+      z-index:200;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(6,11,20,.72);
+      backdrop-filter: blur(4px);
+      pointer-events:auto;
+    }
+    .qrOverlay.hidden{ display:none; }
+    .qrBox{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+    }
+    .qrFrame{
+      position:relative;
+      width: min(72vw, 300px);
+      height: min(72vw, 300px);
+      border-radius:12px;
+      overflow:hidden;
+      background:#000;
+    }
+    #qrVideo{
+      width:100%; height:100%;
+      object-fit:cover;
+    }
+    .qrCorner{
+      position:absolute;
+      width:28px; height:28px;
+      border-color:#00c8ff;
+      border-style:solid;
+      pointer-events:none;
+    }
+    .qrCorner.tl{ top:8px; left:8px; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+    .qrCorner.tr{ top:8px; right:8px; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+    .qrCorner.bl{ bottom:8px; left:8px; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+    .qrCorner.br{ bottom:8px; right:8px; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+    .qrScanLine{
+      position:absolute; left:12px; right:12px; height:2px;
+      background: linear-gradient(90deg, transparent, #00c8ff, transparent);
+      box-shadow: 0 0 8px #00c8ff;
+      animation: qrScan 2s ease-in-out infinite;
+    }
+    @keyframes qrScan{
+      0%{ top:12px; opacity:.5; }
+      50%{ opacity:1; }
+      100%{ top:calc(100% - 14px); opacity:.5; }
+    }
+    .qrStatus{
+      font-family:Orbitron,system-ui;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color:rgba(0,200,255,.85);
+      text-align:center;
+    }
+    .qrClose{
+      padding:7px 22px;
+      border-radius:8px;
+      border:1px solid rgba(0,200,255,.30);
+      background:rgba(0,200,255,.08);
+      color:#fff;
+      font-family:Orbitron,system-ui;
+      font-weight:800;
+      font-size:9px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+    .qrClose:hover{ background:rgba(0,200,255,.18); }
+
+    /* ── 3D PARCEL PANEL ── */
+    .parcelPanel{
+      position:fixed;
+      top:50%; left:50%;
+      transform: translate(-50%, -50%) scale(0.85);
+      z-index:300;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:0;
+      pointer-events:auto;
+      opacity:0;
+      transition: opacity .4s ease, transform .4s ease;
+    }
+    .parcelPanel.show{
+      opacity:1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .parcelPanel.hidden{ display:none; }
+    .parcelCanvas{
+      display:block;
+      border-radius:16px 16px 0 0;
+      background:#000;
+    }
+    .parcelInfo{
+      width:100%;
+      padding:12px 20px 16px;
+      border-radius:0 0 16px 16px;
+      background: rgba(5,10,20,.92);
+      border: 1px solid rgba(0,200,255,.22);
+      border-top: none;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:4px;
+    }
+    .parcelRarity{
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      font-size:18px;
+      letter-spacing:4px;
+      text-transform:uppercase;
+      text-shadow: 0 0 18px currentColor;
+    }
+    .parcelRarity.common   { color:#9ca3af; }
+    .parcelRarity.rare     { color:#60a5fa; }
+    .parcelRarity.epic     { color:#a855f7; }
+    .parcelRarity.legendary{ color:#facc15; }
+    .parcelCode{
+      font-family:Rajdhani,system-ui;
+      font-size:11px;
+      letter-spacing:2px;
+      color:rgba(255,255,255,.40);
+      text-transform:uppercase;
+    }
+    .parcelDismiss{
+      margin-top:6px;
+      padding:6px 18px;
+      border-radius:7px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.05);
+      color:rgba(255,255,255,.55);
+      font-family:Orbitron,system-ui;
+      font-size:8px;
+      font-weight:800;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      cursor:pointer;
+    }
+    .parcelDismiss:hover{ background:rgba(255,255,255,.10); color:#fff; }
+
+    .chip.qrChip{ border-color:rgba(250,204,21,.30); background:rgba(250,204,21,.07); }
+    .chip.qrChip .dot{ background:#facc15; box-shadow:0 0 6px rgba(250,204,21,.65); }
+    .chip.qrChip.active{ background:rgba(250,204,21,.18); border-color:rgba(250,204,21,.60); }
   </style>
 </head>
 
@@ -872,6 +1024,10 @@
 
         <div class="chip" id="btnReloadStats" title="Refrescar stats desde localStorage">
           ↻ STATS
+        </div>
+        <div class="chip qrChip" id="btnQR" title="Escanear QR de parcela">
+          <span class="dot"></span>
+          <span>QR</span>
         </div>
       </div>
 
@@ -952,6 +1108,435 @@
         <div class="small">Tip: en iPhone, Safari es medio terco… pero con FULL + girar, queda 👌</div>
       </div>
     </div>
+
+    <!-- QR SCANNER OVERLAY -->
+    <div class="qrOverlay hidden" id="qrOverlay">
+      <div class="qrBox">
+        <div class="qrFrame">
+          <video id="qrVideo" autoplay playsinline muted></video>
+          <div class="qrCorner tl"></div>
+          <div class="qrCorner tr"></div>
+          <div class="qrCorner bl"></div>
+          <div class="qrCorner br"></div>
+          <div class="qrScanLine"></div>
+        </div>
+        <div class="qrStatus" id="qrStatus">APUNTA AL CÓDIGO QR</div>
+        <button class="qrClose" id="btnQRClose">CERRAR</button>
+      </div>
+    </div>
+
+    <!-- 3D PARCEL PANEL -->
+    <div class="parcelPanel hidden" id="parcelPanel">
+      <canvas class="parcelCanvas" id="parcelCanvas" width="320" height="320"></canvas>
+      <div class="parcelInfo">
+        <div class="parcelRarity" id="parcelRarity">COMMON</div>
+        <div class="parcelCode" id="parcelCode">AEMX-COMMON</div>
+        <button class="parcelDismiss" id="btnParcelDismiss">✕ CERRAR</button>
+      </div>
+    </div>
+
+    <!-- THREE.JS + JSQR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script>
+    // ══════════════════════════════════════════════════════
+    // AEMX 3D PARCEL SYSTEM
+    // ══════════════════════════════════════════════════════
+
+    const RARITY_MAP = {
+      'AEMX-COMMON':    'common',
+      'AEMX-RARE':      'rare',
+      'AEMX-EPIC':      'epic',
+      'AEMX-LEGENDARY': 'legendary',
+    };
+
+    // ── Three.js scene setup ─────────────────────────────
+    const canvas3d = document.getElementById('parcelCanvas');
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(320, 320);
+    renderer.shadowMap.enabled = true;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x040810);
+
+    // Isometric-style camera
+    const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+    camera.position.set(5.5, 5.5, 5.5);
+    camera.lookAt(0, 0.5, 0);
+
+    // Lights
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.55);
+    scene.add(ambLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    dirLight.position.set(5, 8, 5);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+    const fillLight = new THREE.DirectionalLight(0x4080ff, 0.3);
+    fillLight.position.set(-4, 2, -4);
+    scene.add(fillLight);
+
+    // Current parcel group
+    let parcelGroup = null;
+    let animReq = null;
+
+    // ── Color palettes ───────────────────────────────────
+    const C = {
+      grassLight: 0x5aaf3a,
+      grassDark:  0x3d8a27,
+      grassTile:  0x4d9c30,
+      borderCommon:    0x9ca3af,
+      borderRare:      0x60a5fa,
+      borderEpic:      0xa855f7,
+      borderLegendary: 0xf59e0b,
+      trunk:      0x7c4a1e,
+      trunkDark:  0x5a3412,
+      pineGreen1: 0x2d7a3a,
+      pineGreen2: 0x1e5c2a,
+      leafGreen1: 0x3a9e2a,
+      leafGreen2: 0x2d8020,
+      leafGreen3: 0x4ab830,
+      rockGray:   0x6b7280,
+      rockDark:   0x4b5563,
+      flowerYellow: 0xfbbf24,
+      weedGreen:  0x166534,
+      weedDark:   0x14532d,
+    };
+
+    // ── Flat shading material helper ──────────────────────
+    function mat(color, opts={}){
+      return new THREE.MeshLambertMaterial({ color, flatShading: true, ...opts });
+    }
+
+    // ── Build grass tile base ─────────────────────────────
+    function buildBase(borderColor){
+      const g = new THREE.Group();
+
+      // Ground tile (subdivided for flat shading variety)
+      const geo = new THREE.BoxGeometry(4, 0.18, 4, 4, 1, 4);
+      // Randomize Y vertices slightly for minecraft look
+      const pos = geo.attributes.position;
+      for(let i=0; i<pos.count; i++){
+        if(Math.abs(pos.getY(i) - 0.09) < 0.01){
+          pos.setY(i, pos.getY(i) + (Math.random()-0.5)*0.06);
+        }
+      }
+      geo.computeVertexNormals();
+      // Color variation across faces
+      const colors = [];
+      const col = new THREE.Color();
+      for(let i=0; i<geo.attributes.position.count; i++){
+        const t = Math.random();
+        col.setHex(t > 0.5 ? C.grassLight : (t > 0.25 ? C.grassTile : C.grassDark));
+        colors.push(col.r, col.g, col.b);
+      }
+      geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+      const grassMat = new THREE.MeshLambertMaterial({ vertexColors:true, flatShading:true });
+      const ground = new THREE.Mesh(geo, grassMat);
+      ground.receiveShadow = true;
+      g.add(ground);
+
+      // Border frame
+      const borderGeo = new THREE.BoxGeometry(4.22, 0.12, 4.22);
+      const borderMesh = new THREE.Mesh(borderGeo, mat(borderColor));
+      borderMesh.position.y = -0.04;
+      g.add(borderMesh);
+
+      // Border inner cutout effect — 4 strips
+      const bW = 0.11;
+      const strips = [
+        {x:0,   z:2.06, rx:0, rz:0, sx:4.22, sz:bW},
+        {x:0,   z:-2.06,rx:0, rz:0, sx:4.22, sz:bW},
+        {x:2.06,z:0,    rx:0, rz:0, sx:bW, sz:4.22},
+        {x:-2.06,z:0,   rx:0, rz:0, sx:bW, sz:4.22},
+      ];
+      strips.forEach(s=>{
+        const sg = new THREE.BoxGeometry(s.sx, 0.14, s.sz);
+        const sm = new THREE.Mesh(sg, mat(borderColor));
+        sm.position.set(s.x, 0.05, s.z);
+        g.add(sm);
+      });
+
+      return g;
+    }
+
+    // ── COMMON: just base ─────────────────────────────────
+    function buildCommon(){
+      const g = new THREE.Group();
+      g.add(buildBase(C.borderCommon));
+      return g;
+    }
+
+    // ── RARE: base + weeds/reeds ──────────────────────────
+    function buildRare(){
+      const g = new THREE.Group();
+      g.add(buildBase(C.borderRare));
+
+      // Cluster of 4-5 reeds
+      const reedPositions = [
+        {x:-0.6, z:-0.4, h:0.9, lean:0.12},
+        {x:-0.3, z:-0.2, h:1.1, lean:-0.08},
+        {x:-0.7, z:-0.1, h:0.75, lean:0.15},
+        {x:-0.45, z:0.25, h:1.0, lean:0.05},
+        {x:-0.2, z:0.1, h:0.65, lean:-0.12},
+      ];
+      reedPositions.forEach(r=>{
+        const geo = new THREE.CylinderGeometry(0.025, 0.04, r.h, 5);
+        const reed = new THREE.Mesh(geo, mat(Math.random()>0.5 ? C.weedGreen : C.weedDark));
+        reed.position.set(r.x, r.h/2 + 0.09, r.z);
+        reed.rotation.z = r.lean;
+        reed.rotation.x = (Math.random()-0.5)*0.1;
+        reed.castShadow = true;
+        g.add(reed);
+
+        // Tip blade
+        const tipGeo = new THREE.ConeGeometry(0.06, 0.18, 4);
+        const tip = new THREE.Mesh(tipGeo, mat(C.weedGreen));
+        tip.position.set(r.x, r.h + 0.15, r.z);
+        g.add(tip);
+      });
+      return g;
+    }
+
+    // ── EPIC: base + cypress/pine ─────────────────────────
+    function buildEpic(){
+      const g = new THREE.Group();
+      g.add(buildBase(C.borderEpic));
+
+      // Trunk
+      const trunkGeo = new THREE.CylinderGeometry(0.1, 0.15, 0.55, 6);
+      const trunk = new THREE.Mesh(trunkGeo, mat(C.trunk));
+      trunk.position.set(0.2, 0.09 + 0.275, 0.1);
+      trunk.castShadow = true;
+      g.add(trunk);
+
+      // Pine cone shape: 3 stacked cones, decreasing size
+      const coneLayers = [
+        {ry:0.55, rx:0.0, y:0.64, r:0.75, h:1.1},
+        {ry:0.55, rx:0.0, y:1.35, r:0.55, h:0.9},
+        {ry:0.55, rx:0.0, y:1.95, r:0.35, h:0.75},
+        {ry:0.55, rx:0.0, y:2.45, r:0.18, h:0.55},
+      ];
+      coneLayers.forEach((l,i)=>{
+        const cGeo = new THREE.ConeGeometry(l.r, l.h, 7+i);
+        const cMesh = new THREE.Mesh(cGeo, mat(i%2===0 ? C.pineGreen1 : C.pineGreen2));
+        cMesh.position.set(0.2, l.y, 0.1);
+        cMesh.castShadow = true;
+        g.add(cMesh);
+      });
+      return g;
+    }
+
+    // ── LEGENDARY: base + leafy tree + rock + flowers ────
+    function buildLegendary(){
+      const g = new THREE.Group();
+      g.add(buildBase(C.borderLegendary));
+
+      // Trunk — thick branching shape
+      const trunkGeo = new THREE.CylinderGeometry(0.13, 0.2, 1.1, 6);
+      const trunk = new THREE.Mesh(trunkGeo, mat(C.trunk));
+      trunk.position.set(-0.1, 0.09 + 0.55, -0.1);
+      trunk.castShadow = true;
+      g.add(trunk);
+
+      // Branch
+      const brGeo = new THREE.CylinderGeometry(0.07, 0.10, 0.7, 5);
+      const branch = new THREE.Mesh(brGeo, mat(C.trunkDark));
+      branch.position.set(0.22, 1.05, -0.1);
+      branch.rotation.z = -0.6;
+      g.add(branch);
+
+      // Leafy canopy: multiple icosahedra
+      const leafClusters = [
+        {x:-0.1,  y:2.1,  z:-0.1,  s:0.9,  c:C.leafGreen1},
+        {x: 0.55, y:1.75, z: 0.1,  s:0.65, c:C.leafGreen2},
+        {x:-0.65, y:1.85, z: 0.15, s:0.60, c:C.leafGreen3},
+        {x: 0.1,  y:2.65, z: 0.2,  s:0.55, c:C.leafGreen1},
+        {x:-0.3,  y:2.35, z:-0.55, s:0.50, c:C.leafGreen2},
+        {x: 0.4,  y:2.3,  z:-0.3,  s:0.45, c:C.leafGreen3},
+      ];
+      leafClusters.forEach(l=>{
+        const lGeo = new THREE.IcosahedronGeometry(l.s, 0); // detail=0 → faceted
+        const lMesh = new THREE.Mesh(lGeo, mat(l.c));
+        lMesh.position.set(l.x, l.y, l.z);
+        lMesh.rotation.y = Math.random()*Math.PI;
+        lMesh.castShadow = true;
+        g.add(lMesh);
+      });
+
+      // Rock
+      const rockGeo = new THREE.DodecahedronGeometry(0.28, 0);
+      const rock = new THREE.Mesh(rockGeo, mat(C.rockGray));
+      rock.position.set(0.9, 0.18, -0.5);
+      rock.rotation.y = 1.2;
+      rock.scale.set(1, 0.65, 0.9);
+      rock.castShadow = true;
+      g.add(rock);
+
+      const rock2Geo = new THREE.DodecahedronGeometry(0.18, 0);
+      const rock2 = new THREE.Mesh(rock2Geo, mat(C.rockDark));
+      rock2.position.set(1.15, 0.12, -0.2);
+      rock2.rotation.y = 0.6;
+      rock2.scale.set(0.9, 0.55, 1);
+      g.add(rock2);
+
+      // Flowers
+      const flowerPos = [
+        {x:0.7, z:0.5}, {x:0.5, z:0.8}, {x:1.0, z:0.65}, {x:0.3, z:0.9},
+      ];
+      flowerPos.forEach(fp=>{
+        const stemGeo = new THREE.CylinderGeometry(0.015, 0.02, 0.22, 4);
+        const stem = new THREE.Mesh(stemGeo, mat(C.weedGreen));
+        stem.position.set(fp.x, 0.09+0.11, fp.z);
+        g.add(stem);
+        const petalGeo = new THREE.ConeGeometry(0.07, 0.06, 5);
+        const petal = new THREE.Mesh(petalGeo, mat(C.flowerYellow));
+        petal.position.set(fp.x, 0.09+0.24, fp.z);
+        g.add(petal);
+      });
+
+      return g;
+    }
+
+    // ── Load a parcel by rarity ───────────────────────────
+    function loadParcel(rarity){
+      if(parcelGroup){ scene.remove(parcelGroup); parcelGroup = null; }
+      switch(rarity){
+        case 'common':    parcelGroup = buildCommon();    break;
+        case 'rare':      parcelGroup = buildRare();      break;
+        case 'epic':      parcelGroup = buildEpic();      break;
+        case 'legendary': parcelGroup = buildLegendary(); break;
+        default: return;
+      }
+      scene.add(parcelGroup);
+    }
+
+    // ── Animate loop ──────────────────────────────────────
+    function startRender(){
+      if(animReq) return;
+      let t = 0;
+      function loop(){
+        animReq = requestAnimationFrame(loop);
+        t += 0.008;
+        if(parcelGroup){
+          parcelGroup.rotation.y = t;
+        }
+        renderer.render(scene, camera);
+      }
+      loop();
+    }
+    function stopRender(){
+      if(animReq){ cancelAnimationFrame(animReq); animReq = null; }
+    }
+
+    // ── Show parcel panel ─────────────────────────────────
+    function showParcel(code){
+      const rarity = RARITY_MAP[code.toUpperCase()];
+      if(!rarity) return false;
+
+      loadParcel(rarity);
+      startRender();
+
+      const panel = document.getElementById('parcelPanel');
+      const rarityEl = document.getElementById('parcelRarity');
+      const codeEl = document.getElementById('parcelCode');
+
+      rarityEl.textContent = rarity.toUpperCase();
+      rarityEl.className = 'parcelRarity ' + rarity;
+      codeEl.textContent = code.toUpperCase();
+
+      panel.classList.remove('hidden');
+      requestAnimationFrame(()=> panel.classList.add('show'));
+      return true;
+    }
+
+    function hideParcel(){
+      const panel = document.getElementById('parcelPanel');
+      panel.classList.remove('show');
+      setTimeout(()=>{
+        panel.classList.add('hidden');
+        stopRender();
+        if(parcelGroup){ scene.remove(parcelGroup); parcelGroup = null; }
+      }, 400);
+    }
+
+    document.getElementById('btnParcelDismiss').addEventListener('click', hideParcel);
+
+    // ── QR Scanner ───────────────────────────────────────
+    let qrStream = null;
+    let qrAnimReq = null;
+    let qrScanning = false;
+    const qrOverlay = document.getElementById('qrOverlay');
+    const qrVideo   = document.getElementById('qrVideo');
+    const qrStatus  = document.getElementById('qrStatus');
+    const btnQR     = document.getElementById('btnQR');
+
+    const qrCanvas  = document.createElement('canvas');
+    const qrCtx     = qrCanvas.getContext('2d', { willReadFrequently: true });
+
+    function openQR(){
+      qrOverlay.classList.remove('hidden');
+      btnQR.classList.add('active');
+      qrStatus.textContent = 'INICIANDO CÁMARA…';
+      navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false })
+        .then(stream=>{
+          qrStream = stream;
+          qrVideo.srcObject = stream;
+          qrVideo.play();
+          qrScanning = true;
+          qrStatus.textContent = 'APUNTA AL CÓDIGO QR';
+          scanLoop();
+        })
+        .catch(()=>{
+          qrStatus.textContent = 'ERROR: PERMISO DENEGADO';
+        });
+    }
+
+    function closeQR(){
+      qrScanning = false;
+      if(qrAnimReq){ cancelAnimationFrame(qrAnimReq); qrAnimReq = null; }
+      if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream = null; }
+      qrVideo.srcObject = null;
+      qrOverlay.classList.add('hidden');
+      btnQR.classList.remove('active');
+    }
+
+    function scanLoop(){
+      if(!qrScanning) return;
+      qrAnimReq = requestAnimationFrame(scanLoop);
+      if(qrVideo.readyState !== qrVideo.HAVE_ENOUGH_DATA) return;
+      const w = qrVideo.videoWidth;
+      const h = qrVideo.videoHeight;
+      if(!w || !h) return;
+      qrCanvas.width = w;
+      qrCanvas.height = h;
+      qrCtx.drawImage(qrVideo, 0, 0, w, h);
+      const imgData = qrCtx.getImageData(0, 0, w, h);
+      const result = jsQR(imgData.data, w, h, { inversionAttempts:'dontInvert' });
+      if(result){
+        const code = result.data.trim().toUpperCase();
+        if(RARITY_MAP[code]){
+          qrStatus.textContent = '✓ PARCELA DETECTADA: ' + code;
+          closeQR();
+          setTimeout(()=> showParcel(code), 200);
+        } else {
+          qrStatus.textContent = 'QR NO RECONOCIDO';
+        }
+      }
+    }
+
+    document.getElementById('btnQRClose').addEventListener('click', closeQR);
+    btnQR.addEventListener('click', ()=>{
+      if(qrOverlay.classList.contains('hidden')) openQR();
+      else closeQR();
+    });
+
+    // ── DEV: tap canvas to cycle rarities (debug) ────────
+    // canvas3d.addEventListener('click', ()=>{
+    //   const r = ['common','rare','epic','legendary'];
+    //   loadParcel(r[Math.floor(Math.random()*r.length)]);
+    // });
+    </script>
 
     <!-- LOGIN OVERLAY -->
     <div class="loginOverlay" id="loginOverlay">
