@@ -90,18 +90,7 @@
     }
 
     .hud::before{
-      content:"";
-      position:absolute; inset:0;
-      background-image:
-        linear-gradient(rgba(0,200,255,.18) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,200,255,.18) 1px, transparent 1px);
-      background-size: 48px 48px;
-      opacity:1;
-      mix-blend-mode: screen;
-      pointer-events:none;
-      -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
-      mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
-      animation: hudGridPulse 4s ease-in-out infinite;
+      display:none;
     }
     /* Corner accent lines */
     .hud::after{
@@ -465,7 +454,7 @@
       width:0%;
       min-width:3px;
       border-radius:3px;
-      opacity:.95;
+      opacity:.85;
       transition: width 0.7s cubic-bezier(.22,.68,0,1.2);
       position:relative;
       z-index:1;
@@ -483,7 +472,7 @@
       width:28px;
       text-align:right;
       flex-shrink:0;
-      opacity:.85;
+      opacity:.75;
     }
 
     /* HUD chat (bottom-right) */
@@ -655,6 +644,33 @@
       0%, 100% { opacity: .75; }
       50%       { opacity: 1; }
     }
+    @keyframes batteryGlitch {
+      0%   { transform: scaleX(1);      filter: brightness(1); opacity:1; }
+      20%  { transform: scaleX(1.04) translateX(3px); filter: brightness(2.2) hue-rotate(40deg); opacity:.7; }
+      40%  { transform: scaleX(0.97) translateX(-2px); filter: brightness(1.6); opacity:.9; }
+      60%  { transform: scaleX(1.02) translateX(1px); filter: brightness(2) hue-rotate(-25deg); opacity:.8; }
+      100% { transform: scaleX(1);      filter: brightness(1); opacity:1; }
+    }
+    @keyframes badgeGlitch {
+      0%   { transform: rotate(-1.5deg) translateX(0);   filter: brightness(1); }
+      25%  { transform: rotate(-1.5deg) translateX(5px);  filter: brightness(2.5) hue-rotate(30deg); }
+      50%  { transform: rotate(-1.5deg) translateX(-4px); filter: brightness(1.8) hue-rotate(-20deg); }
+      75%  { transform: rotate(-1.5deg) translateX(2px);  filter: brightness(2); }
+      100% { transform: rotate(-1.5deg) translateX(0);   filter: brightness(1); }
+    }
+    @keyframes barGlitch {
+      0%   { transform: translateX(0)   scaleY(1);    filter: brightness(1); }
+      20%  { transform: translateX(4px) scaleY(1.15); filter: brightness(1.8) hue-rotate(30deg); }
+      35%  { transform: translateX(-3px) scaleY(0.9); filter: brightness(2.2) hue-rotate(-20deg); }
+      50%  { transform: translateX(2px) scaleY(1.1);  filter: brightness(1.5); }
+      100% { transform: translateX(0)   scaleY(1);    filter: brightness(1); }
+    }
+    @keyframes numGlitch {
+      0%   { transform: translateX(0);  opacity:1;   filter: none; }
+      25%  { transform: translateX(3px); opacity:.6; filter: blur(1px) brightness(2); }
+      50%  { transform: translateX(-2px); opacity:1; filter: brightness(1.8) hue-rotate(20deg); }
+      100% { transform: translateX(0);  opacity:1;   filter: none; }
+    }
     @keyframes gridEnergy {
       0%, 100% { opacity: .38; filter: brightness(1) hue-rotate(0deg); }
       33%       { opacity: .55; filter: brightness(1.4) hue-rotate(15deg); }
@@ -808,8 +824,12 @@
       text-decoration:underline;
       padding:4px 8px;
       transition: color .2s;
+      display:none;
     }
     .loginSkip:hover{ color:rgba(255,255,255,.70); }
+    @media (hover: hover) and (pointer: fine){
+      .loginSkip{ display:block; }
+    }
 
     .batteryFill{
       animation: batteryPulse 2.4s ease-in-out infinite;
@@ -833,6 +853,7 @@
 
     <div class="hud">
       <div class="scanlines"></div>
+      <svg id="hudGrid" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;opacity:0.85;" preserveAspectRatio="none"></svg>
 
       <!-- clickable controls -->
       <div class="topbar">
@@ -1339,6 +1360,213 @@
       console.error('Firebase init error:', e);
       setChatState(false, 'ERR');
     }
+
+    // ── Curved HUD grid + scanline + glitch ─────────────────
+    const NS = 'http://www.w3.org/2000/svg';
+
+    function buildCurvedGrid(){
+      const svg = document.getElementById('hudGrid');
+      if(!svg) return;
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      svg.innerHTML = '';
+
+      const cols = 14;
+      const rows = 10;
+      const curve = 0.10;
+
+      const fade = (t) => Math.min(1, Math.min(t, 1-t) * 6);
+
+      // Grid group
+      const gridGroup = document.createElementNS(NS, 'g');
+      gridGroup.id = 'gridLines';
+
+      for(let i = 0; i <= cols; i++){
+        const t = i / cols;
+        const x = t * W;
+        const bulgeX = (x - W*0.5) * curve;
+        const op = (fade(t) * 0.9).toFixed(3);
+        const p = document.createElementNS(NS,'path');
+        p.setAttribute('d', `M ${x} 0 C ${x-bulgeX} ${H*0.25}, ${x-bulgeX} ${H*0.75}, ${x} ${H}`);
+        p.setAttribute('stroke', `rgba(0,200,255,${op})`);
+        p.setAttribute('stroke-width','0.7');
+        p.setAttribute('fill','none');
+        gridGroup.appendChild(p);
+      }
+      for(let j = 0; j <= rows; j++){
+        const t = j / rows;
+        const y = t * H;
+        const bulgeY = (y - H*0.5) * curve;
+        const op = (fade(t) * 0.9).toFixed(3);
+        const p = document.createElementNS(NS,'path');
+        p.setAttribute('d', `M 0 ${y} C ${W*0.25} ${y-bulgeY}, ${W*0.75} ${y-bulgeY}, ${W} ${y}`);
+        p.setAttribute('stroke', `rgba(0,200,255,${op})`);
+        p.setAttribute('stroke-width','0.7');
+        p.setAttribute('fill','none');
+        gridGroup.appendChild(p);
+      }
+      svg.appendChild(gridGroup);
+
+      // ── Scanline (gradient trail: opaque top → transparent bottom) ──
+      const defs = document.createElementNS(NS,'defs');
+      const grad = document.createElementNS(NS,'linearGradient');
+      grad.id = 'scanGrad';
+      grad.setAttribute('x1','0'); grad.setAttribute('y1','0');
+      grad.setAttribute('x2','0'); grad.setAttribute('y2','1');
+      const s1 = document.createElementNS(NS,'stop');
+      s1.setAttribute('offset','0%');   s1.setAttribute('stop-color','rgba(0,200,255,0)');
+      const s2 = document.createElementNS(NS,'stop');
+      s2.setAttribute('offset','60%');  s2.setAttribute('stop-color','rgba(0,200,255,0.08)');
+      const s3 = document.createElementNS(NS,'stop');
+      s3.setAttribute('offset','100%'); s3.setAttribute('stop-color','rgba(0,200,255,0.28)');
+      grad.appendChild(s1); grad.appendChild(s2); grad.appendChild(s3);
+      defs.appendChild(grad);
+      svg.appendChild(defs);
+
+      const scanline = document.createElementNS(NS,'rect');
+      scanline.id = 'hudScanline';
+      scanline.setAttribute('x','0');
+      scanline.setAttribute('y','0');
+      scanline.setAttribute('width', W);
+      scanline.setAttribute('height','80');
+      scanline.setAttribute('fill','url(#scanGrad)');
+      svg.appendChild(scanline);
+
+      // ── Glitch rects (2 hidden bands) ──
+      for(let g=0;g<2;g++){
+        const gr = document.createElementNS(NS,'rect');
+        gr.classList.add('glitchBand');
+        gr.setAttribute('x','0');
+        gr.setAttribute('y','-20');
+        gr.setAttribute('width', W);
+        gr.setAttribute('height','6');
+        gr.setAttribute('fill','rgba(0,200,255,0.12)');
+        gr.setAttribute('opacity','0');
+        svg.appendChild(gr);
+      }
+    }
+
+    buildCurvedGrid();
+    window.addEventListener('resize', buildCurvedGrid);
+
+    // Subtle grid pulse
+    const hudGridEl = document.getElementById('hudGrid');
+    if(hudGridEl){
+      hudGridEl.animate(
+        [{opacity:0.75},{opacity:1},{opacity:0.75}],
+        {duration:4000, iterations:Infinity, easing:'ease-in-out'}
+      );
+    }
+
+    // ── Scanline animation ──
+    function animateScanline(){
+      const svg = document.getElementById('hudGrid');
+      if(!svg) return;
+      const H = window.innerHeight;
+      const line = svg.querySelector('#hudScanline');
+      if(!line) return;
+      let y = -80;
+      const speed = 1.8;
+      function step(){
+        y += speed;
+        if(y > H) y = -80;
+        line.setAttribute('y', y);
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    animateScanline();
+
+    // ── Glitch animation ──
+    function triggerGlitch(){
+      const svg = document.getElementById('hudGrid');
+      if(!svg) return;
+      const H = window.innerHeight;
+      const W = window.innerWidth;
+      const bands = svg.querySelectorAll('.glitchBand');
+      bands.forEach(band => {
+        const y = Math.random() * H;
+        const h = 4 + Math.random() * 14;
+        const offsetX = (Math.random() - 0.5) * 18;
+        band.setAttribute('y', y);
+        band.setAttribute('height', h);
+        band.setAttribute('x', offsetX);
+        band.setAttribute('opacity','1');
+        // Also shift a random section of the grid briefly
+        const gridLines = svg.querySelector('#gridLines');
+        if(gridLines){
+          const sliceY = y;
+          const sliceH = h;
+          gridLines.setAttribute('transform',`translate(${offsetX * 0.4},0)`);
+          setTimeout(()=>{
+            gridLines.setAttribute('transform','translate(0,0)');
+          }, 80);
+        }
+        setTimeout(()=>{ band.setAttribute('opacity','0'); }, 120);
+      });
+      // Random interval: 2.5s to 7s
+      setTimeout(triggerGlitch, 2500 + Math.random() * 4500);
+    }
+    setTimeout(triggerGlitch, 1500 + Math.random() * 2000);
+
+    // ── Battery glitch ───────────────────────────────────────────
+    function triggerBatteryGlitch(){
+      const el = document.getElementById('batteryFill');
+      if(!el) return;
+      const dur = 200 + Math.random() * 150;
+      el.style.animation = `batteryGlitch ${dur}ms steps(4,end) 1`;
+      const val = document.getElementById('diamondsVal');
+      if(val){ val.style.filter='brightness(2) hue-rotate(20deg)'; }
+      setTimeout(() => {
+        el.style.animation = '';
+        if(val) val.style.filter = '';
+      }, dur + 50);
+      setTimeout(triggerBatteryGlitch, 3000 + Math.random() * 5000);
+    }
+    setTimeout(triggerBatteryGlitch, 2500 + Math.random() * 2000);
+
+    // ── Badge glitch ──────────────────────────────────────────────
+    function triggerBadgeGlitch(){
+      const card = document.querySelector('.badgeCard:nth-child(3)');
+      const val  = document.getElementById('badgesVal');
+      if(!card) return;
+      const dur = 180 + Math.random() * 120;
+      card.style.animation = `badgeGlitch ${dur}ms steps(4,end) 1`;
+      if(val){ val.style.filter='brightness(2.5) hue-rotate(40deg)'; val.style.transform='translateX(3px)'; }
+      setTimeout(() => {
+        card.style.animation = '';
+        if(val){ val.style.filter=''; val.style.transform=''; }
+      }, dur + 50);
+      setTimeout(triggerBadgeGlitch, 2500 + Math.random() * 5000);
+    }
+    setTimeout(triggerBadgeGlitch, 3500 + Math.random() * 2000);
+
+    // ── Bar stats glitch ──────────────────────────────────────────
+    const BAR_IDS = ['fillCommon','fillRare','fillEpic','fillLegendary'];
+    const NUM_IDS = ['numCommon','numRare','numEpic','numLegendary'];
+
+    function triggerBarGlitch(){
+      // Pick 1-2 random bars to glitch
+      const count = Math.random() < 0.4 ? 2 : 1;
+      const shuffled = [...BAR_IDS].sort(()=>Math.random()-.5).slice(0, count);
+      shuffled.forEach(id => {
+        const el = document.getElementById(id);
+        const num = document.getElementById(id.replace('fill','num'));
+        if(!el) return;
+        const dur = 180 + Math.random() * 120;
+        el.style.animation = `barGlitch ${dur}ms steps(3,end) 1`;
+        if(num) num.style.animation = `numGlitch ${dur}ms steps(3,end) 1`;
+        setTimeout(() => {
+          el.style.animation = '';
+          if(num) num.style.animation = '';
+        }, dur + 50);
+      });
+      // Next glitch: 1.5s to 5s
+      setTimeout(triggerBarGlitch, 1500 + Math.random() * 3500);
+    }
+    setTimeout(triggerBarGlitch, 2000 + Math.random() * 2000);
+    // ─────────────────────────────────────────────────────────────
 
     // Auto-start camera if permission already granted
     if(navigator.permissions){
