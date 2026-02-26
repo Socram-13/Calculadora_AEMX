@@ -759,10 +759,10 @@
         document.getElementById('userNameHeader').textContent = user.displayName || user.email;
         const avatarEl = document.getElementById('userAvatarHeader');
         if (user.photoURL) { avatarEl.src = user.photoURL; } else { avatarEl.style.display = 'none'; }
-        // Detectar y guardar país si está vacío
-        detectarYGuardarPais(user.uid);
-        // Cargar ranking
+        // Cargar ranking inmediatamente (no esperar detección de país)
         loadRanking(user.uid);
+        // Detectar país en paralelo sin bloquear
+        detectarYGuardarPais(user.uid).catch(() => {});
       } else {
         document.getElementById('authOverlay').classList.remove('hidden');
         document.getElementById('userInfo').style.display = 'none';
@@ -783,41 +783,86 @@
       fetchRanking(currentUidGlobal);
     };
 
-    // ✅ get() en lugar de onValue — solo descarga cuando el usuario lo pide
+    const CACHE_KEY = 'aemx_leaderboard_cache';
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
+
+    function loadFromCache(currentUid) {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        const { ts, players } = JSON.parse(raw);
+        if (Date.now() - ts > CACHE_TTL) return null;
+        players.forEach(p => { p.isYou = p.uid === currentUid; });
+        return players;
+      } catch(e) { return null; }
+    }
+
+    function saveToCache(players) {
+      try {
+        const slim = players.map(p => ({
+          uid: p.uid, username: p.username, borderColor: p.borderColor,
+          common: p.common, rare: p.rare, epic: p.epic, legendary: p.legendary, total: p.total
+        }));
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), players: slim }));
+      } catch(e) {}
+    }
+
     async function fetchRanking(currentUid) {
       const btn = document.getElementById('btnRefresh');
+
+      // 1. Mostrar caché inmediatamente si existe
+      const cached = loadFromCache(currentUid);
+      if (cached) {
+        updateStats(cached);
+        renderPodium(cached.slice(0, 3));
+        renderTable(cached);
+        if (btn) { btn.classList.remove('loading'); btn.innerHTML = '↻ ACTUALIZAR'; }
+      }
+
+      // 2. Fetch real con timeout de 10 segundos
       try {
-        const usersRef = ref(db, 'users');
-        const snapshot = await get(usersRef);
-        const players = [];
-        snapshot.forEach((child) => {
-          const d = child.val();
-          if (!d.username) return;
-          if (!(d.country || '').toLowerCase().includes('mexico')) return; // solo México
-          if (d.bannedLeaderboard) return; // bloqueado del ranking
-          const common    = parseInt(d.common)    || 0;
-          const rare      = parseInt(d.rare)      || 0;
-          const epic      = parseInt(d.epic)      || 0;
-          const legendary = parseInt(d.legendary) || 0;
-          const total = common + rare + epic + legendary;
-          players.push({
-            uid: child.key,
-            username:  d.username,
-            avatar:    d.avatar    || '',
-            borderColor: d.borderColor || '',
-            common, rare, epic, legendary, total,
-            isYou: child.key === currentUid,
+        const fetchPromise = (async () => {
+          const snapshot = await get(ref(db, 'users'));
+          const players = [];
+          snapshot.forEach((child) => {
+            const d = child.val();
+            if (!d.username) return;
+            if (!(d.country || '').toLowerCase().includes('mexico')) return;
+            if (d.bannedLeaderboard) return;
+            const common    = parseInt(d.common)    || 0;
+            const rare      = parseInt(d.rare)      || 0;
+            const epic      = parseInt(d.epic)      || 0;
+            const legendary = parseInt(d.legendary) || 0;
+            const total = common + rare + epic + legendary;
+            players.push({
+              uid: child.key,
+              username:    d.username,
+              avatar:      d.avatar      || '',
+              borderColor: d.borderColor || '',
+              common, rare, epic, legendary, total,
+              isYou: child.key === currentUid,
+            });
           });
-        });
+          return players;
+        })();
 
-        // Ordenar por total desc
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 10000)
+        );
+
+        const players = await Promise.race([fetchPromise, timeoutPromise]);
         players.sort((a, b) => b.total - a.total);
-
+        saveToCache(players);
         updateStats(players);
         renderPodium(players.slice(0, 3));
         renderTable(players);
+
       } catch(e) {
-        console.error('Error cargando ranking:', e);
+        console.warn('fetchRanking error:', e.message);
+        if (!cached) {
+          const tbody = document.getElementById('rankingBody');
+          if (tbody) tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">⚠️ Error al cargar. Verifica tu conexión y actualiza.</div></td></tr>';
+        }
       } finally {
         if (btn) { btn.classList.remove('loading'); btn.innerHTML = '↻ ACTUALIZAR'; }
       }
