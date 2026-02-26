@@ -80,7 +80,7 @@
         .message { align-self:flex-start;flex-direction:row; }
         .message.own { align-self:flex-end;flex-direction:row-reverse; }
         @keyframes messageSlide { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-        .message-avatar { width:32px;height:32px;min-width:32px;min-height:32px;aspect-ratio:1/1;border-radius:50%;border:2px solid var(--primary-color);background:rgba(0,255,136,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 0 8px rgba(0,255,136,.3);overflow:hidden; }
+        .message-avatar { width:32px;height:32px;min-width:32px;min-height:32px;aspect-ratio:1/1;border-radius:50%;border:2px solid var(--primary-color);background:rgba(0,255,136,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 0 8px rgba(0,255,136,.3); }
         .message-content { display:flex;flex-direction:column;gap:2px; }
         .message.own .message-content { align-items:flex-end; }
         .message-author { font-weight:700;font-size:11px;color:var(--primary-color);text-transform:uppercase;letter-spacing:.5px;padding:0 4px; }
@@ -352,8 +352,6 @@
         function initChat(firebaseUser) {
             let currentUsername = '';
             let userId = '';
-            let currentAvatar = '';
-            let currentBorderColor = '';
             const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
             const currentUserIsAdmin = firebaseUser.email === ADMIN_EMAIL;
 
@@ -417,7 +415,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     messages.slice(-20).forEach((msg) => {
                         if (!msg.username || !msg.text) return;
                         const isAdminMsg = msg.isAdmin === true || (currentUserIsAdmin && msg.username === currentUsername);
-                        addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.avatar || '', msg.borderColor || '', isAdminMsg);
+                        addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.borderColor || '', isAdminMsg);
                     });
                     container.scrollTop = container.scrollHeight;
                 });
@@ -448,16 +446,15 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
 
-            function addMessageToUI(author, text, timestamp, isOwn = false, msgAvatar = '', msgBorderColor = '', isAdmin = false) {
+            function addMessageToUI(author, text, timestamp, isOwn = false, msgBorderColor = '', isAdmin = false) {
                 // Protección: ignorar mensajes sin datos mínimos
                 if (!author || !text) return;
                 const container = document.getElementById('messagesContainer');
                 const ownClass = isOwn ? 'own' : '';
                 const adminClass = isAdmin ? 'admin-msg' : '';
-                const avatar = isOwn ? (currentAvatar || msgAvatar) : msgAvatar;
-                const borderColor = isAdmin ? '#ff4466' : (isOwn ? (currentBorderColor || msgBorderColor) : msgBorderColor);
+                const borderColor = isAdmin ? '#ff4466' : msgBorderColor;
                 const borderStyle = borderColor ? `border:2px solid ${borderColor};box-shadow:0 0 8px ${borderColor}40;` : '';
-                const avatarHTML = isAdmin ? '👾' : '🧑🏻‍🚀';
+                const avatarHTML = '🧑🏻‍🚀';
                 container.insertAdjacentHTML('beforeend', `
                     <div class="message ${ownClass} ${adminClass}">
                         <div class="message-avatar" style="${borderStyle}">${avatarHTML}</div>
@@ -549,12 +546,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             const localUsername = (() => { try { return (localStorage.getItem('atlas-username') || '').trim().toUpperCase(); } catch(e) { return ''; } })();
             const resolvedUsername = urlUsername || localUsername || '';
 
-            // ── Avatar: localStorage de la app (nunca photoURL de Google) ──
-            const localAvatar = (() => { try { return localStorage.getItem('atlas-avatar') || ''; } catch(e) { return ''; } })();
-
-            // ── Asignar ANTES de llamar setUsername para que se guarden correctos ──
-            currentAvatar = sessionStorage.getItem('chat-avatar') || localAvatar || '';
-            currentBorderColor = sessionStorage.getItem('chat-avatar-border') || localStorage.getItem('atlas-avatar-border') || '';
+            // Avatar removido — se usa emoji fijo 🧑🏻‍🚀
 
             if (resolvedUsername && resolvedUsername.length >= 3) {
                 document.getElementById('usernameInput').value = resolvedUsername;
