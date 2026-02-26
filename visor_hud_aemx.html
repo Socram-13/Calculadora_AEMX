@@ -612,6 +612,7 @@
       clip-path: polygon(0% 0%, calc(100% - 12px) 0%, 100% 100%, 0% 100%);
     }
     /* REC button active state */
+    #btnRec.recording{ color:#ff4466; outline-color:rgba(255,68,102,.55); animation: recPulse 1s ease-in-out infinite; }
     @keyframes recPulse{ 0%,100%{opacity:1} 50%{opacity:.5} }
     .miniBtn button:active{ opacity:.7; }
 
@@ -1021,6 +1022,58 @@
 </head>
 
 <body>
+  <!-- ── Bloqueo de compatibilidad (iOS / Safari) ─────────────────────────── -->
+  <div id="incompatOverlay" style="
+    display:none; position:fixed; top:0; right:0; bottom:0; left:0;
+    z-index:999999; background:#060b14;
+    align-items:center; justify-content:center;
+    font-family:'Rajdhani',sans-serif;
+  ">
+    <div style="
+      max-width:340px; width:88%; text-align:center;
+      border:1px solid #1a3a5c; border-radius:18px;
+      padding:36px 28px; background:#0b1626;
+      box-shadow:0 0 60px rgba(0,200,255,0.10);
+    ">
+      <div style="font-size:40px; margin-bottom:16px;">⛔</div>
+      <div style="
+        font-family:Orbitron,monospace; font-size:16px; font-weight:900;
+        letter-spacing:3px; color:#00c8ff; margin-bottom:14px;
+      ">DISPOSITIVO NO COMPATIBLE</div>
+      <div style="font-size:14px; color:#6b8ab0; line-height:1.7; letter-spacing:0.5px;">
+        El Visor HUD de AEMX requiere funciones avanzadas que <strong style="color:#cce4ff;">Safari e iOS</strong> no soportan.<br/><br/>
+        Para una experiencia completa usa:<br/>
+        <span style="color:#00c8ff;">Chrome · Firefox · Edge</span><br/>
+        en <span style="color:#00c8ff;">Android o PC</span>.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Detección combinada: User Agent + Feature detection
+    (function(){
+      const ua = navigator.userAgent || '';
+      const isIOS     = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+      const isSafari  = /^((?!chrome|android).)*safari/i.test(ua);
+      const isMacSafari = /Macintosh/.test(ua) && isSafari;
+
+      // APIs críticas que usa el visor
+      const missingAPIs =
+        typeof WebGLRenderingContext === 'undefined' ||
+        typeof MediaRecorder === 'undefined' ||
+        typeof IntersectionObserver === 'undefined';
+
+      if (isIOS || isSafari || isMacSafari || missingAPIs) {
+        const overlay = document.getElementById('incompatOverlay');
+        overlay.style.display = 'flex';
+        // Bloquear scroll e interacción con el resto de la página
+        document.body.style.overflow = 'hidden';
+        document.body.style.pointerEvents = 'none';
+        overlay.style.pointerEvents = 'auto';
+      }
+    })();
+  </script>
+
   <div class="stage">
     <video id="cam" autoplay playsinline muted></video>
 
@@ -1115,8 +1168,11 @@
 
     
     <div class="miniBtn">
+      <button id="btnRec" title="Grabar">⏺ REC</button>
+      <button id="btnStop" title="Detener" style="display:none;">⏹ STOP</button>
       <button id="btnUI">HUD</button>
       <button id="btnFS">FULL</button>
+      <button id="btnSnap" title="Captura">📷</button>
     </div>
     <div class="tapHint" id="tapHint"></div>
     <!-- Invisible tap area center-top: reveals camera+QR controls -->
@@ -1124,7 +1180,7 @@
       position:fixed;
       top:0; left:50%;
       transform:translateX(-50%);
-      width:220px; height:80px;
+      width:220px; height:54px;
       z-index:25;
       pointer-events:auto;
       cursor:pointer;
@@ -1582,6 +1638,12 @@
       // no text to update
     });
 
+    // Invisible topbar tap area → show camera/QR controls
+    const topbarTapArea = document.getElementById('topbarTapArea');
+    if(topbarTapArea){
+      topbarTapArea.addEventListener('click', ()=> showUI(true));
+    }
+
     document.querySelectorAll('.pmBtn').forEach(btn=>{
       btn.addEventListener('click', ()=>{
         const rarity = btn.dataset.rarity;
@@ -1743,7 +1805,106 @@
       }, true);
     });
 
+    // ── Screen capture & recording ───────────────────────
+    const btnRec  = document.getElementById('btnRec');
+    const btnStop = document.getElementById('btnStop');
+    const btnSnap = document.getElementById('btnSnap');
 
+    // ── Captura de pantalla con getDisplayMedia ───────────
+    // Captura exactamente lo que se ve: cámara + cuadrícula + HUD + parcelas
+    let displayStream = null;
+    let mediaRecorder = null;
+    let recChunks = [];
+
+    async function getScreen(){
+      if(displayStream && displayStream.active) return displayStream;
+      displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video:{ frameRate:30, displaySurface:'window' },
+        audio:false
+      });
+      displayStream.getVideoTracks()[0].addEventListener('ended', ()=>{
+        // User stopped sharing
+        displayStream = null;
+        if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+        btnRec.classList.remove('recording');
+        btnStop.style.display='none';
+        btnRec.style.display='';
+      });
+      return displayStream;
+    }
+
+    // Snapshot: get one frame from screen capture
+    btnSnap.addEventListener('click', async ()=>{
+      try{
+        const stream = await getScreen();
+        const track = stream.getVideoTracks()[0];
+        // Use ImageCapture if available, fallback to video element
+        if('ImageCapture' in window){
+          const ic = new ImageCapture(track);
+          const bitmap = await ic.grabFrame();
+          const oc = document.createElement('canvas');
+          oc.width = bitmap.width; oc.height = bitmap.height;
+          oc.getContext('2d').drawImage(bitmap, 0, 0);
+          oc.toBlob(blob=>{
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href=url; a.download='aemx-'+Date.now()+'.png'; a.click();
+            setTimeout(()=>URL.revokeObjectURL(url),5000);
+          },'image/png');
+        } else {
+          // Fallback: render single frame via video element
+          const vid = document.createElement('video');
+          vid.srcObject = stream;
+          await vid.play();
+          const oc = document.createElement('canvas');
+          oc.width = vid.videoWidth; oc.height = vid.videoHeight;
+          oc.getContext('2d').drawImage(vid, 0, 0);
+          vid.pause(); vid.srcObject = null;
+          oc.toBlob(blob=>{
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href=url; a.download='aemx-'+Date.now()+'.png'; a.click();
+            setTimeout(()=>URL.revokeObjectURL(url),5000);
+          },'image/png');
+        }
+      }catch(e){ if(e.name!=='NotAllowedError') alert('Error: '+e.message); }
+    });
+
+    // Grabar
+    btnRec.addEventListener('click', async ()=>{
+      if(mediaRecorder) return;
+      try{
+        const stream = await getScreen();
+        recChunks = [];
+        // Pick best supported codec
+        const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4']
+          .find(m=> MediaRecorder.isTypeSupported(m)) || '';
+        mediaRecorder = new MediaRecorder(stream, mime ? {mimeType:mime} : {});
+        mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) recChunks.push(e.data); };
+        mediaRecorder.onstop = ()=>{
+          const ext = mime.includes('mp4') ? 'mp4' : 'webm';
+          const blob = new Blob(recChunks, {type: mime || 'video/webm'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href=url; a.download='aemx-'+Date.now()+'.'+ext; a.click();
+          setTimeout(()=>URL.revokeObjectURL(url),10000);
+          recChunks=[]; mediaRecorder=null;
+        };
+        mediaRecorder.start(200);
+        btnRec.classList.add('recording');
+        btnRec.style.display='none';
+        btnStop.style.display='';
+      }catch(e){ if(e.name!=='NotAllowedError') alert('Error al grabar: '+e.message); }
+    });
+
+    btnStop.addEventListener('click', ()=>{
+      if(mediaRecorder && mediaRecorder.state !== 'inactive'){
+        mediaRecorder.stop();
+        btnRec.classList.remove('recording');
+        btnStop.style.display='none';
+        btnRec.style.display='';
+      }
+    });
     </script>
 
     <!-- LOGIN OVERLAY -->
@@ -1900,12 +2061,6 @@
       if(e && (e.target?.closest?.('.topbar') || e.target?.closest?.('.miniBtn'))) return;
       showUI(true);
     };
-    // Tap area superior → mostrar controles (listener aquí donde showUI ya está definido)
-    const topbarTapArea = document.getElementById('topbarTapArea');
-    if(topbarTapArea){
-      topbarTapArea.addEventListener('click', ()=> showUI(true));
-      topbarTapArea.addEventListener('touchend', (e)=>{ e.preventDefault(); showUI(true); });
-    }
     // reveal only via topbar tap area (btnParcelToggle area) — removed global listeners
 
     btnUI.addEventListener('click', () => {
