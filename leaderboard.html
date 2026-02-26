@@ -720,7 +720,7 @@
 
   <script type="module">
     import { initializeApp }                            from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut }
+    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                                         from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import { getDatabase, ref, onValue, get, update }                from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
@@ -737,34 +737,16 @@
     const db   = getDatabase(app);
 
     // ── Auth ──
-    const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || 
-                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-    const useRedirect = isIOS || isSafari;
-
-    // Manejar resultado de redirect al volver a la página (iOS)
-    getRedirectResult(auth).then((result) => {
-      if (result?.user) {
-        document.getElementById('authError').textContent = '';
-      }
-    }).catch((e) => {
-      if (e.code !== 'auth/no-current-user') {
-        document.getElementById('authError').textContent = 'Error al iniciar sesión. Intenta de nuevo.';
-      }
-    });
-
-    window.authWithGoogle = async function() {
+    // signInWithPopup debe llamarse síncronamente dentro del click para que
+    // Safari no lo bloquee. No usar async/await antes de la llamada.
+    window.authWithGoogle = function() {
       document.getElementById('authError').textContent = '';
-      const provider = new GoogleAuthProvider();
-      try {
-        if (useRedirect) {
-          await signInWithRedirect(auth, provider);
-        } else {
-          await signInWithPopup(auth, provider);
-        }
-      } catch(e) {
-        document.getElementById('authError').textContent = 'Error al iniciar sesión. Intenta de nuevo.';
-      }
+      signInWithPopup(auth, new GoogleAuthProvider())
+        .catch((e) => {
+          if (e.code !== 'auth/popup-closed-by-user') {
+            document.getElementById('authError').textContent = 'Error al iniciar sesión. Intenta de nuevo.';
+          }
+        });
     };
 
     window.signOutUser = async function() {
