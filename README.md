@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/25569330/README.md)
 # 🌎 Atlas Earth AEMX — Gamertag Platform V2.0
 
 <p align="center">
