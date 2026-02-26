@@ -102,8 +102,11 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
   display:flex; align-items:center; justify-content:center;
 }
 #photo-layer img{
-  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  position:absolute; width:100%; height:100%; object-fit:cover;
+  transform-origin:center center;
+  cursor:grab; user-select:none; -webkit-user-drag:none;
 }
+#photo-layer img:active{ cursor:grabbing; }
 .upload-hint{
   display:flex; flex-direction:column; align-items:center; gap:8px;
   pointer-events:none; opacity:0.35; z-index:1;
@@ -133,6 +136,18 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
 }
 
 .hint{font-size:11px; color:var(--text2); letter-spacing:1px; position:relative; z-index:1; text-align:center;}
+
+/* ── Zoom controls ── */
+.zoom-bar{
+  display:none; align-items:center; gap:12px;
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:10px; padding:10px 16px;
+  position:relative; z-index:1;
+}
+.zoom-bar .ctrl-label{ font-size:9px; color:var(--text2); letter-spacing:1px; font-family:'Orbitron',monospace; }
+.zoom-bar input[type=range]{ width:120px; accent-color:var(--glow); }
+.zoom-bar .range-val{ font-size:10px; color:var(--text2); font-family:monospace; min-width:36px; }
+.zoom-bar .btn{ font-size:8px; padding:5px 10px; }
 
 /* ── Access overlay ── */
 #accessOverlay{
@@ -324,7 +339,15 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
   </div>
 </div>
 
-<p class="hint">Toca el círculo para subir tu foto · Arrastra también funciona</p>
+<!-- Zoom controls (visible solo con foto) -->
+<div class="zoom-bar" id="zoom-bar">
+  <span class="ctrl-label">↔ ZOOM</span>
+  <input type="range" id="zoom-slider" min="100" max="300" value="100" step="1"/>
+  <span class="range-val" id="zoom-val">100%</span>
+  <button class="btn" id="zoom-reset">↺ RESET</button>
+</div>
+
+<p class="hint" id="main-hint">Toca el círculo para subir tu foto · Arrastra también funciona</p>
 
 <script>
 // ── URLs de GitHub ────────────────────────────────────────────────────────────
@@ -429,7 +452,17 @@ document.getElementById('color2').addEventListener('input', render2);
   });
 });
 
-// ── Photo upload ─────────────────────────────────────────────────────────────
+// ── Photo upload + Zoom/Pan ───────────────────────────────────────────────────
+let photoState = { zoom: 1, x: 0, y: 0 };
+
+function applyPhotoTransform() {
+  const img = document.querySelector('#photo-layer img');
+  if (!img) return;
+  img.style.transform = `translate(${photoState.x}px, ${photoState.y}px) scale(${photoState.zoom})`;
+  document.getElementById('zoom-slider').value = Math.round(photoState.zoom * 100);
+  document.getElementById('zoom-val').textContent = Math.round(photoState.zoom * 100) + '%';
+}
+
 function loadPhoto(file) {
   if (!file || !file.type.startsWith('image/')) return;
   const url = URL.createObjectURL(file);
@@ -439,15 +472,108 @@ function loadPhoto(file) {
   layer.querySelectorAll('img').forEach(el => el.remove());
   document.getElementById('upload-hint').style.display = 'none';
   layer.appendChild(img);
+  // Resetear estado y mostrar controles
+  photoState = { zoom: 1, x: 0, y: 0 };
+  applyPhotoTransform();
+  document.getElementById('zoom-bar').style.display = 'flex';
+  document.getElementById('main-hint').textContent = 'Arrastra para mover · Scroll o slider para zoom';
 }
 
-document.getElementById('photo-input').addEventListener('change', e => loadPhoto(e.target.files[0]));
-document.getElementById('editor-wrap').addEventListener('click', e => {
-  if (e.target.closest('#logo-layer') || e.target.tagName === 'IMG') return;
+// ── Zoom slider ───────────────────────────────────────────────────────────────
+document.getElementById('zoom-slider').addEventListener('input', e => {
+  photoState.zoom = parseInt(e.target.value) / 100;
+  document.getElementById('zoom-val').textContent = e.target.value + '%';
+  applyPhotoTransform();
+});
+document.getElementById('zoom-reset').addEventListener('click', () => {
+  photoState = { zoom: 1, x: 0, y: 0 };
+  applyPhotoTransform();
+});
+
+// ── Drag para mover (mouse) ───────────────────────────────────────────────────
+let drag = { active: false, startX: 0, startY: 0, originX: 0, originY: 0, moved: false };
+
+const wrap = document.getElementById('editor-wrap');
+
+wrap.addEventListener('mousedown', e => {
+  if (!document.querySelector('#photo-layer img')) return;
+  drag = { active: true, startX: e.clientX, startY: e.clientY,
+           originX: photoState.x, originY: photoState.y, moved: false };
+  e.preventDefault();
+});
+window.addEventListener('mousemove', e => {
+  if (!drag.active) return;
+  const dx = e.clientX - drag.startX, dy = e.clientY - drag.startY;
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) drag.moved = true;
+  photoState.x = drag.originX + dx;
+  photoState.y = drag.originY + dy;
+  applyPhotoTransform();
+});
+window.addEventListener('mouseup', e => {
+  if (!drag.active) return;
+  const wasMoved = drag.moved;
+  drag.active = false;
+  // Si no hubo movimiento real → abrir file picker (click normal)
+  if (!wasMoved && !document.querySelector('#photo-layer img')) {
+    document.getElementById('photo-input').click();
+  }
+});
+
+// ── Scroll para zoom ──────────────────────────────────────────────────────────
+wrap.addEventListener('wheel', e => {
+  if (!document.querySelector('#photo-layer img')) return;
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.05 : 0.05;
+  photoState.zoom = Math.min(3, Math.max(1, photoState.zoom + delta));
+  applyPhotoTransform();
+}, { passive: false });
+
+// ── Touch: pan + pinch zoom ───────────────────────────────────────────────────
+let touch = { last: null, lastDist: null };
+
+wrap.addEventListener('touchstart', e => {
+  if (!document.querySelector('#photo-layer img')) return;
+  if (e.touches.length === 1) {
+    touch.last = { x: e.touches[0].clientX, y: e.touches[0].clientY,
+                   ox: photoState.x, oy: photoState.y };
+    touch.lastDist = null;
+  } else if (e.touches.length === 2) {
+    touch.lastDist = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    );
+    touch.lastZoom = photoState.zoom;
+  }
+}, { passive: true });
+
+wrap.addEventListener('touchmove', e => {
+  if (!document.querySelector('#photo-layer img')) return;
+  e.preventDefault();
+  if (e.touches.length === 1 && touch.last) {
+    photoState.x = touch.last.ox + (e.touches[0].clientX - touch.last.x);
+    photoState.y = touch.last.oy + (e.touches[0].clientY - touch.last.y);
+    applyPhotoTransform();
+  } else if (e.touches.length === 2 && touch.lastDist) {
+    const dist = Math.hypot(
+      e.touches[1].clientX - e.touches[0].clientX,
+      e.touches[1].clientY - e.touches[0].clientY
+    );
+    photoState.zoom = Math.min(3, Math.max(1, touch.lastZoom * (dist / touch.lastDist)));
+    applyPhotoTransform();
+  }
+}, { passive: false });
+
+wrap.addEventListener('touchend', () => { touch.last = null; touch.lastDist = null; });
+
+// ── Click para subir (solo si no hay foto y no hubo drag) ─────────────────────
+wrap.addEventListener('click', e => {
+  if (drag.moved) return; // fue un pan, no un click
+  if (document.querySelector('#photo-layer img')) return; // ya hay foto
+  if (e.target.closest('#logo-layer')) return;
   document.getElementById('photo-input').click();
 });
 
-const wrap = document.getElementById('editor-wrap');
+document.getElementById('photo-input').addEventListener('change', e => loadPhoto(e.target.files[0]));
 wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add('dragover'); });
 wrap.addEventListener('dragleave', () => wrap.classList.remove('dragover'));
 wrap.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('dragover'); loadPhoto(e.dataTransfer.files[0]); });
@@ -508,15 +634,23 @@ function descargar() {
   // Fondo transparente explícito (sin relleno negro)
   tCtx.clearRect(0, 0, size, size);
 
-  // Layer 0: foto del usuario
+  // Layer 0: foto del usuario aplicando el mismo zoom/pan que en preview
   const photoImg = document.querySelector('#photo-layer img');
   if (photoImg) {
     const nw = photoImg.naturalWidth, nh = photoImg.naturalHeight;
-    const scale = Math.max(size / nw, size / nh);
-    const sw = nw * scale, sh = nh * scale;
-    tCtx.drawImage(photoImg, (size - sw) / 2, (size - sh) / 2, sw, sh);
+    // Escala base (object-fit:cover) para cubrir 1024x1024
+    const baseScale = Math.max(size / nw, size / nh);
+    const bw = nw * baseScale, bh = nh * baseScale;
+    // Ratio px-preview → px-canvas para traducir el offset del usuario
+    const previewSize = document.getElementById('editor-wrap').offsetWidth;
+    const ratio = size / previewSize;
+    // Aplicar zoom centrado + offset de pan
+    const fw = bw * photoState.zoom, fh = bh * photoState.zoom;
+    const fx = (size - fw) / 2 + photoState.x * ratio;
+    const fy = (size - fh) / 2 + photoState.y * ratio;
+    tCtx.drawImage(photoImg, fx, fy, fw, fh);
   }
-  // Si no hay foto no rellenamos de negro — el fondo queda transparente
+  // Sin foto → fondo transparente
 
   // Layer 1 (anillo oscuro) y Layer 2 (anillo metálico)
   // Usamos drawFiltered para no perder el canal alpha del PNG
