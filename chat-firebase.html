@@ -254,9 +254,9 @@
     </div>
 
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get, query, limitToLast, orderByChild, endAt } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get, query, limitToLast, orderByChild, endAt } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
@@ -269,7 +269,8 @@
             measurementId: "G-K84EVPE46R"
         };
 
-        const app = initializeApp(firebaseConfig);
+        // Usar nombre único para evitar colisión con la instancia de Firebase del padre (index.html)
+        const app = initializeApp(firebaseConfig, 'chat-app');
         const database = getDatabase(app);
         const auth = getAuth(app);
         const authOverlay = document.getElementById('authOverlay');
