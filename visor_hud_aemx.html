@@ -1299,12 +1299,15 @@
         onValue(q, (snap) => {
           const arr = [];
           if(snap.exists()){
-            snap.forEach(child => arr.push(child.val()));
-            arr.sort((a,b) => {
-              const ta = typeof a.timestamp === 'number' ? a.timestamp : 0;
-              const tb = typeof b.timestamp === 'number' ? b.timestamp : 0;
-              return ta - tb;
+            snap.forEach(child => {
+              const val = child.val();
+              // Normalize timestamp: serverTimestamp() may arrive as object or null briefly
+              if(val && (val.username || val.user) && (val.text || val.message || val.msg)){
+                const ts = typeof val.timestamp === 'number' ? val.timestamp : Date.now();
+                arr.push({ ...val, timestamp: ts });
+              }
             });
+            arr.sort((a,b) => a.timestamp - b.timestamp);
           }
           renderChat(arr);
           const _uname = (window._hudUsername || '').toUpperCase() || 'LIVE';
