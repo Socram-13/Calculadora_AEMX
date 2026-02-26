@@ -11,7 +11,9 @@
 
   <style>
     :root{
-      --primary:#00ff88;
+      
+      --hud-scale: .78;
+--primary:#00ff88;
       --secondary:#00ffff;
       --danger:#ff4466;
       --text:#ffffff;
@@ -58,6 +60,8 @@
     .hud{
       position:absolute; inset:0;
       pointer-events:none;
+      transform: scale(var(--hud-scale));
+      transform-origin: top left;
     }
     .hud::before{
       content:"";
@@ -189,9 +193,9 @@
     /* Badges cards (top center) */
     .badges{
       position:absolute;
-      top: calc(64px + var(--safe-top));
-      left:50%;
-      transform:translateX(-50%);
+      top: calc(62px + var(--safe-top));
+      left: calc(10px + var(--safe-left));
+      transform:none;
       width: 210px;
       height: 70px;
       pointer-events:none;
@@ -376,6 +380,62 @@
       .badgeCard{ width:190px; }
     }
 
+
+    .topbar.hidden{
+      opacity:0;
+      transform: translateY(-10px);
+      pointer-events:none;
+    }
+    .topbar{
+      transition: opacity .25s ease, transform .25s ease;
+    }
+    .tapHint{
+      position:absolute;
+      top: calc(48px + var(--safe-top));
+      right: calc(10px + var(--safe-right));
+      font-family: Orbitron, system-ui;
+      font-weight:900;
+      font-size:9px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color: rgba(255,255,255,.65);
+      background: rgba(5,10,20,.35);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      padding: 7px 10px;
+      backdrop-filter: blur(8px);
+      display:none;
+      pointer-events:none;
+    }
+    .tapHint.show{ display:block; }
+    .miniBtn{
+      position:absolute;
+      bottom: calc(10px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      pointer-events:auto;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .miniBtn button{
+      border:1px solid rgba(0,255,136,.25);
+      background: rgba(5,10,20,.55);
+      color:#e8fff6;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font-family: Orbitron, system-ui;
+      font-weight:900;
+      letter-spacing:2px;
+      font-size:10px;
+      text-transform:uppercase;
+      cursor:pointer;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 18px rgba(0,255,136,.10);
+    }
+    .miniBtn button:active{ transform: scale(.98); }
+
     /* Safe overlay for “rotate device” */
     .rotateHint{
       position:fixed; inset:0;
@@ -508,6 +568,13 @@
       </div>
     </div>
 
+    
+    <div class="miniBtn">
+      <button id="btnUI">HUD</button>
+      <button id="btnFS">FULL</button>
+    </div>
+    <div class="tapHint" id="tapHint">TOCA PARA MOSTRAR CONTROLES</div>
+
     <div class="rotateHint" id="rotateHint">
       <div class="box">
         <div class="big">GIRA EL TELÉFONO A HORIZONTAL</div>
@@ -562,9 +629,9 @@
       const total = s.common + s.rare + s.epic + s.legendary;
       document.getElementById('totalParcels').textContent = total;
 
-      // bars scale by max value (nice visual)
-      const max = Math.max(1, s.common, s.rare, s.epic, s.legendary);
-      const pct = (v) => Math.max(4, Math.round((v / max) * 100)); // min fill so no invisible bar
+      // bars scale by TOTAL parcels (real proportions)
+      const total = Math.max(0, s.common + s.rare + s.epic + s.legendary);
+      const pct = (v) => total ? Math.round((v / total) * 100) : 0;
       document.getElementById('fillCommon').style.height = pct(s.common) + '%';
       document.getElementById('fillRare').style.height = pct(s.rare) + '%';
       document.getElementById('fillEpic').style.height = pct(s.epic) + '%';
@@ -625,6 +692,69 @@
     const btnFullscreen = document.getElementById('btnFullscreen');
     const rotateHint = document.getElementById('rotateHint');
 
+    const btnUI = document.getElementById('btnUI');
+    const btnFS = document.getElementById('btnFS');
+    const topbar = document.querySelector('.topbar');
+    const tapHint = document.getElementById('tapHint');
+
+    let uiHidden = true;
+    let uiTimer = null;
+
+    function showUI(temp=true){
+      uiHidden = false;
+      topbar.classList.remove('hidden');
+      tapHint.classList.remove('show');
+      if(uiTimer) clearTimeout(uiTimer);
+      if(temp){
+        uiTimer = setTimeout(() => hideUI(), 2600);
+      }
+    }
+    function hideUI(){
+      uiHidden = true;
+      topbar.classList.add('hidden');
+      tapHint.classList.add('show');
+    }
+
+    // start hidden (requested)
+    hideUI();
+
+    // Tap anywhere to show controls briefly
+    document.addEventListener('pointerdown', (e) => {
+      // avoid stealing taps from controls
+      if(e.target.closest('.topbar') || e.target.closest('.miniBtn')) return;
+      showUI(true);
+    });
+
+    btnUI.addEventListener('click', () => {
+      if(uiHidden) showUI(false);
+      else hideUI();
+    });
+
+    async function toggleFullscreen(){
+      try{
+        if(!document.fullscreenElement){
+          await document.documentElement.requestFullscreen?.();
+          await requestLandscapeLock();
+        }else{
+          await document.exitFullscreen?.();
+        }
+      }catch(e){}
+      syncFSLabel();
+      checkOrientationHint();
+    }
+
+    function syncFSLabel(){
+      const on = !!document.fullscreenElement;
+      btnFS.textContent = on ? 'SALIR' : 'FULL';
+      // keep original chip label if visible
+      try{ document.getElementById('btnFullscreen').textContent = on ? '⛶ SALIR' : '⛶ FULL'; }catch(e){}
+    }
+
+    btnFS.addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', syncFSLabel);
+    syncFSLabel();
+
+
     let camStream = null;
     let mirrored = true;
 
@@ -683,10 +813,11 @@
     }
 
     btnFullscreen.addEventListener('click', async () => {
-      try{
-        // must be user gesture
-        await document.documentElement.requestFullscreen?.();
-      }catch(e){}
+      if (typeof toggleFullscreen === 'function') {
+        await toggleFullscreen();
+        return;
+      }
+      try{ await document.documentElement.requestFullscreen?.(); }catch(e){}
       await requestLandscapeLock();
       checkOrientationHint();
     });
@@ -706,6 +837,7 @@
     // ─────────────────────────────────────────────────────────────
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getDatabase, ref, query, limitToLast, orderByChild, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+    import { getAuth, onAuthStateChanged, signInAnonymously } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
@@ -745,11 +877,11 @@
 
         const a = document.createElement('span');
         a.className = 'a';
-        a.textContent = safeStr(m.username || m.author || 'ANÓNIMO', 22);
+        a.textContent = safeStr(m.username || m.user || m.author || m.name || 'AEMX', 22);
 
         const t = document.createElement('span');
         t.className = 't';
-        t.textContent = safeStr(m.text || m.message || '', 120) || '…';
+        t.textContent = safeStr(m.text || m.message || m.msg || m.mensaje || '', 120) || '…';
 
         row.appendChild(a);
         row.appendChild(t);
@@ -760,23 +892,45 @@
     try{
       const app = initializeApp(firebaseConfig, 'hud-app');
       const db  = getDatabase(app);
+      const auth = getAuth(app);
 
-      // order by timestamp to keep last 5 in correct chronological order
-      const q = query(ref(db, 'messages'), orderByChild('timestamp'), limitToLast(5));
+      // Helper to attach listener once we have auth (or at least tried)
+      const attachListener = () => {
+        const q = query(ref(db, 'messages'), orderByChild('timestamp'), limitToLast(5));
 
-      onValue(q, (snap) => {
-        const arr = [];
-        if(snap.exists()){
-          snap.forEach(child => arr.push(child.val()));
-          // ensure chronological (firebase may already be, but be safe)
-          arr.sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+        onValue(q, (snap) => {
+          const arr = [];
+          if(snap.exists()){
+            snap.forEach(child => arr.push(child.val()));
+            arr.sort((a,b) => {
+              const ta = typeof a.timestamp === 'number' ? a.timestamp : 0;
+              const tb = typeof b.timestamp === 'number' ? b.timestamp : 0;
+              return ta - tb;
+            });
+          }
+          renderChat(arr);
+          setChatState(true, 'LIVE');
+        }, (err) => {
+          console.error('HUD chat onValue error:', err);
+          setChatState(false, 'DENIED');
+          renderChat([]);
+        });
+      };
+
+      // If your DB rules require auth, anonymous sign-in usually satisfies "auth != null"
+      onAuthStateChanged(auth, async (user) => {
+        if(user){
+          attachListener();
+          return;
         }
-        renderChat(arr);
-        setChatState(true, 'LIVE');
-      }, (err) => {
-        console.error('HUD chat onValue error:', err);
-        setChatState(false, 'ERR');
-        renderChat([]);
+        try{
+          setChatState(false, 'AUTH');
+          await signInAnonymously(auth);
+          // onAuthStateChanged will re-fire, attaching listener
+        }catch(e){
+          console.error('Anonymous auth failed:', e);
+          setChatState(false, 'AUTH-ERR');
+        }
       });
 
     }catch(e){
