@@ -93,11 +93,35 @@
       content:"";
       position:absolute; inset:0;
       background-image:
-        linear-gradient(rgba(255,255,255,.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,.06) 1px, transparent 1px);
-      background-size: 38px 38px;
-      opacity:.25;
-      mix-blend-mode:screen;
+        linear-gradient(rgba(0,200,255,.18) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,200,255,.18) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity:1;
+      mix-blend-mode: screen;
+      pointer-events:none;
+      -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
+      mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 30%, transparent 100%);
+      animation: hudGridPulse 4s ease-in-out infinite;
+    }
+    /* Corner accent lines */
+    .hud::after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        /* top-left corner */
+        linear-gradient(90deg, rgba(0,200,255,.55) 0px, rgba(0,200,255,.55) 40px, transparent 40px) 0 0 / 100% 1px no-repeat,
+        linear-gradient(180deg, rgba(0,200,255,.55) 0px, rgba(0,200,255,.55) 40px, transparent 40px) 0 0 / 1px 100% no-repeat,
+        /* top-right corner */
+        linear-gradient(90deg, transparent calc(100% - 40px), rgba(0,200,255,.55) calc(100% - 40px), rgba(0,200,255,.55) 100%) 0 0 / 100% 1px no-repeat,
+        linear-gradient(180deg, rgba(0,200,255,.55) 0px, rgba(0,200,255,.55) 40px, transparent 40px) 100% 0 / 1px 100% no-repeat,
+        /* bottom-left corner */
+        linear-gradient(90deg, rgba(0,200,255,.55) 0px, rgba(0,200,255,.55) 40px, transparent 40px) 0 100% / 100% 1px no-repeat,
+        linear-gradient(180deg, transparent calc(100% - 40px), rgba(0,200,255,.55) calc(100% - 40px), rgba(0,200,255,.55) 100%) 0 0 / 1px 100% no-repeat,
+        /* bottom-right corner */
+        linear-gradient(90deg, transparent calc(100% - 40px), rgba(0,200,255,.55) calc(100% - 40px)) 0 100% / 100% 1px no-repeat,
+        linear-gradient(180deg, transparent calc(100% - 40px), rgba(0,200,255,.55) calc(100% - 40px)) 100% 0 / 1px 100% no-repeat,
+        /* vignette */
+        radial-gradient(ellipse 100% 100% at 50% 50%, transparent 50%, rgba(0,0,0,.55) 100%);
       pointer-events:none;
     }
     .scanlines{
@@ -117,39 +141,46 @@
     .topbar{
       position:absolute;
       top: calc(10px + var(--safe-top));
-      left: calc(10px + var(--safe-left));
-      right: calc(10px + var(--safe-right));
+      left: 50%;
+      transform: translateX(-50%);
       display:flex;
-      gap:10px;
+      gap:4px;
       align-items:center;
+      justify-content:center;
       pointer-events:auto;
       z-index:10;
+      background: rgba(5,10,20,.55);
+      border: 1px solid rgba(0,200,255,.18);
+      border-radius: 12px;
+      padding: 4px 6px;
+      backdrop-filter: blur(10px);
     }
     .chip{
-      display:flex; align-items:center; gap:8px;
-      padding:9px 12px;
-      border-radius:12px;
-      border:1px solid rgba(0,200,255,.28);
-      background:rgba(5,10,20,.70);
-      backdrop-filter: blur(8px);
-      box-shadow: var(--shadow);
+      display:flex; align-items:center; gap:5px;
+      padding:5px 9px;
+      border-radius:8px;
+      border:1px solid rgba(0,200,255,.20);
+      background:rgba(0,200,255,.07);
       font-family:Orbitron,system-ui;
       font-weight:800;
       letter-spacing:1px;
-      font-size:11px;
+      font-size:9px;
       text-transform:uppercase;
       cursor:pointer;
       user-select:none;
+      white-space:nowrap;
     }
-    .chip:active{ transform:scale(.98); }
+    .chip:active{ transform:scale(.96); }
+    .chip:hover{ background:rgba(0,200,255,.14); }
     .chip .dot{
-      width:8px; height:8px; border-radius:50%;
+      width:6px; height:6px; border-radius:50%;
       background:var(--danger);
-      box-shadow:0 0 10px rgba(255,68,102,.65);
+      box-shadow:0 0 6px rgba(255,68,102,.65);
+      flex-shrink:0;
     }
-    .chip.ok .dot{ background:var(--primary); box-shadow:0 0 10px rgba(0,255,136,.65); }
-    .chip.secondary{ border-color: rgba(0,255,255,.25); }
-    .spacer{ flex:1; }
+    .chip.ok .dot{ background:#4ade80; box-shadow:0 0 6px rgba(74,222,128,.65); }
+    .chip.secondary{ border-color: rgba(0,255,255,.18); }
+    .spacer{ display:none; }
 
     /* Diamonds battery (top-right) */
     .battery{
@@ -460,53 +491,48 @@
       position:absolute;
       bottom: calc(10px + var(--safe-bottom));
       right: calc(10px + var(--safe-right));
-      width: 320px;
+      width: 300px;
       max-width: calc(100vw - 24px);
-      padding:10px 14px 12px;
-      border-radius:16px;
-      background: var(--glass2);
-      border:1px solid rgba(0,200,255,.25);
-      backdrop-filter: blur(14px);
-      box-shadow: 0 0 22px rgba(0,200,255,.14), inset 0 1px 0 rgba(255,255,255,.05);
+      padding:0;
+      background: transparent;
+      border: none;
+      backdrop-filter: none;
+      box-shadow: none;
       pointer-events:none;
     }
-    .hudChatTitle{
-      display:flex; align-items:center; justify-content:space-between;
-      font-family:Orbitron,system-ui;
-      font-weight:900;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      font-size:9px;
-      color:rgba(255,255,255,.85);
-      margin-bottom:8px;
-    }
-    .hudChatTitle .status{
+    .hudChatUser{
       display:flex; align-items:center; gap:6px;
       font-family:Orbitron,system-ui;
       font-size:9px;
-      letter-spacing:1px;
-      color:rgba(255,255,255,.70);
+      font-weight:900;
+      letter-spacing:1.5px;
+      text-transform:uppercase;
+      color:rgba(0,200,255,.75);
+      margin-bottom:6px;
+      justify-content:flex-end;
     }
-    .hudChatTitle .lamp{
-      width:8px; height:8px; border-radius:50%;
+    .hudChatUser .lamp{
+      width:7px; height:7px; border-radius:50%;
       background:var(--danger);
-      box-shadow:0 0 10px rgba(255,68,102,.45);
+      box-shadow:0 0 8px rgba(255,68,102,.55);
+      flex-shrink:0;
     }
-    .hudChatTitle .lamp.ok{
-      background:var(--primary);
-      box-shadow:0 0 10px rgba(0,255,136,.45);
+    .hudChatUser .lamp.ok{
+      background:#4ade80;
+      box-shadow:0 0 8px rgba(74,222,128,.65);
     }
 
     .msg{
       display:flex;
-      gap:6px;
+      gap:5px;
       font-size:12px;
-      line-height:1.2;
-      margin:4px 0;
+      line-height:1.3;
+      margin:3px 0;
       opacity:.92;
-      white-space:nowrap;
       overflow:hidden;
-      text-overflow:ellipsis;
+      justify-content:flex-end;
+      text-align:right;
+      text-shadow: 0 1px 6px rgba(0,0,0,.90);
     }
     .msg .a{
       color:#4ade80;
@@ -515,11 +541,21 @@
       max-width:38%;
       overflow:hidden;
       text-overflow:ellipsis;
+      white-space:nowrap;
+      font-family:Orbitron,system-ui;
+      font-size:10px;
+    }
+    .msg .sep{
+      color:rgba(255,255,255,.30);
+      flex-shrink:0;
     }
     .msg .t{
-      color:rgba(255,255,255,.88);
+      color:rgba(255,255,255,.90);
       overflow:hidden;
       text-overflow:ellipsis;
+      white-space:nowrap;
+      flex:1;
+      min-width:0;
     }
 
     /* Mobile friendliness */
@@ -534,29 +570,21 @@
 
     .topbar.hidden{
       opacity:0;
-      transform: translateY(-10px);
+      transform: translateX(-50%) translateY(-60px);
       pointer-events:none;
     }
     .topbar{
-      transition: opacity .25s ease, transform .25s ease;
+      transition: opacity .30s ease, transform .30s cubic-bezier(.22,.68,0,1.2);
     }
     .tapHint{
       position:absolute;
-      top: calc(14px + var(--safe-top));
+      top: 0;
       left: 50%;
       transform: translateX(-50%);
-      white-space: nowrap;
-      font-family: Orbitron, system-ui;
-      font-weight:900;
-      font-size:9px;
-      letter-spacing:2px;
-      text-transform:uppercase;
-      color: rgba(255,255,255,.65);
-      background: rgba(5,10,20,.45);
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 12px;
-      padding: 7px 14px;
-      backdrop-filter: blur(8px);
+      width: 120px;
+      height: 10px;
+      background: rgba(255,255,255,.08);
+      clip-path: polygon(0% 0%, 100% 0%, 82% 100%, 18% 100%);
       display:none;
       pointer-events:none;
       z-index:15;
@@ -617,6 +645,10 @@
     .rotateHint .small{ font-family:Rajdhani,system-ui; font-size:14px; letter-spacing:0; text-transform:none; opacity:.85; }
 
     /* ── ANIMATIONS ── */
+    @keyframes hudGridPulse {
+      0%, 100% { opacity: .75; }
+      50%       { opacity: 1; }
+    }
     @keyframes gridEnergy {
       0%, 100% { opacity: .38; filter: brightness(1) hue-rotate(0deg); }
       33%       { opacity: .55; filter: brightness(1.4) hue-rotate(15deg); }
@@ -759,6 +791,19 @@
       min-height:16px;
       letter-spacing:.5px;
     }
+    .loginSkip{
+      background:none;
+      border:none;
+      color:rgba(255,255,255,.35);
+      font-family:Rajdhani,system-ui;
+      font-size:12px;
+      letter-spacing:1px;
+      cursor:pointer;
+      text-decoration:underline;
+      padding:4px 8px;
+      transition: color .2s;
+    }
+    .loginSkip:hover{ color:rgba(255,255,255,.70); }
 
     .batteryFill{
       animation: batteryPulse 2.4s ease-in-out infinite;
@@ -854,12 +899,12 @@
 
       <!-- Last 5 chat messages -->
       <div class="hudChat" aria-label="Últimos 5 mensajes">
-        <div class="hudChatTitle">
-          <span>💬 CHAT AEMX (ÚLTIMOS 5)</span>
-          <span class="status"><span class="lamp" id="chatLamp"></span><span id="chatState">OFF</span></span>
+        <div class="hudChatUser">
+          <span class="lamp" id="chatLamp"></span>
+          <span id="chatState">—</span>
         </div>
         <div id="chatLines">
-          <div class="msg"><span class="a">—</span><span class="t">Conecta la cámara y Firebase para ver actividad.</span></div>
+          <div class="msg"><span class="a">—</span><span class="t">Conecta Firebase para ver actividad.</span></div>
         </div>
       </div>
     </div>
@@ -869,7 +914,7 @@
       <button id="btnUI">HUD</button>
       <button id="btnFS">FULL</button>
     </div>
-    <div class="tapHint" id="tapHint">TOCA PARA MOSTRAR CONTROLES</div>
+    <div class="tapHint" id="tapHint"></div>
 
     <div class="rotateHint" id="rotateHint">
       <div class="box">
@@ -888,6 +933,7 @@
           Iniciar con Google
         </button>
         <div class="loginHint" id="loginHint"></div>
+        <button class="loginSkip" id="btnSkipLogin">Omitir (solo pruebas)</button>
       </div>
     </div>
   </div>
@@ -1159,7 +1205,7 @@
 
     function setChatState(on, label){
       chatLamp.classList.toggle('ok', on);
-      chatState.textContent = label || (on ? 'ON' : 'OFF');
+      chatState.textContent = label || (on ? 'LIVE' : '—');
     }
 
     function safeStr(x, max=140){
@@ -1180,13 +1226,18 @@
 
         const a = document.createElement('span');
         a.className = 'a';
-        a.textContent = safeStr(m.username || m.user || m.author || m.name || 'AEMX', 22);
+        a.textContent = safeStr(m.username || m.user || m.author || m.name || 'AEMX', 18);
+
+        const sep = document.createElement('span');
+        sep.className = 'sep';
+        sep.textContent = '·';
 
         const t = document.createElement('span');
         t.className = 't';
-        t.textContent = safeStr(m.text || m.message || m.msg || m.mensaje || '', 120) || '…';
+        t.textContent = safeStr(m.text || m.message || m.msg || m.mensaje || '', 100) || '…';
 
         row.appendChild(a);
+        row.appendChild(sep);
         row.appendChild(t);
         chatLines.appendChild(row);
       }
@@ -1211,6 +1262,12 @@
       function hideLoginOverlay(){
         loginOverlay.classList.add('hidden');
       }
+
+      document.getElementById('btnSkipLogin').addEventListener('click', () => {
+        hideLoginOverlay();
+        setChatState(false, 'SIN SESIÓN');
+        renderChat([{ username: 'AEMX', text: 'Chat no disponible sin sesión.' }]);
+      });
 
       btnLogin.addEventListener('click', async () => {
         btnLogin.disabled = true;
@@ -1258,6 +1315,9 @@
       onAuthStateChanged(auth, (user) => {
         if(user){
           hideLoginOverlay();
+          // Show first name in chat status
+          const firstName = (user.displayName || localStorage.getItem('atlas-username') || 'USER').split(' ')[0].toUpperCase();
+          setChatState(true, firstName);
           attachListener();
         } else {
           showLoginOverlay();
@@ -1269,8 +1329,18 @@
       setChatState(false, 'ERR');
     }
 
-    // Start camera automatically? -> NO (avoid instant permission prompt)
-    setCamState(false);
+    // Auto-start camera if permission already granted
+    if(navigator.permissions){
+      navigator.permissions.query({ name: 'camera' }).then(result => {
+        if(result.state === 'granted'){
+          startCamera();
+        } else {
+          setCamState(false);
+        }
+      }).catch(() => setCamState(false));
+    } else {
+      setCamState(false);
+    }
   </script>
 </body>
 </html>
