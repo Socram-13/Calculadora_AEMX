@@ -954,10 +954,7 @@
         <div class="chip" id="btnReloadStats" title="Refrescar stats desde localStorage">
           ↻ STATS
         </div>
-        <div class="chip qrChip" id="btnQR" title="Escanear QR de parcela">
-          <span class="dot"></span>
-          <span>QR</span>
-        </div>
+
       </div>
 
       <!-- Diamonds battery -->
@@ -1030,6 +1027,34 @@
       <button id="btnFS">FULL</button>
     </div>
     <div class="tapHint" id="tapHint"></div>
+
+    <!-- QR button: always visible, fixed bottom-right -->
+    <div id="btnQR" style="
+      position:fixed;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      right: calc(16px + env(safe-area-inset-right));
+      z-index: 25;
+      pointer-events:auto;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      padding:10px 16px;
+      border-radius:12px;
+      border:1px solid rgba(250,204,21,.45);
+      background:rgba(5,10,20,.72);
+      color:#facc15;
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      font-size:11px;
+      letter-spacing:2px;
+      cursor:pointer;
+      backdrop-filter:blur(10px);
+      box-shadow:0 0 14px rgba(250,204,21,.20);
+      user-select:none;
+    ">
+      <span style="width:7px;height:7px;border-radius:50%;background:#facc15;box-shadow:0 0 6px #facc15;flex-shrink:0;display:inline-block;"></span>
+      QR
+    </div>
 
     <div class="rotateHint" id="rotateHint">
       <div class="box">
@@ -1312,7 +1337,7 @@
 
     async function openQR(){
       qrOverlay.classList.remove('hidden');
-      btnQR.classList.add('active');
+      btnQR.style.background='rgba(250,204,21,.25)'; btnQR.style.borderColor='rgba(250,204,21,.80)';
       if(!qrDetector){
         document.querySelector('.qrFrame').style.display='none';
         qrStatus.textContent='INGRESA EL CÓDIGO MANUALMENTE';
@@ -1349,7 +1374,7 @@
       qrVideo.srcObject = null;
       qrStream = null;
       qrOverlay.classList.add('hidden');
-      btnQR.classList.remove('active');
+      btnQR.style.background='rgba(5,10,20,.72)'; btnQR.style.borderColor='rgba(250,204,21,.45)';
     }
 
     async function scanLoop(){
