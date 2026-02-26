@@ -1460,6 +1460,13 @@
       }
       trackLoop();
     }
+
+    // ── Button listeners ──────────────────────────────────
+    document.getElementById('btnQRClose').addEventListener('click', closeQR);
+    btnQR.addEventListener('click', ()=>{
+      if(qrOverlay.classList.contains('hidden')) openQR();
+      else closeQR();
+    });
     </script>
 
     <!-- LOGIN OVERLAY -->
