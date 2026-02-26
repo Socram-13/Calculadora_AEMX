@@ -407,38 +407,65 @@ wrap.addEventListener('dragover', e => { e.preventDefault(); wrap.classList.add(
 wrap.addEventListener('dragleave', () => wrap.classList.remove('dragover'));
 wrap.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('dragover'); loadPhoto(e.dataTransfer.files[0]); });
 
-// ── Download: composite all layers con CSS filter ─────────────────────────────
+// ── Dibuja una imagen con CSS filter preservando transparencia ───────────────
+// La clave: renderizamos la imagen filtrada en un canvas temporal con fondo
+// transparente y luego la composite sobre el canvas principal con drawImage.
+// Así evitamos que el navegador rellene las zonas alpha con negro.
+function drawFiltered(ctx, imgEl, size) {
+  const filterStr = imgEl.style.filter || '';
+  if (!filterStr || filterStr === 'none') {
+    ctx.drawImage(imgEl, 0, 0, size, size);
+    return;
+  }
+
+  // Canvas temporal solo para aplicar el filtro
+  const offscreen = document.createElement('canvas');
+  offscreen.width = offscreen.height = size;
+  const offCtx = offscreen.getContext('2d');
+
+  // Dibujamos la imagen sin filtro en el offscreen (fondo transparente)
+  offCtx.clearRect(0, 0, size, size);
+  offCtx.drawImage(imgEl, 0, 0, size, size);
+
+  // Aplicamos el filtro CSS sobre el canvas principal usando el offscreen como fuente
+  // Guardamos el estado y usamos filter sobre el ctx principal
+  ctx.save();
+  ctx.filter = filterStr;
+  ctx.drawImage(offscreen, 0, 0, size, size);
+  ctx.filter = 'none';
+  ctx.restore();
+}
+
+// ── Download: composite all layers preservando transparencia ─────────────────
 function descargar() {
   const size = 1024;
   const tmp  = document.createElement('canvas');
   tmp.width = tmp.height = size;
   const tCtx = tmp.getContext('2d');
 
-  // Layer 0: foto
+  // Fondo transparente explícito (sin relleno negro)
+  tCtx.clearRect(0, 0, size, size);
+
+  // Layer 0: foto del usuario
   const photoImg = document.querySelector('#photo-layer img');
   if (photoImg) {
     const nw = photoImg.naturalWidth, nh = photoImg.naturalHeight;
-    const scale = Math.max(size/nw, size/nh);
-    const sw = nw*scale, sh = nh*scale;
-    tCtx.drawImage(photoImg, (size-sw)/2, (size-sh)/2, sw, sh);
-  } else {
-    tCtx.fillStyle = '#111'; tCtx.fillRect(0,0,size,size);
+    const scale = Math.max(size / nw, size / nh);
+    const sw = nw * scale, sh = nh * scale;
+    tCtx.drawImage(photoImg, (size - sw) / 2, (size - sh) / 2, sw, sh);
   }
+  // Si no hay foto no rellenamos de negro — el fondo queda transparente
 
-  // Layer 1 y 2: aplicar el mismo CSS filter que tiene el <img> en pantalla
-  [layer1, layer2].forEach(imgEl => {
-    const f = imgEl.style.filter || '';
-    tCtx.filter = f;
-    tCtx.drawImage(imgEl, 0, 0, size, size);
-    tCtx.filter = 'none';
-  });
+  // Layer 1 (anillo oscuro) y Layer 2 (anillo metálico)
+  // Usamos drawFiltered para no perder el canal alpha del PNG
+  [layer1, layer2].forEach(imgEl => drawFiltered(tCtx, imgEl, size));
 
-  // Layer 3: logo fijo
+  // Layer 3: logo fijo (sin filtro, directo)
   const logoImg = document.getElementById('logo-img');
   if (logoImg.complete && logoImg.naturalWidth) {
     const lw = size * 0.42;
     const lh = logoImg.naturalHeight * (lw / logoImg.naturalWidth);
-    tCtx.drawImage(logoImg, (size-lw)/2, size*(-0.02), lw, lh);
+    tCtx.drawImage(logoImg, (size - lw) / 2, size * (-0.02), lw, lh);
   }
 
   const link = document.createElement('a');
