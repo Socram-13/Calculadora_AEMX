@@ -156,6 +156,7 @@
             .btn-presencia { order:-1; }
             .btn-leaderboard { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
             .btn-marco { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-visor { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
             .btn-transacciones { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
             .btn-presencia .pr-text { display:inline;font-size:8px;letter-spacing:1px; }
             .btn-presencia { padding:6px 10px;font-size:13px;flex-shrink:0;background:rgba(0,255,157,.12);box-shadow:0 0 10px rgba(0,255,157,.25); }
@@ -178,6 +179,9 @@
         .btn-marco { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #facc15;border-radius:8px;color:#facc15;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;flex-shrink:0; }
         .btn-marco:hover { background:#facc15;color:#060b14;box-shadow:0 0 16px rgba(250,204,21,.4); }
         .btn-marco:disabled { opacity:.3;cursor:not-allowed; }
+        .btn-visor { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #00c8ff;border-radius:8px;color:#00c8ff;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;flex-shrink:0; }
+        .btn-visor:hover { background:#00c8ff;color:#060b14;box-shadow:0 0 16px rgba(0,200,255,.4); }
+        .btn-visor.hidden { display:none; }
         .denied-modal { display:none;position:fixed;inset:0;background:rgba(10,14,26,.92);z-index:3000;align-items:center;justify-content:center; }
         .denied-modal.active { display:flex; }
         .denied-box { background:#0f1419;border:1px solid #ff0066;border-radius:16px;padding:36px 32px;max-width:340px;width:90%;text-align:center;box-shadow:0 0 40px rgba(255,0,102,.2); }
@@ -225,6 +229,7 @@
                     <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙</a>
                     
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️</button>
+                    <button class="btn-visor hidden" id="btnVisor" onclick="abrirVisor()" title="Visor HUD">👁</button>
                     <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
                     <!-- spacer empuja cerrar al extremo derecho -->
                     <div class="header-spacer"></div>
@@ -332,12 +337,14 @@
                     const esClan = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
                     window._userEsClan = esClan;
                     actualizarBtnTransacciones();
+                    document.getElementById('btnVisor')?.classList.toggle('hidden', !esClan);
 
                     authOverlay.classList.remove('visible');
                     initChat(user);
                 }).catch(() => {
                     window._userEsClan = false;
                     actualizarBtnTransacciones();
+                    document.getElementById('btnVisor')?.classList.add('hidden');
                     authOverlay.classList.remove('visible');
                     initChat(user);
                 });
@@ -345,6 +352,7 @@
                 // Sin sesión: ocultar botón
                 window._userEsClan = false;
                 actualizarBtnTransacciones();
+                document.getElementById('btnVisor')?.classList.add('hidden');
                 authOverlay.classList.add('visible');
             }
         });
@@ -559,6 +567,26 @@ const userRef = ref(database, 'chat_presence/' + userId);
         } // fin initChat
 
         // ── Botón Marco ──
+        window.abrirVisor = async function() {
+            const user = auth.currentUser;
+            if (!user) { document.getElementById('deniedModal').classList.add('active'); return; }
+            const ventana = window.open('', '_blank');
+            try {
+                const snap = await get(ref(database, 'users/' + user.uid));
+                const data = snap.exists() ? snap.val() : {};
+                const esMiembro = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
+                if (esMiembro) {
+                    ventana.location.href = 'visor_hud_aemx.html';
+                } else {
+                    ventana.close();
+                    setTimeout(() => document.getElementById('deniedModal').classList.add('active'), 100);
+                }
+            } catch(e) {
+                console.error('Error verificando membresía:', e);
+                ventana.close();
+            }
+        };
+
         window.abrirMarco = async function() {
             const user = auth.currentUser;
             if (!user) { document.getElementById('deniedModal').classList.add('active'); return; }
