@@ -1001,6 +1001,29 @@
       background:transparent !important;
       pointer-events:none;
     }
+    /* ── Parcel drop & bounce animations ── */
+    @keyframes parcelDrop {
+      0%   { transform: translateY(-120vh) scaleY(1.08); opacity:0; }
+      60%  { transform: translateY(0)      scaleY(0.92); opacity:1; }
+      75%  { transform: translateY(-18px)  scaleY(1.04); }
+      88%  { transform: translateY(0)      scaleY(0.97); }
+      96%  { transform: translateY(-6px)   scaleY(1.02); }
+      100% { transform: translateY(0)      scaleY(1);    }
+    }
+    @keyframes parcelSettle {
+      0%   { transform: translateY(0)     scaleY(1);    }
+      25%  { transform: translateY(-14px) scaleY(1.04); }
+      50%  { transform: translateY(0)     scaleY(0.96); }
+      70%  { transform: translateY(-5px)  scaleY(1.02); }
+      100% { transform: translateY(0)     scaleY(1);    }
+    }
+    .parcelInstance.dropping {
+      animation: parcelDrop 0.7s cubic-bezier(.22,.68,0,1.1) forwards;
+    }
+    .parcelInstance.settling {
+      animation: parcelSettle 0.45s cubic-bezier(.22,.68,0,1.2) forwards;
+    }
+
     .parcelInstance .pClose{
       position:absolute;
       top:-10px; right:-10px;
@@ -1308,9 +1331,10 @@
       const wrap = document.createElement('div');
       wrap.className = 'parcelInstance';
       const W = window.innerWidth, H = window.innerHeight;
-      // Spawn near center with small random offset
-      const cx = W/2 - PARCEL_SIZE/2 + (Math.random()-.5)*80;
-      const cy = H/2 - PARCEL_SIZE/2 + (Math.random()-.5)*80;
+      // Floor = 62% down the screen
+      const floorY = H * 0.62 - PARCEL_SIZE/2;
+      const cx = opts.left !== undefined ? opts.left : W/2 - PARCEL_SIZE/2 + (Math.random()-.5)*80;
+      const cy = opts.top  !== undefined ? opts.top  : floorY;
       wrap.style.left = cx + 'px';
       wrap.style.top  = cy + 'px';
       wrap.style.width  = PARCEL_SIZE + 'px';
@@ -1332,6 +1356,12 @@
 
       const _hud = document.querySelector('.stage .hud');
       _hud ? _hud.parentNode.insertBefore(wrap, _hud) : document.querySelector('.stage').appendChild(wrap);
+
+      // Drop animation only for newly placed parcels, not restored ones
+      if(opts.left === undefined && opts.top === undefined){
+        wrap.classList.add('dropping');
+        wrap.addEventListener('animationend', () => wrap.classList.remove('dropping'), { once:true });
+      }
 
       // Three.js per-instance
       const rend = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
@@ -1473,18 +1503,23 @@
       }, {passive:false});
 
       function onPointerUp(e){
-        // On single finger release after small move: might be a tap → show close
+        if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
         if(mode === 'rotate' && pointers.size === 1 && totalMove < 8){
           // tap — already showed close btn above
         }
-        // If was rotating, allow dragging next touch
+        // Snap + settle on drag release
+        if(mode === 'drag' && pointers.size <= 1){
+          snapToNeighbor(instance);
+          wrap.classList.add('settling');
+          wrap.addEventListener('animationend', () => wrap.classList.remove('settling'), { once:true });
+          saveParcelState();
+        }
         pointers.delete(e.pointerId);
         if(pointers.size === 0){
           mode = 'idle';
           lastPinchDist = null;
           wrap.classList.remove('dragging');
         } else if(pointers.size === 1){
-          // dropped one finger from pinch → switch to rotate
           mode = 'rotate';
           const remaining = [...pointers.values()][0];
           rotStartX = remaining.x; rotStartY = remaining.y;
@@ -1522,12 +1557,50 @@
           wrap.style.top  = posTop  + 'px';
         }
       }, {passive:true});
-      wrap.addEventListener('pointerup', ()=>{
-        if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; }
-        if(mode==='drag'){ mode='idle'; wrap.classList.remove('dragging'); saveParcelState(); }
-      }, {passive:true});
-
       return instance;
+    }
+
+    // ── Snap to neighbor corner ───────────────────────────
+    // ── Snap to neighbor — base corner to base corner ────
+    const SNAP_DIST  = 120; // px threshold to trigger snap
+    const BASE_OFFSET = 125; // px between div origins so bases touch edge-to-edge
+
+    function snapToNeighbor(inst){
+      const left = parseFloat(inst.wrap.style.left) || 0;
+      const top  = parseFloat(inst.wrap.style.top)  || 0;
+
+      let bestDist = SNAP_DIST;
+      let snapLeft = null, snapTop = null;
+
+      parcelInstances.forEach(other => {
+        if(other === inst) return;
+        const oLeft = parseFloat(other.wrap.style.left) || 0;
+        const oTop  = parseFloat(other.wrap.style.top)  || 0;
+
+        // 4 adjacent positions where bases touch corner to corner
+        const candidates = [
+          { l: oLeft + BASE_OFFSET, t: oTop              }, // right
+          { l: oLeft - BASE_OFFSET, t: oTop              }, // left
+          { l: oLeft,               t: oTop + BASE_OFFSET }, // below
+          { l: oLeft,               t: oTop - BASE_OFFSET }, // above
+        ];
+
+        candidates.forEach(({ l, t }) => {
+          const dist = Math.sqrt((left - l) ** 2 + (top - t) ** 2);
+          if(dist < bestDist){
+            bestDist = dist;
+            snapLeft = l;
+            snapTop  = t;
+          }
+        });
+      });
+
+      if(snapLeft !== null){
+        inst.wrap.style.transition = 'left .18s cubic-bezier(.22,.68,0,1.2), top .18s cubic-bezier(.22,.68,0,1.2)';
+        inst.wrap.style.left = snapLeft + 'px';
+        inst.wrap.style.top  = snapTop  + 'px';
+        setTimeout(() => { inst.wrap.style.transition = ''; }, 200);
+      }
     }
 
     function destroyInstance(inst){
@@ -1597,7 +1670,6 @@
         parcelMenu.classList.remove('open');
         parcelMenu.classList.add('closed');
         btnParcelToggle.classList.remove('open');
-        btnParcelToggle.querySelector('span:last-child').textContent = 'PARCELAS';
       });
     });
 
@@ -1749,122 +1821,6 @@
       }, true);
     });
 
-    // ── Screen capture & recording ───────────────────────
-            
-    // Screenshot: compose camera + 3D parcelas onto an offscreen canvas
-    function captureFrame(){
-      const W = window.innerWidth, H = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio, 2);
-      const oc = document.createElement('canvas');
-      oc.width = W * dpr; oc.height = H * dpr;
-      const ctx = oc.getContext('2d');
-      ctx.scale(dpr, dpr);
-
-      // 1. Draw camera video
-      const vid = document.getElementById('cam');
-      if(vid && vid.readyState >= 2){
-        // Match object-fit:cover
-        const vw = vid.videoWidth, vh = vid.videoHeight;
-        if(vw && vh){
-          const scale = Math.max(W/vw, H/vh);
-          const sw = vw*scale, sh = vh*scale;
-          const ox = (W-sw)/2, oy = (H-sh)/2;
-          // mirror if needed
-          const mirrored = vid.style.transform.includes('scaleX(-1)');
-          if(mirrored){ ctx.save(); ctx.translate(W,0); ctx.scale(-1,1); ctx.drawImage(vid, -ox-(W-sw), oy, sw, sh); ctx.restore(); }
-          else ctx.drawImage(vid, ox, oy, sw, sh);
-        }
-      }
-
-      // 2. Draw each parcel canvas
-      parcelInstances.forEach(inst=>{
-        const rect = inst.wrap.getBoundingClientRect();
-        ctx.save();
-        ctx.translate(rect.left + rect.width/2, rect.top + rect.height/2);
-        // apply same transform (scale)
-        const sc = inst._scale || 1;
-        ctx.scale(sc, sc);
-        ctx.drawImage(inst.canvas, -inst.canvas.width/2/dpr, -inst.canvas.height/2/dpr,
-                      inst.canvas.width/dpr, inst.canvas.height/dpr);
-        ctx.restore();
-      });
-
-      return oc;
-    }
-
-    // Snapshot
-            oc.toBlob(blob=>{
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = 'aemx-' + Date.now() + '.png';
-          a.click();
-          setTimeout(()=> URL.revokeObjectURL(url), 5000);
-        }, 'image/png');
-      }catch(e){ alert('Error al capturar: ' + e.message); }
-    });
-
-    // Recording
-    let mediaRecorder = null;
-    let recChunks = [];
-    let recStream = null;
-
-          try{
-        // Capture the whole screen via captureStream on a composed canvas
-        // We use a live canvas that composites every frame
-        const W = window.innerWidth, H = window.innerHeight;
-        const dpr = Math.min(window.devicePixelRatio, 2);
-        const liveCanvas = document.createElement('canvas');
-        liveCanvas.width = W * dpr; liveCanvas.height = H * dpr;
-        const lctx = liveCanvas.getContext('2d');
-        lctx.scale(dpr, dpr);
-
-        let recActive = true;
-        function drawFrame(){
-          if(!recActive) return;
-          const vid = document.getElementById('cam');
-          lctx.clearRect(0, 0, W, H);
-          if(vid && vid.readyState >= 2){
-            const vw=vid.videoWidth, vh=vid.videoHeight;
-            if(vw && vh){
-              const scale=Math.max(W/vw,H/vh);
-              const sw=vw*scale, sh=vh*scale;
-              const ox=(W-sw)/2, oy=(H-sh)/2;
-              const mirrored=vid.style.transform.includes('scaleX(-1)');
-              if(mirrored){lctx.save();lctx.translate(W,0);lctx.scale(-1,1);lctx.drawImage(vid,-ox-(W-sw),oy,sw,sh);lctx.restore();}
-              else lctx.drawImage(vid,ox,oy,sw,sh);
-            }
-          }
-          parcelInstances.forEach(inst=>{
-            const rect=inst.wrap.getBoundingClientRect();
-            lctx.save();
-            lctx.translate(rect.left+rect.width/2, rect.top+rect.height/2);
-            const sc=inst._scale||1; lctx.scale(sc,sc);
-            lctx.drawImage(inst.canvas,-inst.canvas.width/2/dpr,-inst.canvas.height/2/dpr,inst.canvas.width/dpr,inst.canvas.height/dpr);
-            lctx.restore();
-          });
-          requestAnimationFrame(drawFrame);
-        }
-        drawFrame();
-
-        recStream = liveCanvas.captureStream(30);
-        recChunks = [];
-        mediaRecorder = new         mediaRecorder.ondataavailable = e=>{ if(e.data.size>0) recChunks.push(e.data); };
-        mediaRecorder.onstop = ()=>{
-          recActive = false;
-          const blob = new Blob(recChunks, {type:'video/webm'});
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href=url; a.download='aemx-'+Date.now()+'.webm'; a.click();
-          setTimeout(()=>URL.revokeObjectURL(url),10000);
-          recChunks=[]; mediaRecorder=null; recStream=null;
-        };
-        mediaRecorder.start(200);
-                              }catch(e){ alert('Error al grabar: '+e.message); }
-    });
-
-                                  }
-    });
     </script>
 
     <!-- LOGIN OVERLAY -->
