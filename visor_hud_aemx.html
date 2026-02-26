@@ -925,6 +925,106 @@
         .chip.qrChip{ border-color:rgba(250,204,21,.30); background:rgba(250,204,21,.07); }
     .chip.qrChip .dot{ background:#facc15; box-shadow:0 0 6px rgba(250,204,21,.65); }
     .chip.qrChip.active{ background:rgba(250,204,21,.18); border-color:rgba(250,204,21,.60); }
+
+    /* ── PARCEL MENU ── */
+    .parcelMenu{
+      position:fixed;
+      bottom: calc(62px + env(safe-area-inset-bottom));
+      left: 10px;
+      z-index: 30;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      pointer-events:auto;
+      transform: translateY(20px);
+      opacity:0;
+      transition: opacity .25s ease, transform .25s cubic-bezier(.22,.68,0,1.2);
+    }
+    .parcelMenu.open{ opacity:1; transform:translateY(0); }
+    .parcelMenu.closed{ pointer-events:none; }
+    .pmBtn{
+      display:flex; align-items:center; gap:8px;
+      padding:8px 14px;
+      border-radius:10px;
+      border:1px solid var(--pc);
+      background:rgba(5,10,20,.80);
+      color:var(--pc);
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      font-size:10px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      cursor:pointer;
+      backdrop-filter:blur(10px);
+      box-shadow:0 0 12px rgba(0,0,0,.4);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .pmBtn:active{ opacity:.7; transform:scale(.96); }
+    .pmBtn .pmDot{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--pc);
+      box-shadow:0 0 6px var(--pc);
+      flex-shrink:0;
+    }
+    /* Toggle button (always visible, above miniBtn on left) */
+    #btnParcelToggle{
+      position:fixed;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      left: 10px;
+      z-index:30;
+      pointer-events:auto;
+      display:flex; align-items:center; gap:6px;
+      padding:10px 14px;
+      border-radius:12px;
+      border:1px solid rgba(0,200,255,.40);
+      background:rgba(5,10,20,.72);
+      color:#00c8ff;
+      font-family:Orbitron,system-ui;
+      font-weight:900;
+      font-size:11px;
+      letter-spacing:2px;
+      cursor:pointer;
+      backdrop-filter:blur(10px);
+      box-shadow:0 0 12px rgba(0,200,255,.15);
+      user-select:none;
+    }
+    #btnParcelToggle.open{
+      border-color:rgba(0,200,255,.80);
+      background:rgba(0,200,255,.15);
+    }
+
+    /* ── DRAGGABLE PARCEL INSTANCES ── */
+    .parcelInstance{
+      position:fixed;
+      z-index:45;
+      cursor:grab;
+      touch-action:none;
+      user-select:none;
+    }
+    .parcelInstance.dragging{ cursor:grabbing; z-index:46; }
+    .parcelInstance canvas{
+      display:block;
+      border-radius:12px;
+      background:transparent !important;
+      pointer-events:none;
+    }
+    .parcelInstance .pClose{
+      position:absolute;
+      top:-10px; right:-10px;
+      width:28px; height:28px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.35);
+      background:rgba(5,10,20,.80);
+      color:#fff;
+      font-size:13px;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer;
+      backdrop-filter:blur(6px);
+      pointer-events:auto;
+      z-index:47;
+      line-height:1;
+    }
   </style>
 </head>
 
@@ -1063,6 +1163,29 @@
       </div>
     </div>
 
+
+    <!-- PARCEL TOGGLE BUTTON -->
+    <div id="btnParcelToggle">
+      <span style="font-size:14px;">⊞</span>
+      <span>PARCELAS</span>
+    </div>
+
+    <!-- PARCEL MENU (emergent, above stats) -->
+    <div class="parcelMenu closed" id="parcelMenu">
+      <div class="pmBtn" data-rarity="legendary" style="--pc:#f59e0b">
+        <span class="pmDot"></span>LEGENDARY
+      </div>
+      <div class="pmBtn" data-rarity="epic" style="--pc:#a855f7">
+        <span class="pmDot"></span>EPIC
+      </div>
+      <div class="pmBtn" data-rarity="rare" style="--pc:#60a5fa">
+        <span class="pmDot"></span>RARE
+      </div>
+      <div class="pmBtn" data-rarity="common" style="--pc:#9ca3af">
+        <span class="pmDot"></span>COMMON
+      </div>
+    </div>
+
     <!-- QR SCANNER OVERLAY -->
     <div class="qrOverlay hidden" id="qrOverlay">
       <div class="qrBox">
@@ -1088,8 +1211,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
     // ══════════════════════════════════════════════════════
-    // AEMX AR PARCEL SYSTEM — anchored on QR in camera feed
+    // AEMX — Multi-parcel draggable AR system
     // ══════════════════════════════════════════════════════
+
     const RARITY_MAP = {
       'AEMX-COMMON':    'common',
       'AEMX-RARE':      'rare',
@@ -1097,32 +1221,7 @@
       'AEMX-LEGENDARY': 'legendary',
     };
 
-    // ── AR canvas & Three.js renderer ────────────────────
-    const arCanvas = document.getElementById('arCanvas');
-    const btnARClose = document.getElementById('btnARClose');
-
-    const renderer = new THREE.WebGLRenderer({ canvas: arCanvas, antialias: true, alpha: true });
-    renderer.setClearColor(0x000000, 0); // fully transparent background
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    const scene = new THREE.Scene();
-    // NO scene.background → transparent
-
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
-    camera.position.set(4.5, 4.5, 4.5);
-    camera.lookAt(0, 0.5, 0);
-
-    // Lights
-    scene.add(new THREE.AmbientLight(0xffffff, 0.60));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
-    dirLight.position.set(5, 8, 5);
-    scene.add(dirLight);
-    scene.add(Object.assign(new THREE.DirectionalLight(0x6699ff, 0.25), { position: new THREE.Vector3(-4,2,-4) }));
-
-    let parcelGroup = null;
-    let arRafId = null;
-
-    // ── Colors ───────────────────────────────────────────
+    // ── Colors & material helper ─────────────────────────
     const C = {
       grassLight:0x5aaf3a, grassDark:0x3d8a27, grassTile:0x4d9c30,
       borderCommon:0x9ca3af, borderRare:0x60a5fa, borderEpic:0xa855f7, borderLegendary:0xf59e0b,
@@ -1132,172 +1231,201 @@
       rockGray:0x6b7280, rockDark:0x4b5563,
       flowerYellow:0xfbbf24, weedGreen:0x166534, weedDark:0x14532d,
     };
-    const mat = (color, opts={}) => new THREE.MeshLambertMaterial({ color, flatShading:true, ...opts });
+    const mat = (color) => new THREE.MeshLambertMaterial({ color, flatShading:true });
 
-    // ── Grass base ───────────────────────────────────────
-    function buildBase(borderColor){
+    function buildBase(bc){
       const g = new THREE.Group();
-      const geo = new THREE.BoxGeometry(4, 0.18, 4, 4, 1, 4);
+      const geo = new THREE.BoxGeometry(4,.18,4,4,1,4);
       const pos = geo.attributes.position;
-      for(let i=0; i<pos.count; i++){
-        if(Math.abs(pos.getY(i) - 0.09) < 0.01) pos.setY(i, pos.getY(i)+(Math.random()-.5)*.06);
-      }
+      for(let i=0;i<pos.count;i++) if(Math.abs(pos.getY(i)-.09)<.01) pos.setY(i,pos.getY(i)+(Math.random()-.5)*.06);
       geo.computeVertexNormals();
-      const colors=[], col=new THREE.Color();
-      for(let i=0;i<pos.count;i++){
-        const t=Math.random();
-        col.setHex(t>.5?C.grassLight:t>.25?C.grassTile:C.grassDark);
-        colors.push(col.r,col.g,col.b);
-      }
-      geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors),3));
-      g.add(Object.assign(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true})), {receiveShadow:true}));
-      const border = new THREE.Mesh(new THREE.BoxGeometry(4.22,0.12,4.22), mat(borderColor));
-      border.position.y=-0.04; g.add(border);
+      const cols=[], col=new THREE.Color();
+      for(let i=0;i<pos.count;i++){ const t=Math.random(); col.setHex(t>.5?C.grassLight:t>.25?C.grassTile:C.grassDark); cols.push(col.r,col.g,col.b); }
+      geo.setAttribute('color',new THREE.BufferAttribute(new Float32Array(cols),3));
+      g.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({vertexColors:true,flatShading:true})));
+      const bm = new THREE.Mesh(new THREE.BoxGeometry(4.22,.12,4.22),mat(bc));
+      bm.position.y=-.04; g.add(bm);
       [{x:0,z:2.06,sx:4.22,sz:.11},{x:0,z:-2.06,sx:4.22,sz:.11},{x:2.06,z:0,sx:.11,sz:4.22},{x:-2.06,z:0,sx:.11,sz:4.22}]
-        .forEach(s=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(s.sx,.14,s.sz),mat(borderColor)); m.position.set(s.x,.05,s.z); g.add(m); });
+        .forEach(s=>{ const m=new THREE.Mesh(new THREE.BoxGeometry(s.sx,.14,s.sz),mat(bc)); m.position.set(s.x,.05,s.z); g.add(m); });
       return g;
     }
-
     function buildCommon(){ return buildBase(C.borderCommon); }
-
     function buildRare(){
       const g=buildBase(C.borderRare);
       [{x:-.6,z:-.4,h:.9,l:.12},{x:-.3,z:-.2,h:1.1,l:-.08},{x:-.7,z:-.1,h:.75,l:.15},{x:-.45,z:.25,h:1.0,l:.05},{x:-.2,z:.1,h:.65,l:-.12}]
-        .forEach(r=>{
-          const reed=new THREE.Mesh(new THREE.CylinderGeometry(.025,.04,r.h,5),mat(Math.random()>.5?C.weedGreen:C.weedDark));
-          reed.position.set(r.x,r.h/2+.09,r.z); reed.rotation.z=r.l; g.add(reed);
-          const tip=new THREE.Mesh(new THREE.ConeGeometry(.06,.18,4),mat(C.weedGreen));
-          tip.position.set(r.x,r.h+.15,r.z); g.add(tip);
-        });
+        .forEach(r=>{ const rm=new THREE.Mesh(new THREE.CylinderGeometry(.025,.04,r.h,5),mat(Math.random()>.5?C.weedGreen:C.weedDark)); rm.position.set(r.x,r.h/2+.09,r.z); rm.rotation.z=r.l; g.add(rm); const tip=new THREE.Mesh(new THREE.ConeGeometry(.06,.18,4),mat(C.weedGreen)); tip.position.set(r.x,r.h+.15,r.z); g.add(tip); });
       return g;
     }
-
     function buildEpic(){
       const g=buildBase(C.borderEpic);
-      const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.1,.15,.55,6),mat(C.trunk));
-      trunk.position.set(.2,.36,.1); g.add(trunk);
+      const tr=new THREE.Mesh(new THREE.CylinderGeometry(.1,.15,.55,6),mat(C.trunk)); tr.position.set(.2,.36,.1); g.add(tr);
       [{y:.64,r:.75,h:1.1},{y:1.35,r:.55,h:.9},{y:1.95,r:.35,h:.75},{y:2.45,r:.18,h:.55}]
-        .forEach((l,i)=>{
-          const c=new THREE.Mesh(new THREE.ConeGeometry(l.r,l.h,7+i),mat(i%2===0?C.pineGreen1:C.pineGreen2));
-          c.position.set(.2,l.y,.1); g.add(c);
-        });
+        .forEach((l,i)=>{ const c=new THREE.Mesh(new THREE.ConeGeometry(l.r,l.h,7+i),mat(i%2===0?C.pineGreen1:C.pineGreen2)); c.position.set(.2,l.y,.1); g.add(c); });
       return g;
     }
-
     function buildLegendary(){
       const g=buildBase(C.borderLegendary);
-      const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.13,.2,1.1,6),mat(C.trunk));
-      trunk.position.set(-.1,.64,-.1); g.add(trunk);
-      const br=new THREE.Mesh(new THREE.CylinderGeometry(.07,.10,.7,5),mat(C.trunkDark));
-      br.position.set(.22,1.05,-.1); br.rotation.z=-.6; g.add(br);
-      [{x:-.1,y:2.1,z:-.1,s:.9,c:C.leafGreen1},{x:.55,y:1.75,z:.1,s:.65,c:C.leafGreen2},
-       {x:-.65,y:1.85,z:.15,s:.60,c:C.leafGreen3},{x:.1,y:2.65,z:.2,s:.55,c:C.leafGreen1},
-       {x:-.3,y:2.35,z:-.55,s:.50,c:C.leafGreen2},{x:.4,y:2.3,z:-.3,s:.45,c:C.leafGreen3}]
+      const tr=new THREE.Mesh(new THREE.CylinderGeometry(.13,.2,1.1,6),mat(C.trunk)); tr.position.set(-.1,.64,-.1); g.add(tr);
+      const br=new THREE.Mesh(new THREE.CylinderGeometry(.07,.10,.7,5),mat(C.trunkDark)); br.position.set(.22,1.05,-.1); br.rotation.z=-.6; g.add(br);
+      [{x:-.1,y:2.1,z:-.1,s:.9,c:C.leafGreen1},{x:.55,y:1.75,z:.1,s:.65,c:C.leafGreen2},{x:-.65,y:1.85,z:.15,s:.60,c:C.leafGreen3},{x:.1,y:2.65,z:.2,s:.55,c:C.leafGreen1},{x:-.3,y:2.35,z:-.55,s:.50,c:C.leafGreen2},{x:.4,y:2.3,z:-.3,s:.45,c:C.leafGreen3}]
         .forEach(l=>{ const m=new THREE.Mesh(new THREE.IcosahedronGeometry(l.s,0),mat(l.c)); m.position.set(l.x,l.y,l.z); m.rotation.y=Math.random()*Math.PI; g.add(m); });
-      const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(.28,0),mat(C.rockGray));
-      rock.position.set(.9,.18,-.5); rock.rotation.y=1.2; rock.scale.set(1,.65,.9); g.add(rock);
-      const rock2=new THREE.Mesh(new THREE.DodecahedronGeometry(.18,0),mat(C.rockDark));
-      rock2.position.set(1.15,.12,-.2); rock2.scale.set(.9,.55,1); g.add(rock2);
-      [{x:.7,z:.5},{x:.5,z:.8},{x:1.0,z:.65},{x:.3,z:.9}].forEach(fp=>{
-        const stem=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,.22,4),mat(C.weedGreen));
-        stem.position.set(fp.x,.2,fp.z); g.add(stem);
-        const petal=new THREE.Mesh(new THREE.ConeGeometry(.07,.06,5),mat(C.flowerYellow));
-        petal.position.set(fp.x,.33,fp.z); g.add(petal);
-      });
+      const rk=new THREE.Mesh(new THREE.DodecahedronGeometry(.28,0),mat(C.rockGray)); rk.position.set(.9,.18,-.5); rk.rotation.y=1.2; rk.scale.set(1,.65,.9); g.add(rk);
+      const rk2=new THREE.Mesh(new THREE.DodecahedronGeometry(.18,0),mat(C.rockDark)); rk2.position.set(1.15,.12,-.2); rk2.scale.set(.9,.55,1); g.add(rk2);
+      [{x:.7,z:.5},{x:.5,z:.8},{x:1.0,z:.65},{x:.3,z:.9}].forEach(fp=>{ const st=new THREE.Mesh(new THREE.CylinderGeometry(.015,.02,.22,4),mat(C.weedGreen)); st.position.set(fp.x,.2,fp.z); g.add(st); const pt=new THREE.Mesh(new THREE.ConeGeometry(.07,.06,5),mat(C.flowerYellow)); pt.position.set(fp.x,.33,fp.z); g.add(pt); });
       return g;
     }
 
-    function loadParcel(rarity){
-      if(parcelGroup){ scene.remove(parcelGroup); parcelGroup=null; }
-      const builders = { common:buildCommon, rare:buildRare, epic:buildEpic, legendary:buildLegendary };
-      if(builders[rarity]){ parcelGroup=builders[rarity](); scene.add(parcelGroup); }
-    }
+    // ── Per-parcel renderer factory ───────────────────────
+    // Each parcel gets its own canvas + renderer + scene
+    const PARCEL_SIZE = 180; // px, base size
+    let parcelInstances = []; // array of active instances
 
-    // ── AR state ──────────────────────────────────────────
-    let arActive = false;
-    let arTarget = { x:0, y:0, size:200 }; // screen position of QR center
-    let arSmooth = { x:0, y:0, size:200 }; // smoothed
-    let qrLostFrames = 0;
-    const QR_LOST_THRESHOLD = 20; // frames before hiding
-
-    function resizeAR(){
+    function createParcelInstance(rarity){
+      // Wrapper div (draggable)
+      const wrap = document.createElement('div');
+      wrap.className = 'parcelInstance';
       const W = window.innerWidth, H = window.innerHeight;
-      arCanvas.width = W * Math.min(window.devicePixelRatio, 2);
-      arCanvas.height = H * Math.min(window.devicePixelRatio, 2);
-      arCanvas.style.width = W + 'px';
-      arCanvas.style.height = H + 'px';
-      renderer.setSize(W, H);
-      camera.aspect = 1;
-      camera.updateProjectionMatrix();
+      // Spawn near center with small random offset
+      const cx = W/2 - PARCEL_SIZE/2 + (Math.random()-.5)*80;
+      const cy = H/2 - PARCEL_SIZE/2 + (Math.random()-.5)*80;
+      wrap.style.left = cx + 'px';
+      wrap.style.top  = cy + 'px';
+      wrap.style.width  = PARCEL_SIZE + 'px';
+      wrap.style.height = PARCEL_SIZE + 'px';
+
+      // Canvas
+      const canvas = document.createElement('canvas');
+      canvas.width  = PARCEL_SIZE * Math.min(window.devicePixelRatio,2);
+      canvas.height = PARCEL_SIZE * Math.min(window.devicePixelRatio,2);
+      canvas.style.width  = PARCEL_SIZE + 'px';
+      canvas.style.height = PARCEL_SIZE + 'px';
+      wrap.appendChild(canvas);
+
+      // Close button
+      const closeBtn = document.createElement('div');
+      closeBtn.className = 'pClose';
+      closeBtn.textContent = '✕';
+      wrap.appendChild(closeBtn);
+
+      document.body.appendChild(wrap);
+
+      // Three.js per-instance
+      const rend = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+      rend.setClearColor(0,0);
+      rend.setPixelRatio(Math.min(window.devicePixelRatio,2));
+      rend.setSize(PARCEL_SIZE, PARCEL_SIZE);
+
+      const sc = new THREE.Scene();
+      sc.add(new THREE.AmbientLight(0xffffff,.60));
+      const dl = new THREE.DirectionalLight(0xffffff,1.1); dl.position.set(5,8,5); sc.add(dl);
+      const fl = new THREE.DirectionalLight(0x6699ff,.25); fl.position.set(-4,2,-4); sc.add(fl);
+
+      const cam = new THREE.PerspectiveCamera(42,1,.1,100);
+      cam.position.set(4.5,4.5,4.5);
+      cam.lookAt(0,.5,0);
+
+      const builders = {common:buildCommon,rare:buildRare,epic:buildEpic,legendary:buildLegendary};
+      const group = builders[rarity]();
+      sc.add(group);
+
+      // Render loop for this instance
+      let rafId = null;
+      function renderLoop(){
+        rafId = requestAnimationFrame(renderLoop);
+        rend.render(sc, cam);
+      }
+      renderLoop();
+
+      // Instance object
+      const instance = { wrap, canvas, rend, sc, cam, group, rafId, rarity };
+      parcelInstances.push(instance);
+
+      // Close
+      closeBtn.addEventListener('pointerdown', e=>{
+        e.stopPropagation();
+        destroyInstance(instance);
+      });
+
+      // ── Drag logic ──────────────────────────────────────
+      let dragging = false;
+      let startX, startY, origLeft, origTop;
+
+      function onDragStart(e){
+        if(e.target === closeBtn) return;
+        dragging = true;
+        wrap.classList.add('dragging');
+        const touch = e.touches ? e.touches[0] : e;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        origLeft = parseFloat(wrap.style.left) || 0;
+        origTop  = parseFloat(wrap.style.top)  || 0;
+        e.preventDefault();
+      }
+      function onDragMove(e){
+        if(!dragging) return;
+        const touch = e.touches ? e.touches[0] : e;
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        wrap.style.left = (origLeft + dx) + 'px';
+        wrap.style.top  = (origTop  + dy) + 'px';
+        e.preventDefault();
+      }
+      function onDragEnd(e){
+        if(!dragging) return;
+        dragging = false;
+        wrap.classList.remove('dragging');
+      }
+
+      wrap.addEventListener('pointerdown',  onDragStart, {passive:false});
+      wrap.addEventListener('pointermove',  onDragMove,  {passive:false});
+      wrap.addEventListener('pointerup',    onDragEnd);
+      wrap.addEventListener('pointercancel',onDragEnd);
+      // Touch fallback
+      wrap.addEventListener('touchstart',  onDragStart, {passive:false});
+      wrap.addEventListener('touchmove',   onDragMove,  {passive:false});
+      wrap.addEventListener('touchend',    onDragEnd);
+
+      return instance;
     }
-    window.addEventListener('resize', resizeAR);
-    resizeAR();
 
-    function arRenderLoop(){
-      if(!arActive){ arRafId=null; return; }
-      arRafId = requestAnimationFrame(arRenderLoop);
-
-      // Smooth position
-      const lerpK = 0.18;
-      arSmooth.x += (arTarget.x - arSmooth.x) * lerpK;
-      arSmooth.y += (arTarget.y - arSmooth.y) * lerpK;
-      arSmooth.size += (arTarget.size - arSmooth.size) * lerpK;
-
-      const W = window.innerWidth, H = window.innerHeight;
-      const dpr = Math.min(window.devicePixelRatio, 2);
-
-      // Render 3D to offscreen then blit at QR position
-      // Use scissor/viewport trick: render into a square centered on QR
-      const renderSize = Math.round(arSmooth.size * 2.2); // model slightly bigger than QR
-      const cx = Math.round(arSmooth.x); // screen center X
-      const cy = Math.round(arSmooth.y); // screen center Y
-
-      // WebGL viewport: bottom-left origin, Y flipped
-      const vpX = Math.round((cx - renderSize/2) * dpr);
-      const vpY = Math.round((H - cy - renderSize/2) * dpr);
-      const vpW = Math.round(renderSize * dpr);
-      const vpH = Math.round(renderSize * dpr);
-
-      renderer.setScissorTest(true);
-      renderer.setScissor(vpX, vpY, vpW, vpH);
-      renderer.setViewport(vpX, vpY, vpW, vpH);
-
-      camera.aspect = 1;
-      camera.updateProjectionMatrix();
-
-      renderer.clear(true, true, true);
-      renderer.render(scene, camera);
-      renderer.setScissorTest(false);
+    function destroyInstance(inst){
+      inst.rafId && cancelAnimationFrame(inst.rafId);
+      inst.rend.dispose();
+      inst.wrap.remove();
+      parcelInstances = parcelInstances.filter(i=>i!==inst);
     }
 
-    // ── Show/hide AR ──────────────────────────────────────
-    function showAR(rarity){
-      loadParcel(rarity);
-      arCanvas.style.display = 'block';
-      btnARClose.style.display = 'flex';
-      // Position close button top-right
-      btnARClose.style.top = 'calc(14px + env(safe-area-inset-top))';
-      btnARClose.style.right = 'calc(14px + env(safe-area-inset-right))';
-      arActive = true;
-      qrLostFrames = 0;
-      if(!arRafId) arRenderLoop();
-    }
+    // ── Parcel menu toggle ───────────────────────────────
+    const parcelMenu   = document.getElementById('parcelMenu');
+    const btnParcelToggle = document.getElementById('btnParcelToggle');
+    let menuOpen = false;
 
-    function hideAR(){
-      arActive = false;
-      arCanvas.style.display = 'none';
-      btnARClose.style.display = 'none';
-      if(parcelGroup){ scene.remove(parcelGroup); parcelGroup=null; }
-    }
+    btnParcelToggle.addEventListener('click', ()=>{
+      menuOpen = !menuOpen;
+      parcelMenu.classList.toggle('open', menuOpen);
+      parcelMenu.classList.toggle('closed', !menuOpen);
+      btnParcelToggle.classList.toggle('open', menuOpen);
+      btnParcelToggle.querySelector('span:last-child').textContent = menuOpen ? 'CERRAR' : 'PARCELAS';
+    });
 
-    btnARClose.addEventListener('click', ()=>{ hideAR(); closeQR(); });
+    document.querySelectorAll('.pmBtn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const rarity = btn.dataset.rarity;
+        createParcelInstance(rarity);
+        // Close menu after placing
+        menuOpen = false;
+        parcelMenu.classList.remove('open');
+        parcelMenu.classList.add('closed');
+        btnParcelToggle.classList.remove('open');
+        btnParcelToggle.querySelector('span:last-child').textContent = 'PARCELAS';
+      });
+    });
 
-    // ── QR Scanner with AR anchor ────────────────────────
+    // ── QR Scanner → also spawns a draggable parcel ──────
     let qrStream = null;
     let qrScanning = false;
     let qrDetector = null;
     let qrLoopTimer = null;
-    let detectedRarity = null;
     const qrOverlay = document.getElementById('qrOverlay');
     const qrVideo   = document.getElementById('qrVideo');
     const qrStatus  = document.getElementById('qrStatus');
@@ -1308,36 +1436,29 @@
       try{ qrDetector = new BarcodeDetector({ formats:['qr_code'] }); }catch(e){ qrDetector=null; }
     }
 
-    // Manual fallback
     if(!qrDetector){
       const qrBox = document.querySelector('.qrBox');
       const inp = document.createElement('input');
       inp.type='text'; inp.placeholder='AEMX-COMMON / RARE / EPIC / LEGENDARY';
       inp.style.cssText='background:rgba(5,10,20,.85);border:1px solid rgba(0,200,255,.35);color:#fff;padding:8px 12px;border-radius:8px;width:100%;font-family:Orbitron,system-ui;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;outline:none;text-align:center;margin-top:8px;';
-      const btn = document.createElement('button');
-      btn.textContent='CONFIRMAR';
-      btn.style.cssText='margin-top:6px;padding:7px 22px;border-radius:8px;border:1px solid rgba(0,200,255,.30);background:rgba(0,200,255,.10);color:#fff;font-family:Orbitron,system-ui;font-weight:800;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%;';
-      const confirm = ()=>{
+      const btn2 = document.createElement('button');
+      btn2.textContent='CONFIRMAR';
+      btn2.style.cssText='margin-top:6px;padding:7px 22px;border-radius:8px;border:1px solid rgba(0,200,255,.30);background:rgba(0,200,255,.10);color:#fff;font-family:Orbitron,system-ui;font-weight:800;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%;';
+      const confirm=()=>{
         const code=inp.value.trim().toUpperCase();
         const rarity=RARITY_MAP[code];
-        if(rarity){
-          // Position in center screen when manual
-          arTarget = { x: window.innerWidth/2, y: window.innerHeight/2, size: Math.min(window.innerWidth,window.innerHeight)*0.35 };
-          arSmooth = { ...arTarget };
-          closeQR();
-          showAR(rarity);
-        } else {
-          qrStatus.textContent='⚠ CÓDIGO NO VÁLIDO';
-        }
+        if(rarity){ closeQR(); createParcelInstance(rarity); }
+        else qrStatus.textContent='⚠ CÓDIGO NO VÁLIDO';
       };
-      btn.addEventListener('click', confirm);
-      inp.addEventListener('keydown', e=>{ if(e.key==='Enter') confirm(); });
-      qrBox.appendChild(inp); qrBox.appendChild(btn);
+      btn2.addEventListener('click',confirm);
+      inp.addEventListener('keydown',e=>{ if(e.key==='Enter') confirm(); });
+      qrBox.appendChild(inp); qrBox.appendChild(btn2);
     }
 
     async function openQR(){
       qrOverlay.classList.remove('hidden');
-      btnQR.style.background='rgba(250,204,21,.25)'; btnQR.style.borderColor='rgba(250,204,21,.80)';
+      btnQR.style.background='rgba(250,204,21,.25)';
+      btnQR.style.borderColor='rgba(250,204,21,.80)';
       if(!qrDetector){
         document.querySelector('.qrFrame').style.display='none';
         qrStatus.textContent='INGRESA EL CÓDIGO MANUALMENTE';
@@ -1345,20 +1466,12 @@
       }
       qrStatus.textContent='INICIANDO CÁMARA…';
       try{
-        // Use the MAIN camera stream if already running
-        const mainCam = document.getElementById('cam');
-        if(mainCam && mainCam.srcObject){
-          qrStream = mainCam.srcObject;
-          qrVideo.srcObject = qrStream;
-          qrVideo.play().catch(()=>{});
-        } else {
-          qrStream = await navigator.mediaDevices.getUserMedia({
-            video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
-            audio:false
-          });
-          qrVideo.srcObject = qrStream;
-          await qrVideo.play();
-        }
+        qrStream = await navigator.mediaDevices.getUserMedia({
+          video:{ facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720} },
+          audio:false
+        });
+        qrVideo.srcObject = qrStream;
+        await qrVideo.play();
         qrScanning = true;
         qrStatus.textContent='APUNTA AL CÓDIGO QR';
         scanLoop();
@@ -1368,130 +1481,46 @@
     }
 
     function closeQR(){
-      qrScanning = false;
+      qrScanning=false;
       if(qrLoopTimer){ clearTimeout(qrLoopTimer); qrLoopTimer=null; }
-      // Don't stop stream — we might need it for AR tracking
-      qrVideo.srcObject = null;
-      qrStream = null;
+      if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream=null; }
+      qrVideo.srcObject=null;
       qrOverlay.classList.add('hidden');
-      btnQR.style.background='rgba(5,10,20,.72)'; btnQR.style.borderColor='rgba(250,204,21,.45)';
+      btnQR.style.background='rgba(5,10,20,.72)';
+      btnQR.style.borderColor='rgba(250,204,21,.45)';
     }
 
     async function scanLoop(){
-      if(!qrScanning || !qrDetector) return;
+      if(!qrScanning||!qrDetector) return;
       try{
         const barcodes = await qrDetector.detect(qrVideo);
-        if(barcodes.length > 0){
-          const barcode = barcodes[0];
-          const code = barcode.rawValue.trim().toUpperCase();
-          const rarity = RARITY_MAP[code];
+        if(barcodes.length>0){
+          const code=barcodes[0].rawValue.trim().toUpperCase();
+          const rarity=RARITY_MAP[code];
           if(rarity){
-            // Get QR bounding box in the qrVideo element's coordinate space
-            // then map to screen coordinates
-            const vw = qrVideo.videoWidth || qrVideo.offsetWidth;
-            const vh = qrVideo.videoHeight || qrVideo.offsetHeight;
-            const rect = qrVideo.getBoundingClientRect();
-
-            // Corner points from BarcodeDetector
-            const pts = barcode.cornerPoints;
-            const cx_vid = (pts[0].x + pts[1].x + pts[2].x + pts[3].x) / 4;
-            const cy_vid = (pts[0].y + pts[1].y + pts[2].y + pts[3].y) / 4;
-
-            // QR size in video pixels
-            const qrW = Math.hypot(pts[1].x-pts[0].x, pts[1].y-pts[0].y);
-            const qrH = Math.hypot(pts[3].x-pts[0].x, pts[3].y-pts[0].y);
-            const qrSize_vid = (qrW + qrH) / 2;
-
-            // Scale to screen (video element might be scaled/cropped)
-            const scaleX = rect.width / vw;
-            const scaleY = rect.height / vh;
-            const scale = Math.min(scaleX, scaleY); // object-fit:cover uses max actually
-            // For cover: scale = max, and centered
-            const coverScale = Math.max(scaleX, scaleY);
-            const offsetX = (rect.width  - vw * coverScale) / 2;
-            const offsetY = (rect.height - vh * coverScale) / 2;
-
-            const screen_cx = rect.left + offsetX + cx_vid * coverScale;
-            const screen_cy = rect.top  + offsetY + cy_vid * coverScale;
-            const screen_size = qrSize_vid * coverScale;
-
-            arTarget = { x: screen_cx, y: screen_cy, size: screen_size };
-
-            if(!arActive){
-              arSmooth = { ...arTarget };
-              detectedRarity = rarity;
-              qrStatus.textContent = '✓ ' + code;
-              // Switch: close overlay, start AR on MAIN camera
-              // Reuse main camera for AR tracking
-              closeQR();
-              showAR(rarity);
-              // Start AR tracking loop using main camera
-              startARTracking(rarity);
-              return;
-            }
+            qrStatus.textContent='✓ '+code;
+            closeQR();
+            createParcelInstance(rarity);
+            return;
           } else {
-            qrStatus.textContent = 'QR NO RECONOCIDO';
+            qrStatus.textContent='QR NO RECONOCIDO';
           }
         }
       }catch(e){}
-      if(qrScanning) qrLoopTimer = setTimeout(scanLoop, 150);
+      if(qrScanning) qrLoopTimer=setTimeout(scanLoop,150);
     }
 
-    // ── AR tracking: keep detecting QR on main camera ────
-    let arTrackTimer = null;
-    let arTrackDetector = null;
-
-    async function startARTracking(rarity){
-      if(arTrackDetector) return;
-      try{ arTrackDetector = new BarcodeDetector({ formats:['qr_code'] }); }catch(e){ return; }
-
-      const mainCam = document.getElementById('cam');
-      if(!mainCam) return;
-
-      async function trackLoop(){
-        if(!arActive){ arTrackDetector=null; return; }
-        try{
-          const barcodes = await arTrackDetector.detect(mainCam);
-          if(barcodes.length > 0){
-            const barcode = barcodes[0];
-            const vw = mainCam.videoWidth || mainCam.offsetWidth;
-            const vh = mainCam.videoHeight || mainCam.offsetHeight;
-            const rect = mainCam.getBoundingClientRect();
-
-            const pts = barcode.cornerPoints;
-            const cx_vid = (pts[0].x+pts[1].x+pts[2].x+pts[3].x)/4;
-            const cy_vid = (pts[0].y+pts[1].y+pts[2].y+pts[3].y)/4;
-            const qrW = Math.hypot(pts[1].x-pts[0].x, pts[1].y-pts[0].y);
-            const qrH = Math.hypot(pts[3].x-pts[0].x, pts[3].y-pts[0].y);
-            const qrSize_vid = (qrW+qrH)/2;
-
-            const coverScale = Math.max(rect.width/vw, rect.height/vh);
-            const offsetX = (rect.width  - vw*coverScale)/2;
-            const offsetY = (rect.height - vh*coverScale)/2;
-
-            arTarget.x = rect.left + offsetX + cx_vid*coverScale;
-            arTarget.y = rect.top  + offsetY + cy_vid*coverScale;
-            arTarget.size = qrSize_vid * coverScale;
-            qrLostFrames = 0;
-          } else {
-            qrLostFrames++;
-            if(qrLostFrames > QR_LOST_THRESHOLD){
-              // QR lost — keep last position (don't hide, just freeze)
-            }
-          }
-        }catch(e){}
-        if(arActive) arTrackTimer = setTimeout(trackLoop, 100);
-        else arTrackDetector = null;
-      }
-      trackLoop();
-    }
-
-    // ── Button listeners ──────────────────────────────────
     document.getElementById('btnQRClose').addEventListener('click', closeQR);
     btnQR.addEventListener('click', ()=>{
       if(qrOverlay.classList.contains('hidden')) openQR();
       else closeQR();
     });
+
+    // Remove old single AR canvas (no longer needed)
+    const oldAR = document.getElementById('arCanvas');
+    if(oldAR) oldAR.remove();
+    const oldARClose = document.getElementById('btnARClose');
+    if(oldARClose) oldARClose.remove();
     </script>
 
     <!-- LOGIN OVERLAY -->
