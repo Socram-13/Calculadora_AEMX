@@ -1135,9 +1135,8 @@
       </div>
     </div>
 
-    <!-- THREE.JS + JSQR -->
+    <!-- THREE.JS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script>
     // ══════════════════════════════════════════════════════
     // AEMX 3D PARCEL SYSTEM
@@ -1462,67 +1461,126 @@
 
     document.getElementById('btnParcelDismiss').addEventListener('click', hideParcel);
 
-    // ── QR Scanner ───────────────────────────────────────
+    // ── QR Scanner (BarcodeDetector nativo + fallback manual) ──
     let qrStream = null;
-    let qrAnimReq = null;
     let qrScanning = false;
+    let qrDetector = null;
+    let qrLoopTimer = null;
     const qrOverlay = document.getElementById('qrOverlay');
     const qrVideo   = document.getElementById('qrVideo');
     const qrStatus  = document.getElementById('qrStatus');
     const btnQR     = document.getElementById('btnQR');
 
-    const qrCanvas  = document.createElement('canvas');
-    const qrCtx     = qrCanvas.getContext('2d', { willReadFrequently: true });
+    // Check BarcodeDetector support (Chrome 83+, Android WebView, Edge)
+    const hasBarcodeDetector = ('BarcodeDetector' in window);
+    if(hasBarcodeDetector){
+      try{ qrDetector = new BarcodeDetector({ formats:['qr_code'] }); }catch(e){ qrDetector = null; }
+    }
 
-    function openQR(){
+    // Manual input fallback UI (injected if no BarcodeDetector)
+    let manualInput = null;
+    if(!qrDetector){
+      // Add manual input inside qrBox
+      const qrBox = document.querySelector('.qrBox');
+      manualInput = document.createElement('input');
+      manualInput.type = 'text';
+      manualInput.placeholder = 'AEMX-COMMON / RARE / EPIC / LEGENDARY';
+      manualInput.style.cssText = `
+        background:rgba(5,10,20,.85);border:1px solid rgba(0,200,255,.35);
+        color:#fff;padding:8px 12px;border-radius:8px;width:100%;
+        font-family:Orbitron,system-ui;font-size:10px;letter-spacing:1.5px;
+        text-transform:uppercase;outline:none;text-align:center;
+      `;
+      const manualBtn = document.createElement('button');
+      manualBtn.textContent = 'CONFIRMAR';
+      manualBtn.style.cssText = `
+        padding:7px 22px;border-radius:8px;border:1px solid rgba(0,200,255,.30);
+        background:rgba(0,200,255,.10);color:#fff;font-family:Orbitron,system-ui;
+        font-weight:800;font-size:9px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;width:100%;
+      `;
+      manualBtn.addEventListener('click', ()=>{
+        const code = manualInput.value.trim().toUpperCase();
+        if(RARITY_MAP[code]){
+          closeQR();
+          setTimeout(()=>showParcel(code),150);
+        } else {
+          qrStatus.textContent = '⚠ CÓDIGO NO VÁLIDO';
+        }
+      });
+      manualInput.addEventListener('keydown', e=>{ if(e.key==='Enter') manualBtn.click(); });
+      qrBox.insertBefore(manualInput, qrBox.querySelector('.qrStatus'));
+      qrBox.insertBefore(manualBtn, qrBox.querySelector('.qrStatus'));
+    }
+
+    async function openQR(){
       qrOverlay.classList.remove('hidden');
       btnQR.classList.add('active');
+
+      if(!qrDetector){
+        // No BarcodeDetector: show manual input, hide video
+        qrVideo.style.display='none';
+        document.querySelector('.qrFrame').style.display='none';
+        document.querySelector('.qrScanLine') && (document.querySelector('.qrScanLine').style.display='none');
+        qrStatus.textContent = 'INGRESA EL CÓDIGO MANUALMENTE';
+        if(manualInput) setTimeout(()=>manualInput.focus(),200);
+        return;
+      }
+
       qrStatus.textContent = 'INICIANDO CÁMARA…';
-      navigator.mediaDevices.getUserMedia({ video:{ facingMode:'environment' }, audio:false })
-        .then(stream=>{
-          qrStream = stream;
-          qrVideo.srcObject = stream;
-          qrVideo.play();
-          qrScanning = true;
-          qrStatus.textContent = 'APUNTA AL CÓDIGO QR';
-          scanLoop();
-        })
-        .catch(()=>{
-          qrStatus.textContent = 'ERROR: PERMISO DENEGADO';
+      try{
+        qrStream = await navigator.mediaDevices.getUserMedia({
+          video:{ facingMode:{ ideal:'environment' }, width:{ideal:1280}, height:{ideal:720} },
+          audio:false
         });
+        qrVideo.srcObject = qrStream;
+        await qrVideo.play();
+        qrScanning = true;
+        qrStatus.textContent = 'APUNTA AL CÓDIGO QR';
+        scanLoop();
+      }catch(e){
+        qrStatus.textContent = 'PERMISO DENEGADO — INGRESA CÓDIGO:';
+        // fallback: show text input even if BarcodeDetector exists
+        if(!manualInput){
+          const qrBox = document.querySelector('.qrBox');
+          const inp = document.createElement('input');
+          inp.type='text'; inp.placeholder='AEMX-COMMON';
+          inp.style.cssText='background:rgba(5,10,20,.85);border:1px solid rgba(0,200,255,.35);color:#fff;padding:8px 12px;border-radius:8px;width:100%;font-family:Orbitron,system-ui;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;outline:none;text-align:center;';
+          const btn = document.createElement('button');
+          btn.textContent='CONFIRMAR';
+          btn.style.cssText='padding:7px 22px;border-radius:8px;border:1px solid rgba(0,200,255,.30);background:rgba(0,200,255,.10);color:#fff;font-family:Orbitron,system-ui;font-weight:800;font-size:9px;letter-spacing:2px;cursor:pointer;width:100%;';
+          btn.onclick=()=>{ const c=inp.value.trim().toUpperCase(); if(RARITY_MAP[c]){closeQR();setTimeout(()=>showParcel(c),150);} else qrStatus.textContent='⚠ CÓDIGO NO VÁLIDO'; };
+          qrBox.appendChild(inp); qrBox.appendChild(btn);
+          setTimeout(()=>inp.focus(),200);
+        }
+      }
     }
 
     function closeQR(){
       qrScanning = false;
-      if(qrAnimReq){ cancelAnimationFrame(qrAnimReq); qrAnimReq = null; }
-      if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream = null; }
+      if(qrLoopTimer){ clearTimeout(qrLoopTimer); qrLoopTimer=null; }
+      if(qrStream){ qrStream.getTracks().forEach(t=>t.stop()); qrStream=null; }
       qrVideo.srcObject = null;
       qrOverlay.classList.add('hidden');
       btnQR.classList.remove('active');
     }
 
-    function scanLoop(){
-      if(!qrScanning) return;
-      qrAnimReq = requestAnimationFrame(scanLoop);
-      if(qrVideo.readyState !== qrVideo.HAVE_ENOUGH_DATA) return;
-      const w = qrVideo.videoWidth;
-      const h = qrVideo.videoHeight;
-      if(!w || !h) return;
-      qrCanvas.width = w;
-      qrCanvas.height = h;
-      qrCtx.drawImage(qrVideo, 0, 0, w, h);
-      const imgData = qrCtx.getImageData(0, 0, w, h);
-      const result = jsQR(imgData.data, w, h, { inversionAttempts:'dontInvert' });
-      if(result){
-        const code = result.data.trim().toUpperCase();
-        if(RARITY_MAP[code]){
-          qrStatus.textContent = '✓ PARCELA DETECTADA: ' + code;
-          closeQR();
-          setTimeout(()=> showParcel(code), 200);
-        } else {
-          qrStatus.textContent = 'QR NO RECONOCIDO';
+    async function scanLoop(){
+      if(!qrScanning || !qrDetector) return;
+      try{
+        const barcodes = await qrDetector.detect(qrVideo);
+        if(barcodes.length > 0){
+          const code = barcodes[0].rawValue.trim().toUpperCase();
+          if(RARITY_MAP[code]){
+            qrStatus.textContent = '✓ ' + code;
+            closeQR();
+            setTimeout(()=>showParcel(code),200);
+            return;
+          } else {
+            qrStatus.textContent = 'QR NO RECONOCIDO';
+          }
         }
-      }
+      }catch(e){}
+      if(qrScanning) qrLoopTimer = setTimeout(scanLoop, 250);
     }
 
     document.getElementById('btnQRClose').addEventListener('click', closeQR);
