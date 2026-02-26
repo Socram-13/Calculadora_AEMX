@@ -72,7 +72,7 @@
     z-index: 1;
     max-width: 900px;
     margin: 0 auto;
-    padding: 12px 16px 40px;
+    padding: 12px 16px 16px;
   }
 
   header {
@@ -190,7 +190,7 @@
   }
 
   @media (max-width: 480px) {
-    .container { padding: 8px 8px 100px; }
+    .container { padding: 8px 8px 70px; }
     .header-bar { padding: 10px 10px; gap: 6px; }
     .aemx-logo-img, .atlas-logo-img { width: 44px; height: 44px; }
     .header-tagline { display: none; }
@@ -3056,10 +3056,10 @@
     };
   </script>
 
-  <p style="text-align:center;color:var(--text2);font-size:11px;margin-top:10px;letter-spacing:1px;">
+  <p style="text-align:center;color:var(--text2);font-size:11px;margin-top:4px;letter-spacing:1px;">
     Tasas oficiales de Atlas Earth • Los cálculos son estimados • El ad boost asume 24/7
   </p>
-  <p style="text-align:center;margin-top:6px;">
+  <p style="text-align:center;margin-top:4px;margin-bottom:0;">
     <a href="https://paypal.me/Socram1331" target="_blank" style="color:var(--text2);font-size:11px;letter-spacing:1px;text-decoration:none;opacity:0.7;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">
       ☕ ¿Te fue útil? Apoya con una donación
     </a>
@@ -4326,7 +4326,7 @@
         document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
       }
       if (chatOpen) {
-        history.pushState({ chatOpen: true }, '', window.location.pathname + window.location.search + '#chat');
+        history.pushState({ chatOpen: true }, '');
         // ✅ Solo carga el iframe la PRIMERA vez — evita reinicios de Firebase
         const frame = document.getElementById('chat-frame');
         if (!frame.getAttribute('data-loaded')) {
@@ -4357,12 +4357,7 @@
       if (window.innerWidth <= 480) document.getElementById('chat-fab').style.display = 'flex';
     }
 
-    window.addEventListener('popstate', (e) => {
-      if (chatOpen) {
-        e.preventDefault && e.preventDefault();
-        closeChatWidget();
-      }
-    });
+    window.addEventListener('popstate', () => { if (chatOpen) closeChatWidget(); });
   </script>
 </body>
 </html>
