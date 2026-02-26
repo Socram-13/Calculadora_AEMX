@@ -1853,13 +1853,13 @@
       const isLandscape = window.innerWidth > window.innerHeight;
       let dx, dy;
       if(isLandscape){
-        // En horizontal: gamma mueve X, beta mueve Y (invertido)
+        // En horizontal: gamma mueve X, beta mueve Y
         dx = (e.beta  - lastBeta)  * GYRO_SENSITIVITY;
         dy = (e.gamma - lastGamma) * GYRO_SENSITIVITY * -1;
       } else {
-        // En vertical: gamma mueve X, beta mueve Y
+        // En vertical: gamma mueve X, beta mueve Y (invertido para efecto AR)
         dx = (e.gamma - lastGamma) * GYRO_SENSITIVITY;
-        dy = (e.beta  - lastBeta)  * GYRO_SENSITIVITY;
+        dy = (e.beta  - lastBeta)  * GYRO_SENSITIVITY * -1;
       }
       lastBeta  = e.beta;
       lastGamma = e.gamma;
