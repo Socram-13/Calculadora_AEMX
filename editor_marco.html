@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
 <title>AEMX · Editor de Marco</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
@@ -18,7 +18,7 @@ body{
   align-items:center; padding:24px 16px 48px; gap:20px;
 }
 body::before{
-  content:''; position:fixed; inset:0;
+  content:''; position:fixed; top:0; right:0; bottom:0; left:0;
   background-image:
     linear-gradient(rgba(0,200,255,0.03) 1px,transparent 1px),
     linear-gradient(90deg,rgba(0,200,255,0.03) 1px,transparent 1px);
@@ -94,9 +94,11 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
   border-radius:50%; overflow:hidden;
   box-shadow:0 0 60px rgba(0,200,255,0.15), 0 20px 60px rgba(0,0,0,0.8);
   cursor:pointer;
+  touch-action:none; /* iOS: previene scroll/zoom del sistema durante pan/pinch */
+  -webkit-user-select:none; user-select:none;
 }
 .editor-wrap.dragover{outline:2px dashed var(--glow); outline-offset:4px;}
-.layer{position:absolute; inset:0; width:100%; height:100%;}
+.layer{position:absolute; top:0; right:0; bottom:0; left:0; width:100%; height:100%;}
 #photo-layer{
   background:#0d0d0d;
   display:flex; align-items:center; justify-content:center;
@@ -104,7 +106,7 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
 #photo-layer img{
   position:absolute; width:100%; height:100%; object-fit:cover;
   transform-origin:center center;
-  cursor:grab; user-select:none; -webkit-user-drag:none;
+  cursor:grab; -webkit-user-select:none; user-select:none; -webkit-user-drag:none;
 }
 #photo-layer img:active{ cursor:grabbing; }
 .upload-hint{
@@ -118,14 +120,14 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
 }
 /* frame layers — canvas tint */
 #layer1-canvas, #layer2-canvas{
-  position:absolute; inset:0; width:100%; height:100%;
+  position:absolute; top:0; right:0; bottom:0; left:0; width:100%; height:100%;
   pointer-events:none;
 }
 #layer1-canvas{z-index:2;}
 #layer2-canvas{z-index:3;}
 /* logo layer — top, no tint */
 #logo-layer{
-  position:absolute; inset:0; width:100%; height:100%;
+  position:absolute; top:0; right:0; bottom:0; left:0; width:100%; height:100%;
   pointer-events:none; z-index:4;
   display:flex; align-items:flex-start; justify-content:center;
   padding-top:0;
@@ -151,10 +153,10 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
 
 /* ── Access overlay ── */
 #accessOverlay{
-  display:none; position:fixed; inset:0; z-index:99999;
+  display:none; position:fixed; top:0; right:0; bottom:0; left:0; z-index:99999;
   background:rgba(6,11,20,0.97);
   align-items:center; justify-content:center; flex-direction:column; gap:24px;
-  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
 }
 .access-box{
   background:var(--panel); border:1px solid var(--border);
@@ -334,7 +336,7 @@ input[type="range"]{width:90px; accent-color:var(--glow);}
   <canvas id="layer2-canvas"></canvas>
   <!-- Capa 3: logo fijo -->
   <div class="layer" id="logo-layer">
-    <img id="logo-img" src="" alt="AEMX Logo"/>
+    <img id="logo-img" src="" alt="AEMX Logo" crossorigin="anonymous"/>
   </div>
   </div>
 </div>
@@ -588,7 +590,8 @@ wrap.addEventListener('touchmove', e => {
   }
 }, { passive: false });
 
-wrap.addEventListener('touchend', () => { touch.last = null; touch.lastDist = null; });
+wrap.addEventListener('touchend',   () => { touch.last = null; touch.lastDist = null; touch.lastZoom = null; });
+wrap.addEventListener('touchcancel', () => { touch.last = null; touch.lastDist = null; touch.lastZoom = null; });
 
 // ── Click para subir (solo si no hay foto y no hubo drag) ─────────────────────
 wrap.addEventListener('click', e => {
@@ -639,10 +642,17 @@ function descargar() {
     tCtx.drawImage(logoImg, 0, 0, size, size);
   }
 
-  const link = document.createElement('a');
-  link.download = 'AEMX_marco.png';
-  link.href = tmp.toDataURL('image/png');
-  link.click();
+  const dataUrl = tmp.toDataURL('image/png');
+  // iOS Safari: <a download> no funciona — abre en nueva pestaña para guardar
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (isIOS) {
+    window.open(dataUrl, '_blank');
+  } else {
+    const link = document.createElement('a');
+    link.download = 'AEMX_marco.png';
+    link.href = dataUrl;
+    link.click();
+  }
 }
 </script>
 
