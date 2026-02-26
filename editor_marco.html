@@ -408,32 +408,49 @@ wrap.addEventListener('dragleave', () => wrap.classList.remove('dragover'));
 wrap.addEventListener('drop', e => { e.preventDefault(); wrap.classList.remove('dragover'); loadPhoto(e.dataTransfer.files[0]); });
 
 // ── Dibuja una imagen con CSS filter preservando transparencia ───────────────
-// La clave: renderizamos la imagen filtrada en un canvas temporal con fondo
-// transparente y luego la composite sobre el canvas principal con drawImage.
-// Así evitamos que el navegador rellene las zonas alpha con negro.
+// El problema: ctx.filter trabaja con alpha premultiplicado. Al aplicar
+// hue-rotate/saturate, los píxeles semitransparentes de los bordes del PNG
+// quedan con RGB contaminado de negro. No hay forma de corregirlo después
+// porque el daño ocurre durante la multiplicación interna del canvas.
+//
+// Solución: aplicar el filtro en un canvas B, luego usar destination-in con
+// el alpha original limpio (canvas A) para "recortar" exactamente los bordes.
+// destination-in conserva solo los píxeles donde A tiene alpha > 0, eliminando
+// cualquier borde negro que haya generado el filtro.
 function drawFiltered(ctx, imgEl, size) {
   const filterStr = imgEl.style.filter || '';
+
+  // Canvas A — imagen original sin filtro (alpha limpio)
+  const canvasA = document.createElement('canvas');
+  canvasA.width = canvasA.height = size;
+  const ctxA = canvasA.getContext('2d');
+  ctxA.drawImage(imgEl, 0, 0, size, size);
+
   if (!filterStr || filterStr === 'none') {
-    ctx.drawImage(imgEl, 0, 0, size, size);
+    ctx.drawImage(canvasA, 0, 0);
     return;
   }
 
-  // Canvas temporal solo para aplicar el filtro
-  const offscreen = document.createElement('canvas');
-  offscreen.width = offscreen.height = size;
-  const offCtx = offscreen.getContext('2d');
+  // Canvas B — imagen con filtro aplicado (puede tener bordes negros)
+  const canvasB = document.createElement('canvas');
+  canvasB.width = canvasB.height = size;
+  const ctxB = canvasB.getContext('2d');
+  ctxB.filter = filterStr;
+  ctxB.drawImage(imgEl, 0, 0, size, size);
+  ctxB.filter = 'none';
 
-  // Dibujamos la imagen sin filtro en el offscreen (fondo transparente)
-  offCtx.clearRect(0, 0, size, size);
-  offCtx.drawImage(imgEl, 0, 0, size, size);
+  // Canvas C — aplicamos destination-in: los colores de B quedan enmascarados
+  // por el alpha de A. Resultado: colores filtrados + alpha original limpio.
+  const canvasC = document.createElement('canvas');
+  canvasC.width = canvasC.height = size;
+  const ctxC = canvasC.getContext('2d');
+  ctxC.drawImage(canvasB, 0, 0);                    // paso 1: dibujar imagen filtrada
+  ctxC.globalCompositeOperation = 'destination-in'; // paso 2: recortar con alpha original
+  ctxC.drawImage(canvasA, 0, 0);
+  ctxC.globalCompositeOperation = 'source-over';    // restaurar modo por defecto
 
-  // Aplicamos el filtro CSS sobre el canvas principal usando el offscreen como fuente
-  // Guardamos el estado y usamos filter sobre el ctx principal
-  ctx.save();
-  ctx.filter = filterStr;
-  ctx.drawImage(offscreen, 0, 0, size, size);
-  ctx.filter = 'none';
-  ctx.restore();
+  // Composite final sobre el canvas principal
+  ctx.drawImage(canvasC, 0, 0);
 }
 
 // ── Download: composite all layers preservando transparencia ─────────────────
