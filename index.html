@@ -4346,7 +4346,6 @@
       const name  = badge.querySelector('.mbadge-tooltip-name')?.textContent || '';
       const desc  = badge.querySelector('.mbadge-tooltip-desc')?.textContent || '';
       const cost  = badge.querySelector('.mbadge-tooltip-cost')?.textContent || '';
-      const icon  = badge.querySelector('.mbadge-icon')?.childNodes[0]?.textContent?.trim() || '🏅';
       const rarity = getRarity(badge);
       const cfg   = RARITY_CONFIG[rarity];
       const mid   = badge.dataset.medalId;
@@ -4355,7 +4354,13 @@
 
       // Ícono
       const mmIcon = document.getElementById('mmIcon');
-      mmIcon.textContent = icon;
+      const imgEl = badge.querySelector('.mbadge-icon img');
+      if (imgEl) {
+        mmIcon.innerHTML = `<img src="${imgEl.src}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:11px;display:block;">`;
+      } else {
+        const icon = badge.querySelector('.mbadge-icon')?.childNodes[0]?.textContent?.trim() || '🏅';
+        mmIcon.textContent = icon;
+      }
       mmIcon.style.background = cfg.bg;
       mmIcon.style.borderColor = cfg.border;
       mmIcon.style.boxShadow   = `0 0 20px ${cfg.bg}`;
