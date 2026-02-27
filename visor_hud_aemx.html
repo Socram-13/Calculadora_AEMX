@@ -977,7 +977,7 @@
 
 
     /* Hand tracking canvas */
-    #handCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:2; }
+    #handCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:55; }
 
     /* ── BOOT OVERLAY ── */
     #bootOverlay{
@@ -1138,7 +1138,7 @@
 <body>
   <div class="stage">
     <video id="cam" autoplay playsinline muted></video>
-    <canvas id="handCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;"></canvas>
+    <canvas id="handCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:55;"></canvas>
 
     <div class="hud">
       <div class="scanlines"></div>
@@ -1480,14 +1480,75 @@
 
       // Render loop for this instance
       let rafId = null;
+      let _hovering = false;
+      let _hoverColor = '';
+      let _hoverPoint = null;
+      let _velX = 0, _velY = 0;
+      const IMPULSE   = 6.0;
+      const FRICTION  = 0.99;
+
       function renderLoop(){
         rafId = requestAnimationFrame(renderLoop);
+
+        // Aplicar impulso cuando hay hover — dirección según posición de la mano vs centro parcela
+        if(_hovering && _hoverPoint){
+          const rect = wrap.getBoundingClientRect();
+          const cx = rect.left + rect.width  / 2;
+          const cy = rect.top  + rect.height / 2;
+          const dx = _hoverPoint.x - cx;
+          const dy = _hoverPoint.y - cy;
+          const dist = Math.hypot(dx, dy) || 1;
+          // Izquierda (verde) = repele, Derecha (naranja) = atrae
+          const attract = _hoverColor === '#fb923c' ? 1 : -1;
+          _velX += (dx / dist) * IMPULSE * attract;
+          _velY += (dy / dist) * IMPULSE * attract;
+          _velX = Math.max(-35, Math.min(35, _velX));
+          _velY = Math.max(-35, Math.min(35, _velY));
+        }
+
+        // Fricción dinámica: mano derecha frena más rápido
+        const activeFriction = (_hovering && _hoverColor === '#fb923c') ? 0.80 : FRICTION;
+
+        // Inercia X con rebote
+        if(Math.abs(_velX) > 0.1){
+          posLeft += _velX;
+          _velX *= activeFriction;
+          const maxX = window.innerWidth - PARCEL_SIZE;
+          if(posLeft < 0)    { posLeft = 0;    _velX =  Math.abs(_velX) * 0.75; }
+          if(posLeft > maxX) { posLeft = maxX; _velX = -Math.abs(_velX) * 0.75; }
+          wrap.style.left = posLeft + 'px';
+        } else { _velX = 0; }
+
+        // Inercia Y con rebote
+        if(Math.abs(_velY) > 0.1){
+          posTop += _velY;
+          _velY *= activeFriction;
+          const maxY = window.innerHeight - PARCEL_SIZE;
+          if(posTop < 0)    { posTop = 0;    _velY =  Math.abs(_velY) * 0.75; }
+          if(posTop > maxY) { posTop = maxY; _velY = -Math.abs(_velY) * 0.75; }
+          wrap.style.top = posTop + 'px';
+        } else { _velY = 0; }
+
+        if(Math.abs(_velX) > 0.1 || Math.abs(_velY) > 0.1) updateZIndices();
+
         rend.render(sc, cam);
       }
       renderLoop();
 
       // Instance object
-      const instance = { wrap, canvas, rend, sc, cam, group, rafId, rarity, _scale:1, _theta:Math.PI/4, _phi:Math.PI/4 };
+      const instance = { wrap, canvas, rend, sc, cam, group, rafId, rarity, _scale:1, _theta:Math.PI/4, _phi:Math.PI/4,
+        setHover(on, color, point){
+          _hovering = on;
+          _hoverColor = color;
+          _hoverPoint = point || null;
+          if(on){
+            wrap.style.filter = `drop-shadow(0 0 18px ${color}) drop-shadow(0 0 36px ${color})`;
+            wrap.style.transition = 'filter .2s ease';
+          } else {
+            wrap.style.filter = '';
+          }
+        }
+      };
       parcelInstances.push(instance);
       updateZIndices();
 
@@ -2772,12 +2833,37 @@
 
       function onResults(results){
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+        // Reset hover en todas las parcelas
+        if(typeof parcelInstances !== 'undefined'){
+          parcelInstances.forEach(inst => inst.setHover(false, ''));
+        }
+
         if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
 
         results.multiHandLandmarks.forEach((landmarks, i) => {
           const handedness = results.multiHandedness[i]?.label || 'Left';
           const color = COLORS[handedness] || COLORS.Left;
           drawHand(landmarks, color);
+
+          // Hover: usar punta del índice (landmark 8) y palma (landmark 0)
+          const camEl = document.getElementById('cam');
+          const isMirrored = camEl && camEl.style.transform === 'scaleX(-1)';
+          const W = window.innerWidth, H = window.innerHeight;
+
+          [8, 0].forEach(lmIdx => {
+            const lm = landmarks[lmIdx];
+            const fx = isMirrored ? (1 - lm.x) * W : lm.x * W;
+            const fy = lm.y * H;
+
+            if(typeof parcelInstances !== 'undefined'){
+              parcelInstances.forEach(inst => {
+                const rect = inst.wrap.getBoundingClientRect();
+                const hit = fx >= rect.left && fx <= rect.right && fy >= rect.top && fy <= rect.bottom;
+                if(hit) inst.setHover(true, color, {x: fx, y: fy});
+              });
+            }
+          });
         });
       }
 
