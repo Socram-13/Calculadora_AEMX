@@ -2107,7 +2107,7 @@
 
     btnFS.addEventListener('click', toggleFullscreen);
 
-    document.getElementById('btnExit').addEventListener('click', () => { history.back(); });
+    document.getElementById('btnExit').addEventListener('click', () => { if(window.opener) window.close(); else history.back(); });
     document.addEventListener('fullscreenchange', syncFSLabel);
     syncFSLabel();
 
