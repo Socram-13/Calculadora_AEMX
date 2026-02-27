@@ -2215,11 +2215,11 @@
     });
 
     (async () => {
-      let initializeApp, getDatabase, ref, query, limitToLast, orderByChild, onValue,
+      let initializeApp, getDatabase, ref, query, limitToLast, orderByChild, onValue, get,
           getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, browserLocalPersistence, setPersistence;
       try {
         ({ initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js'));
-        ({ getDatabase, ref, query, limitToLast, orderByChild, onValue } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'));
+        ({ getDatabase, ref, query, limitToLast, orderByChild, onValue, get } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js'));
         ({ getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, browserLocalPersistence, setPersistence } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js'));
       } catch(importErr) {
         console.warn('Firebase no disponible:', importErr);
@@ -2349,13 +2349,22 @@
       // Activar persistencia y esperar estado de auth
       setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
-      onAuthStateChanged(auth, (user) => {
+      onAuthStateChanged(auth, async (user) => {
         if(user){
           hideLoginOverlay();
-          // Show first name in chat status
-          const firstName = (localStorage.getItem('atlas-username') || user.displayName || 'USER').split(' ')[0].toUpperCase();
-          window._hudUsername = firstName;
-          setChatState(true, firstName);
+          // Leer username desde Firebase (fuente de verdad)
+          try {
+            const snap = await get(ref(db, `users/${user.uid}/username`));
+            const fbUsername = snap.exists() ? snap.val() : null;
+            const firstName = (fbUsername || localStorage.getItem('atlas-username') || user.displayName || 'USER').split(' ')[0].toUpperCase();
+            window._hudUsername = firstName;
+            setChatState(true, firstName);
+          } catch(e) {
+            // Fallback a localStorage si falla la lectura
+            const firstName = (localStorage.getItem('atlas-username') || user.displayName || 'USER').split(' ')[0].toUpperCase();
+            window._hudUsername = firstName;
+            setChatState(true, firstName);
+          }
           attachListener();
         } else {
           showLoginOverlay();
