@@ -974,6 +974,48 @@
     .chip.qrChip .dot{ background:#facc15; box-shadow:0 0 6px rgba(250,204,21,.65); }
     .chip.qrChip.active{ background:rgba(250,204,21,.18); border-color:rgba(250,204,21,.60); }
 
+
+    /* ── BOOT OVERLAY ── */
+    #bootOverlay{
+      position:fixed; inset:0; z-index:9999;
+      background:#000;
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:16px;
+      pointer-events:all;
+    }
+    #bootOverlay.hidden{ display:none; }
+
+    #bootLine{
+      width:60%; height:2px;
+      background: linear-gradient(90deg, transparent, #00c8ff, transparent);
+      box-shadow: 0 0 14px #00c8ff, 0 0 28px rgba(0,200,255,.50);
+      border-radius:2px;
+      animation: bootPulse 1.2s ease-in-out infinite;
+    }
+    #bootMsg{
+      font-family:Orbitron,system-ui;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:3px;
+      text-transform:uppercase;
+      color:rgba(0,200,255,.70);
+    }
+    @keyframes bootPulse{
+      0%,100%{ opacity:.5; transform:scaleX(.85); }
+      50%{ opacity:1; transform:scaleX(1); }
+    }
+
+    /* Las dos compuertas */
+    #gateTop, #gateBottom{
+      position:fixed; left:0; right:0; z-index:9998;
+      background:#000;
+      transition: transform 0.7s cubic-bezier(.77,0,.18,1);
+    }
+    #gateTop{    top:0;    height:50vh; transform:translateY(0); }
+    #gateBottom{ bottom:0; height:50vh; transform:translateY(0); }
+    #gateTop.open    { transform:translateY(-100%); }
+    #gateBottom.open { transform:translateY(100%); }
+
     /* ── PARCEL MENU ── */
     .parcelMenu{
       position:fixed;
@@ -1902,6 +1944,15 @@
 
     </script>
 
+
+    <!-- BOOT OVERLAY -->
+    <div id="bootOverlay">
+      <div id="bootLine"></div>
+      <div id="bootMsg">Verificando orientación…</div>
+    </div>
+    <div id="gateTop"></div>
+    <div id="gateBottom"></div>
+
     <!-- LOGIN OVERLAY -->
     <div class="loginOverlay hidden" id="loginOverlay">
       <div class="loginBox">
@@ -2579,18 +2630,59 @@
     setTimeout(triggerBarGlitch, 2000 + Math.random() * 2000);
     // ─────────────────────────────────────────────────────────────
 
-    // Auto-start camera if permission already granted
-    if(navigator.permissions){
-      navigator.permissions.query({ name: 'camera' }).then(result => {
-        if(result.state === 'granted'){
-          startCamera();
-        } else {
-          setCamState(false);
-        }
-      }).catch(() => setCamState(false));
-    } else {
-      setCamState(false);
+    // ── BOOT SEQUENCE ────────────────────────────────────────────
+    const bootOverlay  = document.getElementById('bootOverlay');
+    const bootMsg      = document.getElementById('bootMsg');
+    const gateTop      = document.getElementById('gateTop');
+    const gateBottom   = document.getElementById('gateBottom');
+    let   bootDone     = false;
+
+    function openGates(){
+      if(bootDone) return;
+      bootDone = true;
+      bootOverlay.classList.add('hidden');
+      setTimeout(() => {
+        gateTop.classList.add('open');
+        gateBottom.classList.add('open');
+        // Eliminar compuertas del DOM cuando termina la animación
+        setTimeout(() => { gateTop.remove(); gateBottom.remove(); }, 800);
+      }, 50);
     }
+
+    async function bootSequence(){
+      // Paso 1: esperar orientación landscape
+      const isLandscape = () => window.innerWidth > window.innerHeight;
+      if(!isLandscape()){
+        bootMsg.textContent = 'Gira el dispositivo…';
+        await new Promise(resolve => {
+          const check = () => {
+            if(isLandscape()){ window.removeEventListener('resize', check); resolve(); }
+          };
+          window.addEventListener('resize', check);
+        });
+      }
+
+      // Paso 2: iniciar cámara en segundo plano
+      bootMsg.textContent = 'Iniciando cámara…';
+      await startCamera();
+
+      // Paso 3: esperar que el video tenga datos reales
+      if(camVideo.readyState < 2){
+        await new Promise(resolve => {
+          camVideo.addEventListener('canplay', resolve, { once:true });
+          setTimeout(resolve, 4000); // timeout de seguridad
+        });
+      }
+
+      // Paso 4: esperar 3 segundos con cámara activa
+      bootMsg.textContent = 'Iniciando HUD…';
+      await new Promise(r => setTimeout(r, 3000));
+
+      // Paso 5: abrir compuertas
+      openGates();
+    }
+
+    bootSequence();
   </script>
 </body>
 </html>
