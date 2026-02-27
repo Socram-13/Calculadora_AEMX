@@ -975,6 +975,10 @@
     .chip.qrChip.active{ background:rgba(250,204,21,.18); border-color:rgba(250,204,21,.60); }
 
 
+
+    /* Hand tracking canvas */
+    #handCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:2; }
+
     /* ── BOOT OVERLAY ── */
     #bootOverlay{
       position:fixed; inset:0; z-index:9999;
@@ -1134,6 +1138,7 @@
 <body>
   <div class="stage">
     <video id="cam" autoplay playsinline muted></video>
+    <canvas id="handCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;"></canvas>
 
     <div class="hud">
       <div class="scanlines"></div>
@@ -1323,6 +1328,8 @@
 
     <!-- THREE.JS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script>
     // ══════════════════════════════════════════════════════
     // AEMX — Multi-parcel draggable AR system
@@ -2683,6 +2690,147 @@
     }
 
     bootSequence();
+
+    // ── MediaPipe Hand Tracking ───────────────────────────────────
+    (function initHandTracking(){
+      const handCanvas = document.getElementById('handCanvas');
+      const ctx = handCanvas.getContext('2d');
+
+      // Conexiones del esqueleto de la mano (pares de índices)
+      const CONNECTIONS = [
+        [0,1],[1,2],[2,3],[3,4],         // pulgar
+        [0,5],[5,6],[6,7],[7,8],         // índice
+        [0,9],[9,10],[10,11],[11,12],    // medio
+        [0,13],[13,14],[14,15],[15,16],  // anular
+        [0,17],[17,18],[18,19],[19,20],  // meñique
+        [5,9],[9,13],[13,17]             // palma
+      ];
+
+      const COLORS = {
+        Left:  '#4ade80',  // verde — mano izquierda
+        Right: '#fb923c',  // naranja — mano derecha
+      };
+
+      function resizeCanvas(){
+        handCanvas.width  = window.innerWidth  * Math.min(devicePixelRatio, 2);
+        handCanvas.height = window.innerHeight * Math.min(devicePixelRatio, 2);
+        handCanvas.style.width  = window.innerWidth  + 'px';
+        handCanvas.style.height = window.innerHeight + 'px';
+        ctx.scale(Math.min(devicePixelRatio, 2), Math.min(devicePixelRatio, 2));
+      }
+      resizeCanvas();
+      window.addEventListener('resize', () => { resizeCanvas(); });
+
+      function drawHand(landmarks, color){
+        const W = window.innerWidth;
+        const H = window.innerHeight;
+
+        // Función para convertir coordenadas normalizadas a píxeles
+        // MediaPipe usa x/y de 0-1; el video puede estar en espejo
+        const camEl = document.getElementById('cam');
+        const isMirrored = camEl && camEl.style.transform === 'scaleX(-1)';
+        const px = (lm) => ({
+          x: isMirrored ? (1 - lm.x) * W : lm.x * W,
+          y: lm.y * H
+        });
+
+        // Líneas del esqueleto
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 12;
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 12;
+        ctx.lineCap = 'round';
+
+        CONNECTIONS.forEach(([a, b]) => {
+          const pa = px(landmarks[a]);
+          const pb = px(landmarks[b]);
+          ctx.beginPath();
+          ctx.moveTo(pa.x, pa.y);
+          ctx.lineTo(pb.x, pb.y);
+          ctx.stroke();
+        });
+
+        // Puntos en cada articulación
+        landmarks.forEach((lm, i) => {
+          const p = px(lm);
+          const r = i === 0 ? 14 : (i % 4 === 0 ? 10 : 7); // proporcional a líneas 12px
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowColor = color;
+          ctx.shadowBlur = 18;
+          ctx.fill();
+          // Halo de color
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r + 2, 0, Math.PI * 2);
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 1.5;
+          ctx.shadowBlur = 20;
+          ctx.stroke();
+        });
+      }
+
+      function onResults(results){
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+
+        results.multiHandLandmarks.forEach((landmarks, i) => {
+          const handedness = results.multiHandedness[i]?.label || 'Left';
+          const color = COLORS[handedness] || COLORS.Left;
+          drawHand(landmarks, color);
+        });
+      }
+
+      // Inicializar MediaPipe Hands
+      function startHandTracking(){
+        if(typeof Hands === 'undefined') return; // MediaPipe no cargó
+
+        const hands = new Hands({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+        });
+
+        hands.setOptions({
+          maxNumHands: 2,
+          modelComplexity: 1,
+          minDetectionConfidence: 0.7,
+          minTrackingConfidence: 0.6,
+        });
+
+        hands.onResults(onResults);
+
+        // Procesar frames del video manualmente (sin Camera util para no interferir con el stream)
+        const camEl = document.getElementById('cam');
+        let running = false;
+
+        async function processFrame(){
+          if(!running) return;
+          if(camEl.readyState >= 2){
+            await hands.send({ image: camEl });
+          }
+          requestAnimationFrame(processFrame);
+        }
+
+        // Arrancar cuando la cámara esté lista
+        function tryStart(){
+          if(camEl.readyState >= 2){
+            running = true;
+            processFrame();
+          } else {
+            camEl.addEventListener('canplay', () => { running = true; processFrame(); }, { once:true });
+          }
+        }
+        tryStart();
+      }
+
+      // Esperar a que MediaPipe cargue antes de iniciar
+      if(typeof Hands !== 'undefined'){
+        startHandTracking();
+      } else {
+        window.addEventListener('load', startHandTracking);
+      }
+    })();
+    // ─────────────────────────────────────────────────────────────
+
   </script>
 </body>
 </html>
