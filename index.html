@@ -3575,6 +3575,7 @@
       }));
     } catch(e) {}
     showStatus('✔ Datos guardados');
+    if(window._fbSaveAll) window._fbSaveAll();
   }
 
   async function loadData() {
