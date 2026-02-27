@@ -831,7 +831,9 @@
           snapshot.forEach((child) => {
             const d = child.val();
             if (!d.username) return;
-            if (!(d.country || '').toLowerCase().includes('mexico')) return;
+            const countryRaw = (d.country || '').toLowerCase()
+              .normalize('NFD').replace(/[̀-ͯ]/g, ''); // quita tildes
+            if (!countryRaw.includes('mexico') && !countryRaw.includes('mx')) return;
             if (d.bannedLeaderboard) return;
             const common    = parseInt(d.common)    || 0;
             const rare      = parseInt(d.rare)      || 0;
@@ -866,6 +868,9 @@
         if (!cached) {
           const tbody = document.getElementById('rankingBody');
           if (tbody) tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">⚠️ Error al cargar. Verifica tu conexión y actualiza.</div></td></tr>';
+        } else if (players && players.length === 0) {
+          const tbody2 = document.getElementById('rankingBody');
+          if (tbody2) tbody2.innerHTML = '<tr><td colspan="7"><div class="empty-state">Sin jugadores registrados aún.</div></td></tr>';
         }
       } finally {
         if (btn) { btn.classList.remove('loading'); btn.innerHTML = '↻ ACTUALIZAR'; }
