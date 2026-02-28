@@ -1328,9 +1328,8 @@
 
     <!-- THREE.JS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@3.21.0/dist/tf-core.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@3.21.0/dist/tf-backend-webgl.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.min.js" crossorigin="anonymous"></script>
     <script>
     // ══════════════════════════════════════════════════════
     // AEMX — Multi-parcel draggable AR system
@@ -2327,6 +2326,40 @@
     // Cargado dinámicamente para no bloquear cámara/botones
     // ─────────────────────────────────────────────────────────────
 
+    // Funciones de chat accesibles globalmente
+    const chatLampEl  = document.getElementById('chatLamp');
+    const chatStateEl = document.getElementById('chatState');
+    const chatLinesEl = document.getElementById('chatLines');
+
+    function setChatState(on, label){
+      if(chatLampEl)  chatLampEl.classList.toggle('ok', on);
+      if(chatStateEl) chatStateEl.textContent = label || (on ? 'LIVE' : '—');
+    }
+    function safeStr(x, max=140){
+      const s = String(x ?? '').replace(/\s+/g,' ').trim();
+      if(!s) return '';
+      return s.length > max ? s.slice(0, max-1) + '…' : s;
+    }
+    function renderChat(list){
+      if(!chatLinesEl) return;
+      chatLinesEl.innerHTML = '';
+      if(!list.length){
+        chatLinesEl.innerHTML = '<div class="msg"><span class="a">—</span><span class="t">Sin mensajes recientes.</span></div>';
+        return;
+      }
+      for(const m of list){
+        const row = document.createElement('div');
+        row.className = 'msg';
+        const a = document.createElement('span'); a.className = 'a';
+        a.textContent = safeStr(m.username || m.user || m.author || m.name || 'AEMX', 18);
+        const sep = document.createElement('span'); sep.className = 'sep'; sep.textContent = '·';
+        const t = document.createElement('span'); t.className = 't';
+        t.textContent = safeStr(m.text || m.message || m.msg || m.mensaje || '', 100) || '…';
+        row.appendChild(a); row.appendChild(sep); row.appendChild(t);
+        chatLinesEl.appendChild(row);
+      }
+    }
+
     // btnSkipLogin funciona siempre, independiente de Firebase
     document.getElementById('btnSkipLogin').addEventListener('click', () => {
       document.getElementById('loginOverlay').classList.add('hidden');
@@ -2358,49 +2391,7 @@
       measurementId: "G-K84EVPE46R"
     };
 
-    const chatLamp = document.getElementById('chatLamp');
-    const chatState = document.getElementById('chatState');
-    const chatLines = document.getElementById('chatLines');
-
-    function setChatState(on, label){
-      chatLamp.classList.toggle('ok', on);
-      chatState.textContent = label || (on ? 'LIVE' : '—');
-    }
-
-    function safeStr(x, max=140){
-      const s = String(x ?? '').replace(/\s+/g,' ').trim();
-      if(!s) return '';
-      return s.length > max ? s.slice(0, max-1) + '…' : s;
-    }
-
-    function renderChat(list){
-      chatLines.innerHTML = '';
-      if(!list.length){
-        chatLines.innerHTML = '<div class="msg"><span class="a">—</span><span class="t">Sin mensajes recientes.</span></div>';
-        return;
-      }
-      for(const m of list){
-        const row = document.createElement('div');
-        row.className = 'msg';
-
-        const a = document.createElement('span');
-        a.className = 'a';
-        a.textContent = safeStr(m.username || m.user || m.author || m.name || 'AEMX', 18);
-
-        const sep = document.createElement('span');
-        sep.className = 'sep';
-        sep.textContent = '·';
-
-        const t = document.createElement('span');
-        t.className = 't';
-        t.textContent = safeStr(m.text || m.message || m.msg || m.mensaje || '', 100) || '…';
-
-        row.appendChild(a);
-        row.appendChild(sep);
-        row.appendChild(t);
-        chatLines.appendChild(row);
-      }
-    }
+    // setChatState, safeStr, renderChat definidos globalmente arriba
 
     try{
       const app = initializeApp(firebaseConfig, 'hud-app');
@@ -2753,10 +2744,11 @@
 
     bootSequence();
 
-    // ── TensorFlow.js Hand Tracking ──────────────────────────────
+    // ── MediaPipe Hands Tracking ──────────────────────────────────
     (function initHandTracking(){
       const handCanvas = document.getElementById('handCanvas');
-      const ctx = handCanvas.getContext('2d');
+      const ctx        = handCanvas.getContext('2d');
+      const camEl      = document.getElementById('cam');
 
       const CONNECTIONS = [
         [0,1],[1,2],[2,3],[3,4],
@@ -2766,8 +2758,8 @@
         [0,17],[17,18],[18,19],[19,20],
         [5,9],[9,13],[13,17]
       ];
-
-      const COLORS = { Left: '#4ade80', Right: '#fb923c' };
+      // MediaPipe devuelve "Left"/"Right" desde la perspectiva de la cámara
+      const COLORS = { Left: '#fb923c', Right: '#4ade80' };
 
       function resizeCanvas(){
         const dpr = Math.min(devicePixelRatio, 2);
@@ -2779,123 +2771,147 @@
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
-      function drawHand(keypoints, handedness){
-        const color = COLORS[handedness] || COLORS.Left;
+      // MediaPipe da coordenadas normalizadas [0-1]
+      function toScreen(lm){
         const dpr = Math.min(devicePixelRatio, 2);
-        const W = window.innerWidth, H = window.innerHeight;
-        const camEl = document.getElementById('cam');
+        const W   = window.innerWidth;
+        const H   = window.innerHeight;
         const isMirrored = camEl && camEl.style.transform === 'scaleX(-1)';
+        return {
+          x: (isMirrored ? 1 - lm.x : lm.x) * W * dpr,
+          y: lm.y * H * dpr
+        };
+      }
 
-        const px = (kp) => ({
-          x: (isMirrored ? (1 - kp.x / camEl.videoWidth)  : kp.x / camEl.videoWidth)  * W * dpr,
-          y: (kp.y / camEl.videoHeight) * H * dpr
-        });
+      function drawHand(landmarks, label){
+        const color = COLORS[label] || COLORS.Left;
+        const dpr   = Math.min(devicePixelRatio, 2);
 
+        // Líneas del esqueleto
         ctx.strokeStyle = color;
-        ctx.lineWidth = 12 * dpr;
+        ctx.lineWidth   = 3 * dpr;
         ctx.shadowColor = color;
-        ctx.shadowBlur = 18;
-        ctx.lineCap = 'round';
-
+        ctx.shadowBlur  = 14;
+        ctx.lineCap     = 'round';
+        ctx.lineJoin    = 'round';
         CONNECTIONS.forEach(([a, b]) => {
-          const pa = px(keypoints[a]);
-          const pb = px(keypoints[b]);
+          const pa = toScreen(landmarks[a]);
+          const pb = toScreen(landmarks[b]);
           ctx.beginPath();
           ctx.moveTo(pa.x, pa.y);
           ctx.lineTo(pb.x, pb.y);
           ctx.stroke();
         });
 
-        keypoints.forEach((kp, i) => {
-          const p = px(kp);
-          const r = (i === 0 ? 14 : (i % 4 === 0 ? 10 : 7)) * dpr;
+        // Puntos / nodos
+        landmarks.forEach((lm, i) => {
+          const p = toScreen(lm);
+          const r = (i === 0 ? 10 : (i % 4 === 0 ? 7 : 5)) * dpr;
           ctx.beginPath();
           ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-          ctx.fillStyle = '#ffffff';
+          ctx.fillStyle   = '#ffffff';
           ctx.shadowColor = color;
-          ctx.shadowBlur = 22;
+          ctx.shadowBlur  = 18;
           ctx.fill();
           ctx.beginPath();
           ctx.arc(p.x, p.y, r + 2 * dpr, 0, Math.PI * 2);
           ctx.strokeStyle = color;
-          ctx.lineWidth = 2 * dpr;
+          ctx.lineWidth   = 2 * dpr;
           ctx.stroke();
         });
       }
 
-      function processHover(keypoints, handedness){
-        const color = COLORS[handedness] || COLORS.Left;
+      function processHover(landmarks, label){
+        const color = COLORS[label] || COLORS.Left;
         const W = window.innerWidth, H = window.innerHeight;
-        const camEl = document.getElementById('cam');
         const isMirrored = camEl && camEl.style.transform === 'scaleX(-1)';
-
         [8, 0].forEach(idx => {
-          const kp = keypoints[idx];
-          if(!kp) return;
-          const fx = (isMirrored ? (1 - kp.x / camEl.videoWidth) : kp.x / camEl.videoWidth) * W;
-          const fy = (kp.y / camEl.videoHeight) * H;
-
+          const lm = landmarks[idx];
+          if(!lm) return;
+          const fx = (isMirrored ? 1 - lm.x : lm.x) * W;
+          const fy = lm.y * H;
           if(typeof parcelInstances !== 'undefined'){
             parcelInstances.forEach(inst => {
               const rect = inst.wrap.getBoundingClientRect();
-              const hit = fx >= rect.left && fx <= rect.right && fy >= rect.top && fy <= rect.bottom;
+              const hit  = fx >= rect.left && fx <= rect.right && fy >= rect.top && fy <= rect.bottom;
               if(hit) inst.setHover(true, color, {x: fx, y: fy});
             });
           }
         });
       }
 
-      async function startHandTracking(){
-        if(typeof handPoseDetection === 'undefined') return;
-        try {
-          await tf.setBackend('webgl');
-          await tf.ready();
+      function initMediaPipeHands(){
+        if(typeof Hands === 'undefined'){
+          console.warn('[HandTracking] MediaPipe Hands no disponible');
+          return;
+        }
 
-          const model = handPoseDetection.SupportedModels.MediaPipeHands;
-          const detector = await handPoseDetection.createDetector(model, {
-            runtime: 'tfjs',
-            modelType: 'lite',
-            maxHands: 2,
-          });
+        const hands = new Hands({ locateFile: file =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`
+        });
 
-          const camEl = document.getElementById('cam');
+        hands.setOptions({
+          maxNumHands:        2,
+          modelComplexity:    1,
+          minDetectionConfidence: 0.6,
+          minTrackingConfidence:  0.5,
+        });
 
-          async function loop(){
-            ctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+        hands.onResults(results => {
+          ctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
 
-            // Reset hover
-            if(typeof parcelInstances !== 'undefined'){
-              parcelInstances.forEach(inst => inst.setHover(false, ''));
-            }
-
-            if(camEl.readyState >= 2){
-              try {
-                const hands = await detector.estimateHands(camEl, { flipHorizontal: false });
-                hands.forEach(hand => {
-                  drawHand(hand.keypoints, hand.handedness);
-                  processHover(hand.keypoints, hand.handedness);
-                });
-              } catch(e){}
-            }
-            requestAnimationFrame(loop);
+          // Reset hover
+          if(typeof parcelInstances !== 'undefined'){
+            parcelInstances.forEach(inst => inst.setHover(false, ''));
           }
-          loop();
-        } catch(e){
-          console.warn('TF hand tracking error:', e);
+
+          if(!results.multiHandLandmarks) return;
+          results.multiHandLandmarks.forEach((landmarks, i) => {
+            const label = results.multiHandedness[i]?.label || 'Left';
+            drawHand(landmarks, label);
+            processHover(landmarks, label);
+          });
+        });
+
+        // Esperar a que la cámara esté activa
+        function tryStart(attempts){
+          if(camEl.readyState >= 2 && camEl.videoWidth > 0){
+            // Usar Camera utility de MediaPipe si está disponible
+            if(typeof Camera !== 'undefined'){
+              const camera = new Camera(camEl, {
+                onFrame: async () => { await hands.send({ image: camEl }); },
+                width:  camEl.videoWidth  || 1280,
+                height: camEl.videoHeight || 720,
+              });
+              camera.start();
+            } else {
+              // Fallback: loop manual
+              async function loop(){
+                if(camEl.readyState >= 2) await hands.send({ image: camEl });
+                requestAnimationFrame(loop);
+              }
+              loop();
+            }
+          } else if(attempts > 0){
+            setTimeout(() => tryStart(attempts - 1), 500);
+          } else {
+            console.warn('[HandTracking] Cámara no disponible para hand tracking');
+          }
         }
+        tryStart(30);
       }
 
-      // Esperar a que TF.js cargue
-      function waitForTF(attempts){
-        if(typeof handPoseDetection !== 'undefined' && typeof tf !== 'undefined'){
-          startHandTracking();
+      // Esperar a que los scripts de MediaPipe carguen
+      function waitForMediaPipe(attempts){
+        if(typeof Hands !== 'undefined'){
+          initMediaPipeHands();
         } else if(attempts > 0){
-          setTimeout(() => waitForTF(attempts - 1), 500);
+          setTimeout(() => waitForMediaPipe(attempts - 1), 500);
         } else {
-          console.warn('TF.js hand-pose-detection no disponible');
+          console.warn('[HandTracking] MediaPipe no cargó');
         }
       }
-      waitForTF(40);
+      waitForMediaPipe(40);
     })();
     // ─────────────────────────────────────────────────────────────
 
