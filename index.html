@@ -1983,13 +1983,13 @@
   }
 
   body.theme-original .header-bar {
-    background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%) !important;
+    background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%) !important;
     border-color: var(--border) !important;
     box-shadow: none !important;
   }
 
   body.theme-original .results-card {
-    background: linear-gradient(135deg, #0a1f38 0%, #060f1e 100%) !important;
+    background: linear-gradient(135deg, var(--panel2) 0%, var(--panel) 100%) !important;
     border-color: var(--glow) !important;
   }
 
@@ -2018,6 +2018,18 @@
     border-color: var(--border) !important;
     color: white !important;
     box-shadow: none !important;
+  }
+
+  body.theme-original .counter-btn {
+    background: var(--panel2, #0f1e35) !important;
+    border-color: var(--border) !important;
+    color: var(--glow) !important;
+    box-shadow: none !important;
+  }
+
+  body.theme-original .counter-btn:hover {
+    background: var(--panel, #0b1626) !important;
+    border-color: var(--glow) !important;
   }
 
   body.theme-original .card-title,
@@ -2328,26 +2340,30 @@
     const isOriginal = document.body.classList.toggle('theme-original');
     localStorage.setItem('aemx-theme', isOriginal ? 'original' : 'atlas');
     document.getElementById('theme-toggle-btn').textContent = isOriginal ? '🌿' : '🎨';
-    if (!isOriginal) {
-      // Al volver al tema Atlas, limpiar todas las variables de color custom
-      ['--body-bg','--panel','--panel2','--ppd-bg','--ppd-color','--ppd-shadow',
-       '--input-bg','--input-border','--glow','--accent'].forEach(v => {
-        document.body.style.removeProperty(v);
-        document.documentElement.style.removeProperty(v);
-      });
-      document.querySelectorAll('.card, .medals-card, .results-card, .header-bar, .profile-section').forEach(el => {
-        el.style.removeProperty('background');
-        el.style.removeProperty('border-color');
-        el.style.removeProperty('box-shadow');
-      });
-      document.querySelectorAll('.card-title, .results-title, .breakdown-title').forEach(el => {
-        el.style.removeProperty('color');
-      });
-      document.querySelectorAll('.counter-btn').forEach(btn => {
-        btn.style.removeProperty('color');
-        btn.style.removeProperty('border-color');
-      });
-    }
+    // Limpiar variables inline antes de re-aplicar con el nuevo tema
+    ['--body-bg','--panel','--panel2','--border','--glow','--accent',
+     '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
+    ].forEach(v => {
+      document.body.style.removeProperty(v);
+      document.documentElement.style.removeProperty(v);
+    });
+    document.body.style.removeProperty('background');
+    document.body.style.removeProperty('background-color');
+    document.querySelectorAll('.card, .medals-card, .results-card, .header-bar, .profile-section').forEach(el => {
+      el.style.removeProperty('background');
+      el.style.removeProperty('border-color');
+      el.style.removeProperty('box-shadow');
+    });
+    document.querySelectorAll('.card-title, .results-title, .breakdown-title').forEach(el => {
+      el.style.removeProperty('color');
+    });
+    document.querySelectorAll('.counter-btn').forEach(btn => {
+      btn.style.removeProperty('color');
+      btn.style.removeProperty('border-color');
+    });
+    // Re-aplicar color con el contexto del nuevo tema
+    const savedColor = localStorage.getItem('atlas-avatar-border');
+    if (savedColor && window.applyThemeColor) window.applyThemeColor(savedColor);
   }
 </script>
 <div class="container">
@@ -3874,62 +3890,91 @@
   function applyThemeColor(color) {
     const rgb = hexToRgb(color);
     const root = document.documentElement;
+    const isDark = document.body.classList.contains('theme-original');
+
+    // ── Elementos comunes a ambos temas ──────────────────────────
     document.querySelector('.profile-avatar-wrapper').style.setProperty('--avatar-border-color', color);
     const preview = document.getElementById('color-preview');
     if (preview) preview.style.background = color;
     const avatarEditBtn = document.getElementById('avatar-edit');
     const avatarColorBtn2 = document.getElementById('avatar-color-btn');
-    if (avatarEditBtn) { avatarEditBtn.style.background = color; avatarEditBtn.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
+    if (avatarEditBtn)   { avatarEditBtn.style.background   = color; avatarEditBtn.style.boxShadow   = `0 0 8px rgba(${rgb},0.6)`; }
     if (avatarColorBtn2) { avatarColorBtn2.style.background = color; avatarColorBtn2.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
-    const [_r,_g,_b] = rgb.split(",").map(Number);
-    const darkBg   = `rgb(${Math.round(_r*0.04)},${Math.round(_g*0.04)},${Math.round(_b*0.04)})`;
-    const panelBg  = `rgb(${Math.round(_r*0.06)},${Math.round(_g*0.06)},${Math.round(_b*0.06)})`;
-    const panel2Bg = `rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)})`;
-    const inputBg  = `rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)})`;
-    // FIX: usar variables CSS en body para no borrar background-image ni depender de herencia
-    document.body.style.setProperty('--body-bg',      darkBg);
-    document.body.style.setProperty('--panel',        panelBg);
-    document.body.style.setProperty('--panel2',       panel2Bg);
-    document.body.style.setProperty('--ppd-bg',       panelBg);
-    document.body.style.setProperty('--ppd-color',    color);
-    document.body.style.setProperty('--ppd-shadow',   `0 0 8px rgba(${rgb},0.5)`);
-    document.body.style.setProperty('--input-bg',     inputBg);
-    document.body.style.setProperty('--input-border', `rgba(${rgb},0.4)`);
-    document.body.style.removeProperty('background');
-    document.body.style.removeProperty('background-color');
-    root.style.setProperty('--glow', color);
+    root.style.setProperty('--glow',   color);
     root.style.setProperty('--accent', color);
-    const [_r2,_g2,_b2] = rgb.split(",").map(Number);
-    const lightR = Math.round(_r2 + (255 - _r2) * 0.5);
-    const lightG = Math.round(_g2 + (255 - _g2) * 0.5);
-    const lightB = Math.round(_b2 + (255 - _b2) * 0.5);
-    const donutCenter = document.getElementById('donut-center');
-    if (donutCenter) donutCenter.style.color = `rgb(${lightR},${lightG},${lightB})`;
-    document.querySelectorAll('.counter-btn').forEach(btn => {
-      btn.style.color = color;
-      btn.style.borderColor = `rgba(${rgb},0.5)`;
-    });
-    document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
-    document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
-    document.querySelectorAll('.card, .medals-card').forEach(el => { el.style.borderColor = `rgba(${rgb},0.5)`; });
-    document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
-      el.style.borderColor = `rgba(${rgb},0.5)`;
-      el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
-    });
-    document.querySelectorAll('.results-card').forEach(el => {
-      el.style.borderColor = color;
-      el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
-      el.style.boxShadow = `0 0 40px rgba(${rgb},0.08), inset 0 0 40px rgba(${rgb},0.03)`;
-    });
-    document.querySelectorAll('.divider').forEach(el => {
-      el.style.background = `linear-gradient(90deg, transparent, rgba(${rgb},0.4), transparent)`;
-    });
-    document.querySelectorAll('.breakdown-separator').forEach(el => {
-      el.style.borderTopColor = `rgba(${rgb},0.35)`;
-    });
     const donutBg = document.getElementById('donut-bg-circle');
     if (donutBg) donutBg.setAttribute('stroke', `rgba(${rgb},0.15)`);
     window._userThemeRgb = rgb;
+
+    if (isDark) {
+      // ── Tema OSCURO: colores derivados del color elegido ─────────
+      const [_r,_g,_b] = rgb.split(",").map(Number);
+      const darkBg   = `rgb(${Math.round(_r*0.04)},${Math.round(_g*0.04)},${Math.round(_b*0.04)})`;
+      const panelBg  = `rgb(${Math.round(_r*0.06)},${Math.round(_g*0.06)},${Math.round(_b*0.06)})`;
+      const panel2Bg = `rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)})`;
+      document.body.style.setProperty('--body-bg', darkBg);
+      document.body.style.setProperty('--panel',   panelBg);
+      document.body.style.setProperty('--panel2',  panel2Bg);
+      document.body.style.setProperty('--border',  `rgba(${rgb},0.5)`);
+      document.body.style.removeProperty('background');
+      document.body.style.removeProperty('background-color');
+      document.body.style.setProperty('--ppd-bg',       `rgb(${Math.round(_r*0.5)},${Math.round(_g*0.5)},${Math.round(_b*0.5)})`);
+      document.body.style.setProperty('--ppd-color',    color);
+      document.body.style.setProperty('--ppd-shadow',   `0 0 8px rgba(${rgb},0.5)`);
+      document.body.style.setProperty('--input-bg',     `rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)})`);
+      document.body.style.setProperty('--input-border', `rgba(${rgb},0.4)`);
+      const [_r2,_g2,_b2] = rgb.split(",").map(Number);
+      const lightR = Math.round(_r2 + (255-_r2)*0.5);
+      const lightG = Math.round(_g2 + (255-_g2)*0.5);
+      const lightB = Math.round(_b2 + (255-_b2)*0.5);
+      const donutCenter = document.getElementById('donut-center');
+      if (donutCenter) donutCenter.style.color = `rgb(${lightR},${lightG},${lightB})`;
+      document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
+      document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
+      document.querySelectorAll('.divider').forEach(el => {
+        el.style.background = `linear-gradient(90deg, transparent, rgba(${rgb},0.4), transparent)`;
+      });
+      document.querySelectorAll('.breakdown-separator').forEach(el => {
+        el.style.borderTopColor = `rgba(${rgb},0.35)`;
+      });
+
+    } else {
+      // ── Tema CLARO: solo color como acento, sin tocar fondos ─────
+      ['--body-bg','--panel','--panel2','--border',
+       '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
+      ].forEach(v => {
+        document.body.style.removeProperty(v);
+        root.style.removeProperty(v);
+      });
+      document.body.style.removeProperty('background');
+      document.body.style.removeProperty('background-color');
+      document.querySelectorAll('.card, .medals-card').forEach(el => {
+        el.style.removeProperty('background');
+        el.style.borderColor = `rgba(${rgb},0.5)`;
+      });
+      document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
+        el.style.removeProperty('background');
+        el.style.borderColor = `rgba(${rgb},0.5)`;
+      });
+      document.querySelectorAll('.results-card').forEach(el => {
+        el.style.removeProperty('background');
+        el.style.borderColor = color;
+      });
+      document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
+      document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
+      document.querySelectorAll('.divider').forEach(el => {
+        el.style.background = `linear-gradient(90deg, transparent, rgba(${rgb},0.4), transparent)`;
+      });
+      document.querySelectorAll('.breakdown-separator').forEach(el => {
+        el.style.borderTopColor = `rgba(${rgb},0.35)`;
+      });
+      document.querySelectorAll('.counter-btn').forEach(btn => {
+        btn.style.color = color;
+        btn.style.borderColor = `rgba(${rgb},0.5)`;
+      });
+      const donutCenter = document.getElementById('donut-center');
+      if (donutCenter) donutCenter.style.removeProperty('color');
+    }
   }
   window.applyThemeColor = applyThemeColor;
 
