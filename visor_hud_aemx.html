@@ -2873,25 +2873,19 @@
           });
         });
 
-        // Esperar a que la cámara esté activa
+        // Esperar a que la cámara esté activa y enviar frames sin abrir otro stream
         function tryStart(attempts){
           if(camEl.readyState >= 2 && camEl.videoWidth > 0){
-            // Usar Camera utility de MediaPipe si está disponible
-            if(typeof Camera !== 'undefined'){
-              const camera = new Camera(camEl, {
-                onFrame: async () => { await hands.send({ image: camEl }); },
-                width:  camEl.videoWidth  || 1280,
-                height: camEl.videoHeight || 720,
-              });
-              camera.start();
-            } else {
-              // Fallback: loop manual
-              async function loop(){
-                if(camEl.readyState >= 2) await hands.send({ image: camEl });
-                requestAnimationFrame(loop);
+            let sending = false;
+            async function loop(){
+              if(!sending && camEl.readyState >= 2 && !camEl.paused && !camEl.ended){
+                sending = true;
+                try { await hands.send({ image: camEl }); } catch(e){}
+                sending = false;
               }
-              loop();
+              requestAnimationFrame(loop);
             }
+            loop();
           } else if(attempts > 0){
             setTimeout(() => tryStart(attempts - 1), 500);
           } else {
