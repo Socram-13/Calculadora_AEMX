@@ -2760,51 +2760,54 @@
       const COLORS = { Left:'#4ade80', Right:'#fb923c' };
 
       function resizeCanvas(){
-        const dpr = Math.min(devicePixelRatio, 2);
-        handCanvas.width  = window.innerWidth  * dpr;
-        handCanvas.height = window.innerHeight * dpr;
+        handCanvas.width  = window.innerWidth;
+        handCanvas.height = window.innerHeight;
         handCanvas.style.width  = window.innerWidth  + 'px';
         handCanvas.style.height = window.innerHeight + 'px';
       }
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
-      // hand-pose-detection devuelve coords en píxeles del VIDEO
-      function toScreen(kp){
-        const dpr = Math.min(devicePixelRatio, 2);
+      // MediaPipe Hands da coords normalizadas [0-1]
+      function toScreen(lm){
         const W = window.innerWidth, H = window.innerHeight;
-        const vW = camEl.videoWidth  || W;
-        const vH = camEl.videoHeight || H;
         const isMirrored = camEl.style.transform === 'scaleX(-1)';
         return {
-          x: (isMirrored ? 1 - kp.x / vW : kp.x / vW) * W * dpr,
-          y: (kp.y / vH) * H * dpr
+          x: (isMirrored ? 1 - lm.x : lm.x) * W,
+          y: lm.y * H
         };
       }
 
       function drawHand(keypoints, handedness){
-        const color = COLORS[handedness] || '#00c8ff';
-        const dpr = Math.min(devicePixelRatio, 2);
+        // handedness puede llegar como string o como array de scores
+        const label = typeof handedness === 'string' ? handedness : (handedness?.[0]?.label || 'Left');
+        const color = COLORS[label] || '#00c8ff';
+
+        // Filtrar keypoints inválidos
+        const valid = keypoints.map(kp => {
+          if(!kp || isNaN(kp.x) || isNaN(kp.y)) return null;
+          return toScreen(kp);
+        });
 
         ctx.strokeStyle = color;
-        ctx.lineWidth   = 3 * dpr;
+        ctx.lineWidth   = 3;
         ctx.shadowColor = color;
         ctx.shadowBlur  = 14;
         ctx.lineCap     = 'round';
         ctx.lineJoin    = 'round';
 
         CONNECTIONS.forEach(([a, b]) => {
-          const pa = toScreen(keypoints[a]);
-          const pb = toScreen(keypoints[b]);
+          const pa = valid[a], pb = valid[b];
+          if(!pa || !pb) return;
           ctx.beginPath();
           ctx.moveTo(pa.x, pa.y);
           ctx.lineTo(pb.x, pb.y);
           ctx.stroke();
         });
 
-        keypoints.forEach((kp, i) => {
-          const p = toScreen(kp);
-          const r = (i === 0 ? 10 : (i % 4 === 0 ? 7 : 5)) * dpr;
+        valid.forEach((p, i) => {
+          if(!p) return;
+          const r = i === 0 ? 10 : (i % 4 === 0 ? 7 : 5);
           ctx.beginPath();
           ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
           ctx.fillStyle   = '#ffffff';
@@ -2812,9 +2815,9 @@
           ctx.shadowBlur  = 18;
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(p.x, p.y, r + 2*dpr, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, r + 2, 0, Math.PI * 2);
           ctx.strokeStyle = color;
-          ctx.lineWidth   = 2 * dpr;
+          ctx.lineWidth   = 2;
           ctx.stroke();
         });
       }
@@ -2855,41 +2858,35 @@
 
       async function startHandTracking(){
         try {
-          try { await tf.setBackend('webgl'); }
-          catch(e){ await tf.setBackend('cpu'); }
-          await tf.ready();
-          dbg('Backend: ' + tf.getBackend());
-
-          const detector = await handPoseDetection.createDetector(
-            handPoseDetection.SupportedModels.MediaPipeHands,
-            { runtime: 'tfjs', modelType: 'lite', maxHands: 2 }
-          );
-          dbg('Detector listo ✓');
-
-          let running = false;
-          async function loop(){
+          dbg('Iniciando MediaPipe Hands...');
+          const hands = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}` });
+          hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
+          hands.onResults(results => {
             ctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-            if(typeof parcelInstances !== 'undefined'){
-              parcelInstances.forEach(inst => inst.setHover(false, ''));
-            }
-            if(!running && camEl.readyState >= 2 && camEl.videoWidth > 0){
-              running = true;
-              try {
-                const hands = await detector.estimateHands(camEl, { flipHorizontal: false });
-                if(hands.length > 0) dbg('Manos: ' + hands.length);
-                hands.forEach(hand => {
-                  drawHand(hand.keypoints, hand.handedness);
-                  processHover(hand.keypoints, hand.handedness);
-                });
-              } catch(e){ dbg('estimateHands ERR: ' + e.message); }
-              running = false;
+            if(typeof parcelInstances !== 'undefined') parcelInstances.forEach(i => i.setHover(false,''));
+            if(!results.multiHandLandmarks) return;
+            results.multiHandLandmarks.forEach((landmarks, i) => {
+              const label = results.multiHandedness[i]?.label || 'Left';
+              if(landmarks.length > 0){
+                const lm0 = landmarks[0];
+                dbg(`lm0: x=${(lm0.x*100).toFixed(1)}% y=${(lm0.y*100).toFixed(1)}% | ${label}`);
+              }
+              drawHand(landmarks, label);
+              processHover(landmarks, label);
+            });
+          });
+          dbg('Hands listo, esperando cámara...');
+          let sending = false;
+          async function loop(){
+            if(!sending && camEl.readyState >= 2 && camEl.videoWidth > 0){
+              sending = true;
+              try { await hands.send({ image: camEl }); } catch(e){ dbg('send ERR:'+e.message); }
+              sending = false;
             }
             requestAnimationFrame(loop);
           }
           loop();
-        } catch(e){
-          dbg('ERROR createDetector: ' + e.message);
-        }
+        } catch(e){ dbg('ERROR: ' + e.message); }
       }
 
       function loadScript(src){
@@ -2897,25 +2894,18 @@
           const s = document.createElement('script');
           s.src = src; s.async = true;
           s.onload = res;
-          s.onerror = () => rej(new Error('Fallo carga: ' + src.split('/').pop()));
+          s.onerror = () => rej(new Error('Fallo: ' + src.split('/').pop()));
           document.head.appendChild(s);
         });
       }
 
       async function loadAndStart(){
         try {
-          dbg('Cargando TF.js...');
-          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js');
-          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js');
-          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu@4.22.0/dist/tf-backend-cpu.min.js');
-          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js');
-          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-layers@4.22.0/dist/tf-layers.min.js');
-          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js');
+          dbg('Cargando MediaPipe...');
+          await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js');
           dbg('Scripts OK ✓');
           startHandTracking();
-        } catch(e){
-          dbg('Script ERR: ' + e.message);
-        }
+        } catch(e){ dbg('Script ERR: ' + e.message); }
       }
 
       function waitForBoot(){
