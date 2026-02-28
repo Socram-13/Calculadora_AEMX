@@ -2968,9 +2968,10 @@
               inst.wrap.style.left          = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
               inst.wrap.style.top           = (proj.y - inst.wrap.offsetHeight/2) + 'px';
               inst.wrap.style.opacity       = proj.opacity;
-              // Cancelar el roll del dispositivo para mantener la parcela vertical
-              const counterRoll = -roll;
-              inst.wrap.style.transform     = `scale(${proj.scale}) rotate(${counterRoll}deg)`;
+              // En landscape Android, el roll visual = beta - 90
+              const isLandscape = window.innerWidth > window.innerHeight;
+              const visualRoll  = isLandscape ? (pitch - 90) : roll;
+              inst.wrap.style.transform = `scale(${proj.scale}) rotate(${-visualRoll}deg)`;
               inst.wrap.style.pointerEvents = 'none';
               inst.wrap.style.visibility    = 'visible';
             } else {
