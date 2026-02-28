@@ -5,31 +5,39 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🪪 Atlas Earth AEMX - GAMERTAG V2.0</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@700;800;900&family=Baloo+2:wght@700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #060b14;
-    --panel: #0b1626;
-    --panel2: #0f1e35;
-    --border: #1a3a5c;
-    --glow: #00c8ff;
-    --glow2: #00ff9d;
-    --gold: #ffd700;
-    --epic: #c084fc;
-    --rare: #60a5fa;
-    --common: #4ade80;
-    --legendary: #facc15;
-    --text: #cce4ff;
-    --text2: #6b8ab0;
-    --accent: #00c8ff;
+    --bg: #7bc96a;
+    --panel: #fffbf0;
+    --panel2: #f5ead8;
+    --border: #c8a96e;
+    --glow: #F5A623;
+    --glow2: #4CAF50;
+    --gold: #F5A623;
+    --epic: #9C27B0;
+    --rare: #2196F3;
+    --common: #4CAF50;
+    --legendary: #FF9800;
+    --text: #3E2A10;
+    --text2: #7a5c30;
+    --accent: #F5A623;
+    --sky: #87CEEB;
+    --sand: #F5ECD7;
+    --sand-dark: #e0d0b0;
+    --green-dark: #2d7a25;
+    --red-game: #E53935;
+    --blue-game: #1E88E5;
+    --purple-game: #8E24AA;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: var(--bg);
+    background: var(--bg) url('outdoor-bg.webp') center top / cover fixed;
     color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
     min-height: 100vh;
   }
 
@@ -37,35 +45,7 @@
     overflow-x: hidden;
   }
 
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
-    background-size: 40px 40px;
-    z-index: 0;
-    animation: gridMove 20s linear infinite;
-  }
-
-  @keyframes gridMove {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(40px); }
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(ellipse at 30% 20%, rgba(0,200,255,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 80%, rgba(0,255,157,0.04) 0%, transparent 50%);
-    z-index: 0;
-    pointer-events: none;
-  }
+  /* fondo tomado de outdoor-bg.webp */
 
   .container {
     position: relative;
@@ -84,22 +64,24 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%);
-    border: 3px solid var(--border);
-    border-radius: 14px;
+    background: linear-gradient(180deg, #7dd86a 0%, #55b845 100%);
+    border: 4px solid #3d9932;
+    border-radius: 20px;
     padding: 10px 16px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 6px 0 #1e5c19, 0 8px 20px rgba(0,0,0,0.25);
   }
 
   .header-bar::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 6px;
-    background: linear-gradient(90deg, #00c8ff, #4ade80, #facc15, #c084fc, #00c8ff);
+    height: 5px;
+    background: linear-gradient(90deg, #F5A623, #FFD060, #4CAF50, #29B6F6, #F5A623);
     background-size: 200% 100%;
     animation: rainbowSlide 6s linear infinite;
+    border-radius: 16px 16px 0 0;
   }
 
   @keyframes rainbowSlide {
@@ -120,14 +102,14 @@
     height: 80px;
     object-fit: contain;
     border-radius: 0;
-    filter: drop-shadow(0 0 10px rgba(0,200,255,0.3));
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
   }
 
   .header-left-label {
-    font-family: 'Orbitron', monospace;
-    font-size: 7px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 8px;
     letter-spacing: 2px;
-    color: var(--text2);
+    color: rgba(255,255,255,0.8);
     text-transform: uppercase;
   }
 
@@ -137,30 +119,32 @@
   }
 
   .header-title {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: clamp(18px, 4vw, 34px);
-    font-weight: 900;
+    font-weight: 400;
     line-height: 1.1;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+    text-shadow: 2px 3px 0 rgba(0,0,0,0.2);
   }
 
-  .header-title .atlas { color: #facc15; }
-  .header-title .earth { color: #facc15; }
-  .header-title .mexico { color: #7EC8E3; }
+  .header-title .atlas { color: #FFD060; }
+  .header-title .earth { color: #FFD060; }
+  .header-title .mexico { color: #fff; }
   .header-title .mexico .i { color: #ef4444; }
 
   .header-subtitle {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: clamp(16px, 3vw, 24px);
-    font-weight: 700;
+    font-weight: 400;
     color: #fff;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     margin-top: 4px;
+    text-shadow: 2px 3px 0 rgba(0,0,0,0.2);
   }
 
   .header-tagline {
     font-size: 11px;
-    color: var(--text2);
+    color: rgba(255,255,255,0.7);
     letter-spacing: 2px;
     text-transform: uppercase;
     margin-top: 6px;
@@ -178,14 +162,14 @@
     width: 80px;
     height: 80px;
     object-fit: contain;
-    filter: drop-shadow(0 0 10px rgba(0,200,255,0.3));
+    filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
   }
 
   .header-right-label {
-    font-family: 'Orbitron', monospace;
-    font-size: 7px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 8px;
     letter-spacing: 2px;
-    color: var(--glow);
+    color: #FFD060;
     text-transform: uppercase;
   }
 
@@ -245,24 +229,26 @@
   .card {
     background: var(--panel);
     border: 3px solid var(--border);
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 14px;
     position: relative;
     overflow: hidden;
     transition: border-color 0.3s, transform 0.2s;
+    box-shadow: 0 5px 0 var(--sand-dark), 0 8px 16px rgba(0,0,0,0.15);
   }
 
   .card:hover {
-    border-color: var(--glow);
-    transform: translateY(-2px);
+    border-color: var(--gold);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 0 var(--sand-dark), 0 10px 20px rgba(0,0,0,0.2);
   }
 
   .card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
     opacity: 0;
     transition: opacity 0.3s;
   }
@@ -270,19 +256,20 @@
   .card:hover::before { opacity: 1; }
 
   .card-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 4px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 2px;
     text-transform: uppercase;
     margin-bottom: 10px;
+    color: var(--text);
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
   .card-title .dot {
-    width: 6px; height: 6px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     flex-shrink: 0;
   }
@@ -311,7 +298,7 @@
   }
 
   .parcel-rate {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif; font-weight: 800;
     font-size: 10px;
     color: var(--text2);
     white-space: nowrap;
@@ -319,17 +306,19 @@
 
   input[type="number"] {
     width: 80px;
-    background: #060b14;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: white;
-    font-family: 'Share Tech Mono', monospace;
+    background: #fff;
+    border: 3px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
     font-size: 16px;
+    font-weight: 800;
     padding: 8px 10px;
     text-align: center;
     transition: border-color 0.2s, box-shadow 0.2s;
     appearance: textfield;
     -moz-appearance: textfield;
+    box-shadow: 0 3px 0 var(--sand-dark);
   }
 
   input[type="number"]::-webkit-inner-spin-button,
@@ -339,8 +328,8 @@
 
   input[type="number"]:focus {
     outline: none;
-    border-color: var(--glow);
-    box-shadow: 0 0 0 2px rgba(0,200,255,0.15);
+    border-color: var(--gold);
+    box-shadow: 0 3px 0 #c8851a, 0 0 0 3px rgba(245,166,35,0.2);
   }
 
   .common .parcel-icon { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.3); color: var(--common); }
@@ -371,23 +360,23 @@
   .booster-desc { font-size: 11px; color: var(--text2); margin-top: 2px; }
 
   .results-card {
-    background: linear-gradient(135deg, #0a1f38 0%, #060f1e 100%);
-    border: 3px solid var(--glow);
-    border-radius: 12px;
+    background: linear-gradient(180deg, #fffbf0 0%, #f5ead8 100%);
+    border: 4px solid var(--gold);
+    border-radius: 20px;
     padding: 18px;
     margin-top: 16px;
-    box-shadow: 0 0 40px rgba(0,200,255,0.08), inset 0 0 40px rgba(0,200,255,0.03);
+    box-shadow: 0 6px 0 #c8851a, 0 10px 24px rgba(0,0,0,0.15);
     overflow-x: hidden;
     width: 100%;
     box-sizing: border-box;
   }
 
   .results-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 5px;
-    color: var(--glow);
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: var(--text);
     text-transform: uppercase;
     text-align: center;
     margin-bottom: 14px;
@@ -397,20 +386,20 @@
     width: 100%;
     border-collapse: collapse;
     margin-bottom: 24px;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif;
     table-layout: fixed;
     word-break: break-word;
   }
 
   .results-table thead tr {
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
   }
 
   .results-table th {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 3px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 2px;
     color: var(--text2);
     text-transform: uppercase;
     padding: 8px 14px;
@@ -423,8 +412,10 @@
   .results-table td {
     padding: 10px 14px;
     font-size: 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-weight: 700;
+    border-bottom: 1px solid rgba(200,169,110,0.3);
     vertical-align: middle;
+    color: var(--text);
   }
 
   .results-table tbody tr {
@@ -432,14 +423,14 @@
   }
 
   .results-table tbody tr:hover {
-    background: rgba(0,200,255,0.04);
+    background: rgba(245,166,35,0.06);
   }
 
   .results-table tbody tr:last-child td { border-bottom: none; }
 
   .rt-period {
-    font-family: 'Orbitron', monospace;
-    font-size: 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
     letter-spacing: 2px;
     color: var(--text2);
     text-transform: uppercase;
@@ -449,41 +440,40 @@
   }
 
   .rt-period .dot {
-    width: 6px; height: 6px;
+    width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--glow);
+    background: var(--gold);
     flex-shrink: 0;
-    box-shadow: 0 0 4px var(--glow);
+    box-shadow: 0 0 4px rgba(245,166,35,0.5);
   }
 
   .rt-base {
     color: var(--text2);
     font-size: 13px;
+    font-weight: 700;
   }
 
   .rt-boost {
-    color: var(--glow2);
+    color: #2d7a25;
     font-size: 15px;
-    font-weight: 700;
-    text-shadow: 0 0 12px rgba(0,255,157,0.3);
+    font-weight: 800;
   }
 
   .rt-boost.highlight {
-    color: var(--glow2);
+    color: #2d7a25;
     font-size: 18px;
-    text-shadow: 0 0 20px rgba(0,255,157,0.5);
   }
 
   .breakdown {
-    border-top: 1px solid var(--border);
+    border-top: 2px solid var(--sand-dark);
     padding-top: 12px;
     margin-top: 4px;
   }
 
   .breakdown-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    letter-spacing: 3px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    letter-spacing: 2px;
     color: var(--text2);
     text-transform: uppercase;
     margin-bottom: 8px;
@@ -495,45 +485,47 @@
     align-items: center;
     margin-bottom: 8px;
     font-size: 13px;
+    font-weight: 700;
   }
 
   .donut-arrow {
     font-size: 26px;
-    font-weight: 700;
+    font-weight: 900;
     margin-right: 3px;
     line-height: 1;
   }
-  .donut-arrow.up   { color: #4ade80; }
-  .donut-arrow.down { color: #ef4444; }
+  .donut-arrow.up   { color: #2d7a25; }
+  .donut-arrow.down { color: #c0392b; }
 
   .rarity-arrow {
     font-size: 11px;
-    font-weight: 700;
+    font-weight: 900;
     margin-right: 2px;
     line-height: 1;
   }
-  .rarity-arrow.up   { color: #4ade80; }
-  .rarity-arrow.down { color: #ef4444; }
+  .rarity-arrow.up   { color: #2d7a25; }
+  .rarity-arrow.down { color: #c0392b; }
 
   .breakdown-label { color: var(--text2); }
   .breakdown-value {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
     color: var(--text);
   }
 
-  .breakdown-value.highlight { color: var(--glow); font-weight: 700; }
+  .breakdown-value.highlight { color: var(--gold); font-weight: 900; }
 
   .boost-badge {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(255,215,0,0.1);
-    border: 1px solid rgba(255,215,0,0.3);
+    background: rgba(245,166,35,0.15);
+    border: 2px solid rgba(245,166,35,0.5);
     border-radius: 20px;
     padding: 4px 12px;
     font-size: 12px;
-    font-weight: 600;
-    color: var(--gold);
+    font-weight: 800;
+    color: #c8851a;
     margin-left: 8px;
   }
 
@@ -544,22 +536,22 @@
     gap: 10px;
     margin-top: 16px;
     padding: 12px;
-    background: rgba(0,200,255,0.04);
-    border-radius: 8px;
-    border: 1px dashed rgba(0,200,255,0.2);
+    background: rgba(245,166,35,0.08);
+    border-radius: 12px;
+    border: 2px dashed rgba(245,166,35,0.4);
   }
 
-  .tier-label { font-size: 12px; color: var(--text2); }
+  .tier-label { font-size: 12px; color: var(--text2); font-weight: 700; }
   .tier-value {
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--glow);
+    font-family: 'Fredoka One', cursive;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--gold);
   }
 
   .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--sand-dark), transparent);
     margin: 4px 0 8px;
   }
 
@@ -569,20 +561,21 @@
     text-align: center;
     margin-bottom: 8px;
     padding: 8px;
-    background: rgba(255,255,255,0.02);
-    border-radius: 8px;
+    background: rgba(245,166,35,0.06);
+    border-radius: 12px;
   }
 
   .total-parcels .num {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 28px;
-    font-weight: 900;
-    color: white;
+    font-weight: 400;
+    color: var(--text);
   }
 
   .total-parcels .lbl {
+    font-family: 'Fredoka One', cursive;
     font-size: 11px;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     color: var(--text2);
     text-transform: uppercase;
   }
@@ -594,25 +587,29 @@
   }
 
   .counter-btn {
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--glow);
-    font-size: 18px;
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    border: 3px solid var(--border);
+    background: linear-gradient(180deg, #fff 0%, #f5ead8 100%);
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 900;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, border-color 0.15s;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
     flex-shrink: 0;
     line-height: 1;
+    box-shadow: 0 3px 0 var(--sand-dark);
   }
 
   .counter-btn:hover {
-    background: rgba(0,200,255,0.1);
-    border-color: var(--glow);
+    background: linear-gradient(180deg, #FFF8E1 0%, #FFE082 100%);
+    border-color: var(--gold);
+    transform: translateY(-1px);
   }
+  .counter-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--sand-dark); }
 
   @keyframes pop {
     0% { transform: scale(1); }
@@ -622,23 +619,24 @@
 
   .pop { animation: pop 0.2s ease; }
 
-  @keyframes glowPulse {
-    0%, 100% { box-shadow: 0 0 40px rgba(0,200,255,0.08); }
-    50% { box-shadow: 0 0 60px rgba(0,200,255,0.16); }
+  @keyframes bouncePulse {
+    0%, 100% { box-shadow: 0 6px 0 #c8851a, 0 8px 16px rgba(0,0,0,0.15); }
+    50% { box-shadow: 0 8px 0 #c8851a, 0 12px 24px rgba(245,166,35,0.25); }
   }
 
-  .results-card { animation: glowPulse 4s ease-in-out infinite; }
+  .results-card { animation: bouncePulse 4s ease-in-out infinite; }
 
-  .diamond-row .booster-name { color: #a5f3fc; }
+  .diamond-row .booster-name { color: #1565C0; }
 
   .info {
     font-size: 10px;
     color: var(--text2);
-    background: rgba(0,200,255,0.05);
-    border: 1px solid rgba(0,200,255,0.1);
-    border-radius: 4px;
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.3);
+    border-radius: 8px;
     padding: 2px 6px;
     margin-left: 4px;
+    font-weight: 700;
   }
 
   .coins-bar {
@@ -648,26 +646,27 @@
     gap: 14px;
     margin-top: 28px;
     padding: 14px 20px;
-    background: linear-gradient(135deg, #1a1200 0%, #0d0b00 100%);
-    border: 2px solid rgba(255, 215, 0, 0.35);
-    border-radius: 14px;
+    background: linear-gradient(180deg, #fff8e1 0%, #ffeaa0 100%);
+    border: 3px solid #F5A623;
+    border-radius: 18px;
     position: relative;
     overflow: hidden;
     transition: border-color 0.3s;
+    box-shadow: 0 5px 0 #c8851a, 0 8px 16px rgba(0,0,0,0.1);
   }
 
   .coins-bar::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #ffd700, transparent);
-    opacity: 0.7;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #FFD060, transparent);
+    opacity: 0.9;
   }
 
   .coins-icon {
     font-size: 28px;
-    filter: drop-shadow(0 0 8px rgba(255,215,0,0.8));
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
     animation: coinFloat 3s ease-in-out infinite;
     flex-shrink: 0;
   }
@@ -680,20 +679,19 @@
   .coins-info { text-align: left; }
 
   .coins-label {
-    font-family: 'Orbitron', monospace;
-    font-size: 8px;
-    letter-spacing: 3px;
-    color: rgba(255,215,0,0.6);
+    font-family: 'Fredoka One', cursive;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #c8851a;
     text-transform: uppercase;
     margin-bottom: 2px;
   }
 
   .coins-value {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 28px;
-    font-weight: 900;
-    color: #ffd700;
-    text-shadow: 0 0 20px rgba(255,215,0,0.6);
+    font-weight: 400;
+    color: #7a4a0a;
     line-height: 1;
     transition: transform 0.3s;
   }
@@ -704,74 +702,77 @@
 
   @keyframes coinPop {
     0%   { transform: scale(1); }
-    30%  { transform: scale(1.4); color: #fff; }
+    30%  { transform: scale(1.4); }
     60%  { transform: scale(0.9); }
     100% { transform: scale(1); }
   }
 
   .coins-sub {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif;
     font-size: 10px;
-    color: rgba(255,215,0,0.45);
+    font-weight: 700;
+    color: #c8851a;
     margin-top: 2px;
     letter-spacing: 1px;
   }
 
   .coins-status {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif;
     font-size: 11px;
+    font-weight: 700;
     text-align: center;
     flex: 1;
   }
 
   .coins-status .earned {
-    color: #4ade80;
-    text-shadow: 0 0 10px rgba(74,222,128,0.5);
+    color: #2d7a25;
     animation: fadeInUp 0.4s ease;
   }
 
   .coins-status .waiting {
-    color: rgba(255,215,0,0.4);
+    color: rgba(200,133,26,0.6);
     letter-spacing: 1px;
   }
 
   .btn-checkin {
-    font-family: 'Orbitron', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 10px 20px;
-    border-radius: 10px;
-    border: 2px solid #ffd700;
-    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,180,0,0.1));
-    color: #ffd700;
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    padding: 12px 22px;
+    border-radius: 14px;
+    border: 3px solid #c8851a;
+    background: linear-gradient(180deg, #FFD060 0%, #F5A623 100%);
+    color: #7a4a0a;
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
     flex-shrink: 0;
-    text-shadow: 0 0 8px rgba(255,215,0,0.4);
-    box-shadow: 0 0 12px rgba(255,215,0,0.15);
+    box-shadow: 0 4px 0 #c8851a;
+    text-transform: uppercase;
   }
   .btn-checkin:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(255,215,0,0.4), rgba(255,180,0,0.25));
-    box-shadow: 0 0 20px rgba(255,215,0,0.4);
-    transform: translateY(-1px);
+    background: linear-gradient(180deg, #FFE090 0%, #FFD060 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #c8851a;
+  }
+  .btn-checkin:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c8851a;
   }
   .btn-checkin:disabled {
-    border-color: rgba(255,215,0,0.2);
-    color: rgba(255,215,0,0.3);
-    background: rgba(255,215,0,0.04);
+    border-color: var(--sand-dark);
+    color: var(--text2);
+    background: var(--sand);
     cursor: not-allowed;
-    box-shadow: none;
-    text-shadow: none;
+    box-shadow: 0 3px 0 var(--sand-dark);
     transform: none;
   }
   .btn-checkin.done {
-    border-color: #4ade80;
-    color: #4ade80;
-    background: rgba(74,222,128,0.08);
-    text-shadow: 0 0 8px rgba(74,222,128,0.4);
-    box-shadow: 0 0 12px rgba(74,222,128,0.15);
+    border-color: #2d7a25;
+    color: #1e5c19;
+    background: linear-gradient(180deg, #81C784 0%, #4CAF50 100%);
+    box-shadow: 0 4px 0 #2d7a25;
   }
 
   @keyframes fadeInUp {
@@ -784,16 +785,16 @@
     top: 24px;
     left: 50%;
     transform: translateX(-50%) translateY(-80px);
-    background: linear-gradient(135deg, #1a1200, #2a1e00);
-    border: 2px solid #ffd700;
+    background: linear-gradient(180deg, #fff8e1 0%, #ffeaa0 100%);
+    border: 3px solid #F5A623;
     border-radius: 50px;
     padding: 10px 24px;
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    font-weight: 700;
-    color: #ffd700;
-    letter-spacing: 2px;
-    box-shadow: 0 0 30px rgba(255,215,0,0.4);
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    font-weight: 400;
+    color: #7a4a0a;
+    letter-spacing: 1px;
+    box-shadow: 0 5px 0 #c8851a, 0 8px 24px rgba(0,0,0,0.2);
     z-index: 99999;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     pointer-events: none;
@@ -814,33 +815,34 @@
   }
 
   .btn-save {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 1px;
     text-transform: uppercase;
-    color: #000;
-    background: linear-gradient(135deg, #00c8ff, #4ade80);
-    border: none;
-    border-radius: 8px;
-    padding: 9px 20px;
+    color: #fff;
+    background: linear-gradient(180deg, #66BB6A 0%, #43A047 100%);
+    border: 3px solid #2d7a25;
+    border-radius: 12px;
+    padding: 10px 22px;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 0 20px rgba(0,200,255,0.35);
+    box-shadow: 0 4px 0 #2d7a25;
   }
 
   .btn-save:hover {
     opacity: 0.9;
     transform: translateY(-2px);
-    box-shadow: 0 0 30px rgba(0,200,255,0.5);
+    box-shadow: 0 6px 0 #2d7a25;
   }
 
-  .btn-save:active { transform: scale(0.97); }
+  .btn-save:active { transform: translateY(2px); box-shadow: 0 2px 0 #2d7a25; }
 
   .save-status {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif;
     font-size: 12px;
-    color: var(--glow2);
+    font-weight: 800;
+    color: #2d7a25;
     opacity: 0;
     transition: opacity 0.4s;
     display: flex;
@@ -856,41 +858,43 @@
   .save-status.visible { opacity: 1; }
 
   .btn-copy-link {
-    font-family: 'Orbitron', monospace;
-    font-size: 10px;
-    font-weight: 700;
+    font-family: 'Fredoka One', cursive;
+    font-size: 12px;
+    font-weight: 400;
     letter-spacing: 1px;
-    color: #000;
-    background: var(--glow2);
-    border: none;
-    border-radius: 6px;
-    padding: 8px 14px;
+    color: #fff;
+    background: linear-gradient(180deg, #42A5F5 0%, #1E88E5 100%);
+    border: 3px solid #1565C0;
+    border-radius: 10px;
+    padding: 9px 16px;
     cursor: pointer;
     flex-shrink: 0;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 3px 0 #1565C0;
   }
 
-  .btn-copy-link:hover { opacity: 0.85; }
+  .btn-copy-link:hover { opacity: 0.9; transform: translateY(-1px); }
 
   .profile-section {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%);
+    background: linear-gradient(180deg, #fffbf0 0%, #f5ead8 100%);
     border: 3px solid var(--border);
-    border-radius: 14px;
+    border-radius: 20px;
     padding: 10px 16px 10px 16px;
     margin-bottom: 16px;
     position: relative;
     overflow: hidden;
     min-width: 0;
+    box-shadow: 0 5px 0 var(--sand-dark), 0 8px 16px rgba(0,0,0,0.1);
   }
 
   .profile-section::before {
     content: '';
     position: absolute;
     bottom: 0; left: 0; right: 0;
-    height: 1px;
+    height: 2px;
     background: linear-gradient(90deg, transparent, var(--border), transparent);
   }
 
@@ -900,17 +904,17 @@
     left: 12px;
     width: 42px;
     height: 42px;
-    background: var(--glow);
+    background: var(--gold);
     border-radius: 50%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 17px;
-    font-weight: 700;
-    color: var(--glow);
-    box-shadow: 0 0 8px rgba(0,200,255,0.5);
+    font-weight: 400;
+    color: #7a4a0a;
+    box-shadow: 0 3px 0 #c8851a;
     z-index: 4;
     line-height: 1.1;
     text-align: center;
@@ -934,7 +938,7 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    background: conic-gradient(var(--avatar-border-color, #00c8ff), transparent 40%, var(--avatar-border-color, #00c8ff));
+    background: conic-gradient(var(--avatar-border-color, #F5A623), transparent 40%, var(--avatar-border-color, #F5A623));
     animation: spinBorder 2.5s linear infinite;
     z-index: 0;
   }
@@ -944,7 +948,7 @@
     position: absolute;
     inset: 20px;
     border-radius: 50%;
-    background: var(--bg);
+    background: var(--panel);
     z-index: 1;
   }
 
@@ -959,9 +963,9 @@
     border-radius: 50%;
     object-fit: cover;
     border: none;
-    box-shadow: 0 0 16px rgba(0,200,255,0.35);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     display: block;
-    background: #0f1e35;
+    background: var(--sand);
     position: relative;
     z-index: 2;
   }
@@ -970,8 +974,8 @@
     width: 130px;
     height: 130px;
     border-radius: 50%;
-    border: 2px dashed var(--border);
-    background: #0b1626;
+    border: 3px dashed var(--border);
+    background: var(--sand);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -984,8 +988,8 @@
   }
 
   .profile-avatar-placeholder:hover {
-    border-color: var(--glow);
-    background: rgba(0,200,255,0.05);
+    border-color: var(--gold);
+    background: rgba(245,166,35,0.1);
   }
 
   .profile-avatar-placeholder .upload-icon {
@@ -994,7 +998,8 @@
   }
 
   .profile-avatar-placeholder .upload-label {
-    font-size: 8px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 9px;
     letter-spacing: 1px;
     color: var(--text2);
     text-transform: uppercase;
@@ -1008,14 +1013,14 @@
     left: 2px;
     width: 32px;
     height: 32px;
-    background: var(--glow);
+    background: var(--gold);
     border-radius: 50%;
     display: none;
     align-items: center;
     justify-content: center;
     font-size: 15px;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(0,200,255,0.5);
+    box-shadow: 0 2px 0 #c8851a;
     z-index: 3;
   }
 
@@ -1025,15 +1030,15 @@
     right: 2px;
     width: 32px;
     height: 32px;
-    background: var(--glow);
+    background: var(--gold);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    color: #000;
+    color: #7a4a0a;
     cursor: pointer;
-    box-shadow: 0 0 8px rgba(0,200,255,0.5);
+    box-shadow: 0 2px 0 #c8851a;
     display: none;
     z-index: 3;
   }
@@ -1043,35 +1048,35 @@
   }
 
   .profile-name-label {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 9px;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
     color: var(--text2);
     text-transform: uppercase;
     margin-bottom: 6px;
   }
 
   .profile-name-input {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: clamp(16px, 3vw, 24px);
-    font-weight: 900;
-    color: #fff;
+    font-weight: 400;
+    color: var(--text);
     background: transparent;
     border: none;
-    border-bottom: 2px solid var(--border);
+    border-bottom: 3px solid var(--border);
     outline: none;
     width: auto;
     min-width: min(280px, 100%);
     max-width: 100%;
     padding: 4px 2px;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     text-transform: uppercase;
     transition: border-color 0.2s;
-    caret-color: var(--glow);
+    caret-color: var(--gold);
   }
 
   .profile-name-input:focus {
-    border-bottom-color: var(--glow);
+    border-bottom-color: var(--gold);
   }
 
   .profile-name-input::placeholder {
@@ -1086,13 +1091,13 @@
   .explorer-badge-inline {
     font-size: 22px;
     flex-shrink: 0;
-    filter: drop-shadow(0 0 6px rgba(250,204,21,0.7));
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
     animation: glowCompass 2s ease-in-out infinite;
   }
 
   @keyframes glowCompass {
-    0%, 100% { filter: drop-shadow(0 0 4px rgba(250,204,21,0.5)); }
-    50%       { filter: drop-shadow(0 0 12px rgba(250,204,21,1)); }
+    0%, 100% { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
+    50%       { filter: drop-shadow(0 0 8px rgba(245,166,35,0.7)); }
   }
 
   .explorer-row {
@@ -1101,22 +1106,22 @@
     gap: 12px;
     margin-bottom: 12px;
     padding: 8px 12px;
-    background: rgba(250,204,21,0.05);
-    border: 1px solid rgba(250,204,21,0.2);
-    border-radius: 10px;
+    background: rgba(245,166,35,0.08);
+    border: 2px solid rgba(245,166,35,0.3);
+    border-radius: 14px;
     cursor: pointer;
     transition: background 0.2s, border-color 0.2s;
   }
 
   .explorer-row:hover {
-    background: rgba(250,204,21,0.1);
-    border-color: rgba(250,204,21,0.4);
+    background: rgba(245,166,35,0.15);
+    border-color: rgba(245,166,35,0.5);
   }
 
   .explorer-checkbox {
-    width: 22px; height: 22px;
-    border-radius: 6px;
-    border: 2px solid rgba(250,204,21,0.5);
+    width: 24px; height: 24px;
+    border-radius: 8px;
+    border: 3px solid rgba(245,166,35,0.5);
     background: transparent;
     display: flex;
     align-items: center;
@@ -1124,23 +1129,25 @@
     flex-shrink: 0;
     transition: background 0.2s, border-color 0.2s;
     font-size: 14px;
-    color: #000;
+    color: #7a4a0a;
   }
 
   .explorer-checkbox.checked {
-    background: #facc15;
-    border-color: #facc15;
-    box-shadow: 0 0 10px rgba(250,204,21,0.4);
+    background: var(--gold);
+    border-color: #c8851a;
+    box-shadow: 0 2px 0 #c8851a;
   }
 
   .explorer-info { flex: 1; }
   .explorer-name {
+    font-family: 'Fredoka One', cursive;
     font-size: 14px;
-    font-weight: 700;
-    color: #facc15;
+    font-weight: 400;
+    color: #c8851a;
   }
   .explorer-desc {
     font-size: 11px;
+    font-weight: 700;
     color: var(--text2);
     margin-top: 2px;
   }
@@ -1150,15 +1157,15 @@
   }
 
   .explorer-days {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 20px;
-    font-weight: 900;
-    color: #facc15;
-    text-shadow: 0 0 12px rgba(250,204,21,0.5);
+    font-weight: 400;
+    color: #c8851a;
     line-height: 1;
   }
 
   .explorer-days-label {
+    font-family: 'Fredoka One', cursive;
     font-size: 9px;
     color: var(--text2);
     letter-spacing: 1px;
@@ -1168,17 +1175,17 @@
 
   .dollar-box {
     margin-top: 8px;
-    background: linear-gradient(135deg, rgba(250,204,21,0.06) 0%, rgba(250,204,21,0.02) 100%);
-    border: 1px solid rgba(250,204,21,0.25);
-    border-radius: 10px;
+    background: rgba(245,166,35,0.08);
+    border: 2px solid rgba(245,166,35,0.3);
+    border-radius: 14px;
     padding: 10px 8px;
   }
 
   .dollar-box-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    letter-spacing: 4px;
-    color: #facc15;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: #c8851a;
     text-transform: uppercase;
     margin-bottom: 10px;
     display: flex;
@@ -1188,7 +1195,7 @@
 
   .dollar-box-title::before {
     content: '◈';
-    color: #facc15;
+    color: var(--gold);
   }
 
   .dollar-time {
@@ -1209,18 +1216,17 @@
   .dollar-unit:last-child { border-right: none; }
 
   .dollar-num {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: clamp(16px, 3vw, 24px);
-    font-weight: 900;
-    color: #facc15;
-    text-shadow: 0 0 16px rgba(250,204,21,0.5);
+    font-weight: 400;
+    color: #c8851a;
     line-height: 1;
   }
 
   .dollar-lbl {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 10px;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     color: var(--text2);
     text-transform: uppercase;
     margin-top: 4px;
@@ -1229,18 +1235,20 @@
   .dollar-note {
     text-align: center;
     font-size: 11px;
+    font-weight: 700;
     color: var(--text2);
     margin-top: 14px;
     letter-spacing: 1px;
   }
 
   .dollar-note span {
-    color: #facc15;
-    font-weight: 700;
+    color: #c8851a;
+    font-weight: 900;
   }
 
   .parcel-pct {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
     font-size: 15px;
     color: var(--text2);
     min-width: 44px;
@@ -1249,10 +1257,10 @@
     transition: color 0.3s;
     opacity: 0.4;
   }
-  .common .parcel-pct.active  { color: #4ade80; opacity: 1; font-weight: 700; }
-  .rare .parcel-pct.active    { color: #60a5fa; opacity: 1; font-weight: 700; }
-  .epic .parcel-pct.active    { color: #c084fc; opacity: 1; font-weight: 700; }
-  .legendary .parcel-pct.active { color: #facc15; opacity: 1; font-weight: 700; }
+  .common .parcel-pct.active  { color: #2d7a25; opacity: 1; }
+  .rare .parcel-pct.active    { color: #1565C0; opacity: 1; }
+  .epic .parcel-pct.active    { color: #6A1B9A; opacity: 1; }
+  .legendary .parcel-pct.active { color: #c8851a; opacity: 1; }
 
   .profile-chart {
     flex-shrink: 0;
@@ -1285,17 +1293,17 @@
   }
 
   .dl-letter {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    font-weight: 900;
+    font-family: 'Fredoka One', cursive;
+    font-size: 10px;
+    font-weight: 400;
     letter-spacing: 1px;
     width: 10px;
   }
 
   .dl-pct {
-    font-family: 'Share Tech Mono', monospace;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 900;
     font-size: 22px;
-    font-weight: 700;
     min-width: 48px;
   }
 
@@ -1326,13 +1334,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 22px;
-    font-weight: 900;
-    color: var(--glow);
-    text-shadow:
-      2px 2px 0px #0a0a14,
-      3px 3px 0px rgba(0,0,0,0.6);
+    font-weight: 400;
+    color: var(--text);
     text-align: center;
     line-height: 1.2;
   }
@@ -1345,15 +1350,15 @@
   .donut-crel {
     display: flex;
     gap: 6px;
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 16px;
-    font-weight: 900;
-    letter-spacing: 3px;
+    font-weight: 400;
+    letter-spacing: 2px;
   }
 
   @media print {
     @page { margin: 0; size: auto; }
-    body { background: #060b14 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    body { background: #f5ead8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     #visit-wrapper { display: none !important; }
     .container > p { display: none !important; }
     * { animation: none !important; transition: none !important; }
@@ -1364,44 +1369,44 @@
     bottom: 28px;
     right: 28px;
     z-index: 9998;
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #00ff88, #00ffff);
-    border: none;
+    background: linear-gradient(180deg, #66BB6A 0%, #2E7D32 100%);
+    border: 3px solid #1b5e20;
     cursor: pointer;
-    box-shadow: 0 0 20px rgba(0,255,136,0.6), 0 4px 15px rgba(0,0,0,0.4);
+    box-shadow: 0 5px 0 #1b5e20, 0 8px 20px rgba(0,0,0,0.3);
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
   }
   #chat-fab:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 35px rgba(0,255,136,0.9), 0 6px 20px rgba(0,0,0,0.5);
+    transform: scale(1.1) translateY(-2px);
+    box-shadow: 0 7px 0 #1b5e20, 0 10px 24px rgba(0,0,0,0.35);
   }
-  #chat-fab:active { transform: scale(0.95); }
-  #chat-fab svg { width: 28px; height: 28px; fill: #0a0e1a; }
+  #chat-fab:active { transform: scale(0.95) translateY(2px); box-shadow: 0 3px 0 #1b5e20; }
+  #chat-fab svg { width: 28px; height: 28px; fill: #fff; }
   #chat-fab.open svg.icon-chat { display: none; }
   #chat-fab.open svg.icon-close { display: block !important; }
   #chat-fab::before {
     content: 'CHAT';
     position: absolute;
-    right: 70px;
-    background: #0f1419;
-    border: 1px solid #00ff88;
-    color: #00ff88;
-    font-family: 'Orbitron', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    padding: 6px 10px;
-    border-radius: 4px;
+    right: 74px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    color: var(--text);
+    font-family: 'Fredoka One', cursive;
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 1px;
+    padding: 6px 12px;
+    border-radius: 12px;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s ease;
-    box-shadow: 0 0 10px rgba(0,255,136,0.3);
+    box-shadow: 0 3px 0 var(--sand-dark);
   }
   #chat-fab:hover::before { opacity: 1; }
   #chat-fab.open::before { content: 'CERRAR'; }
@@ -1413,10 +1418,10 @@
     z-index: 9997;
     width: 380px;
     height: min(600px, calc(100dvh - 120px));
-    border-radius: 12px;
+    border-radius: 20px;
     overflow: hidden;
-    border: 2px solid #00ff88;
-    box-shadow: 0 0 40px rgba(0,255,136,0.4), 0 20px 60px rgba(0,0,0,0.6);
+    border: 3px solid var(--border);
+    box-shadow: 0 8px 0 var(--sand-dark), 0 16px 40px rgba(0,0,0,0.25);
     transform: scale(0.85) translateY(20px);
     transform-origin: bottom right;
     opacity: 0;
@@ -1434,8 +1439,8 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 36px;
-    background: linear-gradient(90deg, rgba(0,255,136,0.15), rgba(0,255,255,0.1));
-    border-bottom: 1px solid rgba(0,255,136,0.4);
+    background: linear-gradient(90deg, #5aba4e, #3d9932);
+    border-bottom: 2px solid #2d7a25;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1444,18 +1449,17 @@
     pointer-events: none;
   }
   #chat-widget-bar span {
-    font-family: 'Orbitron', sans-serif;
-    font-size: 9px;
-    font-weight: 700;
-    color: #00ff88;
-    letter-spacing: 2px;
-    text-shadow: 0 0 8px #00ff88;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    font-weight: 400;
+    color: #fff;
+    letter-spacing: 1px;
   }
   #chat-widget-bar .dots { display: flex; gap: 5px; }
   #chat-widget-bar .dot { width: 8px; height: 8px; border-radius: 50%; }
   #chat-widget-bar .dot:nth-child(1) { background: #ff5f57; }
   #chat-widget-bar .dot:nth-child(2) { background: #ffbd2e; }
-  #chat-widget-bar .dot:nth-child(3) { background: #00ff88; box-shadow: 0 0 6px #00ff88; }
+  #chat-widget-bar .dot:nth-child(3) { background: #28c840; }
 
   @media (max-width: 480px) {
     #chat-widget-bar { display: none; }
@@ -1481,19 +1485,20 @@
   .medals-card {
     background: var(--panel);
     border: 3px solid var(--border);
-    border-radius: 12px;
+    border-radius: 18px;
     overflow: hidden;
     margin-top: 10px;
     margin-bottom: 10px;
     transition: border-color 0.3s, transform 0.2s;
     position: relative;
+    box-shadow: 0 5px 0 var(--sand-dark), 0 8px 16px rgba(0,0,0,0.1);
   }
-  .medals-card:hover { border-color: var(--glow); }
+  .medals-card:hover { border-color: var(--gold); }
   .medals-card::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 2px;
+    height: 3px;
     background: linear-gradient(90deg, transparent, var(--accent), transparent);
     opacity: 0;
     transition: opacity 0.3s;
@@ -1514,14 +1519,14 @@
     -webkit-tap-highlight-color: transparent;
     min-height: 48px; /* tap target iOS */
   }
-  .medals-toggle:hover { background: rgba(0,200,255,0.04); }
+  .medals-toggle:hover { background: rgba(245,166,35,0.06); }
   .medals-toggle-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
   .medals-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 4px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 2px;
     color: var(--text);
     text-transform: uppercase;
     display: flex;
@@ -1529,21 +1534,20 @@
     gap: 8px;
   }
   .medals-title-dot {
-    width: 6px; height: 6px;
+    width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--glow);
-    box-shadow: 0 0 6px var(--glow);
+    background: var(--gold);
     flex-shrink: 0;
   }
   .medals-count {
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    color: var(--glow);
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    color: #c8851a;
     letter-spacing: 1px;
-    background: rgba(0,200,255,0.1);
-    border: 1px solid rgba(0,200,255,0.25);
-    border-radius: 4px;
-    padding: 1px 7px;
+    background: rgba(245,166,35,0.15);
+    border: 2px solid rgba(245,166,35,0.4);
+    border-radius: 8px;
+    padding: 1px 8px;
   }
   .medals-arrow {
     font-size: 10px;
@@ -1570,10 +1574,10 @@
     width: 100%;
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px dashed rgba(26,58,92,0.9);
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    letter-spacing: 3px;
+    border-top: 2px dashed rgba(200,169,110,0.5);
+    font-family: 'Fredoka One', cursive;
+    font-size: 10px;
+    letter-spacing: 2px;
     color: var(--text2);
     text-transform: uppercase;
   }
@@ -1591,28 +1595,29 @@
   .mbadge-icon {
     width: 52px;
     height: 52px;
-    border-radius: 12px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
-    border: 1px solid;
+    border: 2px solid;
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 3px 0;
   }
   .mbadge-icon::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
     pointer-events: none;
   }
-  .mbadge:hover .mbadge-icon { transform: translateY(-3px); filter: brightness(1.2); }
+  .mbadge:hover .mbadge-icon { transform: translateY(-4px); filter: brightness(1.1); }
   .mbadge-name {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Nunito', sans-serif;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.5px;
     text-align: center;
     color: var(--text2);
@@ -1620,15 +1625,15 @@
     line-height: 1.2;
   }
 
-  .mbadge.m-common   .mbadge-icon { background: rgba(74,222,128,0.12);  border-color: rgba(74,222,128,0.4);  box-shadow: 0 0 12px rgba(74,222,128,0.15); }
-  .mbadge.m-rare     .mbadge-icon { background: rgba(96,165,250,0.12);  border-color: rgba(96,165,250,0.4);  box-shadow: 0 0 12px rgba(96,165,250,0.15); }
-  .mbadge.m-epic     .mbadge-icon { background: rgba(192,132,252,0.12); border-color: rgba(192,132,252,0.4); box-shadow: 0 0 12px rgba(192,132,252,0.15); }
-  .mbadge.m-legendary .mbadge-icon { background: rgba(255,215,0,0.12);  border-color: rgba(255,215,0,0.45);  box-shadow: 0 0 16px rgba(255,215,0,0.25); animation: mLegendaryGlow 2s ease-in-out infinite; }
-  .mbadge.m-coins    .mbadge-icon { background: rgba(255,170,0,0.12); border-color: rgba(255,170,0,0.45); box-shadow: 0 0 12px rgba(255,170,0,0.2); }
+  .mbadge.m-common   .mbadge-icon { background: rgba(76,175,80,0.15);  border-color: rgba(76,175,80,0.5);  box-shadow: 0 3px 0 rgba(76,175,80,0.4); }
+  .mbadge.m-rare     .mbadge-icon { background: rgba(33,150,243,0.15);  border-color: rgba(33,150,243,0.5);  box-shadow: 0 3px 0 rgba(33,150,243,0.4); }
+  .mbadge.m-epic     .mbadge-icon { background: rgba(156,39,176,0.15); border-color: rgba(156,39,176,0.5); box-shadow: 0 3px 0 rgba(156,39,176,0.4); }
+  .mbadge.m-legendary .mbadge-icon { background: rgba(245,166,35,0.15);  border-color: rgba(245,166,35,0.5);  box-shadow: 0 3px 0 rgba(245,166,35,0.4); animation: mLegendaryGlow 2s ease-in-out infinite; }
+  .mbadge.m-coins    .mbadge-icon { background: rgba(255,152,0,0.15); border-color: rgba(255,152,0,0.5); box-shadow: 0 3px 0 rgba(255,152,0,0.4); }
 
   @keyframes mLegendaryGlow {
-    0%, 100% { box-shadow: 0 0 16px rgba(255,215,0,0.25); }
-    50%       { box-shadow: 0 0 28px rgba(255,215,0,0.5); }
+    0%, 100% { box-shadow: 0 3px 0 rgba(245,166,35,0.4); }
+    50%       { box-shadow: 0 5px 0 rgba(245,166,35,0.6), 0 0 20px rgba(245,166,35,0.3); }
   }
 
   .mbadge-tooltip {
@@ -1636,9 +1641,9 @@
     bottom: calc(100% + 10px);
     left: 50%;
     transform: translateX(-50%);
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 12px;
     padding: 8px 12px;
     width: 170px;
     text-align: center;
@@ -1646,11 +1651,12 @@
     opacity: 0;
     transition: opacity 0.15s;
     z-index: 10;
+    box-shadow: 0 4px 0 var(--sand-dark);
   }
   .mbadge:hover .mbadge-tooltip { opacity: 1; }
-  .mbadge-tooltip-name { font-family: 'Orbitron', monospace; font-size: 9px; letter-spacing: 1px; color: var(--text); margin-bottom: 4px; }
-  .mbadge-tooltip-desc { font-family: 'Rajdhani', sans-serif; font-size: 11px; color: var(--text2); line-height: 1.25; }
-  .mbadge-tooltip-cost { margin-top: 6px; font-family: 'Orbitron', monospace; font-size: 9px; color: #ffaa00; }
+  .mbadge-tooltip-name { font-family: 'Fredoka One', cursive; font-size: 11px; letter-spacing: 1px; color: var(--text); margin-bottom: 4px; }
+  .mbadge-tooltip-desc { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 11px; color: var(--text2); line-height: 1.25; }
+  .mbadge-tooltip-cost { margin-top: 6px; font-family: 'Fredoka One', cursive; font-size: 11px; color: #c8851a; }
 
   /* Medallas regulares bloqueadas */
   .mbadge.m-locked { display: none !important; }
@@ -1660,17 +1666,17 @@
   .medal-modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 10000;                     /* por encima del chat FAB (9998) */
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s ease;
     backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px); /* Safari */
+    -webkit-backdrop-filter: blur(3px);
   }
   .medal-modal-overlay.open {
     opacity: 1;
-    pointer-events: auto;               /* "all" no es válido en algunos browsers */
+    pointer-events: auto;
   }
   .medal-modal {
     position: fixed;
@@ -1679,16 +1685,15 @@
     transform: translateX(-50%) translateY(100%);
     width: 100%;
     max-width: 480px;
-    background: #0b1626;
-    border: 2px solid var(--border);
+    background: var(--panel);
+    border: 3px solid var(--border);
     border-bottom: none;
-    border-radius: 20px 20px 0 0;
-    /* Safe area para iPhone X+ (barra home) */
+    border-radius: 24px 24px 0 0;
     padding: 20px 24px calc(28px + env(safe-area-inset-bottom, 0px));
     z-index: 10001;
     transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-    box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
-    overscroll-behavior: contain;       /* evita que el scroll arrastre la página en iOS */
+    box-shadow: 0 -6px 0 var(--sand-dark), 0 -12px 40px rgba(0,0,0,0.2);
+    overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     max-height: 85vh;
     overflow-y: auto;
@@ -1698,9 +1703,9 @@
   }
   .medal-modal-handle {
     width: 40px;
-    height: 4px;
-    background: var(--border);
-    border-radius: 2px;
+    height: 5px;
+    background: var(--sand-dark);
+    border-radius: 3px;
     margin: 0 auto 18px;
     flex-shrink: 0;
   }
@@ -1713,7 +1718,7 @@
   .medal-modal-icon {
     width: 64px;
     height: 64px;
-    border-radius: 14px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1722,49 +1727,50 @@
     flex-shrink: 0;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 4px 0;
   }
   .medal-modal-icon::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 60%);
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
   }
   .medal-modal-info { flex: 1; min-width: 0; }
   .medal-modal-name {
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 1px;
     color: var(--text);
     margin-bottom: 6px;
     word-break: break-word;
   }
   .medal-modal-rarity {
-    font-family: 'Orbitron', monospace;
-    font-size: 8px;
-    letter-spacing: 3px;
-    padding: 2px 8px;
-    border-radius: 4px;
-    border: 1px solid;
+    font-family: 'Fredoka One', cursive;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 2px 10px;
+    border-radius: 8px;
+    border: 2px solid;
     display: inline-block;
   }
   .medal-modal-divider {
-    height: 1px;
+    height: 2px;
     background: linear-gradient(90deg, transparent, var(--border), transparent);
     margin: 14px 0;
   }
   .medal-modal-section-label {
-    font-family: 'Orbitron', monospace;
-    font-size: 8px;
-    letter-spacing: 3px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 10px;
+    letter-spacing: 2px;
     color: var(--text2);
     text-transform: uppercase;
     margin-bottom: 6px;
   }
   .medal-modal-desc {
-    font-family: 'Rajdhani', sans-serif;
+    font-family: 'Nunito', sans-serif;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text);
     line-height: 1.4;
     margin-bottom: 14px;
@@ -1773,31 +1779,34 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    font-family: 'Orbitron', monospace;
-    font-size: 9px;
-    letter-spacing: 2px;
-    padding: 6px 14px;
-    border-radius: 8px;
-    border: 1px solid;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 2px solid;
+    box-shadow: 0 3px 0;
   }
   .medal-modal-status.earned {
-    color: #4ade80;
-    border-color: rgba(74,222,128,0.4);
-    background: rgba(74,222,128,0.08);
+    color: #2d7a25;
+    border-color: rgba(45,122,37,0.5);
+    background: rgba(76,175,80,0.1);
+    box-shadow: 0 3px 0 rgba(45,122,37,0.3);
   }
   .medal-modal-status.locked {
     color: var(--text2);
-    border-color: rgba(107,138,176,0.3);
-    background: rgba(107,138,176,0.06);
+    border-color: rgba(200,169,110,0.5);
+    background: rgba(200,169,110,0.08);
+    box-shadow: 0 3px 0 rgba(200,169,110,0.3);
   }
   .medal-modal-cost {
     margin-top: 10px;
-    font-family: 'Orbitron', monospace;
-    font-size: 11px;
-    color: #ffaa00;
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    color: #c8851a;
     letter-spacing: 1px;
   }
-  .mbadge.m-coins.m-owned .mbadge-icon { border-color: rgba(74,222,128,0.7); box-shadow: 0 0 16px rgba(74,222,128,0.35); filter: none; }
+  .mbadge.m-coins.m-owned .mbadge-icon { border-color: rgba(45,122,37,0.7); box-shadow: 0 3px 0 rgba(45,122,37,0.4); filter: none; }
   .mbadge.m-coins.m-owned::after {
     content: '✔';
     position: absolute;
@@ -1807,9 +1816,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(74,222,128,0.95);
-    color: #07131f;
-    font-family: 'Orbitron', monospace;
+    background: rgba(76,175,80,0.9);
+    color: #3E2A10;
+    font-family: 'Fredoka One', cursive;
     font-size: 10px;
     box-shadow: 0 0 10px rgba(74,222,128,0.35);
   }
@@ -1817,7 +1826,7 @@
   /* ── Botón comprar ── */
   .mbadge-buy-btn {
     margin-top: 2px;
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 8px;
     font-weight: 700;
     letter-spacing: 1px;
@@ -1901,7 +1910,7 @@
     border-radius: 5px;
   }
   .mprev-name {
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 5px;
     font-weight: 700;
     letter-spacing: 0.5px;
@@ -1923,16 +1932,156 @@
   .mprev-more {
     width: 28px; height: 28px;
     border-radius: 7px;
-    background: rgba(0,200,255,0.07);
-    border: 1.5px dashed rgba(0,200,255,0.3);
+    background: rgba(245,166,35,0.08);
+    border: 1.5px dashed rgba(245,166,35,0.4);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: 'Orbitron', monospace;
+    font-family: 'Fredoka One', cursive;
     font-size: 7px;
     color: var(--text2);
     flex-shrink: 0;
   }
+
+  /* ══════════════════════════════════
+     TEMA ORIGINAL (CYBERPUNK/SCI-FI)
+  ══════════════════════════════════ */
+  body.theme-original {
+    --bg: #060b14;
+    --panel: #0b1626;
+    --panel2: #0f1e35;
+    --border: #1a3a5c;
+    --glow: #00c8ff;
+    --glow2: #00ff9d;
+    --gold: #ffd700;
+    --epic: #c084fc;
+    --rare: #60a5fa;
+    --common: #4ade80;
+    --legendary: #facc15;
+    --text: #cce4ff;
+    --text2: #6b8ab0;
+    --accent: #00c8ff;
+    --sand: #0b1626;
+    --sand-dark: #1a3a5c;
+    background: var(--bg) !important;
+    font-family: 'Orbitron', monospace !important;
+  }
+
+  body.theme-original .card,
+  body.theme-original .profile-section,
+  body.theme-original .results-card,
+  body.theme-original .medals-card,
+  body.theme-original .coins-bar,
+  body.theme-original .medal-modal {
+    background: var(--panel) !important;
+    border-color: var(--border) !important;
+    box-shadow: 0 0 20px rgba(0,200,255,0.08) !important;
+  }
+
+  body.theme-original .header-bar {
+    background: linear-gradient(135deg, #0b1f3a 0%, #060f1e 100%) !important;
+    border-color: var(--border) !important;
+    box-shadow: none !important;
+  }
+
+  body.theme-original .results-card {
+    background: linear-gradient(135deg, #0a1f38 0%, #060f1e 100%) !important;
+    border-color: var(--glow) !important;
+  }
+
+  body.theme-original .btn-save {
+    background: linear-gradient(135deg, #00c8ff, #4ade80) !important;
+    border-color: transparent !important;
+    color: #000 !important;
+    box-shadow: 0 0 20px rgba(0,200,255,0.35) !important;
+  }
+
+  body.theme-original .btn-checkin {
+    background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,180,0,0.1)) !important;
+    border-color: #ffd700 !important;
+    color: #ffd700 !important;
+    box-shadow: 0 0 12px rgba(255,215,0,0.15) !important;
+  }
+
+  body.theme-original .coins-bar {
+    background: linear-gradient(135deg, #1a1200 0%, #0d0b00 100%) !important;
+    border-color: rgba(255,215,0,0.35) !important;
+    box-shadow: none !important;
+  }
+
+  body.theme-original input[type="number"] {
+    background: #060b14 !important;
+    border-color: var(--border) !important;
+    color: white !important;
+    box-shadow: none !important;
+  }
+
+  body.theme-original .card-title,
+  body.theme-original .results-title,
+  body.theme-original .medals-title,
+  body.theme-original .header-title .atlas,
+  body.theme-original .header-title .earth {
+    color: var(--glow) !important;
+    font-family: 'Orbitron', monospace !important;
+  }
+
+  body.theme-original .header-bar::before {
+    background: linear-gradient(90deg, #00c8ff, #4ade80, #facc15, #c084fc, #00c8ff) !important;
+  }
+
+  /* ══ Botón de cambio de tema ══ */
+  #theme-toggle-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 28px;
+    z-index: 9999;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 3px solid #c8851a;
+    background: linear-gradient(180deg, #FFD060 0%, #F5A623 100%);
+    box-shadow: 0 4px 0 #c8851a, 0 6px 16px rgba(0,0,0,0.25);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    title: "Cambiar tema";
+  }
+  #theme-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #c8851a, 0 8px 20px rgba(0,0,0,0.3);
+  }
+  #theme-toggle-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #c8851a;
+  }
+  body.theme-original #theme-toggle-btn {
+    background: linear-gradient(135deg, #00c8ff, #4ade80) !important;
+    border-color: #007a99 !important;
+    box-shadow: 0 0 16px rgba(0,200,255,0.5) !important;
+  }
+
+  #theme-toggle-tooltip {
+    position: fixed;
+    bottom: 162px;
+    right: 22px;
+    z-index: 9999;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 5px 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    box-shadow: 0 3px 0 var(--sand-dark);
+  }
+  #theme-toggle-btn:hover + #theme-toggle-tooltip { opacity: 1; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -2156,6 +2305,24 @@
   <!-- ===== FIN FIREBASE SDK ===== -->
 </head>
 <body>
+
+<!-- ══ BOTÓN CAMBIO DE TEMA ══ -->
+<button id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema">🎨</button>
+<div id="theme-toggle-tooltip">Cambiar tema</div>
+
+<script>
+  (function() {
+    const saved = localStorage.getItem('aemx-theme');
+    if (saved === 'original') document.body.classList.add('theme-original');
+    const btn = document.getElementById('theme-toggle-btn');
+    if (btn) btn.textContent = saved === 'original' ? '🌿' : '🎨';
+  })();
+  function toggleTheme() {
+    const isOriginal = document.body.classList.toggle('theme-original');
+    localStorage.setItem('aemx-theme', isOriginal ? 'original' : 'atlas');
+    document.getElementById('theme-toggle-btn').textContent = isOriginal ? '🌿' : '🎨';
+  }
+</script>
 <div class="container">
   <header>
     <div class="header-bar">
@@ -2208,14 +2375,14 @@
       </div>
       <div class="profile-hint" style="font-size:9px;">Toca el avatar para cambiar foto</div>
       <span id="color-preview" style="display:none;"></span>
-      <div style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);letter-spacing:1px;">
+      <div style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;color:var(--text2);letter-spacing:1px;">
         <span style="opacity:0.5;">JUGANDO DESDE·</span>
         <input
           type="date"
           id="start-date"
           onchange="saveStartDate()"
           style="
-            font-family:'Share Tech Mono',monospace;
+            font-family:'Nunito',sans-serif;font-weight:800;
             font-size:11px;
             color:var(--text2);
             letter-spacing:1px;
@@ -2230,13 +2397,13 @@
         >
       </div>
       <div style="margin-top:8px;">
-        <div style="display:inline-flex;justify-content:center;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);letter-spacing:1px;">
-          <span id="cl-year">—</span><span>·</span><span id="cl-month">—</span><span>·</span><span id="cl-day">—</span><span style="margin:0 5px;opacity:0.4;">|</span><span id="cl-hour">—</span><span>:</span><span id="cl-min">—</span><span>:</span><span id="cl-sec" style="color:var(--glow);">—</span><span style="margin:0 5px;opacity:0.4;">·</span><span style="font-family:'Orbitron',monospace;font-size:11px;font-weight:700;color:var(--text2);text-shadow:none;">SOL <span id="aemx-sol">—</span> MX</span>
+        <div style="display:inline-flex;justify-content:center;align-items:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:var(--text2);letter-spacing:1px;">
+          <span id="cl-year">—</span><span>·</span><span id="cl-month">—</span><span>·</span><span id="cl-day">—</span><span style="margin:0 5px;opacity:0.4;">|</span><span id="cl-hour">—</span><span>:</span><span id="cl-min">—</span><span>:</span><span id="cl-sec" style="color:var(--gold);">—</span><span style="margin:0 5px;opacity:0.4;">·</span><span style="font-family:'Fredoka One',cursive;font-size:11px;font-weight:700;color:var(--text2);text-shadow:none;">SOL <span id="aemx-sol">—</span> MX</span>
         </div>
       </div>
       <div style="margin-top:6px;">
-        <div style="display:inline-flex;align-items:center;gap:6px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--text2);letter-spacing:1px;">
-          <span style="color:var(--glow);font-size:11px;">📍</span>
+        <div style="display:inline-flex;align-items:center;gap:6px;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:var(--text2);letter-spacing:1px;">
+          <span style="color:var(--gold);font-size:11px;">📍</span>
           <span id="user-location" style="color:#fff;font-weight:700;text-transform:uppercase;">—</span>
         </div>
       </div>
@@ -2246,10 +2413,10 @@
 
     <div class="profile-chart">
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#4ade80;" id="donut-pct-c"><span class="donut-arrow" id="donut-arrow-c"></span>0%</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#60a5fa;" id="donut-pct-r"><span class="donut-arrow" id="donut-arrow-r"></span>0%</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#c084fc;" id="donut-pct-e"><span class="donut-arrow" id="donut-arrow-e"></span>0%</div>
-        <div style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#facc15;" id="donut-pct-l"><span class="donut-arrow" id="donut-arrow-l"></span>0%</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:22px;font-weight:700;color:#2d7a25;" id="donut-pct-c"><span class="donut-arrow" id="donut-arrow-c"></span>0%</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:22px;font-weight:700;color:#1565C0;" id="donut-pct-r"><span class="donut-arrow" id="donut-arrow-r"></span>0%</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:22px;font-weight:700;color:#6A1B9A;" id="donut-pct-e"><span class="donut-arrow" id="donut-arrow-e"></span>0%</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:22px;font-weight:700;color:#c8851a;" id="donut-pct-l"><span class="donut-arrow" id="donut-arrow-l"></span>0%</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
         <div class="donut-wrap">
@@ -2259,10 +2426,10 @@
           <div class="donut-center" id="donut-center">—</div>
         </div>
         <div class="donut-crel">
-          <span style="color:#4ade80">C.</span>
-          <span style="color:#60a5fa">R.</span>
-          <span style="color:#c084fc">E.</span>
-          <span style="color:#facc15">L.</span>
+          <span style="color:#2d7a25">C.</span>
+          <span style="color:#1565C0">R.</span>
+          <span style="color:#6A1B9A">E.</span>
+          <span style="color:#c8851a">L.</span>
         </div>
       </div>
     </div>
@@ -2645,9 +2812,9 @@
       </div>
 
       <div style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 16px;">
-        <div style="font-family:'Orbitron',monospace;font-size:10px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;">Parcelas por día</div>
+        <div style="font-family:'Fredoka One',cursive;font-size:10px;letter-spacing:2px;color:var(--text2);text-transform:uppercase;">Parcelas por día</div>
         <div style="display:flex;align-items:baseline;gap:5px;">
-          <span id="ppd-card" style="font-family:'Share Tech Mono',monospace;font-size:22px;font-weight:700;color:#94a3b8;">—</span>
+          <span id="ppd-card" style="font-family:'Nunito',sans-serif;font-weight:800;font-size:22px;font-weight:700;color:var(--text2);">—</span>
           <span style="font-size:10px;color:var(--text2);">parc/día</span>
         </div>
       </div>
@@ -2722,15 +2889,15 @@
           <div class="booster-desc">Calculado automáticamente por parcelas</div>
         </div>
         <div style="text-align:center;">
-          <div id="adboost-display" style="font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--glow);text-shadow:0 0 20px rgba(0,200,255,0.5);line-height:1;">20×</div>
+          <div id="adboost-display" style="font-family:'Fredoka One',cursive;font-size:22px;font-weight:900;color:var(--gold);text-shadow:none;line-height:1;">20×</div>
           <div id="adboost-range" style="font-size:10px;color:var(--text2);letter-spacing:1px;margin-top:2px;">1–50 parcelas</div>
         </div>
       </div>
 
       <div class="tier-info" id="tier-info" style="flex-direction:column;gap:6px;text-align:center;">
-        <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;">Parcelas que puedes comprar</div>
+        <div style="font-family:'Fredoka One',cursive;font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;">Parcelas que puedes comprar</div>
         <div style="display:flex;align-items:baseline;justify-content:center;gap:8px;">
-          <span id="parcels-buyable" style="font-family:'Orbitron',monospace;font-size:30px;font-weight:900;color:var(--glow2);text-shadow:0 0 20px rgba(0,255,157,0.4);">0</span>
+          <span id="parcels-buyable" style="font-family:'Fredoka One',cursive;font-size:30px;font-weight:900;color:#2d7a25;text-shadow:none;">0</span>
           <span style="font-size:12px;color:var(--text2);">parcelas</span>
         </div>
         <div style="font-size:11px;color:var(--text2);">con tus <span id="ab-total-display" style="color:var(--gold);">0 AB</span> · 100 AB por parcela</div>
@@ -2776,28 +2943,28 @@
           <td class="rt-boost" id="r-week">$0.0000</td>
         </tr>
         <tr style="background:rgba(0,255,157,0.03);">
-          <td><div class="rt-period" style="color:var(--glow2)"><span class="dot" style="background:var(--glow2);box-shadow:0 0 4px var(--glow2)"></span>Renta Mensual</div></td>
+          <td><div class="rt-period" style="color:#2d7a25"><span class="dot" style="background:var(--glow2);box-shadow:0 0 4px var(--glow2)"></span>Renta Mensual</div></td>
           <td class="rt-base" id="r-month-base">$0.0000</td>
           <td class="rt-boost highlight" id="r-month">$0.0000</td>
         </tr>
         <tr style="background:rgba(251,191,36,0.04);border-top:1px solid rgba(251,191,36,0.15);">
           <td>
-            <div class="rt-period" style="color:#fbbf24"><span class="dot" style="background:#fbbf24;box-shadow:0 0 4px #fbbf24"></span>SRB 50×</div>
-            <div style="font-size:10px;color:#92400e;font-family:'Share Tech Mono',monospace;margin-top:3px;padding-left:14px;">32h · 50× boost</div>
+            <div class="rt-period" style="color:#c8851a"><span class="dot" style="background:#fbbf24;box-shadow:0 0 4px #fbbf24"></span>SRB 50×</div>
+            <div style="font-size:10px;color:#92400e;font-family:'Nunito',sans-serif;font-weight:800;margin-top:3px;padding-left:14px;">32h · 50× boost</div>
           </td>
           <td class="rt-base" id="r-single-event-base">$0.0000</td>
-          <td class="rt-boost" id="r-single-event" style="color:#fbbf24;text-shadow:0 0 16px rgba(251,191,36,0.5);">$0.0000</td>
+          <td class="rt-boost" id="r-single-event" style="color:#c8851a;text-shadow:0 0 16px rgba(251,191,36,0.5);">$0.0000</td>
         </tr>
         <tr style="background:rgba(251,191,36,0.07);border-top:1px solid rgba(251,191,36,0.2);">
           <td>
-            <div class="rt-period" style="color:#fbbf24"><span class="dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf24"></span>Renta Total Mes</div>
-            <div style="font-size:10px;color:#92400e;font-family:'Share Tech Mono',monospace;margin-top:3px;padding-left:14px;">2× SRB · 32h · 50× boost</div>
+            <div class="rt-period" style="color:#c8851a"><span class="dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf24"></span>Renta Total Mes</div>
+            <div style="font-size:10px;color:#92400e;font-family:'Nunito',sans-serif;font-weight:800;margin-top:3px;padding-left:14px;">2× SRB · 32h · 50× boost</div>
           </td>
           <td class="rt-base" id="r-event-base">$0.0000</td>
-          <td class="rt-boost" id="r-event" style="color:#fbbf24;text-shadow:0 0 20px rgba(251,191,36,0.6);font-size:18px;">$0.0000</td>
+          <td class="rt-boost" id="r-event" style="color:#c8851a;text-shadow:0 0 20px rgba(251,191,36,0.6);font-size:18px;">$0.0000</td>
         </tr>
         <tr style="background:rgba(0,200,255,0.03);">
-          <td><div class="rt-period" style="color:var(--glow)"><span class="dot" style="background:var(--glow);box-shadow:0 0 4px var(--glow)"></span>Por Año</div></td>
+          <td><div class="rt-period" style="color:var(--gold)"><span class="dot" style="background:var(--glow);box-shadow:0 0 4px var(--glow)"></span>Por Año</div></td>
           <td class="rt-base" id="r-year-base">$0.00</td>
           <td class="rt-boost highlight" id="r-year" style="color:#00ff9d;text-shadow:0 0 20px rgba(0,255,157,0.6);font-size:16px;font-weight:900;letter-spacing:1px;">$0.00</td>
         </tr>
@@ -2824,15 +2991,15 @@
         <span class="breakdown-value highlight" id="b-total">$0.00</span>
       </div>
       <div class="breakdown-row" style="margin-top:4px;">
-        <span class="breakdown-label" style="font-weight:700;color:var(--glow)">💫 Total anual estimado</span>
-        <span class="breakdown-value" style="color:var(--glow);font-size:15px;font-weight:700;text-shadow:0 0 12px rgba(0,200,255,0.4);" id="b-year">$0.00</span>
+        <span class="breakdown-label" style="font-weight:700;color:var(--gold)">💫 Total anual estimado</span>
+        <span class="breakdown-value" style="color:var(--gold);font-size:15px;font-weight:700;text-shadow:none;" id="b-year">$0.00</span>
       </div>
 
       <div style="margin-top:16px;padding:14px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);border-radius:10px;">
-        <div style="font-family:'Orbitron',monospace;font-size:9px;letter-spacing:3px;color:#fbbf24;text-transform:uppercase;margin-bottom:12px;">🚀 SRB 50×</div>
+        <div style="font-family:'Fredoka One',cursive;font-size:9px;letter-spacing:3px;color:#c8851a;text-transform:uppercase;margin-bottom:12px;">🚀 SRB 50×</div>
         <div class="breakdown-row" style="margin-bottom:6px;">
           <span class="breakdown-label">Renta 1 evento (32h · 50×)</span>
-          <span class="breakdown-value" id="b-single-event" style="color:#fbbf24;">$0.0000</span>
+          <span class="breakdown-value" id="b-single-event" style="color:#c8851a;">$0.0000</span>
         </div>
         <div class="breakdown-row" style="margin-bottom:6px;">
           <span class="breakdown-label">Horas normales del mes <span style="font-size:10px;color:var(--text2)">(≈720h − 64h evento)</span></span>
@@ -2844,11 +3011,11 @@
         </div>
         <div class="breakdown-row" style="margin-bottom:6px;">
           <span class="breakdown-label">Renta en 2 eventos (64h · 50×)</span>
-          <span class="breakdown-value" id="b-event-income" style="color:#fbbf24;">$0.0000</span>
+          <span class="breakdown-value" id="b-event-income" style="color:#c8851a;">$0.0000</span>
         </div>
         <div class="breakdown-row breakdown-separator" style="border-top:1px solid rgba(251,191,36,0.2);padding-top:10px;margin-top:4px;">
           <span class="breakdown-label" style="font-weight:700;color:#fef3c7;">Renta Total Mes</span>
-          <span class="breakdown-value" style="color:#fbbf24;font-size:16px;font-weight:700;text-shadow:0 0 12px rgba(251,191,36,0.4);" id="b-event-total">$0.0000</span>
+          <span class="breakdown-value" style="color:#c8851a;font-size:16px;font-weight:700;text-shadow:0 0 12px rgba(251,191,36,0.4);" id="b-event-total">$0.0000</span>
         </div>
       </div>
     </div>
@@ -2873,9 +3040,9 @@
   <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
     <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
     <div id="google-auth-bar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-      <span id="google-user-info" style="display:none;align-items:center;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--glow);letter-spacing:1px;"></span>
+      <span id="google-user-info" style="display:none;align-items:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:var(--gold);letter-spacing:1px;"></span>
       <button id="google-auth-btn" onclick="handleGoogleAuth()"
-        style="font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:7px 16px;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#1a3a5c,#0b1626);border:1px solid var(--glow);color:var(--glow);transition:all 0.2s;white-space:nowrap;"
+        style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:7px 16px;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#1a3a5c,#0b1626);border:1px solid var(--glow);color:var(--gold);transition:all 0.2s;white-space:nowrap;"
         onmouseover="this.style.background='var(--glow)';this.style.color='#060b14'"
         onmouseout="this.style.background='linear-gradient(135deg,#1a3a5c,#0b1626)';this.style.color='var(--glow)'">
         🔑 Iniciar con Google
@@ -3979,7 +4146,7 @@
     wrapper.id = 'visit-wrapper';
     wrapper.innerHTML = `
       <span style="font-size:13px;opacity:0.7;">Powered by Socram13 👁 👁</span>
-      <span id="visit-count-display" style="font-family:'Share Tech Mono',monospace;font-size:15px;color:#4a6a8a;letter-spacing:3px;background:#0b1626;border:1px solid #1a3a5c;border-radius:6px;padding:3px 10px;">00000000</span>
+      <span id="visit-count-display" style="font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;color:var(--text2);letter-spacing:3px;background:var(--panel);border:2px solid var(--border);border-radius:10px;padding:3px 10px;">00000000</span>
     `;
     Object.assign(wrapper.style, {
       position: 'fixed', bottom: '14px', right: '18px', zIndex: '99999',
