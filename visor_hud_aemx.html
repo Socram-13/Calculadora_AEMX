@@ -2748,7 +2748,36 @@
       el.id = '_htdbg';
       el.style.cssText = 'position:fixed;top:10px;left:220px;z-index:9999;color:#0f0;font-size:8px;font-family:monospace;pointer-events:none;text-shadow:0 0 3px #000;max-width:50vw;opacity:0.45;';
       document.body.appendChild(el);
-      window._dbg = msg => { el.innerHTML += msg + '<br>'; };
+      window._dbg = msg => {
+        console.log('[DBG]', msg);
+        const lines = el.innerHTML.split('<br>').filter(l => l);
+        if(lines.length >= 6) lines.shift();
+        el.innerHTML = [...lines, msg].join('<br>') + '<br>';
+      };
+
+      // Errores JS globales
+      window.addEventListener('error', e => _dbg('❌ '+e.message+' ('+e.filename?.split('/').pop()+':'+e.lineno+')'));
+      window.addEventListener('unhandledrejection', e => _dbg('❌ Promise: '+(e.reason?.message||e.reason)));
+
+      // Log de boot observando bootMsg
+      const bootMsgEl = document.getElementById('bootMsg');
+      if(bootMsgEl){
+        const obs = new MutationObserver(() => _dbg('Boot: '+bootMsgEl.textContent));
+        obs.observe(bootMsgEl, { childList:true, characterData:true, subtree:true });
+      }
+
+      // Log de cámara — monitorear cada 2s hasta que esté lista
+      const camEl = document.getElementById('cam');
+      let camLogged = false;
+      const camInterval = setInterval(() => {
+        _dbg(`Cam: state=${camEl.readyState} ${camEl.videoWidth}x${camEl.videoHeight} stream=${!!camEl.srcObject}`);
+        if(camEl.readyState >= 2 && camEl.videoWidth > 0){
+          _dbg('✓ Cámara lista');
+          clearInterval(camInterval);
+        }
+      }, 2000);
+
+      _dbg('Log iniciado ✓');
     })();
 
 
