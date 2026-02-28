@@ -80,13 +80,15 @@
       position:absolute; inset:0;
       width:100%; height:100%;
       object-fit:cover;
-      transform:scaleX(1); /* sin espejo por defecto */
+      transform:scaleX(1);
       background:#000;
+      z-index:0;
     }
     /* HUD Overlay */
     .hud{
       position:absolute; inset:0;
       pointer-events:none;
+      z-index:2;
     }
 
     .hud::before{
@@ -1112,12 +1114,13 @@
     /* ── DRAGGABLE PARCEL INSTANCES ── */
     .parcelInstance{
       position:absolute;
-      z-index:0;
+      z-index:1;
       cursor:grab;
       touch-action:none;
       user-select:none;
+      isolation:auto;
     }
-    .parcelInstance.dragging{ cursor:grabbing; z-index:0; }
+    .parcelInstance.dragging{ cursor:grabbing; z-index:1; }
     .parcelInstance canvas{
       display:block;
       border-radius:12px;
@@ -1169,12 +1172,11 @@
 <body>
   <div class="stage">
     <video id="cam" autoplay playsinline muted></video>
-    <canvas id="handCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:55;"></canvas>
     <div id="arMinimap"></div>
 
     <div class="hud">
       <div class="scanlines"></div>
-      <svg id="hudGrid" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;opacity:0.85;" preserveAspectRatio="none"></svg>
+      <svg id="hudGrid" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0.85;" preserveAspectRatio="none"></svg>
 
       <!-- clickable controls -->
       <div class="topbar">
@@ -1484,8 +1486,14 @@
       closeBtn.textContent = '✕';
       wrap.appendChild(closeBtn);
 
-      const _hud = document.querySelector('.stage .hud');
-      _hud ? _hud.parentNode.insertBefore(wrap, _hud.nextSibling) : document.querySelector('.stage').appendChild(wrap);
+      // Insertar en .stage directamente, entre cámara y hud
+      const _stage = document.querySelector('.stage');
+      const _hud   = document.querySelector('.stage .hud');
+      if(_hud){
+        _stage.insertBefore(wrap, _hud);
+      } else {
+        _stage.appendChild(wrap);
+      }
 
       // Drop animation only for newly placed parcels, not restored ones
       if(opts.left === undefined && opts.top === undefined){
@@ -1762,14 +1770,16 @@
     // Z-index dinámico: la parcela más abajo en pantalla (top + height) va al frente
     function updateZIndices(){
       if(parcelInstances.length === 0) return;
-      // Ordenar por posición Y + mitad del tamaño (centro visual)
+      // Ordenar por posición Y para depth sorting entre parcelas
+      // Máximo z-index = 1 para quedar siempre debajo del .hud (z-index:2)
       const sorted = [...parcelInstances].sort((a, b) => {
         const ay = parseFloat(a.wrap.style.top  || 0) + PARCEL_SIZE * 0.5;
         const by = parseFloat(b.wrap.style.top  || 0) + PARCEL_SIZE * 0.5;
-        return ay - by; // más arriba = z-index menor
+        return ay - by;
       });
+      const step = parcelInstances.length > 1 ? 0.9 / parcelInstances.length : 0;
       sorted.forEach((inst, i) => {
-        inst.wrap.style.zIndex = 10 + i;
+        inst.wrap.style.zIndex = (0.1 + step * i).toFixed(2);
       });
     }
 
@@ -2968,7 +2978,7 @@
               inst.wrap.style.left          = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
               inst.wrap.style.top           = (proj.y - inst.wrap.offsetHeight/2) + 'px';
               inst.wrap.style.opacity       = proj.opacity;
-              inst.wrap.style.zIndex        = '22';
+              inst.wrap.style.zIndex        = '0';
               const isLandscape = window.innerWidth > window.innerHeight;
               const visualRoll  = isLandscape ? (roll + 78) : roll;
               inst.wrap.style.transform     = `scale(${proj.scale}) rotate(${-visualRoll}deg)`;
@@ -2978,7 +2988,7 @@
               inst.wrap.style.left          = '-9999px';
               inst.wrap.style.top           = '-9999px';
               inst.wrap.style.opacity       = '0';
-              inst.wrap.style.zIndex        = '22';
+              inst.wrap.style.zIndex        = '0';
               inst.wrap.style.visibility    = 'hidden';
               inst.wrap.style.pointerEvents = 'none';
             }
