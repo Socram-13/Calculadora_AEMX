@@ -2890,7 +2890,7 @@
       // ── Proyección AR ─────────────────────────────────────────────
       const FOV_H   = 80;  // S25 Ultra cámara gran angular ~80°
       const FOV_V   = 55;
-      const MAX_DIST = 200;
+      const MAX_DIST = 5;
 
       function projectToScreen(lat,lon){
         if(userLat==null) return null;
@@ -2973,23 +2973,41 @@
         if(typeof parcelInstances !== 'undefined'){
           parcelInstances.forEach(inst => {
             if(!inst.geoLat || !inst.geoLon) return;
-            const proj = projectToScreen(inst.geoLat, inst.geoLon);
-            if(proj){
-              inst.wrap.style.left          = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
-              inst.wrap.style.top           = (proj.y - inst.wrap.offsetHeight/2) + 'px';
-              inst.wrap.style.opacity       = proj.opacity;
-              inst.wrap.style.zIndex        = '0';
-              const isLandscape = window.innerWidth > window.innerHeight;
-              const visualRoll  = isLandscape ? (roll + 78) : roll;
-              inst.wrap.style.transform     = `scale(${proj.scale}) rotate(${-visualRoll}deg)`;
-              inst.wrap.style.pointerEvents = 'none';
+
+            if(userLat === null){
+              // GPS no disponible aún, mostrar normal
               inst.wrap.style.visibility    = 'visible';
-            } else {
+              inst.wrap.style.opacity       = '1';
+              inst.wrap.style.left          = inst._savedLeft || inst.wrap.style.left;
+              inst.wrap.style.top           = inst._savedTop  || inst.wrap.style.top;
+              inst.wrap.style.transform     = '';
+              inst.wrap.style.pointerEvents = '';
+              return;
+            }
+
+            const dist = distMeters(userLat, userLon, inst.geoLat, inst.geoLon);
+
+            if(dist > MAX_DIST){
+              // Demasiado lejos — ocultar
+              inst.wrap.style.visibility    = 'hidden';
               inst.wrap.style.left          = '-9999px';
               inst.wrap.style.top           = '-9999px';
-              inst.wrap.style.opacity       = '0';
-              inst.wrap.style.zIndex        = '0';
-              inst.wrap.style.visibility    = 'hidden';
+              inst.wrap.style.pointerEvents = 'none';
+            } else {
+              // Dentro del rango — mostrar en posición guardada
+              if(!inst._savedLeft){
+                inst._savedLeft = inst.wrap.style.left;
+                inst._savedTop  = inst.wrap.style.top;
+              }
+              const opacity = Math.max(0.4, 1 - dist / MAX_DIST * 0.6);
+              const scale   = Math.max(0.5, 1 - dist / MAX_DIST * 0.5);
+              const isLandscape = window.innerWidth > window.innerHeight;
+              const visualRoll  = isLandscape ? (roll + 78) : roll;
+              inst.wrap.style.visibility    = 'visible';
+              inst.wrap.style.left          = inst._savedLeft;
+              inst.wrap.style.top           = inst._savedTop;
+              inst.wrap.style.opacity       = opacity;
+              inst.wrap.style.transform     = `scale(${scale}) rotate(${-visualRoll}deg)`;
               inst.wrap.style.pointerEvents = 'none';
             }
           });
