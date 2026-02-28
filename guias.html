@@ -2133,27 +2133,37 @@ function clearProgress() {
   localStorage.removeItem(LS_KEY);
 }
 
-// Al salir de la página (no recarga) → limpiar
+// Marcar que hubo actividad en esta pestaña (sobrevive recarga)
+sessionStorage.setItem('aemx_tab_active', '1');
+
+// Al salir de la página → solo limpiar si NO es recarga
 window.addEventListener('pagehide', e => {
   if (!e.persisted) {
-    // Salida real (no bfcache), invalidar sesión
-    sessionStorage.removeItem(LS_SESSION);
-    clearProgress();
-  } else {
-    // iOS bfcache: marcar que la sesión entró a bfcache
-    // Se validará en pageshow cuando regrese
-    sessionStorage.setItem('aemx_bfcache_ts', String(Date.now()));
+    // Verificar si es recarga: sessionStorage sigue vivo durante recarga
+    // pero se limpia cuando la página realmente se cierra/navega fuera
+    // Usamos un flag que se borra ANTES del unload solo en navegación real
+    if (!sessionStorage.getItem('aemx_is_reload')) {
+      sessionStorage.removeItem(LS_SESSION);
+      clearProgress();
+    }
+    sessionStorage.removeItem('aemx_is_reload');
   }
 });
 
-// iOS Safari bfcache: cuando el usuario vuelve con "Atrás"
-// e.persisted = true significa que viene del bfcache
+// beforeunload se dispara tanto en recarga como en navegación
+// pero podemos marcar el tipo justo antes
+window.addEventListener('beforeunload', () => {
+  // No podemos saber aquí si es recarga o no,
+  // así que conservamos el progreso siempre en beforeunload
+  // El pagehide sin persisted + sin reload flag lo limpiará si fue navegación real
+  sessionStorage.setItem('aemx_is_reload', '1');
+});
+
+// pageshow: si vuelve del bfcache (botón atrás desde Facebook)
 window.addEventListener('pageshow', e => {
   if (e.persisted) {
-    // Volvió desde bfcache (p.ej. regresó de Facebook)
-    // Invalidar sesión para que el progreso no persista
     sessionStorage.removeItem(LS_SESSION);
-    sessionStorage.removeItem('aemx_bfcache_ts');
+    sessionStorage.removeItem('aemx_is_reload');
     clearProgress();
   }
 });
