@@ -1485,7 +1485,7 @@
       wrap.appendChild(closeBtn);
 
       const _hud = document.querySelector('.stage .hud');
-      _hud ? _hud.parentNode.insertBefore(wrap, _hud) : document.querySelector('.stage').appendChild(wrap);
+      _hud ? _hud.parentNode.insertBefore(wrap, _hud.nextSibling) : document.querySelector('.stage').appendChild(wrap);
 
       // Drop animation only for newly placed parcels, not restored ones
       if(opts.left === undefined && opts.top === undefined){
@@ -2968,16 +2968,17 @@
               inst.wrap.style.left          = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
               inst.wrap.style.top           = (proj.y - inst.wrap.offsetHeight/2) + 'px';
               inst.wrap.style.opacity       = proj.opacity;
+              inst.wrap.style.zIndex        = '22';
               const isLandscape = window.innerWidth > window.innerHeight;
               const visualRoll  = isLandscape ? (roll + 78) : roll;
-              inst.wrap.style.transform = `scale(${proj.scale}) rotate(${-visualRoll}deg)`;
+              inst.wrap.style.transform     = `scale(${proj.scale}) rotate(${-visualRoll}deg)`;
               inst.wrap.style.pointerEvents = 'none';
               inst.wrap.style.visibility    = 'visible';
             } else {
-              // Sacar completamente de pantalla para no interferir con otras parcelas
               inst.wrap.style.left          = '-9999px';
               inst.wrap.style.top           = '-9999px';
               inst.wrap.style.opacity       = '0';
+              inst.wrap.style.zIndex        = '22';
               inst.wrap.style.visibility    = 'hidden';
               inst.wrap.style.pointerEvents = 'none';
             }
