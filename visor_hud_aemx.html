@@ -2814,6 +2814,7 @@
       let rawHeading  = 0;
       let heading     = 0; // suavizado
       let pitch       = 0;
+      let roll        = 0; // gamma: inclinación lateral
       const HEADING_BUF = [];
       const HEADING_N   = 8; // tamaño del buffer de suavizado
 
@@ -2846,7 +2847,8 @@
         let sinSum = 0, cosSum = 0;
         HEADING_BUF.forEach(h => { sinSum += Math.sin(h*DEG); cosSum += Math.cos(h*DEG); });
         heading = (Math.atan2(sinSum, cosSum) / DEG + 360) % 360;
-        if(e.beta != null) pitch = e.beta;
+        if(e.beta  != null) pitch = e.beta;
+        if(e.gamma != null) roll  = e.gamma;
       }
 
       if(typeof DeviceOrientationEvent !== 'undefined' &&
@@ -2957,20 +2959,27 @@
         }
       }
 
-      // ── Loop AR ──────────────────────────────────────────────────
       function arLoop(){
         if(typeof parcelInstances !== 'undefined'){
           parcelInstances.forEach(inst => {
             if(!inst.geoLat || !inst.geoLon) return;
             const proj = projectToScreen(inst.geoLat, inst.geoLon);
             if(proj){
-              inst.wrap.style.left      = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
-              inst.wrap.style.top       = (proj.y - inst.wrap.offsetHeight/2) + 'px';
-              inst.wrap.style.opacity   = proj.opacity;
-              inst.wrap.style.transform = `scale(${proj.scale})`;
+              inst.wrap.style.left          = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
+              inst.wrap.style.top           = (proj.y - inst.wrap.offsetHeight/2) + 'px';
+              inst.wrap.style.opacity       = proj.opacity;
+              // Cancelar el roll del dispositivo para mantener la parcela vertical
+              const counterRoll = -roll;
+              inst.wrap.style.transform     = `scale(${proj.scale}) rotate(${counterRoll}deg)`;
               inst.wrap.style.pointerEvents = 'none';
+              inst.wrap.style.visibility    = 'visible';
             } else {
-              inst.wrap.style.opacity = '0';
+              // Sacar completamente de pantalla para no interferir con otras parcelas
+              inst.wrap.style.left          = '-9999px';
+              inst.wrap.style.top           = '-9999px';
+              inst.wrap.style.opacity       = '0';
+              inst.wrap.style.visibility    = 'hidden';
+              inst.wrap.style.pointerEvents = 'none';
             }
           });
         }
