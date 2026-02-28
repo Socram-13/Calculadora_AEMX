@@ -643,11 +643,39 @@ function descargar() {
   }
 
   const dataUrl = tmp.toDataURL('image/png');
-  // iOS Safari: <a download> no funciona — abre en nueva pestaña para guardar
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   if (isIOS) {
-    window.open(dataUrl, '_blank');
+    // iOS Safari: <a download> no funciona — mostrar modal con instrucciones
+    const iosOverlay = document.createElement('div');
+    iosOverlay.style.cssText = `
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      background:rgba(6,11,20,0.95); z-index:99999;
+      display:flex; flex-direction:column; align-items:center;
+      justify-content:center; padding:24px; box-sizing:border-box;
+      font-family:'Rajdhani',sans-serif;
+    `;
+    iosOverlay.innerHTML = `
+      <p style="color:#00c8ff; font-family:'Orbitron',monospace; font-size:11px;
+         letter-spacing:3px; margin-bottom:12px; text-align:center;">
+        GUARDAR IMAGEN
+      </p>
+      <p style="color:#cce4ff; font-size:15px; text-align:center;
+         margin-bottom:20px; line-height:1.6;">
+        Mantén presionada la imagen<br>y elige <strong>"Añadir a Fotos"</strong>
+      </p>
+      <img src="${dataUrl}" style="max-width:100%; max-height:55vh;
+        border-radius:12px; box-shadow:0 0 40px rgba(0,200,255,0.2);">
+      <button onclick="this.parentElement.remove()" style="
+        margin-top:20px; font-family:'Orbitron',monospace; font-size:9px;
+        letter-spacing:2px; padding:9px 22px; border-radius:8px;
+        border:1px solid #00c8ff; background:rgba(0,200,255,0.08);
+        color:#00c8ff; cursor:pointer;">
+        CERRAR
+      </button>
+    `;
+    document.body.appendChild(iosOverlay);
   } else {
+    // Android / Desktop: descarga directa sin cambios
     const link = document.createElement('a');
     link.download = 'AEMX_marco.png';
     link.href = dataUrl;
