@@ -1328,8 +1328,7 @@
 
     <!-- THREE.JS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/hands.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.min.js" crossorigin="anonymous"></script>
+    <!-- TF.js se carga dinámicamente después del boot para no bloquear la página -->
     <script>
     // ══════════════════════════════════════════════════════
     // AEMX — Multi-parcel draggable AR system
@@ -2741,15 +2740,13 @@
       // Paso 5: abrir compuertas
       openGates();
     }
-
-    bootSequence();
-
-    // ── MediaPipe Hands Tracking ──────────────────────────────────
+    // ── Hand Pose Detection (TF.js v4 + hand-pose-detection v2) ──
     (function initHandTracking(){
       const handCanvas = document.getElementById('handCanvas');
       const ctx        = handCanvas.getContext('2d');
       const camEl      = document.getElementById('cam');
 
+      // 21 keypoints, conexiones estándar MediaPipe
       const CONNECTIONS = [
         [0,1],[1,2],[2,3],[3,4],
         [0,5],[5,6],[6,7],[7,8],
@@ -2758,8 +2755,7 @@
         [0,17],[17,18],[18,19],[19,20],
         [5,9],[9,13],[13,17]
       ];
-      // MediaPipe devuelve "Left"/"Right" desde la perspectiva de la cámara
-      const COLORS = { Left: '#fb923c', Right: '#4ade80' };
+      const COLORS = { Left:'#4ade80', Right:'#fb923c' };
 
       function resizeCanvas(){
         const dpr = Math.min(devicePixelRatio, 2);
@@ -2771,41 +2767,41 @@
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
-      // MediaPipe da coordenadas normalizadas [0-1]
-      function toScreen(lm){
+      // hand-pose-detection devuelve coords en píxeles del VIDEO
+      function toScreen(kp){
         const dpr = Math.min(devicePixelRatio, 2);
-        const W   = window.innerWidth;
-        const H   = window.innerHeight;
-        const isMirrored = camEl && camEl.style.transform === 'scaleX(-1)';
+        const W = window.innerWidth, H = window.innerHeight;
+        const vW = camEl.videoWidth  || W;
+        const vH = camEl.videoHeight || H;
+        const isMirrored = camEl.style.transform === 'scaleX(-1)';
         return {
-          x: (isMirrored ? 1 - lm.x : lm.x) * W * dpr,
-          y: lm.y * H * dpr
+          x: (isMirrored ? 1 - kp.x / vW : kp.x / vW) * W * dpr,
+          y: (kp.y / vH) * H * dpr
         };
       }
 
-      function drawHand(landmarks, label){
-        const color = COLORS[label] || COLORS.Left;
-        const dpr   = Math.min(devicePixelRatio, 2);
+      function drawHand(keypoints, handedness){
+        const color = COLORS[handedness] || '#00c8ff';
+        const dpr = Math.min(devicePixelRatio, 2);
 
-        // Líneas del esqueleto
         ctx.strokeStyle = color;
         ctx.lineWidth   = 3 * dpr;
         ctx.shadowColor = color;
         ctx.shadowBlur  = 14;
         ctx.lineCap     = 'round';
         ctx.lineJoin    = 'round';
+
         CONNECTIONS.forEach(([a, b]) => {
-          const pa = toScreen(landmarks[a]);
-          const pb = toScreen(landmarks[b]);
+          const pa = toScreen(keypoints[a]);
+          const pb = toScreen(keypoints[b]);
           ctx.beginPath();
           ctx.moveTo(pa.x, pa.y);
           ctx.lineTo(pb.x, pb.y);
           ctx.stroke();
         });
 
-        // Puntos / nodos
-        landmarks.forEach((lm, i) => {
-          const p = toScreen(lm);
+        keypoints.forEach((kp, i) => {
+          const p = toScreen(kp);
           const r = (i === 0 ? 10 : (i % 4 === 0 ? 7 : 5)) * dpr;
           ctx.beginPath();
           ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
@@ -2814,99 +2810,107 @@
           ctx.shadowBlur  = 18;
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(p.x, p.y, r + 2 * dpr, 0, Math.PI * 2);
+          ctx.arc(p.x, p.y, r + 2*dpr, 0, Math.PI * 2);
           ctx.strokeStyle = color;
           ctx.lineWidth   = 2 * dpr;
           ctx.stroke();
         });
       }
 
-      function processHover(landmarks, label){
-        const color = COLORS[label] || COLORS.Left;
+      function processHover(keypoints, handedness){
+        const color = COLORS[handedness] || '#00c8ff';
         const W = window.innerWidth, H = window.innerHeight;
-        const isMirrored = camEl && camEl.style.transform === 'scaleX(-1)';
+        const vW = camEl.videoWidth || W, vH = camEl.videoHeight || H;
+        const isMirrored = camEl.style.transform === 'scaleX(-1)';
         [8, 0].forEach(idx => {
-          const lm = landmarks[idx];
-          if(!lm) return;
-          const fx = (isMirrored ? 1 - lm.x : lm.x) * W;
-          const fy = lm.y * H;
+          const kp = keypoints[idx];
+          if(!kp) return;
+          const fx = (isMirrored ? 1 - kp.x/vW : kp.x/vW) * W;
+          const fy = (kp.y / vH) * H;
           if(typeof parcelInstances !== 'undefined'){
             parcelInstances.forEach(inst => {
               const rect = inst.wrap.getBoundingClientRect();
               const hit  = fx >= rect.left && fx <= rect.right && fy >= rect.top && fy <= rect.bottom;
-              if(hit) inst.setHover(true, color, {x: fx, y: fy});
+              if(hit) inst.setHover(true, color, {x:fx, y:fy});
             });
           }
         });
       }
 
-      function initMediaPipeHands(){
-        if(typeof Hands === 'undefined'){
-          console.warn('[HandTracking] MediaPipe Hands no disponible');
-          return;
-        }
+      async function startHandTracking(){
+        try {
+          // Intentar WebGL primero, fallback a CPU
+          try { await tf.setBackend('webgl'); }
+          catch(e){ await tf.setBackend('cpu'); }
+          await tf.ready();
+          console.log('[HandTracking] Backend:', tf.getBackend());
 
-        const hands = new Hands({ locateFile: file =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${file}`
-        });
+          const detector = await handPoseDetection.createDetector(
+            handPoseDetection.SupportedModels.MediaPipeHands,
+            { runtime: 'tfjs', modelType: 'lite', maxHands: 2 }
+          );
+          console.log('[HandTracking] Detector listo');
 
-        hands.setOptions({
-          maxNumHands:        2,
-          modelComplexity:    1,
-          minDetectionConfidence: 0.6,
-          minTrackingConfidence:  0.5,
-        });
-
-        hands.onResults(results => {
-          ctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-
-          // Reset hover
-          if(typeof parcelInstances !== 'undefined'){
-            parcelInstances.forEach(inst => inst.setHover(false, ''));
-          }
-
-          if(!results.multiHandLandmarks) return;
-          results.multiHandLandmarks.forEach((landmarks, i) => {
-            const label = results.multiHandedness[i]?.label || 'Left';
-            drawHand(landmarks, label);
-            processHover(landmarks, label);
-          });
-        });
-
-        // Esperar a que la cámara esté activa y enviar frames sin abrir otro stream
-        function tryStart(attempts){
-          if(camEl.readyState >= 2 && camEl.videoWidth > 0){
-            let sending = false;
-            async function loop(){
-              if(!sending && camEl.readyState >= 2 && !camEl.paused && !camEl.ended){
-                sending = true;
-                try { await hands.send({ image: camEl }); } catch(e){}
-                sending = false;
-              }
-              requestAnimationFrame(loop);
+          let running = false;
+          async function loop(){
+            ctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+            if(typeof parcelInstances !== 'undefined'){
+              parcelInstances.forEach(inst => inst.setHover(false, ''));
             }
-            loop();
-          } else if(attempts > 0){
-            setTimeout(() => tryStart(attempts - 1), 500);
-          } else {
-            console.warn('[HandTracking] Cámara no disponible para hand tracking');
+            if(!running && camEl.readyState >= 2 && camEl.videoWidth > 0){
+              running = true;
+              try {
+                const hands = await detector.estimateHands(camEl, { flipHorizontal: false });
+                hands.forEach(hand => {
+                  drawHand(hand.keypoints, hand.handedness);
+                  processHover(hand.keypoints, hand.handedness);
+                });
+              } catch(e){ console.warn('[HandTracking]', e); }
+              running = false;
+            }
+            requestAnimationFrame(loop);
           }
+          loop();
+        } catch(e){
+          console.error('[HandTracking] Error:', e);
         }
-        tryStart(30);
       }
 
-      // Esperar a que los scripts de MediaPipe carguen
-      function waitForMediaPipe(attempts){
-        if(typeof Hands !== 'undefined'){
-          initMediaPipeHands();
-        } else if(attempts > 0){
-          setTimeout(() => waitForMediaPipe(attempts - 1), 500);
-        } else {
-          console.warn('[HandTracking] MediaPipe no cargó');
+      function loadScript(src){ 
+        return new Promise((res, rej) => {
+          const s = document.createElement('script');
+          s.src = src; s.async = true;
+          s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+      }
+
+      async function loadAndStart(){
+        try {
+          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js');
+          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js');
+          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu@4.22.0/dist/tf-backend-cpu.min.js');
+          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js');
+          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js');
+          console.log('[HandTracking] Scripts cargados');
+          startHandTracking();
+        } catch(e){
+          console.warn('[HandTracking] Error cargando scripts:', e);
         }
       }
-      waitForMediaPipe(40);
+
+      // Esperar a que el boot termine antes de cargar TF.js (evita bloqueo)
+      function waitForBoot(){
+        const boot = document.getElementById('bootOverlay');
+        if(!boot || boot.classList.contains('hidden') || !document.body.contains(boot)){
+          loadAndStart();
+        } else {
+          setTimeout(waitForBoot, 500);
+        }
+      }
+      waitForBoot();
     })();
+    // ─────────────────────────────────────────────────────────────
     // ─────────────────────────────────────────────────────────────
 
   </script>
