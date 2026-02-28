@@ -1104,27 +1104,7 @@
     </div>
   </div>
 
-  <!-- VIDEO MODAL -->
-  <div id="video-modal">
-    <div class="vm-inner">
-      <div class="vm-header">
-        <span class="vm-title" id="vm-title">GUÍA 01</span>
-        <div class="vm-timer-wrap">
-          <span class="vm-timer-label">TIEMPO VISTO</span>
-          <span class="vm-timer" id="vm-timer">0:00</span>
-          <span class="vm-timer-req">/ 1:00</span>
-        </div>
-        <button class="vm-close" onclick="closeVideo()">✕</button>
-      </div>
-      <div class="vm-frame-wrap">
-        <iframe id="vm-iframe" src="" frameborder="0" allowfullscreen
-          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
-      </div>
-      <div class="vm-footer" id="vm-footer">
-        ⏳ Mira al menos <strong>1 minuto</strong> para marcar esta guía como vista
-      </div>
-    </div>
-  </div>
+
 
   <!-- CONTENT -->
   <div class="content-section">
@@ -2197,47 +2177,16 @@ function buildEmbedUrl(shareUrl) {
 
 window.openVideo = function(num) {
   if (rewardAlreadyClaimed) return;
-  currentVideoNum = num;
-  videoElapsed    = 0;
-  videoStartTime  = Date.now();
 
-  // Setear iframe
-  const iframe = document.getElementById('vm-iframe');
-  iframe.src = buildEmbedUrl(VIDEO_URLS[num]);
+  // Abrir video en Facebook directamente desde el segundo 0
+  const url = VIDEO_URLS[num];
+  const fbUrl = url.includes('?') ? url + '&t=0' : url + '?t=0';
+  window.open(fbUrl, '_blank');
 
-  // Setear título
-  document.getElementById('vm-title').textContent = VIDEO_TITLES[num] || ('GUÍA ' + num);
-
-  // Reset timer UI
-  const timerEl  = document.getElementById('vm-timer');
-  const footerEl = document.getElementById('vm-footer');
-  timerEl.textContent = '0:00';
-  timerEl.classList.remove('done');
-  footerEl.classList.remove('done');
-  footerEl.innerHTML = '⏳ Mira al menos <strong>1 minuto</strong> para marcar esta guía como vista';
-
-  // Mostrar modal
-  document.getElementById('video-modal').classList.add('visible');
-  document.body.style.overflow = 'hidden';
-
-  // Iniciar timer
-  clearInterval(videoTimer);
-  videoTimer = setInterval(() => {
-    videoElapsed = Date.now() - videoStartTime;
-    const secs = Math.floor(videoElapsed / 1000);
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
-
-    if (videoElapsed >= MIN_WATCH_MS) {
-      clearInterval(videoTimer);
-      timerEl.classList.add('done');
-      timerEl.textContent = '1:00';
-      footerEl.classList.add('done');
-      footerEl.innerHTML = '✅ <strong>¡Guía completada!</strong> Cierra el video para continuar';
-      markVisited(num);
-    }
-  }, 500);
+  // Iniciar timer silencioso de 1 minuto; al completarse marcar como vista
+  setTimeout(() => {
+    markVisited(num);
+  }, 60 * 1000);
 };
 
 window.closeVideo = function() {
