@@ -2968,9 +2968,8 @@
               inst.wrap.style.left          = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
               inst.wrap.style.top           = (proj.y - inst.wrap.offsetHeight/2) + 'px';
               inst.wrap.style.opacity       = proj.opacity;
-              // En landscape Android: gamma es el roll visual, +90 corrige el eje
               const isLandscape = window.innerWidth > window.innerHeight;
-              const visualRoll  = isLandscape ? (roll + 90) : roll;
+              const visualRoll  = isLandscape ? (roll + 78) : roll;
               inst.wrap.style.transform = `scale(${proj.scale}) rotate(${-visualRoll}deg)`;
               inst.wrap.style.pointerEvents = 'none';
               inst.wrap.style.visibility    = 'visible';
