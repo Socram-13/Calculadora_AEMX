@@ -2908,12 +2908,17 @@
         tryStart();
       }
 
-      // Esperar a que MediaPipe cargue antes de iniciar
-      if(typeof Hands !== 'undefined'){
-        startHandTracking();
-      } else {
-        window.addEventListener('load', startHandTracking);
+      // Esperar a que MediaPipe cargue — polling robusto para Android
+      function waitForMediaPipe(attempts){
+        if(typeof Hands !== 'undefined'){
+          startHandTracking();
+        } else if(attempts > 0){
+          setTimeout(() => waitForMediaPipe(attempts - 1), 300);
+        } else {
+          console.warn('MediaPipe Hands no disponible');
+        }
       }
+      waitForMediaPipe(30); // intenta hasta 9 segundos
     })();
     // ─────────────────────────────────────────────────────────────
 
