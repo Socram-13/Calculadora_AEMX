@@ -2112,10 +2112,13 @@ function loadProgress() {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
     const data = JSON.parse(raw);
-    // Validar que pertenezca a la sesión actual
-    if (data.sessionId !== getSessionId()) return null;
-    // Validar timeout de 30 min
+    // Validar timeout de 30 min de inactividad
     if (Date.now() - data.timestamp > TIMEOUT_MS) return null;
+    // Si el sessionId no coincide (recarga), adoptarlo para que siga válido
+    if (data.sessionId !== getSessionId()) {
+      data.sessionId = getSessionId();
+      localStorage.setItem(LS_KEY, JSON.stringify(data));
+    }
     return data;
   } catch { return null; }
 }
@@ -2133,40 +2136,7 @@ function clearProgress() {
   localStorage.removeItem(LS_KEY);
 }
 
-// Marcar que hubo actividad en esta pestaña (sobrevive recarga)
-sessionStorage.setItem('aemx_tab_active', '1');
-
-// Al salir de la página → solo limpiar si NO es recarga
-window.addEventListener('pagehide', e => {
-  if (!e.persisted) {
-    // Verificar si es recarga: sessionStorage sigue vivo durante recarga
-    // pero se limpia cuando la página realmente se cierra/navega fuera
-    // Usamos un flag que se borra ANTES del unload solo en navegación real
-    if (!sessionStorage.getItem('aemx_is_reload')) {
-      sessionStorage.removeItem(LS_SESSION);
-      clearProgress();
-    }
-    sessionStorage.removeItem('aemx_is_reload');
-  }
-});
-
-// beforeunload se dispara tanto en recarga como en navegación
-// pero podemos marcar el tipo justo antes
-window.addEventListener('beforeunload', () => {
-  // No podemos saber aquí si es recarga o no,
-  // así que conservamos el progreso siempre en beforeunload
-  // El pagehide sin persisted + sin reload flag lo limpiará si fue navegación real
-  sessionStorage.setItem('aemx_is_reload', '1');
-});
-
-// pageshow: si vuelve del bfcache (botón atrás desde Facebook)
-window.addEventListener('pageshow', e => {
-  if (e.persisted) {
-    sessionStorage.removeItem(LS_SESSION);
-    sessionStorage.removeItem('aemx_is_reload');
-    clearProgress();
-  }
-});
+// El progreso se borra automáticamente después de 30 min de inactividad (ver loadProgress)
 
 // Ping de actividad cada vez que el usuario interactúa
 function refreshTimestamp() {
