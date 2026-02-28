@@ -2877,7 +2877,12 @@
           });
           dbg('Hands listo, esperando cámara...');
           let sending = false;
+          let logged = false;
           async function loop(){
+            if(!logged){
+              dbg(`cam: readyState=${camEl.readyState} vW=${camEl.videoWidth} vH=${camEl.videoHeight} srcObj=${!!camEl.srcObject}`);
+              logged = true;
+            }
             if(!sending && camEl.readyState >= 2 && camEl.videoWidth > 0){
               sending = true;
               try { await hands.send({ image: camEl }); } catch(e){ dbg('send ERR:'+e.message); }
