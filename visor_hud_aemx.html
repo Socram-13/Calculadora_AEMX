@@ -3008,11 +3008,14 @@
               return;
             }
 
-            // Dentro del rango GPS — mostrar siempre sin filtro de brújula
+            // Dentro del rango GPS — posicionar por bearing, sin cortar por FOV
             inst._visible = true;
             if(!inst._savedTop) inst._savedTop = inst.wrap.style.top;
             const W = window.innerWidth, H = window.innerHeight;
-            const screenX = W / 2;
+            const bear  = bearing(userLat, userLon, inst.geoLat, inst.geoLon);
+            const dH    = ((bear - heading + 540) % 360) - 180; // -180..+180
+            // Mapear dH a pantalla: ±90° = ±mitad de pantalla (sin cortar)
+            const screenX = W / 2 + (dH / 90) * (W / 2);
             const screenY = parseFloat(inst._savedTop) || H * 0.5;
             const opacity = Math.max(0.5, 1 - dist / MAX_DIST * 0.5);
             const scale   = Math.max(0.6, 1 - dist / MAX_DIST * 0.4);
