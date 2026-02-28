@@ -34,7 +34,11 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    background: #7bc96a url('outdoor-bg.webp') center top / cover scroll;
+    background-color: var(--body-bg, #7bc96a);
+    background-image: url('outdoor-bg.webp');
+    background-position: center top;
+    background-size: cover;
+    background-attachment: scroll;
     color: var(--text);
     font-family: 'Nunito', sans-serif;
     font-weight: 700;
@@ -3855,8 +3859,9 @@
     if (avatarColorBtn2) { avatarColorBtn2.style.background = color; avatarColorBtn2.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
     const [_r,_g,_b] = rgb.split(",").map(Number);
     const darkBg = `rgb(${Math.round(_r*0.04)},${Math.round(_g*0.04)},${Math.round(_b*0.04)})`;
-    document.body.style.background = darkBg;
-    document.body.style.backgroundColor = darkBg;
+    document.body.style.removeProperty('background');
+    document.body.style.removeProperty('background-color');
+    document.documentElement.style.setProperty('--body-bg', darkBg);
     const panelBg = `rgb(${Math.round(_r*0.06)},${Math.round(_g*0.06)},${Math.round(_b*0.06)})`;
     const panel2Bg = `rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)})`;
     root.style.setProperty("--panel", panelBg);
