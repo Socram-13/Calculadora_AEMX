@@ -29,6 +29,9 @@
     --red-game: #E53935;
     --blue-game: #1E88E5;
     --purple-game: #8E24AA;
+    --auth-btn-bg: linear-gradient(135deg, #e8f4e8, #f5ead8);
+    --auth-btn-color: #3E2A10;
+    --auth-btn-hover-text: #3E2A10;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1952,6 +1955,9 @@
   ══════════════════════════════════ */
   body.theme-original {
     background-image: none !important;
+    --auth-btn-bg: linear-gradient(135deg, #1a3a5c, #0b1626);
+    --auth-btn-color: var(--gold);
+    --auth-btn-hover-text: #060b14;
     --bg: #060b14;
     --panel: #0b1626;
     --panel2: #0f1e35;
@@ -2340,7 +2346,6 @@
     const isOriginal = document.body.classList.toggle('theme-original');
     localStorage.setItem('aemx-theme', isOriginal ? 'original' : 'atlas');
     document.getElementById('theme-toggle-btn').textContent = isOriginal ? '🌿' : '🎨';
-    // Limpiar variables inline antes de re-aplicar con el nuevo tema
     ['--body-bg','--panel','--panel2','--border','--glow','--accent',
      '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
     ].forEach(v => {
@@ -2361,7 +2366,6 @@
       btn.style.removeProperty('color');
       btn.style.removeProperty('border-color');
     });
-    // Re-aplicar color con el contexto del nuevo tema
     const savedColor = localStorage.getItem('atlas-avatar-border');
     if (savedColor && window.applyThemeColor) window.applyThemeColor(savedColor);
   }
@@ -3085,9 +3089,9 @@
     <div id="google-auth-bar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <span id="google-user-info" style="display:none;align-items:center;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:var(--gold);letter-spacing:1px;"></span>
       <button id="google-auth-btn" onclick="handleGoogleAuth()"
-        style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:7px 16px;border-radius:8px;cursor:pointer;background:linear-gradient(135deg,#1a3a5c,#0b1626);border:1px solid var(--glow);color:var(--gold);transition:all 0.2s;white-space:nowrap;"
-        onmouseover="this.style.background='var(--glow)';this.style.color='#060b14'"
-        onmouseout="this.style.background='linear-gradient(135deg,#1a3a5c,#0b1626)';this.style.color='var(--glow)'">
+        style="font-family:'Nunito',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;padding:7px 16px;border-radius:8px;cursor:pointer;background:var(--auth-btn-bg);border:1px solid var(--glow);color:var(--auth-btn-color);transition:all 0.2s;white-space:nowrap;"
+        onmouseover="this.style.background='var(--glow)';this.style.color='var(--auth-btn-hover-text)'"
+        onmouseout="this.style.background='var(--auth-btn-bg)';this.style.color='var(--auth-btn-color)'">
         🔑 Iniciar con Google
       </button>
     </div>
@@ -3892,13 +3896,13 @@
     const root = document.documentElement;
     const isDark = document.body.classList.contains('theme-original');
 
-    // ── Elementos comunes a ambos temas ──────────────────────────
+    // ── Comunes a ambos temas ─────────────────────────────────────
     document.querySelector('.profile-avatar-wrapper').style.setProperty('--avatar-border-color', color);
     const preview = document.getElementById('color-preview');
     if (preview) preview.style.background = color;
     const avatarEditBtn = document.getElementById('avatar-edit');
     const avatarColorBtn2 = document.getElementById('avatar-color-btn');
-    if (avatarEditBtn)   { avatarEditBtn.style.background   = color; avatarEditBtn.style.boxShadow   = `0 0 8px rgba(${rgb},0.6)`; }
+    if (avatarEditBtn)   { avatarEditBtn.style.background   = color; avatarEditBtn.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
     if (avatarColorBtn2) { avatarColorBtn2.style.background = color; avatarColorBtn2.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
     root.style.setProperty('--glow',   color);
     root.style.setProperty('--accent', color);
@@ -3907,7 +3911,7 @@
     window._userThemeRgb = rgb;
 
     if (isDark) {
-      // ── Tema OSCURO: colores derivados del color elegido ─────────
+      // ── Tema OSCURO ───────────────────────────────────────────────
       const [_r,_g,_b] = rgb.split(",").map(Number);
       const darkBg   = `rgb(${Math.round(_r*0.04)},${Math.round(_g*0.04)},${Math.round(_b*0.04)})`;
       const panelBg  = `rgb(${Math.round(_r*0.06)},${Math.round(_g*0.06)},${Math.round(_b*0.06)})`;
@@ -3939,7 +3943,7 @@
       });
 
     } else {
-      // ── Tema CLARO: solo color como acento, sin tocar fondos ─────
+      // ── Tema CLARO: solo acento, sin tocar fondos ─────────────────
       ['--body-bg','--panel','--panel2','--border',
        '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
       ].forEach(v => {
