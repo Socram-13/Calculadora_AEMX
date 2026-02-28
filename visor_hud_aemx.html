@@ -2850,7 +2850,7 @@
         if(!el){
           el = document.createElement('div');
           el.id = '_htdbg';
-          el.style.cssText = 'position:fixed;bottom:60px;left:10px;z-index:9999;color:#0f0;font-size:11px;font-family:monospace;pointer-events:none;text-shadow:0 0 4px #000;max-width:90vw;';
+          el.style.cssText = 'position:fixed;top:60px;left:10px;z-index:9999;color:#0f0;font-size:11px;font-family:monospace;pointer-events:none;text-shadow:0 0 4px #000;max-width:90vw;';
           document.body.appendChild(el);
         }
         el.innerHTML += msg + '<br>';
@@ -2859,36 +2859,46 @@
       async function startHandTracking(){
         try {
           dbg('Iniciando MediaPipe Hands...');
-          const hands = new Hands({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}` });
-          hands.setOptions({ maxNumHands: 2, modelComplexity: 1, minDetectionConfidence: 0.6, minTrackingConfidence: 0.5 });
+          const hands = new Hands({
+            locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240/${f}`
+          });
+          hands.setOptions({
+            maxNumHands: 2,
+            modelComplexity: 1,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5,
+            selfieMode: false
+          });
           hands.onResults(results => {
             ctx.clearRect(0, 0, handCanvas.width, handCanvas.height);
             if(typeof parcelInstances !== 'undefined') parcelInstances.forEach(i => i.setHover(false,''));
-            if(!results.multiHandLandmarks) return;
+            if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+            dbg(`Manos: ${results.multiHandLandmarks.length}`);
             results.multiHandLandmarks.forEach((landmarks, i) => {
               const label = results.multiHandedness[i]?.label || 'Left';
-              if(landmarks.length > 0){
-                const lm0 = landmarks[0];
-                dbg(`lm0: x=${(lm0.x*100).toFixed(1)}% y=${(lm0.y*100).toFixed(1)}% | ${label}`);
-              }
               drawHand(landmarks, label);
               processHover(landmarks, label);
             });
           });
-          dbg('Hands listo, esperando cámara...');
+
+          // Inicializar con un frame vacío para forzar carga de WASM
+          dbg('Inicializando modelo (puede tardar)...');
+          await hands.initialize();
+          dbg('Modelo listo ✓');
+
           let sending = false;
           let logged = false;
           let sendLogged = false;
           async function loop(){
             if(!logged){
-              dbg(`cam: readyState=${camEl.readyState} vW=${camEl.videoWidth} vH=${camEl.videoHeight} srcObj=${!!camEl.srcObject}`);
+              dbg(`cam: readyState=${camEl.readyState} vW=${camEl.videoWidth} vH=${camEl.videoHeight}`);
               logged = true;
             }
             if(!sending && camEl.readyState >= 2 && camEl.videoWidth > 0){
               sending = true;
               try {
                 await hands.send({ image: camEl });
-                if(!sendLogged){ dbg('send() OK - esperando onResults...'); sendLogged=true; }
+                if(!sendLogged){ dbg('send() OK'); sendLogged=true; }
               } catch(e){ dbg('send ERR:'+e.message); }
               sending = false;
             }
