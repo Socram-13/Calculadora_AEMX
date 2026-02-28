@@ -1958,6 +1958,7 @@
     --auth-btn-bg: linear-gradient(135deg, #1a3a5c, #0b1626);
     --auth-btn-color: var(--gold);
     --auth-btn-hover-text: #060b14;
+    --location-color: #cce4ff;
     --bg: #060b14;
     --panel: #0b1626;
     --panel2: #0f1e35;
@@ -2346,9 +2347,10 @@
     const isOriginal = document.body.classList.toggle('theme-original');
     localStorage.setItem('aemx-theme', isOriginal ? 'original' : 'atlas');
     document.getElementById('theme-toggle-btn').textContent = isOriginal ? '🌿' : '🎨';
-    ['--body-bg','--panel','--panel2','--border','--glow','--accent',
-     '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
-    ].forEach(v => {
+    // Limpiar todos los inline styles antes de re-aplicar con el contexto del nuevo tema
+    const varsToClear = ['--body-bg','--panel','--panel2','--border','--glow','--accent',
+                         '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'];
+    varsToClear.forEach(v => {
       document.body.style.removeProperty(v);
       document.documentElement.style.removeProperty(v);
     });
@@ -2365,7 +2367,10 @@
     document.querySelectorAll('.counter-btn').forEach(btn => {
       btn.style.removeProperty('color');
       btn.style.removeProperty('border-color');
+      btn.style.removeProperty('background');
     });
+    window._userThemeRgb = null;
+    // Re-aplicar con el nuevo tema activo
     const savedColor = localStorage.getItem('atlas-avatar-border');
     if (savedColor && window.applyThemeColor) window.applyThemeColor(savedColor);
   }
@@ -2451,7 +2456,7 @@
       <div style="margin-top:6px;">
         <div style="display:inline-flex;align-items:center;gap:6px;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;color:var(--text2);letter-spacing:1px;">
           <span style="color:var(--gold);font-size:11px;">📍</span>
-          <span id="user-location" style="color:#fff;font-weight:700;text-transform:uppercase;">—</span>
+          <span id="user-location" style="color:var(--location-color,var(--text2));font-weight:700;text-transform:uppercase;">—</span>
         </div>
       </div>
     </div>
@@ -3646,8 +3651,13 @@
     center.textContent = total;
 
     const _donutBg = document.getElementById('donut-bg-circle');
-    if (_donutBg && window._userThemeRgb) {
-      _donutBg.setAttribute('stroke', `rgba(${window._userThemeRgb},0.15)`);
+    if (_donutBg) {
+      const _isDark = document.body.classList.contains('theme-original');
+      if (_isDark && window._userThemeRgb) {
+        _donutBg.setAttribute('stroke', `rgba(${window._userThemeRgb},0.15)`);
+      } else if (!_isDark) {
+        _donutBg.setAttribute('stroke', 'rgba(200,169,110,0.3)');
+      }
     }
 
     const activeCount = vals.filter(v => v > 0).length;
@@ -3906,9 +3916,6 @@
     if (avatarColorBtn2) { avatarColorBtn2.style.background = color; avatarColorBtn2.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
     root.style.setProperty('--glow',   color);
     root.style.setProperty('--accent', color);
-    const donutBg = document.getElementById('donut-bg-circle');
-    if (donutBg) donutBg.setAttribute('stroke', `rgba(${rgb},0.15)`);
-    window._userThemeRgb = rgb;
 
     if (isDark) {
       // ── Tema OSCURO ───────────────────────────────────────────────
@@ -3933,6 +3940,9 @@
       const lightB = Math.round(_b2 + (255-_b2)*0.5);
       const donutCenter = document.getElementById('donut-center');
       if (donutCenter) donutCenter.style.color = `rgb(${lightR},${lightG},${lightB})`;
+      const donutBg = document.getElementById('donut-bg-circle');
+      if (donutBg) donutBg.setAttribute('stroke', `rgba(${rgb},0.15)`);
+      window._userThemeRgb = rgb;
       document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
       document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
       document.querySelectorAll('.divider').forEach(el => {
@@ -3943,7 +3953,8 @@
       });
 
     } else {
-      // ── Tema CLARO: solo acento, sin tocar fondos ─────────────────
+      // ── Tema CLARO: solo acento, limpiar todo lo oscuro ───────────
+      window._userThemeRgb = null;
       ['--body-bg','--panel','--panel2','--border',
        '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
       ].forEach(v => {
@@ -3952,6 +3963,7 @@
       });
       document.body.style.removeProperty('background');
       document.body.style.removeProperty('background-color');
+      // Limpiar inline styles que pudo haber dejado el tema oscuro
       document.querySelectorAll('.card, .medals-card').forEach(el => {
         el.style.removeProperty('background');
         el.style.borderColor = `rgba(${rgb},0.5)`;
@@ -3964,20 +3976,25 @@
         el.style.removeProperty('background');
         el.style.borderColor = color;
       });
-      document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
-      document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
+      // Títulos: limpiar color inline para que use var(--text) del CSS
+      document.querySelectorAll('.card-title, .results-title, .breakdown-title').forEach(el => {
+        el.style.removeProperty('color');
+      });
+      document.querySelectorAll('.counter-btn').forEach(btn => {
+        btn.style.removeProperty('color');
+        btn.style.removeProperty('border-color');
+        btn.style.removeProperty('background');
+      });
+      const donutBg = document.getElementById('donut-bg-circle');
+      if (donutBg) donutBg.setAttribute('stroke', 'var(--sand-dark)');
+      const donutCenter = document.getElementById('donut-center');
+      if (donutCenter) donutCenter.style.removeProperty('color');
       document.querySelectorAll('.divider').forEach(el => {
         el.style.background = `linear-gradient(90deg, transparent, rgba(${rgb},0.4), transparent)`;
       });
       document.querySelectorAll('.breakdown-separator').forEach(el => {
         el.style.borderTopColor = `rgba(${rgb},0.35)`;
       });
-      document.querySelectorAll('.counter-btn').forEach(btn => {
-        btn.style.color = color;
-        btn.style.borderColor = `rgba(${rgb},0.5)`;
-      });
-      const donutCenter = document.getElementById('donut-center');
-      if (donutCenter) donutCenter.style.removeProperty('color');
     }
   }
   window.applyThemeColor = applyThemeColor;
