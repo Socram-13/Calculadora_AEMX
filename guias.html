@@ -953,6 +953,66 @@
       .vip-grid { grid-template-columns: 1fr 1fr; }
       .info-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── LOGIN MODAL ── */
+    #login-modal {
+      display: none;
+      position: fixed; inset: 0; z-index: 99999;
+      background: rgba(6,11,20,0.96);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    #login-modal.visible { display: flex; }
+    .login-modal-inner {
+      width: min(400px, 100%);
+      background: var(--panel);
+      border: 1px solid rgba(0,200,255,0.25);
+      border-radius: 16px;
+      padding: 36px 32px;
+      text-align: center;
+      box-shadow: 0 0 60px rgba(0,200,255,0.08);
+      animation: fadeDown 0.3s ease both;
+    }
+    .login-modal-icon { font-size: 40px; margin-bottom: 16px; }
+    .login-modal-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 16px; font-weight: 700;
+      letter-spacing: 2px; color: var(--gold);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+    .login-modal-msg {
+      font-size: 14px; color: var(--text2);
+      line-height: 1.7; margin-bottom: 24px;
+    }
+    .login-modal-msg strong { color: var(--glow2); }
+    .btn-google-login {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 10px;
+      background: #fff; color: #3c3c3c;
+      border: none; border-radius: 10px;
+      padding: 12px 24px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 15px; font-weight: 700;
+      letter-spacing: 0.5px; cursor: pointer;
+      width: 100%; transition: all 0.2s;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    .btn-google-login:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+    .btn-google-login:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-google-login svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .login-modal-cancel {
+      display: block; margin-top: 14px;
+      font-size: 12px; color: var(--text2);
+      cursor: pointer; letter-spacing: 1px;
+      background: none; border: none;
+      font-family: 'Orbitron', monospace;
+      transition: color 0.2s;
+    }
+    .login-modal-cancel:hover { color: var(--text); }
   </style>
 </head>
 <body>
@@ -1999,7 +2059,7 @@
 <script type="module">
 // ── CHECKPOINT SYSTEM ────────────────────────────────────────────────────────
 import { initializeApp }       from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, browserLocalPersistence, setPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 import { getDatabase, ref, get, set, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 const firebaseConfig = {
@@ -2015,6 +2075,8 @@ const firebaseConfig = {
 const app      = initializeApp(firebaseConfig, 'guias');
 const auth     = getAuth(app);
 const database = getDatabase(app);
+const provider = new GoogleAuthProvider();
+setPersistence(auth, browserLocalPersistence).catch(console.warn);
 
 const LS_KEY        = 'aemx_guias_progress';
 const LS_SESSION    = 'aemx_guias_session';
@@ -2023,6 +2085,14 @@ const TOTAL_GUIDES  = 10;
 
 let currentUser = null;
 let rewardAlreadyClaimed = false;
+
+// Promesa que se resuelve cuando Firebase confirma el estado de auth
+const authReady = new Promise(resolve => {
+  const unsub = onAuthStateChanged(auth, user => {
+    unsub();
+    resolve(user);
+  });
+});
 
 // ── Session management ───────────────────────────────────────────────────────
 // Genera un ID de sesión único por carga de página
@@ -2212,18 +2282,26 @@ function markVisited(num) {
 
 // ── Claim reward ─────────────────────────────────────────────────────────────
 window.claimReward = async function() {
-  if (!currentUser) {
-    alert('Debes iniciar sesión para reclamar tu recompensa.');
-    return;
-  }
   if (rewardAlreadyClaimed) return;
 
   const btn = document.getElementById('btn-claim-reward');
   btn.disabled = true;
+  btn.textContent = '⏳ VERIFICANDO SESIÓN...';
+
+  // Esperar a que Firebase confirme el estado de autenticación
+  const user = currentUser || await authReady;
+
+  if (!user) {
+    btn.disabled = false;
+    btn.textContent = '⚡ RECLAMAR 10 COINS';
+    showLoginModal();
+    return;
+  }
+
   btn.textContent = '⏳ PROCESANDO...';
 
   try {
-    const uid = currentUser.uid;
+    const uid = user.uid;
     const userRef = ref(database, 'users/' + uid);
     const snap = await get(userRef);
 
@@ -2301,7 +2379,57 @@ function goBack(){
     window.location.href = "index.html";
   }
 }
+
+// ── Login modal ───────────────────────────────────────────────────────────────
+function showLoginModal() {
+  document.getElementById('login-modal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLoginModal() {
+  document.getElementById('login-modal').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+window.loginAndClaim = async function() {
+  const btn = document.getElementById('btn-google-login');
+  btn.disabled = true;
+  btn.innerHTML = '<svg viewBox="0 0 48 48" style="width:20px;height:20px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Conectando...';
+  try {
+    const result = await signInWithPopup(auth, provider);
+    currentUser = result.user;
+    closeLoginModal();
+    // Continuar automáticamente con el reclamo
+    claimReward();
+  } catch (err) {
+    console.error('Login error:', err);
+    btn.disabled = false;
+    btn.innerHTML = '<svg viewBox="0 0 48 48" style="width:20px;height:20px"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Iniciar sesión con Google';
+  }
+};
+
+window.closeLoginModal = closeLoginModal;
+
 </script>
+
+
+  <!-- LOGIN MODAL -->
+  <div id="login-modal">
+    <div class="login-modal-inner">
+      <div class="login-modal-icon">🔐</div>
+      <div class="login-modal-title">Sesión requerida</div>
+      <p class="login-modal-msg">
+        Necesitas iniciar sesión con tu cuenta de Google para<br>
+        <strong>reclamar tus 10 coins</strong> de explorador.<br>
+        Tus guías completadas <strong>no se perderán</strong>.
+      </p>
+      <button class="btn-google-login" id="btn-google-login" onclick="loginAndClaim()">
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Iniciar sesión con Google
+      </button>
+      <button class="login-modal-cancel" onclick="closeLoginModal()">CANCELAR</button>
+    </div>
+  </div>
 
 </body>
 </html>
