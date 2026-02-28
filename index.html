@@ -3864,8 +3864,11 @@
     document.documentElement.style.setProperty('--body-bg', darkBg);
     const panelBg = `rgb(${Math.round(_r*0.06)},${Math.round(_g*0.06)},${Math.round(_b*0.06)})`;
     const panel2Bg = `rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)})`;
-    root.style.setProperty("--panel", panelBg);
-    root.style.setProperty("--panel2", panel2Bg);
+    // ✅ FIX: setear en body (no solo en root/html) para ganar sobre body.theme-original { --panel }
+    document.body.style.setProperty("--panel", panelBg);
+    document.body.style.setProperty("--panel2", panel2Bg);
+    document.body.style.setProperty('--glow', color);
+    document.body.style.setProperty('--accent', color);
     root.style.setProperty('--glow', color);
     root.style.setProperty('--accent', color);
     const [_r2,_g2,_b2] = rgb.split(",").map(Number);
@@ -3894,7 +3897,10 @@
     });
     document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
     document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
-    document.querySelectorAll('.card, .medals-card').forEach(el => { el.style.borderColor = `rgba(${rgb},0.5)`; });
+    document.querySelectorAll('.card, .medals-card').forEach(el => {
+      el.style.borderColor = `rgba(${rgb},0.5)`;
+      el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
+    });
     document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
       el.style.borderColor = `rgba(${rgb},0.5)`;
       el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
