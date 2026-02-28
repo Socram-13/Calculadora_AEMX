@@ -979,6 +979,37 @@
     /* Hand tracking canvas */
     #handCanvas{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:55; }
 
+    /* Mini-mapa AR */
+    #arMinimap{
+      position:fixed;
+      top: calc(108px + var(--safe-top));
+      left: 10px;
+      width: 170px;
+      height: 170px;
+      border-radius: 12px;
+      border: 1px solid rgba(0,200,255,.35);
+      box-shadow: 0 0 18px rgba(0,200,255,.18), inset 0 0 12px rgba(0,0,0,.4);
+      overflow: hidden;
+      z-index: 6;
+      opacity: 0.55;
+      pointer-events: none;
+      backdrop-filter: blur(2px);
+    }
+    #arMinimap::after{
+      content:'MAP';
+      position:absolute; top:4px; right:6px;
+      font-family:Orbitron,system-ui; font-size:7px; font-weight:900;
+      color:rgba(0,200,255,.6); letter-spacing:2px;
+      pointer-events:none; z-index:10;
+    }
+    /* Ocultar controles de Leaflet */
+    #arMinimap .leaflet-control{ display:none !important; }
+    #arMinimap .leaflet-bottom, #arMinimap .leaflet-top{ display:none !important; }
+    /* Tiles más oscuros via filtro */
+    #arMinimap .leaflet-tile{
+      filter: brightness(0.35) saturate(0.4) hue-rotate(180deg);
+    }
+
     /* ── BOOT OVERLAY ── */
     #bootOverlay{
       position:fixed; inset:0; z-index:9999;
@@ -1139,6 +1170,7 @@
   <div class="stage">
     <video id="cam" autoplay playsinline muted></video>
     <canvas id="handCanvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:55;"></canvas>
+    <div id="arMinimap"></div>
 
     <div class="hud">
       <div class="scanlines"></div>
@@ -1328,6 +1360,9 @@
 
     <!-- THREE.JS (CDN) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- TF.js se carga dinámicamente después del boot para no bloquear la página -->
     <script>
     // ══════════════════════════════════════════════════════
@@ -2772,116 +2807,177 @@
     }
     bootSequence();
 
-    // ── AR Geolocalización ────────────────────────────────────────
+    // ── AR Geolocalización + Mini-mapa ───────────────────────────
     (function initGeoAR(){
       const DEG = Math.PI / 180;
       let userLat = null, userLon = null;
-      let heading = 0; // brújula en grados (0=Norte)
-      let pitch   = 0; // inclinación vertical en grados
+      let rawHeading  = 0;
+      let heading     = 0; // suavizado
+      let pitch       = 0;
+      const HEADING_BUF = [];
+      const HEADING_N   = 8; // tamaño del buffer de suavizado
 
-      // ── GPS ──────────────────────────────────────────────────────
+      const RARITY_COLORS = {
+        legendary: '#facc15',
+        epic:      '#a855f7',
+        rare:      '#60a5fa',
+        common:    '#9ca3af'
+      };
+
+      // ── GPS de alta precisión ─────────────────────────────────────
       if('geolocation' in navigator){
         navigator.geolocation.watchPosition(
-          pos => { userLat = pos.coords.latitude; userLon = pos.coords.longitude; },
-          err => console.warn('[GeoAR] GPS error:', err.message),
-          { enableHighAccuracy: true, maximumAge: 1000 }
+          pos => { userLat = pos.coords.latitude; userLon = pos.coords.longitude; updateMap(); },
+          err => console.warn('[GeoAR] GPS:', err.message),
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
         );
       }
 
-      // ── Brújula + giroscopio ─────────────────────────────────────
-      function startOrientation(){
-        window.addEventListener('deviceorientationabsolute', onOrient, true);
-        window.addEventListener('deviceorientation',         onOrient, true);
-      }
+      // ── Brújula suavizada ─────────────────────────────────────────
       function onOrient(e){
-        // alpha = brújula (0=Norte en absolute), beta = pitch, gamma = roll
         if(e.absolute && e.alpha != null){
-          heading = (360 - e.alpha) % 360; // convertir a azimuth real
+          rawHeading = (360 - e.alpha) % 360;
         } else if(e.webkitCompassHeading != null){
-          heading = e.webkitCompassHeading;  // iOS fallback
+          rawHeading = e.webkitCompassHeading;
         }
+        HEADING_BUF.push(rawHeading);
+        if(HEADING_BUF.length > HEADING_N) HEADING_BUF.shift();
+        // Promedio circular para evitar saltos en 0/360
+        let sinSum = 0, cosSum = 0;
+        HEADING_BUF.forEach(h => { sinSum += Math.sin(h*DEG); cosSum += Math.cos(h*DEG); });
+        heading = (Math.atan2(sinSum, cosSum) / DEG + 360) % 360;
         if(e.beta != null) pitch = e.beta;
       }
 
-      // Chrome Android requiere permiso explícito en algunos casos
       if(typeof DeviceOrientationEvent !== 'undefined' &&
          typeof DeviceOrientationEvent.requestPermission === 'function'){
         DeviceOrientationEvent.requestPermission().then(r => {
-          if(r === 'granted') startOrientation();
+          if(r === 'granted'){
+            window.addEventListener('deviceorientationabsolute', onOrient, true);
+            window.addEventListener('deviceorientation', onOrient, true);
+          }
         }).catch(()=>{});
       } else {
-        startOrientation();
+        window.addEventListener('deviceorientationabsolute', onOrient, true);
+        window.addEventListener('deviceorientation', onOrient, true);
       }
 
-      // ── Calcular bearing entre dos coordenadas GPS ───────────────
-      function bearing(lat1, lon1, lat2, lon2){
-        const dLon = (lon2 - lon1) * DEG;
-        const y = Math.sin(dLon) * Math.cos(lat2 * DEG);
-        const x = Math.cos(lat1 * DEG) * Math.sin(lat2 * DEG) -
-                  Math.sin(lat1 * DEG) * Math.cos(lat2 * DEG) * Math.cos(dLon);
-        return (Math.atan2(y, x) / DEG + 360) % 360;
+      // ── Haversine ─────────────────────────────────────────────────
+      function distMeters(lat1,lon1,lat2,lon2){
+        const R=6371000, dLat=(lat2-lat1)*DEG, dLon=(lon2-lon1)*DEG;
+        const a=Math.sin(dLat/2)**2+Math.cos(lat1*DEG)*Math.cos(lat2*DEG)*Math.sin(dLon/2)**2;
+        return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+      }
+      function bearing(lat1,lon1,lat2,lon2){
+        const dLon=(lon2-lon1)*DEG;
+        const y=Math.sin(dLon)*Math.cos(lat2*DEG);
+        const x=Math.cos(lat1*DEG)*Math.sin(lat2*DEG)-Math.sin(lat1*DEG)*Math.cos(lat2*DEG)*Math.cos(dLon);
+        return (Math.atan2(y,x)/DEG+360)%360;
       }
 
-      // ── Distancia en metros (Haversine) ──────────────────────────
-      function distMeters(lat1, lon1, lat2, lon2){
-        const R = 6371000;
-        const dLat = (lat2 - lat1) * DEG;
-        const dLon = (lon2 - lon1) * DEG;
-        const a = Math.sin(dLat/2)**2 +
-                  Math.cos(lat1*DEG) * Math.cos(lat2*DEG) * Math.sin(dLon/2)**2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-      }
+      // ── Proyección AR ─────────────────────────────────────────────
+      const FOV_H   = 80;  // S25 Ultra cámara gran angular ~80°
+      const FOV_V   = 55;
+      const MAX_DIST = 200;
 
-      // ── Proyectar coordenada GPS a posición en pantalla ──────────
-      const FOV_H = 60; // campo de visión horizontal estimado en grados
-      const FOV_V = 40; // campo de visión vertical estimado en grados
-      const MAX_DIST = 200; // metros máximos para mostrar parcela
-
-      function projectToScreen(lat, lon){
-        if(userLat == null) return null;
-        const dist = distMeters(userLat, userLon, lat, lon);
+      function projectToScreen(lat,lon){
+        if(userLat==null) return null;
+        const dist = distMeters(userLat,userLon,lat,lon);
         if(dist > MAX_DIST) return null;
+        const bear = bearing(userLat,userLon,lat,lon);
+        const dH   = ((bear-heading+540)%360)-180;
+        const dV   = -pitch;
+        if(Math.abs(dH) > FOV_H/2) return null;
+        const W=window.innerWidth, H=window.innerHeight;
+        return {
+          x: W/2 + (dH/(FOV_H/2))*(W/2),
+          y: H/2 + (dV/(FOV_V/2))*(H/2),
+          dist,
+          opacity: Math.max(0.3, 1-dist/MAX_DIST),
+          scale:   Math.max(0.4, 1-dist/MAX_DIST*0.6)
+        };
+      }
 
-        const bear  = bearing(userLat, userLon, lat, lon);
-        const dH    = ((bear - heading + 540) % 360) - 180; // diff horizontal [-180,180]
-        const dV    = -pitch; // diff vertical simplificado
+      // ── Mini-mapa Leaflet ─────────────────────────────────────────
+      let map = null, userMarker = null;
+      const parcelMarkers = new Map(); // inst -> leaflet marker
 
-        if(Math.abs(dH) > FOV_H / 2) return null; // fuera del campo visual
+      function initMap(lat, lon){
+        if(map) return;
+        if(typeof L === 'undefined') return;
 
-        const W = window.innerWidth, H = window.innerHeight;
-        const x = W / 2 + (dH / (FOV_H / 2)) * (W / 2);
-        const y = H / 2 + (dV / (FOV_V / 2)) * (H / 2);
+        map = L.map('arMinimap', {
+          center: [lat, lon], zoom: 18,
+          zoomControl: false, attributionControl: false,
+          dragging: false, scrollWheelZoom: false,
+          doubleClickZoom: false, boxZoom: false, keyboard: false
+        });
 
-        // Opacidad según distancia (más lejos = más transparente)
-        const opacity = Math.max(0.3, 1 - dist / MAX_DIST);
-        // Escala según distancia (más lejos = más pequeño)
-        const scale = Math.max(0.4, 1 - dist / MAX_DIST * 0.6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 20
+        }).addTo(map);
 
-        return { x, y, dist, opacity, scale };
+        // Marcador del usuario (punto rojo)
+        userMarker = L.circleMarker([lat,lon], {
+          radius: 7, color: '#ff4466', fillColor: '#ff4466',
+          fillOpacity: 1, weight: 2
+        }).addTo(map);
+
+        // Radio de 200m
+        L.circle([lat,lon], {
+          radius: MAX_DIST, color: 'rgba(0,200,255,.4)',
+          fillColor: 'rgba(0,200,255,.05)', weight: 1
+        }).addTo(map);
+      }
+
+      function updateMap(){
+        if(userLat == null) return;
+        if(!map){ initMap(userLat, userLon); return; }
+        map.setView([userLat, userLon], 18);
+        userMarker?.setLatLng([userLat, userLon]);
+
+        // Actualizar marcadores de parcelas
+        if(typeof parcelInstances !== 'undefined'){
+          parcelInstances.forEach(inst => {
+            if(!inst.geoLat) return;
+            const color = RARITY_COLORS[inst.rarity] || RARITY_COLORS.common;
+            if(!parcelMarkers.has(inst)){
+              const m = L.circleMarker([inst.geoLat, inst.geoLon], {
+                radius: 6, color, fillColor: color, fillOpacity: 0.9, weight: 2
+              }).addTo(map);
+              parcelMarkers.set(inst, m);
+            } else {
+              parcelMarkers.get(inst).setLatLng([inst.geoLat, inst.geoLon]);
+            }
+          });
+          // Limpiar marcadores de parcelas eliminadas
+          parcelMarkers.forEach((m, inst) => {
+            if(!parcelInstances.includes(inst)){ map.removeLayer(m); parcelMarkers.delete(inst); }
+          });
+        }
       }
 
       // ── Loop AR ──────────────────────────────────────────────────
       function arLoop(){
         if(typeof parcelInstances !== 'undefined'){
           parcelInstances.forEach(inst => {
-            if(!inst.geoLat || !inst.geoLon) return; // sin coordenada GPS asignada
+            if(!inst.geoLat || !inst.geoLon) return;
             const proj = projectToScreen(inst.geoLat, inst.geoLon);
             if(proj){
-              inst.wrap.style.left    = (proj.x - inst.wrap.offsetWidth  / 2) + 'px';
-              inst.wrap.style.top     = (proj.y - inst.wrap.offsetHeight / 2) + 'px';
-              inst.wrap.style.opacity = proj.opacity;
+              inst.wrap.style.left      = (proj.x - inst.wrap.offsetWidth/2)  + 'px';
+              inst.wrap.style.top       = (proj.y - inst.wrap.offsetHeight/2) + 'px';
+              inst.wrap.style.opacity   = proj.opacity;
               inst.wrap.style.transform = `scale(${proj.scale})`;
-              inst.wrap.style.pointerEvents = 'none'; // no arrastrable en modo AR
+              inst.wrap.style.pointerEvents = 'none';
             } else {
-              inst.wrap.style.opacity = '0'; // fuera de vista
+              inst.wrap.style.opacity = '0';
             }
           });
         }
         requestAnimationFrame(arLoop);
       }
 
-      // ── Botón para anclar/desanclar parcela al GPS ───────────────
-      // Se agrega dinámicamente cuando hay parcelas activas
+      // ── Botón ancla en cada parcela ───────────────────────────────
       function addAnchorButton(inst){
         if(inst._anchorBtn) return;
         const btn = document.createElement('button');
@@ -2897,34 +2993,34 @@
           e.stopPropagation();
           if(!userLat){ alert('GPS no disponible aún'); return; }
           if(inst.geoLat){
-            // Desanclar
             inst.geoLat = null; inst.geoLon = null;
             btn.textContent = '📍';
             btn.style.background = 'rgba(0,200,255,.25)';
-            inst.wrap.style.opacity   = '1';
+            inst.wrap.style.opacity = '1';
             inst.wrap.style.transform = '';
             inst.wrap.style.pointerEvents = '';
+            // Quitar del mapa
+            if(parcelMarkers.has(inst)){ map?.removeLayer(parcelMarkers.get(inst)); parcelMarkers.delete(inst); }
           } else {
-            // Anclar
             inst.geoLat = userLat; inst.geoLon = userLon;
             btn.textContent = '🔒';
             btn.style.background = 'rgba(74,222,128,.35)';
+            updateMap();
           }
         });
         inst.wrap.appendChild(btn);
         inst._anchorBtn = btn;
       }
 
-      // Observar nuevas parcelas y agregarles el botón de ancla
-      const _origCreate = window.createParcelInstance;
       setInterval(() => {
         if(typeof parcelInstances !== 'undefined'){
           parcelInstances.forEach(inst => addAnchorButton(inst));
         }
+        updateMap();
       }, 1000);
 
       arLoop();
-      console.log('[GeoAR] Sistema AR geo iniciado');
+      console.log('[GeoAR] Sistema AR geo + mapa iniciado');
     })();
 
     // ── Monitor HUD en vivo ───────────────────────────────────────
