@@ -2347,10 +2347,9 @@
     const isOriginal = document.body.classList.toggle('theme-original');
     localStorage.setItem('aemx-theme', isOriginal ? 'original' : 'atlas');
     document.getElementById('theme-toggle-btn').textContent = isOriginal ? '🌿' : '🎨';
-    // Limpiar todos los inline styles antes de re-aplicar con el contexto del nuevo tema
-    const varsToClear = ['--body-bg','--panel','--panel2','--border','--glow','--accent',
-                         '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'];
-    varsToClear.forEach(v => {
+    ['--body-bg','--panel','--panel2','--border','--glow','--accent',
+     '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
+    ].forEach(v => {
       document.body.style.removeProperty(v);
       document.documentElement.style.removeProperty(v);
     });
@@ -2370,7 +2369,6 @@
       btn.style.removeProperty('background');
     });
     window._userThemeRgb = null;
-    // Re-aplicar con el nuevo tema activo
     const savedColor = localStorage.getItem('atlas-avatar-border');
     if (savedColor && window.applyThemeColor) window.applyThemeColor(savedColor);
   }
@@ -3943,6 +3941,7 @@
       const donutBg = document.getElementById('donut-bg-circle');
       if (donutBg) donutBg.setAttribute('stroke', `rgba(${rgb},0.15)`);
       window._userThemeRgb = rgb;
+      document.querySelectorAll('.card, .medals-card').forEach(el => { el.style.borderColor = `rgba(${rgb},0.5)`; });
       document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
       document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
       document.querySelectorAll('.divider').forEach(el => {
@@ -3953,7 +3952,7 @@
       });
 
     } else {
-      // ── Tema CLARO: solo acento, limpiar todo lo oscuro ───────────
+      // ── Tema CLARO: limpiar todo lo oscuro, sin tocar fondos ni bordes ──
       window._userThemeRgb = null;
       ['--body-bg','--panel','--panel2','--border',
        '--ppd-bg','--ppd-color','--ppd-shadow','--input-bg','--input-border'
@@ -3963,20 +3962,18 @@
       });
       document.body.style.removeProperty('background');
       document.body.style.removeProperty('background-color');
-      // Limpiar inline styles que pudo haber dejado el tema oscuro
       document.querySelectorAll('.card, .medals-card').forEach(el => {
         el.style.removeProperty('background');
-        el.style.borderColor = `rgba(${rgb},0.5)`;
+        el.style.removeProperty('border-color');
       });
       document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
         el.style.removeProperty('background');
-        el.style.borderColor = `rgba(${rgb},0.5)`;
+        el.style.removeProperty('border-color');
       });
       document.querySelectorAll('.results-card').forEach(el => {
         el.style.removeProperty('background');
-        el.style.borderColor = color;
+        el.style.removeProperty('border-color');
       });
-      // Títulos: limpiar color inline para que use var(--text) del CSS
       document.querySelectorAll('.card-title, .results-title, .breakdown-title').forEach(el => {
         el.style.removeProperty('color');
       });
@@ -3986,7 +3983,7 @@
         btn.style.removeProperty('background');
       });
       const donutBg = document.getElementById('donut-bg-circle');
-      if (donutBg) donutBg.setAttribute('stroke', 'var(--sand-dark)');
+      if (donutBg) donutBg.setAttribute('stroke', 'rgba(200,169,110,0.3)');
       const donutCenter = document.getElementById('donut-center');
       if (donutCenter) donutCenter.style.removeProperty('color');
       document.querySelectorAll('.divider').forEach(el => {
