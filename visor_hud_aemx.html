@@ -2821,6 +2821,15 @@
     (function initGeoAR(){
       const DEG = Math.PI / 180;
       let userLat = null, userLon = null;
+      const GPS_HISTORY = [];
+      const GPS_SMOOTH  = 5; // promedio de últimas 5 lecturas
+
+      function smoothGPS(lat, lon){
+        GPS_HISTORY.push({lat, lon});
+        if(GPS_HISTORY.length > GPS_SMOOTH) GPS_HISTORY.shift();
+        const avg = GPS_HISTORY.reduce((a,b) => ({lat: a.lat+b.lat, lon: a.lon+b.lon}), {lat:0,lon:0});
+        return { lat: avg.lat / GPS_HISTORY.length, lon: avg.lon / GPS_HISTORY.length };
+      }
       let rawHeading  = 0;
       let heading     = 0; // suavizado
       let pitch       = 0;
@@ -2839,8 +2848,9 @@
       if('geolocation' in navigator){
         navigator.geolocation.watchPosition(
           pos => {
-          userLat = pos.coords.latitude;
-          userLon = pos.coords.longitude;
+          const smooth = smoothGPS(pos.coords.latitude, pos.coords.longitude);
+          userLat = smooth.lat;
+          userLon = smooth.lon;
           window._arUserLat = userLat;
           window._arUserLon = userLon;
           updateMap();
@@ -2895,7 +2905,8 @@
       }
 
       // ── Proyección AR ─────────────────────────────────────────────
-      const MAX_DIST = 50;
+      const MAX_DIST      = 25; // aparece dentro de 25m
+      const MAX_DIST_HIDE = 30; // desaparece al salir de 30m (zona de gracia)
 
       function projectToScreen(lat,lon){
         if(userLat==null) return null;
@@ -2986,7 +2997,9 @@
 
             const dist = distMeters(userLat, userLon, inst.geoLat, inst.geoLon);
 
-            if(dist > MAX_DIST){
+            const hideThreshold = inst._visible ? MAX_DIST_HIDE : MAX_DIST;
+            if(dist > hideThreshold){
+              inst._visible = false;
               // Fuera de rango GPS — ocultar
               inst.wrap.style.visibility    = 'hidden';
               inst.wrap.style.left          = '-9999px';
@@ -2996,6 +3009,7 @@
             }
 
             // Dentro del rango GPS — mostrar siempre sin filtro de brújula
+            inst._visible = true;
             if(!inst._savedTop) inst._savedTop = inst.wrap.style.top;
             const W = window.innerWidth, H = window.innerHeight;
             const screenX = W / 2;
