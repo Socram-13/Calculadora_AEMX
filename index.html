@@ -2324,6 +2324,23 @@
     const isOriginal = document.body.classList.toggle('theme-original');
     localStorage.setItem('aemx-theme', isOriginal ? 'original' : 'atlas');
     document.getElementById('theme-toggle-btn').textContent = isOriginal ? '🌿' : '🎨';
+
+    if (!isOriginal) {
+      // FIX 4: al volver al tema Atlas, limpiar TODOS los inline styles de applyThemeColor
+      document.documentElement.style.removeProperty('--body-bg');
+      document.body.style.removeProperty('background');
+      document.body.style.removeProperty('background-color');
+      document.body.style.removeProperty('--panel');
+      document.body.style.removeProperty('--panel2');
+      document.querySelectorAll('.card, .medals-card, .results-card, .header-bar, .profile-section').forEach(el => {
+        el.style.removeProperty('background');
+        el.style.removeProperty('border-color');
+        el.style.removeProperty('box-shadow');
+      });
+      document.querySelectorAll('.card-title, .results-title, .breakdown-title').forEach(el => {
+        el.style.removeProperty('color');
+      });
+    }
   }
 </script>
 <div class="container">
@@ -3859,16 +3876,15 @@
     if (avatarColorBtn2) { avatarColorBtn2.style.background = color; avatarColorBtn2.style.boxShadow = `0 0 8px rgba(${rgb},0.6)`; }
     const [_r,_g,_b] = rgb.split(",").map(Number);
     const darkBg = `rgb(${Math.round(_r*0.04)},${Math.round(_g*0.04)},${Math.round(_b*0.04)})`;
+    // FIX 1: usar --body-bg para no eliminar background-image
+    document.documentElement.style.setProperty('--body-bg', darkBg);
     document.body.style.removeProperty('background');
     document.body.style.removeProperty('background-color');
-    document.documentElement.style.setProperty('--body-bg', darkBg);
     const panelBg = `rgb(${Math.round(_r*0.06)},${Math.round(_g*0.06)},${Math.round(_b*0.06)})`;
     const panel2Bg = `rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)})`;
-    // ✅ FIX: setear en body (no solo en root/html) para ganar sobre body.theme-original { --panel }
+    // FIX 2: setear --panel en body (inline) para ganar sobre body.theme-original { --panel }
     document.body.style.setProperty("--panel", panelBg);
     document.body.style.setProperty("--panel2", panel2Bg);
-    document.body.style.setProperty('--glow', color);
-    document.body.style.setProperty('--accent', color);
     root.style.setProperty('--glow', color);
     root.style.setProperty('--accent', color);
     const [_r2,_g2,_b2] = rgb.split(",").map(Number);
@@ -3898,8 +3914,9 @@
     document.querySelectorAll('.card-title').forEach(el => { el.style.color = color; });
     document.querySelectorAll('.results-title, .breakdown-title').forEach(el => { el.style.color = color; });
     document.querySelectorAll('.card, .medals-card').forEach(el => {
+      // FIX 3: aplicar background directo para no depender de herencia de --panel
       el.style.borderColor = `rgba(${rgb},0.5)`;
-      el.style.background = `linear-gradient(135deg, rgb(${Math.round(_r*0.07)},${Math.round(_g*0.07)},${Math.round(_b*0.07)}) 0%, rgb(${Math.round(_r*0.05)},${Math.round(_g*0.05)},${Math.round(_b*0.05)}) 100%)`;
+      el.style.background = panelBg;
     });
     document.querySelectorAll('.header-bar, .profile-section').forEach(el => {
       el.style.borderColor = `rgba(${rgb},0.5)`;
