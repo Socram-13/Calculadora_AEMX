@@ -2839,19 +2839,32 @@
         });
       }
 
+
+      // Log visible en pantalla para debug
+      function dbg(msg){
+        console.log('[HandTracking]', msg);
+        let el = document.getElementById('_htdbg');
+        if(!el){
+          el = document.createElement('div');
+          el.id = '_htdbg';
+          el.style.cssText = 'position:fixed;bottom:60px;left:10px;z-index:9999;color:#0f0;font-size:11px;font-family:monospace;pointer-events:none;text-shadow:0 0 4px #000;max-width:90vw;';
+          document.body.appendChild(el);
+        }
+        el.innerHTML += msg + '<br>';
+      }
+
       async function startHandTracking(){
         try {
-          // Intentar WebGL primero, fallback a CPU
           try { await tf.setBackend('webgl'); }
           catch(e){ await tf.setBackend('cpu'); }
           await tf.ready();
-          console.log('[HandTracking] Backend:', tf.getBackend());
+          dbg('Backend: ' + tf.getBackend());
 
           const detector = await handPoseDetection.createDetector(
             handPoseDetection.SupportedModels.MediaPipeHands,
             { runtime: 'tfjs', modelType: 'lite', maxHands: 2 }
           );
-          console.log('[HandTracking] Detector listo');
+          dbg('Detector listo ✓');
 
           let running = false;
           async function loop(){
@@ -2863,56 +2876,56 @@
               running = true;
               try {
                 const hands = await detector.estimateHands(camEl, { flipHorizontal: false });
+                if(hands.length > 0) dbg('Manos: ' + hands.length);
                 hands.forEach(hand => {
                   drawHand(hand.keypoints, hand.handedness);
                   processHover(hand.keypoints, hand.handedness);
                 });
-              } catch(e){ console.warn('[HandTracking]', e); }
+              } catch(e){ dbg('estimateHands ERR: ' + e.message); }
               running = false;
             }
             requestAnimationFrame(loop);
           }
           loop();
         } catch(e){
-          console.error('[HandTracking] Error:', e);
+          dbg('ERROR createDetector: ' + e.message);
         }
       }
 
-      function loadScript(src){ 
+      function loadScript(src){
         return new Promise((res, rej) => {
           const s = document.createElement('script');
           s.src = src; s.async = true;
-          s.onload = res; s.onerror = rej;
+          s.onload = res;
+          s.onerror = () => rej(new Error('Fallo carga: ' + src.split('/').pop()));
           document.head.appendChild(s);
         });
       }
 
       async function loadAndStart(){
         try {
+          dbg('Cargando TF.js...');
           await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core@4.22.0/dist/tf-core.min.js');
           await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl@4.22.0/dist/tf-backend-webgl.min.js');
           await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-cpu@4.22.0/dist/tf-backend-cpu.min.js');
           await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter@4.22.0/dist/tf-converter.min.js');
+          await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-layers@4.22.0/dist/tf-layers.min.js');
           await loadScript('https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js');
-          console.log('[HandTracking] Scripts cargados');
+          dbg('Scripts OK ✓');
           startHandTracking();
         } catch(e){
-          console.warn('[HandTracking] Error cargando scripts:', e);
+          dbg('Script ERR: ' + e.message);
         }
       }
 
-      // Esperar a que el boot termine antes de cargar TF.js (evita bloqueo)
       function waitForBoot(){
         const boot = document.getElementById('bootOverlay');
-        if(!boot || boot.classList.contains('hidden') || !document.body.contains(boot)){
-          loadAndStart();
-        } else {
-          setTimeout(waitForBoot, 500);
-        }
+        const hidden = !boot || boot.classList.contains('hidden') || getComputedStyle(boot).display === 'none';
+        if(hidden){ loadAndStart(); }
+        else { setTimeout(waitForBoot, 500); }
       }
       waitForBoot();
     })();
-    // ─────────────────────────────────────────────────────────────
     // ─────────────────────────────────────────────────────────────
 
   </script>
