@@ -687,6 +687,106 @@
       width: 0%;
     }
 
+    /* ── VIDEO MODAL ── */
+    #video-modal {
+      display: none;
+      position: fixed; inset: 0; z-index: 99998;
+      background: rgba(6,11,20,0.96);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      padding-top: env(safe-area-inset-top, 16px);
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+    #video-modal.visible { display: flex; }
+
+    .vm-inner {
+      width: min(640px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 40px);
+    }
+
+    .vm-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel2);
+      flex-shrink: 0;
+    }
+    .vm-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px; letter-spacing: 2px;
+      color: var(--glow); flex: 1;
+    }
+    .vm-timer-wrap {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(0,200,255,0.07);
+      border: 1px solid rgba(0,200,255,0.15);
+      border-radius: 8px; padding: 5px 10px;
+    }
+    .vm-timer-label {
+      font-family: 'Orbitron', monospace;
+      font-size: 7px; letter-spacing: 1px;
+      color: var(--text2);
+    }
+    .vm-timer {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px; font-weight: 700;
+      color: var(--glow); min-width: 32px;
+      transition: color 0.3s;
+    }
+    .vm-timer.done { color: var(--glow2); }
+    .vm-timer-req {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px; color: var(--text2);
+    }
+    .vm-close {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 50%; width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text2); font-size: 12px; cursor: pointer;
+      flex-shrink: 0; transition: all 0.2s;
+    }
+    .vm-close:hover { background: rgba(255,255,255,0.14); color: #fff; }
+
+    .vm-frame-wrap {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+      background: #000;
+      flex-shrink: 0;
+    }
+    .vm-frame-wrap iframe {
+      position: absolute;
+      inset: 0; width: 100%; height: 100%;
+      border: none;
+    }
+
+    .vm-footer {
+      padding: 10px 16px;
+      font-size: 13px; color: var(--text2);
+      text-align: center;
+      border-top: 1px solid var(--border);
+      background: var(--panel2);
+      flex-shrink: 0;
+      transition: all 0.3s;
+    }
+    .vm-footer.done {
+      color: var(--glow2);
+      background: rgba(0,255,157,0.06);
+      border-top-color: rgba(0,255,157,0.2);
+    }
+
     /* ── AURA POPUP ── */
     #aura-popup {
       display: none;
@@ -921,86 +1021,108 @@
     </div>
 
     <div class="guides-grid">
-      <a class="guide-card" href="https://www.facebook.com/share/v/1AcP9Vo8Rf/" target="_blank" rel="noopener" data-guide="1" onclick="markVisited(1)">
+      <div class="guide-card" data-guide="1" onclick="openVideo(1)">
         <div class="guide-icon">👨‍🚀</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 01</div>
           <div class="guide-title">Primeros pasos en Atlas Earth</div>
         </div>
         <div class="guide-check" id="check-1">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1YW1XiRBRL/" target="_blank" rel="noopener" data-guide="2" onclick="markVisited(2)">
+      </div>
+      <div class="guide-card" data-guide="2" onclick="openVideo(2)">
         <div class="guide-icon">🧭</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 02</div>
           <div class="guide-title">Suscripciones Premium EC/SP</div>
         </div>
         <div class="guide-check" id="check-2">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1A8SnBcX6R/" target="_blank" rel="noopener" data-guide="3" onclick="markVisited(3)">
+      </div>
+      <div class="guide-card" data-guide="3" onclick="openVideo(3)">
         <div class="guide-icon">🤵</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 03</div>
           <div class="guide-title">V.I.P. en Atlas Earth</div>
         </div>
         <div class="guide-check" id="check-3">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1A9vPNQFwR/" target="_blank" rel="noopener" data-guide="4" onclick="markVisited(4)">
+      </div>
+      <div class="guide-card" data-guide="4" onclick="openVideo(4)">
         <div class="guide-icon">🗺️</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 04</div>
           <div class="guide-title">Mapa de Atlas Earth</div>
         </div>
         <div class="guide-check" id="check-4">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1N3UXYcRfT/" target="_blank" rel="noopener" data-guide="5" onclick="markVisited(5)">
+      </div>
+      <div class="guide-card" data-guide="5" onclick="openVideo(5)">
         <div class="guide-icon">🐇</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 05</div>
           <div class="guide-title">Topes, Caídas y Saltos</div>
         </div>
         <div class="guide-check" id="check-5">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/19ySgWJ5Lo/" target="_blank" rel="noopener" data-guide="6" onclick="markVisited(6)">
+      </div>
+      <div class="guide-card" data-guide="6" onclick="openVideo(6)">
         <div class="guide-icon">📈</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 06</div>
           <div class="guide-title">Tablas de Saltos</div>
         </div>
         <div class="guide-check" id="check-6">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1BV5NKitE2/" target="_blank" rel="noopener" data-guide="7" onclick="markVisited(7)">
+      </div>
+      <div class="guide-card" data-guide="7" onclick="openVideo(7)">
         <div class="guide-icon">📊</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 07</div>
           <div class="guide-title">C.R.E.L.</div>
         </div>
         <div class="guide-check" id="check-7">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1EWMgw9X8t/" target="_blank" rel="noopener" data-guide="8" onclick="markVisited(8)">
+      </div>
+      <div class="guide-card" data-guide="8" onclick="openVideo(8)">
         <div class="guide-icon">🚫</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 08</div>
           <div class="guide-title">Mejoras de Parcelas</div>
         </div>
         <div class="guide-check" id="check-8">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1ZpapUhcLg/" target="_blank" rel="noopener" data-guide="9" onclick="markVisited(9)">
+      </div>
+      <div class="guide-card" data-guide="9" onclick="openVideo(9)">
         <div class="guide-icon">🌳</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 09</div>
           <div class="guide-title">Seguir la Vegetación</div>
         </div>
         <div class="guide-check" id="check-9">✓</div>
-      </a>
-      <a class="guide-card" href="https://www.facebook.com/share/v/1G1cvT5EHT/" target="_blank" rel="noopener" data-guide="10" onclick="markVisited(10)">
+      </div>
+      <div class="guide-card" data-guide="10" onclick="openVideo(10)">
         <div class="guide-icon">🏚️</div>
         <div class="guide-info">
           <div class="guide-num">GUÍA 10</div>
           <div class="guide-title">Diversificar las Parcelas</div>
         </div>
         <div class="guide-check" id="check-10">✓</div>
-      </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIDEO MODAL -->
+  <div id="video-modal">
+    <div class="vm-inner">
+      <div class="vm-header">
+        <span class="vm-title" id="vm-title">GUÍA 01</span>
+        <div class="vm-timer-wrap">
+          <span class="vm-timer-label">TIEMPO VISTO</span>
+          <span class="vm-timer" id="vm-timer">0:00</span>
+          <span class="vm-timer-req">/ 1:00</span>
+        </div>
+        <button class="vm-close" onclick="closeVideo()">✕</button>
+      </div>
+      <div class="vm-frame-wrap">
+        <iframe id="vm-iframe" src="" frameborder="0" allowfullscreen
+          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"></iframe>
+      </div>
+      <div class="vm-footer" id="vm-footer">
+        ⏳ Mira al menos <strong>1 minuto</strong> para marcar esta guía como vista
+      </div>
     </div>
   </div>
 
@@ -2038,8 +2160,98 @@ function lockRewardClaimed() {
   clearProgress();
 }
 
+// ── Video URLs ────────────────────────────────────────────────────────────────
+const VIDEO_URLS = {
+  1:  'https://www.facebook.com/share/v/1AcP9Vo8Rf/',
+  2:  'https://www.facebook.com/share/v/1YW1XiRBRL/',
+  3:  'https://www.facebook.com/share/v/1A8SnBcX6R/',
+  4:  'https://www.facebook.com/share/v/1A9vPNQFwR/',
+  5:  'https://www.facebook.com/share/v/1N3UXYcRfT/',
+  6:  'https://www.facebook.com/share/v/19ySgWJ5Lo/',
+  7:  'https://www.facebook.com/share/v/1BV5NKitE2/',
+  8:  'https://www.facebook.com/share/v/1EWMgw9X8t/',
+  9:  'https://www.facebook.com/share/v/1ZpapUhcLg/',
+  10: 'https://www.facebook.com/share/v/1G1cvT5EHT/'
+};
+
+const VIDEO_TITLES = {
+  1:'GUÍA 01 · Primeros pasos', 2:'GUÍA 02 · Suscripciones EC/SP',
+  3:'GUÍA 03 · V.I.P.', 4:'GUÍA 04 · Mapa de Atlas Earth',
+  5:'GUÍA 05 · Topes, Caídas y Saltos', 6:'GUÍA 06 · Tablas de Saltos',
+  7:'GUÍA 07 · C.R.E.L.', 8:'GUÍA 08 · Mejoras de Parcelas',
+  9:'GUÍA 09 · Seguir la Vegetación', 10:'GUÍA 10 · Diversificar Parcelas'
+};
+
+const MIN_WATCH_MS = 60 * 1000; // 1 minuto
+let videoTimer      = null;
+let videoStartTime  = null;
+let videoElapsed    = 0;
+let currentVideoNum = null;
+
+function buildEmbedUrl(shareUrl) {
+  // Convierte share URL de Facebook a embed URL con &t=0 para iniciar desde el inicio
+  // https://www.facebook.com/share/v/XXXX/ → https://www.facebook.com/plugins/video.php?href=...&t=0
+  const encoded = encodeURIComponent(shareUrl);
+  return `https://www.facebook.com/plugins/video.php?href=${encoded}&show_text=false&t=0&mute=0`;
+}
+
+window.openVideo = function(num) {
+  if (rewardAlreadyClaimed) return;
+  currentVideoNum = num;
+  videoElapsed    = 0;
+  videoStartTime  = Date.now();
+
+  // Setear iframe
+  const iframe = document.getElementById('vm-iframe');
+  iframe.src = buildEmbedUrl(VIDEO_URLS[num]);
+
+  // Setear título
+  document.getElementById('vm-title').textContent = VIDEO_TITLES[num] || ('GUÍA ' + num);
+
+  // Reset timer UI
+  const timerEl  = document.getElementById('vm-timer');
+  const footerEl = document.getElementById('vm-footer');
+  timerEl.textContent = '0:00';
+  timerEl.classList.remove('done');
+  footerEl.classList.remove('done');
+  footerEl.innerHTML = '⏳ Mira al menos <strong>1 minuto</strong> para marcar esta guía como vista';
+
+  // Mostrar modal
+  document.getElementById('video-modal').classList.add('visible');
+  document.body.style.overflow = 'hidden';
+
+  // Iniciar timer
+  clearInterval(videoTimer);
+  videoTimer = setInterval(() => {
+    videoElapsed = Date.now() - videoStartTime;
+    const secs = Math.floor(videoElapsed / 1000);
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+
+    if (videoElapsed >= MIN_WATCH_MS) {
+      clearInterval(videoTimer);
+      timerEl.classList.add('done');
+      timerEl.textContent = '1:00';
+      footerEl.classList.add('done');
+      footerEl.innerHTML = '✅ <strong>¡Guía completada!</strong> Cierra el video para continuar';
+      markVisited(num);
+    }
+  }, 500);
+};
+
+window.closeVideo = function() {
+  clearInterval(videoTimer);
+  // Detener el video limpiando el src del iframe
+  const iframe = document.getElementById('vm-iframe');
+  iframe.src = '';
+  currentVideoNum = null;
+  document.getElementById('video-modal').classList.remove('visible');
+  document.body.style.overflow = '';
+};
+
 // ── Mark visited ─────────────────────────────────────────────────────────────
-window.markVisited = function(num) {
+function markVisited(num) {
   if (rewardAlreadyClaimed) return;
   const progress = loadProgress() || { visited: [] };
   if (!progress.visited.includes(num)) {
@@ -2047,7 +2259,7 @@ window.markVisited = function(num) {
   }
   saveProgress(progress.visited);
   updateUI(progress.visited);
-};
+}
 
 // ── Claim reward ─────────────────────────────────────────────────────────────
 window.claimReward = async function() {
