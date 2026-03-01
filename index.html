@@ -76,7 +76,7 @@
     border-radius: 20px;
     padding: 10px 16px;
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 6px 0 #1e5c19, 0 8px 20px rgba(0,0,0,0.25);
   }
 
@@ -2112,9 +2112,9 @@
   /* Tooltips para enlaces de redes sociales */
   .tooltip-bubble {
     position: absolute;
-    bottom: -50px;
+    top: 100%;
     left: 50%;
-    transform: translateX(-50%) scale(0);
+    transform: translateX(-50%) translateY(10px) scale(0);
     background: linear-gradient(135deg, #FFD060, #F5A623);
     color: #2c1810;
     padding: 8px 14px;
@@ -2131,11 +2131,12 @@
     text-align: center;
     word-wrap: break-word;
     white-space: normal;
+    margin-top: 8px;
   }
 
   .tooltip-bubble.show {
     opacity: 1;
-    transform: translateX(-50%) scale(1);
+    transform: translateX(-50%) translateY(10px) scale(1);
   }
 
   .tooltip-arrow {
@@ -2154,15 +2155,14 @@
     .tooltip-bubble {
       font-size: 9px;
       padding: 6px 10px;
-      bottom: -50px;
       max-width: 140px;
       left: 0;
       right: 0;
-      margin: 0 auto;
-      transform: translateX(0) scale(0);
+      margin: 8px auto 0;
+      transform: translateX(0) translateY(10px) scale(0);
     }
     .tooltip-bubble.show {
-      transform: translateX(0) scale(1);
+      transform: translateX(0) translateY(10px) scale(1);
     }
   }
 </style>
@@ -2438,7 +2438,7 @@
           <img src="imagen_2.png" alt="AEMX" class="aemx-logo-img">
         </a>
         <div class="tooltip-bubble" id="tooltip-facebook">
-          Te invitamos a nuestro Facebook
+          Visita nuestro Facebook
           <div class="tooltip-arrow"></div>
         </div>
         <div class="header-left-label">Comunidad</div>
