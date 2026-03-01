@@ -2919,7 +2919,7 @@
       <div class="divider"></div>
 
       <div class="explorer-row" onclick="toggleExplorer()">
-        <div class="explorer-checkbox" id="explorer-check">✓</div>
+        <div class="explorer-checkbox" id="explorer-check"></div>
         <div class="explorer-info">
           <div class="explorer-name">🧭 Club de Explorador</div>
           <div class="explorer-desc" id="explorer-desc">Activo: diamantes ÷ 7 giros de ruleta</div>
@@ -3384,10 +3384,12 @@
     const badge = document.getElementById('explorer-badge');
     if (explorerActive) {
       check.classList.add('checked');
+      check.textContent = '✓';
       desc.textContent = 'Activo: diamantes ÷ 7 giros de ruleta';
       badge.style.display = 'block';
     } else {
       check.classList.remove('checked');
+      check.textContent = '';
       desc.textContent = 'Inactivo: diamantes ÷ 5 giros de ruleta';
       badge.style.display = 'none';
     }
@@ -3825,6 +3827,7 @@
       const desc  = document.getElementById('explorer-desc');
       const badge = document.getElementById('explorer-badge');
       check.classList.remove('checked');
+      check.textContent = '';
       desc.textContent = 'Inactivo: diamantes ÷ 5 giros de ruleta';
       badge.style.display = 'none';
     }
@@ -3836,7 +3839,9 @@
     await loadProfile();
     adjustBadge();
     if (explorerActive) {
-      document.getElementById('explorer-check').classList.add('checked');
+      const check = document.getElementById('explorer-check');
+      check.classList.add('checked');
+      check.textContent = '✓';
       document.getElementById('explorer-badge').style.display = 'block';
     }
   }
