@@ -2164,7 +2164,7 @@ function lockRewardClaimed() {
     if (card) card.classList.add('reward-claimed');
   }
   const popup = document.getElementById('aura-popup');
-  popup.classList.add('visible', 'claimed');
+  popup.classList.remove('visible');
   document.getElementById('aura-popup-title').textContent = '¡RECOMPENSA\nRECLAMADA!';
   document.getElementById('aura-popup-msg').innerHTML = '✅ Ya tienes tus <strong>10 coins</strong> de explorador. ¡Sigue dominando Atlas Earth!';
   document.getElementById('btn-claim-reward').disabled = true;
