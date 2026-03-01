@@ -237,11 +237,106 @@
       opacity: 0.6;
     }
     .aviso-body {
+      padding: 12px 14px;
+    }
+    .aviso-tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+    .aviso-tab {
+      padding: 6px 12px;
+      background: rgba(255,170,0,0.06);
+      border: 1px solid rgba(255,170,0,0.2);
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: 11px;
+      font-family: 'Share Tech Mono', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      position: relative;
+    }
+    .aviso-tab:hover { background: rgba(255,170,0,0.1); }
+    .aviso-tab.active { background: rgba(255,170,0,0.15); color: #ffaa00; border-color: #ffaa00; }
+    .aviso-tab-status {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+    .aviso-tab-status.active { background: #00ff9d; box-shadow: 0 0 6px #00ff9d; }
+    .aviso-tab-status.scheduled { background: #00c8ff; }
+    .aviso-tab-status.expired { background: var(--text2); opacity: 0.4; }
+    .aviso-tab-status.disabled { background: var(--text2); opacity: 0.2; }
+    .aviso-form {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .aviso-form.active { display: flex; }
+    .aviso-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .aviso-field label {
+      display: block;
+      font-size: 9px;
+      color: var(--text2);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .aviso-datetime {
+      padding: 7px 10px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 11px;
+      font-family: 'Share Tech Mono', monospace;
+      width: 100%;
+      transition: all 0.2s;
+    }
+    .aviso-datetime:focus { border-color: #ffaa00; box-shadow: 0 0 8px rgba(255,170,0,0.3); outline: none; }
+    .aviso-datetime:disabled { opacity: 0.4; cursor: not-allowed; }
+    .aviso-actions {
       display: flex;
       gap: 8px;
-      padding: 12px 14px;
-      align-items: center;
+      justify-content: flex-end;
     }
+    .aviso-btn {
+      padding: 7px 14px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid;
+    }
+    .aviso-btn-toggle {
+      background: rgba(255,170,0,0.1);
+      border-color: rgba(255,170,0,0.3);
+      color: #ffaa00;
+    }
+    .aviso-btn-toggle:hover { background: rgba(255,170,0,0.2); }
+    .aviso-btn-toggle.enabled {
+      background: rgba(0,255,157,0.15);
+      border-color: #00ff9d;
+      color: #00ff9d;
+    }
+    .aviso-btn-save {
+      background: rgba(0,255,157,0.1);
+      border-color: rgba(0,255,157,0.3);
+      color: #00ff9d;
+    }
+    .aviso-btn-save:hover { background: rgba(0,255,157,0.2); }
     .aviso-input:focus { border-color: #ffaa00; box-shadow: 0 0 8px rgba(255,170,0,0.3); }
     .aviso-input::placeholder { color: rgba(255,170,0,0.35); font-size: 11px; letter-spacing: 1px; }
     .aviso-btn {
@@ -1569,19 +1664,137 @@
   <!-- Controles: Aviso + TTL + Coins -->
   <div style="position:relative;z-index:1;padding:0 16px 12px;display:flex;flex-direction:column;gap:10px;">
 
-    <!-- Aviso del chat (fila completa) -->
-    <div style="background:var(--panel);border:1px solid rgba(255,170,0,0.4);border-top:2px solid #ffaa00;border-radius:12px;display:flex;align-items:center;gap:12px;padding:10px 16px;">
-      <span style="font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:3px;color:#ffaa00;white-space:nowrap;flex-shrink:0;">📢 AVISO DEL CHAT</span>
-      <textarea
-        id="avisoInput"
-        rows="1"
-        placeholder="Escribe un aviso para mostrar en el chat..."
-        onkeydown="if(event.ctrlKey&&event.key==='Enter')saveAviso()"
-        style="flex:1;min-width:0;height:38px;background:var(--panel2);border:1px solid rgba(255,170,0,0.3);border-radius:8px;color:#ffe066;font-family:'Rajdhani',sans-serif;font-size:13px;padding:9px 12px;outline:none;resize:none;transition:border-color 0.2s;line-height:1.4;"
-      ></textarea>
-      <div id="avisoPreview" style="display:none;"></div>
-      <button onclick="saveAviso()" style="flex-shrink:0;background:linear-gradient(135deg,rgba(255,170,0,0.25),rgba(255,220,0,0.15));border:1px solid #ffaa00;border-radius:7px;color:#ffaa00;font-family:'Orbitron',monospace;font-size:9px;font-weight:700;letter-spacing:2px;padding:9px 18px;cursor:pointer;white-space:nowrap;">⚡ PUBLICAR</button>
-      <button id="avisoClear" onclick="clearAviso()" style="display:none;flex-shrink:0;background:none;border:1px solid var(--border);border-radius:7px;color:var(--text2);font-family:'Orbitron',monospace;font-size:9px;letter-spacing:1px;padding:9px 14px;cursor:pointer;white-space:nowrap;">✕ BORRAR</button>
+    <!-- Aviso del chat con 5 mensajes programables --
+>
+    <div class="aviso-card">
+      <div class="aviso-header">
+        <span class="aviso-title">📢 AVISOS DEL CHAT</span>
+        <span class="aviso-live">SISTEMA PROGRAMABLE</span>
+      </div>
+      <div class="aviso-body">
+        <div class="aviso-tabs">
+          <div class="aviso-tab active" onclick="switchAvisoTab(0)">
+            <span class="aviso-tab-status disabled"></span>Mensaje 1
+          </div>
+          <div class="aviso-tab" onclick="switchAvisoTab(1)">
+            <span class="aviso-tab-status disabled"></span>Mensaje 2
+          </div>
+          <div class="aviso-tab" onclick="switchAvisoTab(2)">
+            <span class="aviso-tab-status disabled"></span>Mensaje 3
+          </div>
+          <div class="aviso-tab" onclick="switchAvisoTab(3)">
+            <span class="aviso-tab-status disabled"></span>Mensaje 4
+          </div>
+          <div class="aviso-tab" onclick="switchAvisoTab(4)">
+            <span class="aviso-tab-status disabled"></span>Mensaje 5
+          </div>
+        </div>
+
+        <div class="aviso-form active" data-slot="0">
+          <div class="aviso-field">
+            <label>Texto del mensaje</label>
+            <textarea class="aviso-input" id="aviso0text" rows="2" placeholder="Escribe el mensaje..."></textarea>
+          </div>
+          <div class="aviso-row">
+            <div class="aviso-field">
+              <label>Inicio</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso0start">
+            </div>
+            <div class="aviso-field">
+              <label>Fin</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso0end">
+            </div>
+          </div>
+          <div class="aviso-actions">
+            <button class="aviso-btn aviso-btn-toggle" onclick="toggleAvisoSlot(0)" id="avisoToggle0">ACTIVAR</button>
+            <button class="aviso-btn aviso-btn-save" onclick="saveAvisoSlot(0)">💾 GUARDAR</button>
+          </div>
+        </div>
+
+        <div class="aviso-form" data-slot="1">
+          <div class="aviso-field">
+            <label>Texto del mensaje</label>
+            <textarea class="aviso-input" id="aviso1text" rows="2" placeholder="Escribe el mensaje..."></textarea>
+          </div>
+          <div class="aviso-row">
+            <div class="aviso-field">
+              <label>Inicio</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso1start">
+            </div>
+            <div class="aviso-field">
+              <label>Fin</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso1end">
+            </div>
+          </div>
+          <div class="aviso-actions">
+            <button class="aviso-btn aviso-btn-toggle" onclick="toggleAvisoSlot(1)" id="avisoToggle1">ACTIVAR</button>
+            <button class="aviso-btn aviso-btn-save" onclick="saveAvisoSlot(1)">💾 GUARDAR</button>
+          </div>
+        </div>
+
+        <div class="aviso-form" data-slot="2">
+          <div class="aviso-field">
+            <label>Texto del mensaje</label>
+            <textarea class="aviso-input" id="aviso2text" rows="2" placeholder="Escribe el mensaje..."></textarea>
+          </div>
+          <div class="aviso-row">
+            <div class="aviso-field">
+              <label>Inicio</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso2start">
+            </div>
+            <div class="aviso-field">
+              <label>Fin</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso2end">
+            </div>
+          </div>
+          <div class="aviso-actions">
+            <button class="aviso-btn aviso-btn-toggle" onclick="toggleAvisoSlot(2)" id="avisoToggle2">ACTIVAR</button>
+            <button class="aviso-btn aviso-btn-save" onclick="saveAvisoSlot(2)">💾 GUARDAR</button>
+          </div>
+        </div>
+
+        <div class="aviso-form" data-slot="3">
+          <div class="aviso-field">
+            <label>Texto del mensaje</label>
+            <textarea class="aviso-input" id="aviso3text" rows="2" placeholder="Escribe el mensaje..."></textarea>
+          </div>
+          <div class="aviso-row">
+            <div class="aviso-field">
+              <label>Inicio</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso3start">
+            </div>
+            <div class="aviso-field">
+              <label>Fin</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso3end">
+            </div>
+          </div>
+          <div class="aviso-actions">
+            <button class="aviso-btn aviso-btn-toggle" onclick="toggleAvisoSlot(3)" id="avisoToggle3">ACTIVAR</button>
+            <button class="aviso-btn aviso-btn-save" onclick="saveAvisoSlot(3)">💾 GUARDAR</button>
+          </div>
+        </div>
+
+        <div class="aviso-form" data-slot="4">
+          <div class="aviso-field">
+            <label>Texto del mensaje</label>
+            <textarea class="aviso-input" id="aviso4text" rows="2" placeholder="Escribe el mensaje..."></textarea>
+          </div>
+          <div class="aviso-row">
+            <div class="aviso-field">
+              <label>Inicio</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso4start">
+            </div>
+            <div class="aviso-field">
+              <label>Fin</label>
+              <input type="datetime-local" class="aviso-datetime" id="aviso4end">
+            </div>
+          </div>
+          <div class="aviso-actions">
+            <button class="aviso-btn aviso-btn-toggle" onclick="toggleAvisoSlot(4)" id="avisoToggle4">ACTIVAR</button>
+            <button class="aviso-btn aviso-btn-save" onclick="saveAvisoSlot(4)">💾 GUARDAR</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Autoborrado + Coins (misma fila) -->
@@ -1967,13 +2180,10 @@
         document.getElementById('headerRight').style.display = 'flex';
         document.getElementById('adminEmail').textContent = user.displayName || user.email;
         loadUsers();
+        loadAvisoSlots(); // Cargar los 5 slots de avisos programables
         // Cargar toda la config de una sola vez — sin sockets permanentes
         get(ref(db, 'config')).then((snap) => {
           const cfg = snap.exists() ? snap.val() : {};
-          const txt = cfg.aviso || '';
-          document.getElementById('avisoInput').value = txt;
-          document.getElementById('avisoPreview').textContent = txt || '(sin aviso activo)';
-          document.getElementById('avisoClear').style.display = txt ? 'inline-flex' : 'none';
           const coinsActivo = cfg.coinsActivo !== false;
           const coinsChk = document.getElementById('coinsToggle'); const coinsSt = document.getElementById('coinsToggleStatus');
           if (coinsChk) coinsChk.checked = coinsActivo;
@@ -1991,19 +2201,142 @@
       }
     });
 
-    // ── Avisos ──
-    window.saveAviso = async function() {
-      const texto = document.getElementById('avisoInput').value.trim();
-      try {
-        await set(ref(db, 'config/aviso'), texto);
-        showToast(texto ? '📢 Aviso publicado' : '🗑️ Aviso eliminado');
-      } catch(e) { showToast('Error al guardar aviso', true); }
+    // ── Avisos Programables (5 slots) ──
+    let avisoSlots = [
+      { text: '', start: '', end: '', enabled: false },
+      { text: '', start: '', end: '', enabled: false },
+      { text: '', start: '', end: '', enabled: false },
+      { text: '', start: '', end: '', enabled: false },
+      { text: '', start: '', end: '', enabled: false }
+    ];
+    let currentAvisoTab = 0;
+
+    // Cambiar de tab
+    window.switchAvisoTab = function(index) {
+      currentAvisoTab = index;
+      document.querySelectorAll('.aviso-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+      });
+      document.querySelectorAll('.aviso-form').forEach((form, i) => {
+        form.classList.toggle('active', i === index);
+      });
     };
 
-    window.clearAviso = async function() {
-      document.getElementById('avisoInput').value = '';
-      await window.saveAviso();
+    // Toggle activar/desactivar slot
+    window.toggleAvisoSlot = function(index) {
+      avisoSlots[index].enabled = !avisoSlots[index].enabled;
+      updateAvisoUI(index);
     };
+
+    // Guardar slot
+    window.saveAvisoSlot = async function(index) {
+      const text = document.getElementById(`aviso${index}text`).value.trim();
+      const start = document.getElementById(`aviso${index}start`).value;
+      const end = document.getElementById(`aviso${index}end`).value;
+
+      avisoSlots[index].text = text;
+      avisoSlots[index].start = start;
+      avisoSlots[index].end = end;
+
+      try {
+        await set(ref(db, `config/avisos/slot${index}`), avisoSlots[index]);
+        showToast(`💾 Mensaje ${index + 1} guardado`);
+        updateAvisoUI(index);
+        updateActiveAviso();
+      } catch(e) {
+        showToast('Error al guardar mensaje', true);
+      }
+    };
+
+    // Actualizar UI de un slot
+    function updateAvisoUI(index) {
+      const slot = avisoSlots[index];
+      const toggle = document.getElementById(`avisoToggle${index}`);
+      const textArea = document.getElementById(`aviso${index}text`);
+      const startInput = document.getElementById(`aviso${index}start`);
+      const endInput = document.getElementById(`aviso${index}end`);
+      const tab = document.querySelectorAll('.aviso-tab')[index];
+      const status = tab.querySelector('.aviso-tab-status');
+
+      // Actualizar botón toggle
+      toggle.textContent = slot.enabled ? 'ACTIVADO' : 'DESACTIVADO';
+      toggle.classList.toggle('enabled', slot.enabled);
+
+      // Actualizar inputs
+      textArea.disabled = !slot.enabled;
+      startInput.disabled = !slot.enabled;
+      endInput.disabled = !slot.enabled;
+
+      // Actualizar status del tab
+      const now = new Date();
+      const start = slot.start ? new Date(slot.start) : null;
+      const end = slot.end ? new Date(slot.end) : null;
+
+      status.classList.remove('active', 'scheduled', 'expired', 'disabled');
+
+      if (!slot.enabled || !slot.text || !start || !end) {
+        status.classList.add('disabled');
+      } else if (now < start) {
+        status.classList.add('scheduled');
+      } else if (now > end) {
+        status.classList.add('expired');
+      } else {
+        status.classList.add('active');
+      }
+    }
+
+    // Actualizar aviso activo en Firebase
+    async function updateActiveAviso() {
+      const now = new Date();
+      let activeText = '';
+
+      for (const slot of avisoSlots) {
+        if (slot.enabled && slot.text && slot.start && slot.end) {
+          const start = new Date(slot.start);
+          const end = new Date(slot.end);
+          if (now >= start && now <= end) {
+            activeText = slot.text;
+            break;
+          }
+        }
+      }
+
+      try {
+        await set(ref(db, 'config/aviso'), activeText);
+      } catch(e) {
+        console.error('Error al actualizar aviso activo:', e);
+      }
+    }
+
+    // Cargar slots desde Firebase
+    async function loadAvisoSlots() {
+      try {
+        const snapshot = await get(ref(db, 'config/avisos'));
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+          for (let i = 0; i < 5; i++) {
+            if (data[`slot${i}`]) {
+              avisoSlots[i] = data[`slot${i}`];
+              document.getElementById(`aviso${i}text`).value = avisoSlots[i].text || '';
+              document.getElementById(`aviso${i}start`).value = avisoSlots[i].start || '';
+              document.getElementById(`aviso${i}end`).value = avisoSlots[i].end || '';
+              updateAvisoUI(i);
+            }
+          }
+        }
+        updateActiveAviso();
+      } catch(e) {
+        console.error('Error al cargar avisos:', e);
+      }
+    }
+
+    // Actualizar avisos cada minuto
+    setInterval(() => {
+      for (let i = 0; i < 5; i++) {
+        updateAvisoUI(i);
+      }
+      updateActiveAviso();
+    }, 60000);
 
     // ── Data ──
     let allUsers   = [];
