@@ -2108,6 +2108,63 @@
     box-shadow: 0 3px 0 var(--sand-dark);
   }
   #theme-toggle-btn:hover + #theme-toggle-tooltip { opacity: 1; }
+
+  /* Tooltips para enlaces de redes sociales */
+  .tooltip-bubble {
+    position: absolute;
+    bottom: -50px;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    background: linear-gradient(135deg, #FFD060, #F5A623);
+    color: #2c1810;
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(245,166,35,0.4);
+    opacity: 0;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 1000;
+    pointer-events: none;
+    max-width: 200px;
+    text-align: center;
+    word-wrap: break-word;
+    white-space: normal;
+  }
+
+  .tooltip-bubble.show {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
+  }
+
+  .tooltip-arrow {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid #FFD060;
+  }
+
+  @media (max-width: 600px) {
+    .tooltip-bubble {
+      font-size: 9px;
+      padding: 6px 10px;
+      bottom: -50px;
+      max-width: 140px;
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+      transform: translateX(0) scale(0);
+    }
+    .tooltip-bubble.show {
+      transform: translateX(0) scale(1);
+    }
+  }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -2376,10 +2433,14 @@
 <div class="container">
   <header>
     <div class="header-bar">
-      <div class="header-left">
+      <div class="header-left" style="position:relative;">
         <a href="https://www.facebook.com/groups/atlasearthmexicoaemx" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
           <img src="imagen_2.png" alt="AEMX" class="aemx-logo-img">
         </a>
+        <div class="tooltip-bubble" id="tooltip-facebook">
+          Te invitamos a nuestro Facebook
+          <div class="tooltip-arrow"></div>
+        </div>
         <div class="header-left-label">Comunidad</div>
       </div>
 
@@ -2391,10 +2452,14 @@
         <div class="header-tagline">Calcula tus ganancias pasivas</div>
       </div>
 
-      <div class="header-right">
+      <div class="header-right" style="position:relative;">
         <a href="https://chat.whatsapp.com/HYPouduuDQsCRGI9apqSK9" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
           <img src="imagen_3.png" alt="Atlas Earth México" class="atlas-logo-img">
         </a>
+        <div class="tooltip-bubble" id="tooltip-whatsapp">
+          Únete al WhatsApp
+          <div class="tooltip-arrow"></div>
+        </div>
         <div class="header-right-label">Atlas Earth AEMX</div>
       </div>
     </div>
@@ -3845,6 +3910,32 @@
     }
   }
   init();
+
+  // Tooltips secuenciales para redes sociales
+  window.addEventListener('load', function() {
+    const fbTooltip = document.getElementById('tooltip-facebook');
+    const waTooltip = document.getElementById('tooltip-whatsapp');
+    
+    // Mostrar tooltip de Facebook primero
+    setTimeout(() => {
+      fbTooltip.classList.add('show');
+      
+      // Ocultar tooltip de Facebook después de 8 segundos
+      setTimeout(() => {
+        fbTooltip.classList.remove('show');
+        
+        // Mostrar tooltip de WhatsApp después de 0.5s
+        setTimeout(() => {
+          waTooltip.classList.add('show');
+          
+          // Ocultar tooltip de WhatsApp después de 8 segundos
+          setTimeout(() => {
+            waTooltip.classList.remove('show');
+          }, 8000);
+        }, 500);
+      }, 8000);
+    }, 1000);
+  });
 
   const avatarPlaceholder = document.getElementById('avatar-placeholder');
   const avatarEdit = document.getElementById('avatar-edit');
