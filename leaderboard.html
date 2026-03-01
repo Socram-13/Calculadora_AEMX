@@ -41,7 +41,10 @@
     body::before {
       content: '';
       position: fixed;
-      inset: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
       background-image:
         linear-gradient(rgba(0,200,255,0.04) 1px, transparent 1px),
         linear-gradient(90deg, rgba(0,200,255,0.04) 1px, transparent 1px);
@@ -70,12 +73,16 @@
     /* ── Auth overlay ── */
     .auth-overlay {
       position: fixed;
-      inset: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
       background: rgba(6, 11, 20, 0.97);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 2000;
+      -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
     }
     .auth-overlay.hidden { display: none; }
@@ -657,7 +664,7 @@
     <header>
       <div class="header-left">
         <h1>🏆 LEADERBOARD</h1>
-        <div class="subtitle">ATLAS EARTH MÉXICO · RANKING DE PARCELAS</div>
+        <div class="subtitle">ATLAS EARTH MÉXICO · TOP 30 JUGADORES</div>
       </div>
       <div class="user-info" id="userInfo" style="display:none">
         <img class="user-avatar-small" id="userAvatarHeader" src="" alt="" onerror="this.style.display='none'">
@@ -822,8 +829,12 @@
         if (btn) { btn.classList.remove('loading'); btn.innerHTML = '↻ ACTUALIZAR'; }
       }
 
-      // 2. Fetch real con timeout de 10 segundos
+      // 2. Fetch real con timeout de 30 segundos
       try {
+        if (btn) { 
+          btn.classList.add('loading'); 
+          btn.innerHTML = '⏳ Cargando datos...'; 
+        }
         const fetchPromise = (async () => {
           const snapshot = await get(ref(db, 'users'));
           const players = [];
@@ -852,21 +863,31 @@
         })();
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('timeout')), 10000)
+          setTimeout(() => reject(new Error('timeout')), 30000)
         );
 
         const players = await Promise.race([fetchPromise, timeoutPromise]);
         players.sort((a, b) => b.total - a.total);
-        saveToCache(players);
-        updateStats(players);
-        renderPodium(players.slice(0, 3));
-        renderTable(players);
+        
+        // Limitar a top 30 para mejorar rendimiento
+        const top30 = players.slice(0, 30);
+        
+        saveToCache(top30);
+        updateStats(players); // Stats con todos para totales correctos
+        renderPodium(top30.slice(0, 3));
+        renderTable(top30);
 
       } catch(e) {
         console.warn('fetchRanking error:', e.message);
         if (!cached) {
           const tbody = document.getElementById('rankingBody');
-          if (tbody) tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">⚠️ Error al cargar. Verifica tu conexión y actualiza.</div></td></tr>';
+          if (tbody) {
+            if (e.message === 'timeout') {
+              tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">⏱️ La carga está tardando más de lo normal. Por favor espera o intenta más tarde.</div></td></tr>';
+            } else {
+              tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">⚠️ Error al cargar. Verifica tu conexión y actualiza.</div></td></tr>';
+            }
+          }
         } else if (players && players.length === 0) {
           const tbody2 = document.getElementById('rankingBody');
           if (tbody2) tbody2.innerHTML = '<tr><td colspan="7"><div class="empty-state">Sin jugadores registrados aún.</div></td></tr>';
