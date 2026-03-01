@@ -2208,7 +2208,6 @@ function buildEmbedUrl(shareUrl) {
 }
 
 window.openVideo = function(num) {
-  if (rewardAlreadyClaimed) return;
 
   // Abrir video en Facebook directamente desde el segundo 0
   const url = VIDEO_URLS[num];
@@ -2233,7 +2232,6 @@ window.closeVideo = function() {
 
 // ── Mark visited ─────────────────────────────────────────────────────────────
 function markVisited(num) {
-  if (rewardAlreadyClaimed) return;
   const progress = loadProgress() || { visited: [] };
   if (!progress.visited.includes(num)) {
     progress.visited.push(num);
