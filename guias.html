@@ -2152,12 +2152,13 @@ function updateUI(visited) {
   }
 
   if (count >= TOTAL_GUIDES && !rewardAlreadyClaimed) {
-    document.getElementById('aura-popup').classList.add('visible');
+    markGuidesCompleted();
   }
 }
 
 function lockRewardClaimed() {
   rewardAlreadyClaimed = true;
+  localStorage.setItem('aemx_popup_seen', 'true');
   for (let i = 1; i <= TOTAL_GUIDES; i++) {
     const card = document.querySelector(`[data-guide="${i}"]`);
     if (card) card.classList.add('reward-claimed');
@@ -2241,6 +2242,36 @@ function markVisited(num) {
   updateUI(progress.visited);
 }
 
+// ── Mark guides completed ─────────────────────────────────────────────────────
+async function markGuidesCompleted() {
+  // Si ya está marcado localmente, solo mostrar popup
+  if (localStorage.getItem('aemx_popup_seen')) return;
+
+  const user = currentUser || await authReady;
+
+  if (user) {
+    try {
+      const completedRef = ref(database, 'users/' + user.uid + '/guiasCompleted');
+      const snap = await get(completedRef);
+
+      // Si ya está en Firebase, no mostrar popup
+      if (snap.exists() && snap.val() === true) {
+        localStorage.setItem('aemx_popup_seen', 'true');
+        return;
+      }
+
+      // Guardar en Firebase que completó las guías
+      await set(completedRef, true);
+    } catch (e) {
+      console.warn('No se pudo guardar guiasCompleted:', e);
+    }
+  }
+
+  // Mostrar popup (primera vez)
+  localStorage.setItem('aemx_popup_seen', 'true');
+  document.getElementById('aura-popup').classList.add('visible');
+}
+
 // ── Claim reward ─────────────────────────────────────────────────────────────
 window.claimReward = async function() {
   if (rewardAlreadyClaimed) return;
@@ -2305,16 +2336,27 @@ onAuthStateChanged(auth, async user => {
   currentUser = user;
 
   if (user) {
-    // Verificar primero en Firebase si ya cobró la recompensa
     try {
-      const snap = await get(ref(database, 'users/' + user.uid + '/guiasReward'));
-      if (snap.exists() && snap.val() === true) {
-        rewardAlreadyClaimed = true;
-        lockRewardClaimed();
-        return;
+      const userRef = ref(database, 'users/' + user.uid);
+      const snap = await get(userRef);
+
+      if (snap.exists()) {
+        const userData = snap.val();
+
+        // Si ya cobró la recompensa
+        if (userData.guiasReward === true) {
+          rewardAlreadyClaimed = true;
+          lockRewardClaimed();
+          return;
+        }
+
+        // Si ya completó las guías (pero aún no cobró), suprimir popup en futuras cargas
+        if (userData.guiasCompleted === true) {
+          localStorage.setItem('aemx_popup_seen', 'true');
+        }
       }
     } catch (e) {
-      console.warn('No se pudo verificar guiasReward:', e);
+      console.warn('No se pudo verificar estado en Firebase:', e);
     }
   }
 
