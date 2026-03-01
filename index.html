@@ -2377,7 +2377,9 @@
   <header>
     <div class="header-bar">
       <div class="header-left">
-        <img src="imagen_2.png" alt="AEMX" class="aemx-logo-img">
+        <a href="https://www.facebook.com/groups/atlasearthmexicoaemx" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
+          <img src="imagen_2.png" alt="AEMX" class="aemx-logo-img">
+        </a>
         <div class="header-left-label">Comunidad</div>
       </div>
 
@@ -2390,7 +2392,9 @@
       </div>
 
       <div class="header-right">
-        <img src="imagen_3.png" alt="Atlas Earth México" class="atlas-logo-img">
+        <a href="https://chat.whatsapp.com/HYPouduuDQsCRGI9apqSK9" target="_blank" rel="noopener noreferrer" style="display:block;line-height:0;">
+          <img src="imagen_3.png" alt="Atlas Earth México" class="atlas-logo-img">
+        </a>
         <div class="header-right-label">Atlas Earth AEMX</div>
       </div>
     </div>
@@ -2919,7 +2923,7 @@
       <div class="divider"></div>
 
       <div class="explorer-row" onclick="toggleExplorer()">
-        <div class="explorer-checkbox" id="explorer-check"></div>
+        <div class="explorer-checkbox" id="explorer-check">✓</div>
         <div class="explorer-info">
           <div class="explorer-name">🧭 Club de Explorador</div>
           <div class="explorer-desc" id="explorer-desc">Activo: diamantes ÷ 7 giros de ruleta</div>
@@ -3384,12 +3388,10 @@
     const badge = document.getElementById('explorer-badge');
     if (explorerActive) {
       check.classList.add('checked');
-      check.textContent = '✓';
       desc.textContent = 'Activo: diamantes ÷ 7 giros de ruleta';
       badge.style.display = 'block';
     } else {
       check.classList.remove('checked');
-      check.textContent = '';
       desc.textContent = 'Inactivo: diamantes ÷ 5 giros de ruleta';
       badge.style.display = 'none';
     }
@@ -3827,7 +3829,6 @@
       const desc  = document.getElementById('explorer-desc');
       const badge = document.getElementById('explorer-badge');
       check.classList.remove('checked');
-      check.textContent = '';
       desc.textContent = 'Inactivo: diamantes ÷ 5 giros de ruleta';
       badge.style.display = 'none';
     }
@@ -3839,9 +3840,7 @@
     await loadProfile();
     adjustBadge();
     if (explorerActive) {
-      const check = document.getElementById('explorer-check');
-      check.classList.add('checked');
-      check.textContent = '✓';
+      document.getElementById('explorer-check').classList.add('checked');
       document.getElementById('explorer-badge').style.display = 'block';
     }
   }
