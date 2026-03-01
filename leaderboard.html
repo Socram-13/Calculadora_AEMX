@@ -904,12 +904,19 @@
     }
 
     // ── Avatar helper ──
-    function avatarHTML(player, size = 36) {
+    function avatarHTML(player, size = 36, rank = null) {
       const letter = (player.username || '?').charAt(0).toUpperCase();
       const colors = ['#00c8ff','#00ff9d','#c084fc','#60a5fa','#facc15','#4ade80','#f472b6'];
       const bg = colors[letter.charCodeAt(0) % colors.length];
       const fontSize = Math.round(size * 0.55);
-      return `<div class="avatar" style="width:${size}px;height:${size}px;background:${bg};border-color:${player.borderColor||'var(--border)'};font-size:${fontSize}px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;">${letter}</div>`;
+      
+      // Emojis según posición
+      let emoji = '👤'; // Emoji general
+      if (rank === 1) emoji = '🥇';
+      else if (rank === 2) emoji = '🥈';
+      else if (rank === 3) emoji = '🥉';
+      
+      return `<div class="avatar" style="width:${size}px;height:${size}px;background:${bg};border-color:${player.borderColor||'var(--border)'};font-size:${fontSize}px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:700;">${emoji}</div>`;
     }
 
     // ── Podium ──
@@ -928,10 +935,11 @@
         const p = top3[dataIdx];
         if (!p) return '';
         const avSize = cls === 'first' ? 72 : 60;
+        const rank = dataIdx + 1; // 1, 2 o 3
         return `
           <div class="podium-item ${cls}">
             <span class="podium-crown">${crown}</span>
-            ${avatarHTML(p, avSize).replace('class="avatar"', `class="podium-avatar"`)}
+            ${avatarHTML(p, avSize, rank).replace('class="avatar"', `class="podium-avatar"`)}
             <div class="podium-name">${p.username}</div>
             <div class="podium-total">${p.total.toLocaleString()} parcelas</div>
             <div class="podium-block">${blockNum}</div>
@@ -958,7 +966,7 @@
             <td class="rank-cell ${rankClass}">${rank}</td>
             <td>
               <div class="player-cell">
-                ${avatarHTML(p, 36)}
+                ${avatarHTML(p, 36, rank)}
                 <div>
                   <div class="player-name">${p.username} ${youBadge}</div>
                 </div>
