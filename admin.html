@@ -216,35 +216,37 @@
     }
     @keyframes rainbowSlide { 0%{background-position:0%} 100%{background-position:200%} }
     .aviso-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 16px;
+      padding: 12px 16px;
       background: rgba(255,170,0,0.06);
       border-bottom: 1px solid rgba(255,170,0,0.2);
+      text-align: center;
     }
     .aviso-title {
       font-family: 'Orbitron', monospace;
-      font-size: 9px;
+      font-size: 10px;
       font-weight: 700;
       letter-spacing: 3px;
       color: #ffaa00;
+      display: block;
+      margin-bottom: 4px;
     }
     .aviso-live {
       font-family: 'Share Tech Mono', monospace;
       font-size: 9px;
       color: #ffaa00;
       opacity: 0.6;
+      display: block;
     }
     .aviso-body {
-      padding: 12px 14px;
+      padding: 16px;
     }
     .aviso-tabs {
       display: flex;
       gap: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 16px;
       overflow-x: auto;
       scrollbar-width: thin;
+      padding-bottom: 4px;
     }
     .aviso-tab {
       padding: 6px 12px;
@@ -275,13 +277,13 @@
     .aviso-form {
       display: none;
       flex-direction: column;
-      gap: 10px;
+      gap: 14px;
     }
     .aviso-form.active { display: flex; }
     .aviso-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 12px;
     }
     .aviso-field label {
       display: block;
@@ -1190,18 +1192,18 @@
     }
     .aviso-body { padding: 12px 14px; display: flex; flex-direction: row; align-items: flex-start; gap: 10px; }
     .aviso-input {
-      flex: 1 1 auto;
-      min-width: 200px;
+      width: 100%;
       background: var(--panel2);
       border: 1px solid rgba(255,170,0,0.3);
       border-radius: 8px;
       color: #ffe066;
       font-family: 'Rajdhani', sans-serif;
       font-size: 13px;
-      padding: 9px 12px;
+      padding: 10px 12px;
       outline: none;
-      resize: none;
+      resize: vertical;
       transition: border-color 0.2s;
+      min-height: 60px;
     }
     .aviso-input:focus { border-color: #ffaa00; box-shadow: 0 0 8px rgba(255,170,0,0.2); }
     .aviso-input::placeholder { color: var(--text2); }
