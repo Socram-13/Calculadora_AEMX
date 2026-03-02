@@ -2965,7 +2965,7 @@
       <div class="booster-row">
         <div class="booster-icon">💎</div>
         <div class="booster-info">
-          <div class="booster-name" style="color:#a5f3fc">Diamantes</div>
+          <div class="booster-name" style="color:#0891b2">Diamantes</div>
         </div>
         <div class="counter">
           <button class="counter-btn" onclick="change('diamonds',-1)">−</button>
@@ -2979,7 +2979,7 @@
       <div class="booster-row">
         <div class="booster-icon">💵</div>
         <div class="booster-info">
-          <div class="booster-name" style="color:#86efac">Atlas Bucks (AB)</div>
+          <div class="booster-name" style="color:#16a34a">Atlas Bucks (AB)</div>
         </div>
         <div class="counter">
           <button class="counter-btn" onclick="change('atlasbucks',-100)">−</button>
@@ -3088,7 +3088,7 @@
         <tr style="background:rgba(0,200,255,0.03);">
           <td><div class="rt-period" style="color:var(--gold)"><span class="dot" style="background:var(--glow);box-shadow:0 0 4px var(--glow)"></span>Por Año</div></td>
           <td class="rt-base" id="r-year-base">$0.00</td>
-          <td class="rt-boost highlight" id="r-year" style="color:#00ff9d;text-shadow:0 0 20px rgba(0,255,157,0.6);font-size:16px;font-weight:900;letter-spacing:1px;">$0.00</td>
+          <td class="rt-boost highlight" id="r-year" style="color:#059669;font-size:16px;font-weight:900;letter-spacing:1px;">$0.00</td>
         </tr>
       </tbody>
     </table>
@@ -4126,17 +4126,19 @@
       const tempImg = new Image();
       tempImg.onload = function() {
         const canvas = document.createElement('canvas');
-        canvas.width = 200;
-        canvas.height = 200;
+        canvas.width = 150;
+        canvas.height = 150;
         const ctx = canvas.getContext('2d');
 
         // Recorte centrado (crop cuadrado)
         const size = Math.min(tempImg.width, tempImg.height);
         const offsetX = (tempImg.width - size) / 2;
         const offsetY = (tempImg.height - size) / 2;
-        ctx.drawImage(tempImg, offsetX, offsetY, size, size, 0, 0, 200, 200);
+        ctx.drawImage(tempImg, offsetX, offsetY, size, size, 0, 0, 150, 150);
 
-        const compressed = canvas.toDataURL('image/jpeg', 0.75);
+        // Usar WebP si el navegador lo soporta, si no JPEG
+        const testWebP = canvas.toDataURL('image/webp', 0.70);
+        const compressed = testWebP.startsWith('data:image/webp') ? testWebP : canvas.toDataURL('image/jpeg', 0.70);
 
         // Actualizar UI
         const img = document.getElementById('avatar-img');
