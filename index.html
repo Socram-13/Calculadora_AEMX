@@ -2302,16 +2302,12 @@
     }
 
     // ✅ FIX PRINCIPAL: _fbSaveAll ahora siempre incluye el avatar desde localStorage
-    window._fbSaveAll = async function() {
+    window._fbSaveAll = async function(includeAvatar = false) {
       const user = window._fbUser;
       if (!user) return;
 
-      // Leer el avatar directamente de localStorage en el momento de guardar
-      const avatarData = localStorage.getItem('atlas-avatar') || '';
-
       const data = {
         username:    document.getElementById('username')?.value    || '',
-        avatar:      avatarData,
         borderColor: localStorage.getItem('atlas-avatar-border')   || '',
         startDate:   document.getElementById('start-date')?.value  || '',
         common:      document.getElementById('common')?.value      || 0,
@@ -2322,6 +2318,13 @@
         diamonds:    document.getElementById('diamonds')?.value    || 0,
         atlasbucks:  document.getElementById('atlasbucks')?.value  || 0,
       };
+
+      // Solo incluir avatar cuando se indica explícitamente (botón guardar)
+      if (includeAvatar) {
+        const avatarData = localStorage.getItem('atlas-avatar') || '';
+        data.avatar = avatarData;
+      }
+
       try {
         const snap = await get(ref(db, `users/${user.uid}`));
         if (snap.exists()) {
@@ -3866,7 +3869,7 @@
       }));
     } catch(e) {}
     showStatus('✔ Datos guardados');
-    if(window._fbSaveAll) window._fbSaveAll();
+    if(window._fbSaveAll) window._fbSaveAll(true); // true = incluir avatar
   }
 
   async function loadData() {
@@ -4109,7 +4112,7 @@
   function changeAvatarBorder(color) {
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
-    if (window._fbUser && window._fbSaveAll) window._fbSaveAll();
+    // ✅ Color guardado en localStorage, se subirá a Firebase con botón GUARDAR
   }
 
   // ✅ FIX PRINCIPAL: loadAvatar ahora comprime la imagen Y sube a Firebase
@@ -4149,10 +4152,7 @@
         // Guardar en localStorage
         localStorage.setItem('atlas-avatar', compressed);
 
-        // ✅ FIX: Subir a Firebase inmediatamente después de guardar en localStorage
-        if (window._fbUser && window._fbSaveAll) {
-          setTimeout(window._fbSaveAll, 300);
-        }
+        // ✅ Avatar guardado en localStorage, se subirá a Firebase con botón GUARDAR
       };
       tempImg.src = e.target.result;
     };
