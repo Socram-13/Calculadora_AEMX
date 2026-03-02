@@ -4249,6 +4249,8 @@
     userCountry = pais; window.userCountry = pais;
     var spanMexico = document.querySelector('.mexico');
     if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; }
+    var boostTitle = document.getElementById('boost-country-title');
+    if (boostTitle) boostTitle.textContent = ' Boost (' + pais + ')';
     if (typeof calc === 'function') calc();
     if (typeof updateMedals === 'function') updateMedals();
     var intentos = 0;
