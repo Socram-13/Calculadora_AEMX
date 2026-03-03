@@ -2102,9 +2102,16 @@
     };
 
     // Toggle activar/desactivar slot
-    window.toggleAvisoSlot = function(index) {
+    window.toggleAvisoSlot = async function(index) {
       avisoSlots[index].enabled = !avisoSlots[index].enabled;
       updateAvisoUI(index);
+      try {
+        await set(ref(db, `config/avisos/slot${index}`), avisoSlots[index]);
+        await updateActiveAviso();
+        showToast(`📢 Mensaje ${index + 1} ${avisoSlots[index].enabled ? 'activado' : 'desactivado'}`);
+      } catch(e) {
+        showToast('Error al guardar estado', true);
+      }
     };
 
     // Guardar slot
