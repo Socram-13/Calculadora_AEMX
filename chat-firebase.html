@@ -494,7 +494,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 if (texto && texto.trim()) {
                     txt.textContent = texto.trim();
                     bar.classList.add('visible');
-                    txt.style.animationDuration = Math.max(15, texto.length * 0.18) + 's';
+                    txt.style.animationDuration = Math.max(20, texto.length * 0.12) + 's';
                 } else {
                     bar.classList.remove('visible');
                 }

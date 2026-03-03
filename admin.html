@@ -2174,18 +2174,19 @@
     // Actualizar aviso activo en Firebase
     async function updateActiveAviso() {
       const now = new Date();
-      let activeText = '';
+      const activeTexts = [];
 
       for (const slot of avisoSlots) {
         if (slot.enabled && slot.text && slot.start && slot.end) {
           const start = new Date(slot.start);
           const end = new Date(slot.end);
           if (now >= start && now <= end) {
-            activeText = slot.text;
-            break;
+            activeTexts.push(slot.text);
           }
         }
       }
+
+      const activeText = activeTexts.join('   •••   ');
 
       try {
         await set(ref(db, 'config/aviso'), activeText);
