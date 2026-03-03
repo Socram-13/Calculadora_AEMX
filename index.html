@@ -3532,7 +3532,18 @@
       else if (total <= 300)  { adBoost = 5;  adRange = "251–300 parcelas"; }
       else if (total <= 350)  { adBoost = 4;  adRange = "301–350 parcelas"; }
       else if (total <= 400)  { adBoost = 3;  adRange = "351–400 parcelas"; }
-      else                    { adBoost = 2;  adRange = "401–1000 parcelas"; }
+      else                    { adBoost = 2;  adRange = "401+ parcelas"; }
+    } else if (userCountry === "Brazil") {
+      if      (total <= 60)   { adBoost = 20; adRange = "1–60 parcelas"; }
+      else if (total <= 75)   { adBoost = 15; adRange = "61–75 parcelas"; }
+      else if (total <= 100)  { adBoost = 12; adRange = "76–100 parcelas"; }
+      else if (total <= 120)  { adBoost = 10; adRange = "101–120 parcelas"; }
+      else if (total <= 150)  { adBoost = 8;  adRange = "121–150 parcelas"; }
+      else if (total <= 200)  { adBoost = 6;  adRange = "151–200 parcelas"; }
+      else if (total <= 250)  { adBoost = 5;  adRange = "201–250 parcelas"; }
+      else if (total <= 300)  { adBoost = 4;  adRange = "251–300 parcelas"; }
+      else if (total <= 400)  { adBoost = 3;  adRange = "301–400 parcelas"; }
+      else                    { adBoost = 2;  adRange = "401+ parcelas"; }
     } else if (userCountry === "United States") {
       if      (total <= 150)  { adBoost = 30; adRange = "1–150 parcelas"; }
       else if (total <= 220)  { adBoost = 20; adRange = "151–220 parcelas"; }
@@ -4235,6 +4246,7 @@
     "alemania": "Germany", "germany": "Germany",
     "italia": "Italy", "italy": "Italy",
     "rusia": "Russia", "russia": "Russia",
+    "brasil": "Brazil", "brazil": "Brazil", "br": "Brazil",
   };
 
   function normalizarPais(name) {
