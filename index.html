@@ -3110,7 +3110,7 @@
         <span class="breakdown-value" id="b-badge">+$0.00/mes</span>
       </div>
       <div class="breakdown-row">
-        <span class="breakdown-label">Boost de anuncios — <span id="b-ad-x">20×</span></span>
+        <span class="breakdown-label">Boost de anuncios — <span id="b-ad-x">20×</span> (México)</span>
         <span class="breakdown-value" id="b-ad">+$0.00/mes</span>
       </div>
       <div class="breakdown-row breakdown-separator" style="border-top:1px solid var(--border);padding-top:10px;margin-top:6px">
@@ -4230,15 +4230,24 @@
   window.userCountry = "";
 
   var COUNTRY_MAP = {
-    "méxico": "Mexico", "mexico": "Mexico",
+    // México
+    "méxico": "Mexico", "mexico": "Mexico", "mx": "Mexico", "mex": "Mexico",
+    // Estados Unidos
     "estados unidos": "United States", "united states": "United States",
-    "us": "United States", "usa": "United States",
-    "españa": "Spain", "spain": "Spain",
-    "francia": "France", "france": "France",
-    "alemania": "Germany", "germany": "Germany",
-    "italia": "Italy", "italy": "Italy",
-    "rusia": "Russia", "russia": "Russia",
-    "brasil": "Brazil", "brazil": "Brazil", "br": "Brazil",
+    "us": "United States", "usa": "United States", "u.s.": "United States",
+    "u.s.a.": "United States", "america": "United States",
+    // España
+    "españa": "Spain", "spain": "Spain", "espana": "Spain", "es": "Spain",
+    // Francia
+    "francia": "France", "france": "France", "fr": "France",
+    // Alemania
+    "alemania": "Germany", "germany": "Germany", "deutschland": "Germany", "de": "Germany",
+    // Italia
+    "italia": "Italy", "italy": "Italy", "it": "Italy",
+    // Rusia
+    "rusia": "Russia", "russia": "Russia", "ru": "Russia",
+    // Brasil
+    "brasil": "Brazil", "brazil": "Brazil", "br": "Brazil", "bra": "Brazil",
   };
 
   function normalizarPais(name) {
