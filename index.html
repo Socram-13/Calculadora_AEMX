@@ -3747,33 +3747,32 @@
     const available = 2 * Math.PI - totalGap;
 
     function arcPath(cx, cy, r, startAngle, endAngle) {
-      const toothHeight = 5.5;
-      const toothWidth  = 0.08;
-      const gapWidth    = 0.14;
-      const period      = toothWidth + gapWidth;
-      const arcLen      = endAngle - startAngle;
-      const numTeeth    = Math.max(1, Math.floor(arcLen / period));
-      const actualPeriod = arcLen / numTeeth;
-      const tw = actualPeriod * 0.45;
-      const rOuter = r + toothHeight;
+      const arcLen   = endAngle - startAngle;
+      const numTeeth = Math.max(2, Math.round(arcLen / 0.40));
+      const period   = arcLen / numTeeth;
+      const toothH   = 6;
+      const rOuter   = r + toothH;
 
-      let d = '';
+      // Diente recto: valle plano | subida vertical | punta plana estrecha | bajada vertical | valle
+      const valFrac  = 0.50;  // 50% valle
+      const topFrac  = 0.50;  // 50% diente (flancos casi verticales, punta plana)
+
+      const p = (angle, radius) => `${cx + radius * Math.cos(angle)},${cy + radius * Math.sin(angle)}`;
+
+      let d = `M ${p(startAngle, r)}`;
       for (let t = 0; t < numTeeth; t++) {
-        const a0 = startAngle + t * actualPeriod;
-        const a1 = a0 + (actualPeriod - tw);
-        const a2 = a1 + tw * 0.5;
-        const a3 = a0 + actualPeriod;
+        const a0 = startAngle + t * period;          // inicio valle
+        const a1 = a0 + valFrac * period;            // fin valle / pie izq diente
+        const a2 = a1 + topFrac * period * 0.08;     // flanco izq (casi vertical)
+        const a3 = a2 + topFrac * period * 0.84;     // punta plana
+        const a4 = a3 + topFrac * period * 0.08;     // flanco der (casi vertical)
 
-        const p = (angle, radius) => `${cx + radius * Math.cos(angle)} ${cy + radius * Math.sin(angle)}`;
-
-        if (t === 0) d += `M ${p(a0, r)}`;
-        else         d += ` L ${p(a0, r)}`;
-
-        d += ` A ${r} ${r} 0 0 1 ${p(a1, r)}`;
-        d += ` L ${p(a1, rOuter)}`;
-        d += ` L ${p(a2, rOuter)}`;
-        d += ` L ${p(a3, r)}`;
+        d += ` A ${r} ${r} 0 0 1 ${p(a1, r)}`;      // arco valle
+        d += ` L ${p(a2, rOuter)}`;                  // sube vertical izq
+        d += ` L ${p(a3, rOuter)}`;                  // punta plana
+        d += ` L ${p(a4, r)}`;                       // baja vertical der
       }
+      d += ` A ${r} ${r} 0 0 1 ${p(endAngle, r)}`;
       return d;
     }
 
