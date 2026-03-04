@@ -2277,7 +2277,8 @@
         }
         if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
         if (d.country) {
-          userCountry = d.country; window.userCountry = d.country;
+          const _normC = (typeof normalizarPais === 'function') ? normalizarPais(d.country) : d.country;
+          userCountry = _normC; window.userCountry = _normC;
           const boostTitle = document.getElementById('boost-country-title');
           if (boostTitle) {
             const nombre = d.country === 'MX' ? 'México' : d.country === 'US' ? 'EE.UU.' : d.country.toUpperCase();
