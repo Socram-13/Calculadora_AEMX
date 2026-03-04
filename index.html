@@ -3519,8 +3519,9 @@
     }
 
     let adBoost, adRange;
+    const _activeCountry = (window.userCountry || userCountry || 'Mexico');
     const EUROPA_COUNTRIES = new Set(["Spain", "France", "Germany", "Italy", "Russia"]);
-    if (EUROPA_COUNTRIES.has(userCountry)) {
+    if (EUROPA_COUNTRIES.has(_activeCountry)) {
       if      (total <= 70)   { adBoost = 20; adRange = "1–70 parcelas"; }
       else if (total <= 100)  { adBoost = 15; adRange = "71–100 parcelas"; }
       else if (total <= 135)  { adBoost = 10; adRange = "101–135 parcelas"; }
@@ -3531,7 +3532,7 @@
       else if (total <= 350)  { adBoost = 4;  adRange = "301–350 parcelas"; }
       else if (total <= 400)  { adBoost = 3;  adRange = "351–400 parcelas"; }
       else                    { adBoost = 2;  adRange = "401+ parcelas"; }
-    } else if (userCountry === "Brazil") {
+    } else if (_activeCountry === "Brazil") {
       if      (total <= 60)   { adBoost = 20; adRange = "1–60 parcelas"; }
       else if (total <= 75)   { adBoost = 15; adRange = "61–75 parcelas"; }
       else if (total <= 100)  { adBoost = 12; adRange = "76–100 parcelas"; }
@@ -3542,7 +3543,7 @@
       else if (total <= 300)  { adBoost = 4;  adRange = "251–300 parcelas"; }
       else if (total <= 400)  { adBoost = 3;  adRange = "301–400 parcelas"; }
       else                    { adBoost = 2;  adRange = "401+ parcelas"; }
-    } else if (userCountry === "United States") {
+    } else if (_activeCountry === "United States") {
       if      (total <= 150)  { adBoost = 30; adRange = "1–150 parcelas"; }
       else if (total <= 220)  { adBoost = 20; adRange = "151–220 parcelas"; }
       else if (total <= 290)  { adBoost = 15; adRange = "221–290 parcelas"; }
@@ -3557,7 +3558,16 @@
       else if (total <= 3000) { adBoost = 2;  adRange = "1501–3000 parcelas"; }
       else                    { adBoost = 2;  adRange = "3001+ parcelas"; }
     } else {
-      adBoost = 2; adRange = "Boost estándar";
+      // Mexico (default) o país no identificado con parcelas
+      if      (total <= 50)  { adBoost = 20; adRange = "1–50 parcelas"; }
+      else if (total <= 85)  { adBoost = 15; adRange = "51–85 parcelas"; }
+      else if (total <= 100) { adBoost = 12; adRange = "86–100 parcelas"; }
+      else if (total <= 140) { adBoost = 8;  adRange = "101–140 parcelas"; }
+      else if (total <= 175) { adBoost = 7;  adRange = "141–175 parcelas"; }
+      else if (total <= 225) { adBoost = 5;  adRange = "176–225 parcelas"; }
+      else if (total <= 300) { adBoost = 4;  adRange = "226–300 parcelas"; }
+      else if (total <= 400) { adBoost = 3;  adRange = "301–400 parcelas"; }
+      else                   { adBoost = 2;  adRange = "401+ parcelas"; }
     }
     document.getElementById('adboost-display').textContent = adBoost + '×';
     document.getElementById('adboost-range').textContent = adRange;
