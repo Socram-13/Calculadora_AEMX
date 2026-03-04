@@ -2287,7 +2287,11 @@
           if (elLoc) elLoc.textContent = (d.city || d.country).toUpperCase();
         }
 
+        // Si hay datos del scanner pendientes, no sobreescribir parcelas/insignias
+        const _hasScannerData = !!localStorage.getItem('atlas-scanner-data');
+        const _scannerFields = new Set(['common','rare','epic','legendary','badges']);
         ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
+          if (_hasScannerData && _scannerFields.has(k)) return;
           if (d[k] !== undefined) { document.getElementById(k).value = d[k]; }
         });
 
@@ -4931,12 +4935,15 @@
     }
     window.abrirScanner = abrirScanner;
 
-    // Ejecutar al cargar
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', cargarDatosScanner);
-    } else {
+    // Esperar a que Firebase termine de cargar antes de aplicar datos del scanner
+    window._scannerBridgePending = true;
+    function intentarCarga() {
+      if (!window._scannerBridgePending) return;
       cargarDatosScanner();
+      window._scannerBridgePending = false;
     }
+    // Ejecutar tras Firebase (que tarda ~1-2s) con margen seguro
+    window.addEventListener('load', () => setTimeout(intentarCarga, 2500));
   })();
 </script>
 </body>
