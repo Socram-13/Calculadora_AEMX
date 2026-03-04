@@ -136,7 +136,7 @@
 
   .header-title .atlas { color: #FFD060; }
   .header-title .earth { color: #FFD060; }
-  .header-title .mexico { color: #fff; }
+  .header-title .mexico { color: #fff; visibility: hidden; }
   .header-title .mexico .i { color: #ef4444; }
 
   .header-subtitle {
@@ -2282,7 +2282,7 @@
           const boostTitle = document.getElementById('boost-country-title');
           if (boostTitle) boostTitle.textContent = ` Boost (${_normC})`;
           const spanMx = document.querySelector('.mexico');
-          if (spanMx) { spanMx.textContent = _normC.toUpperCase(); spanMx.style.color = '#7EC8E3'; }
+          if (spanMx) { spanMx.textContent = _normC.toUpperCase(); spanMx.style.color = '#7EC8E3'; spanMx.style.visibility = 'visible'; }
           const elLoc = document.getElementById('user-location');
           if (elLoc) elLoc.textContent = (d.city || d.country).toUpperCase();
         }
@@ -4260,7 +4260,7 @@
     if (!pais) return;
     userCountry = pais; window.userCountry = pais;
     var spanMexico = document.querySelector('.mexico');
-    if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; }
+    if (spanMexico) { spanMexico.textContent = pais.toUpperCase(); spanMexico.style.color = '#7EC8E3'; spanMexico.style.visibility = 'visible'; }
     var boostTitle = document.getElementById('boost-country-title');
     if (boostTitle) boostTitle.textContent = ' Boost (' + pais + ')';
     if (typeof calc === 'function') calc();
