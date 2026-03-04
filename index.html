@@ -2280,12 +2280,9 @@
           const _normC = (typeof normalizarPais === 'function') ? normalizarPais(d.country) : d.country;
           userCountry = _normC; window.userCountry = _normC;
           const boostTitle = document.getElementById('boost-country-title');
-          if (boostTitle) {
-            const nombre = d.country === 'MX' ? 'México' : d.country === 'US' ? 'EE.UU.' : d.country.toUpperCase();
-            boostTitle.textContent = ` Boost (${nombre})`;
-          }
+          if (boostTitle) boostTitle.textContent = ` Boost (${_normC})`;
           const spanMx = document.querySelector('.mexico');
-          if (spanMx) { spanMx.textContent = d.country.toUpperCase(); spanMx.style.color = '#7EC8E3'; }
+          if (spanMx) { spanMx.textContent = _normC.toUpperCase(); spanMx.style.color = '#7EC8E3'; }
           const elLoc = document.getElementById('user-location');
           if (elLoc) elLoc.textContent = (d.city || d.country).toUpperCase();
         }
