@@ -5,372 +5,145 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Atlas Scanner</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <style>
   :root {
-    --bg: #0f1923;
-    --card: #1a2535;
-    --card2: #1f2d42;
-    --accent: #00c8ff;
-    --gold: #F5A623;
-    --green: #00ff9d;
-    --purple: #c084fc;
-    --blue: #60a5fa;
-    --common: #4ade80;
-    --rare: #60a5fa;
-    --epic: #c084fc;
-    --legendary: #fbbf24;
-    --text: #e2e8f0;
-    --text2: #94a3b8;
-    --border: rgba(255,255,255,0.07);
-    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+    --bg:#0f1923; --card:#1a2535; --card2:#1f2d42;
+    --accent:#00c8ff; --gold:#F5A623; --border:rgba(255,255,255,0.07);
+    --shadow:0 8px 32px rgba(0,0,0,0.4); --text:#e2e8f0; --text2:#94a3b8;
+    --common:#4ade80; --rare:#60a5fa; --epic:#c084fc; --legendary:#fbbf24;
   }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    font-family: 'Nunito', sans-serif;
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px 16px 40px;
-    background-image: radial-gradient(ellipse at 20% 20%, rgba(0,200,255,0.06) 0%, transparent 60%),
-                      radial-gradient(ellipse at 80% 80%, rgba(245,166,35,0.05) 0%, transparent 60%);
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg); font-family:'Nunito',sans-serif; color:var(--text);
+    min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    padding:24px 16px 48px;
+    background-image:radial-gradient(ellipse at 20% 20%,rgba(0,200,255,0.06) 0%,transparent 60%),
+                     radial-gradient(ellipse at 80% 80%,rgba(245,166,35,0.05) 0%,transparent 60%);
   }
-
-  header {
-    text-align: center;
-    margin-bottom: 28px;
+  header{text-align:center;margin-bottom:28px;}
+  .logo{
+    font-family:'Fredoka One',cursive;font-size:32px;
+    background:linear-gradient(135deg,var(--accent),var(--gold));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
   }
-
-  .logo {
-    font-family: 'Fredoka One', cursive;
-    font-size: 32px;
-    background: linear-gradient(135deg, var(--accent), var(--gold));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    letter-spacing: 1px;
+  .subtitle{font-size:13px;color:var(--text2);margin-top:4px;font-weight:600;}
+  .upload-zone{
+    width:100%;max-width:460px;background:var(--card);
+    border:2px dashed rgba(0,200,255,0.3);border-radius:20px;
+    padding:36px 24px;text-align:center;cursor:pointer;
+    transition:all 0.25s;position:relative;overflow:hidden;
   }
-
-  .subtitle {
-    font-size: 13px;
-    color: var(--text2);
-    margin-top: 4px;
-    font-weight: 600;
+  .upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(0,200,255,0.06);}
+  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+  .upload-icon{font-size:48px;margin-bottom:12px;display:block;}
+  .upload-title{font-family:'Fredoka One',cursive;font-size:18px;color:var(--accent);margin-bottom:6px;}
+  .upload-hint{font-size:12px;color:var(--text2);line-height:1.6;}
+  .preview-wrap{
+    display:none;width:100%;max-width:460px;margin-top:16px;
+    border-radius:16px;overflow:hidden;border:2px solid var(--border);position:relative;
   }
-
-  /* Upload Zone */
-  .upload-zone {
-    width: 100%;
-    max-width: 460px;
-    background: var(--card);
-    border: 2px dashed rgba(0,200,255,0.3);
-    border-radius: 20px;
-    padding: 36px 24px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.25s;
-    position: relative;
-    overflow: hidden;
+  .preview-wrap img{width:100%;max-height:280px;object-fit:cover;display:block;}
+  .preview-badge{
+    position:absolute;top:10px;right:10px;background:rgba(0,200,255,0.9);
+    color:#000;font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;
   }
-
-  .upload-zone:hover, .upload-zone.dragover {
-    border-color: var(--accent);
-    background: rgba(0,200,255,0.06);
+  .btn-scan{
+    display:none;margin-top:18px;width:100%;max-width:460px;padding:16px;
+    background:linear-gradient(135deg,var(--accent),#0080a0);border:none;border-radius:14px;
+    color:#000;font-family:'Fredoka One',cursive;font-size:18px;letter-spacing:1px;
+    cursor:pointer;transition:all 0.2s;box-shadow:0 4px 20px rgba(0,200,255,0.3);
   }
-
-  .upload-zone input[type=file] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer;
+  .btn-scan:hover{transform:translateY(-2px);}
+  .btn-scan:disabled{opacity:0.5;cursor:not-allowed;transform:none;}
+  .loader{display:none;flex-direction:column;align-items:center;gap:12px;margin-top:24px;}
+  .spinner{width:44px;height:44px;border:3px solid rgba(0,200,255,0.2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .progress-bar-wrap{width:200px;height:6px;background:rgba(255,255,255,0.1);border-radius:10px;overflow:hidden;}
+  .progress-bar{height:100%;background:var(--accent);border-radius:10px;width:0%;transition:width 0.3s;}
+  .loader-text{font-size:13px;color:var(--text2);font-weight:700;animation:pulse 1.5s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .result-card{
+    display:none;width:100%;max-width:460px;margin-top:24px;
+    background:var(--card);border-radius:20px;overflow:hidden;
+    box-shadow:var(--shadow);border:1px solid var(--border);animation:slideUp 0.4s ease;
   }
-
-  .upload-icon {
-    font-size: 48px;
-    margin-bottom: 12px;
-    display: block;
+  @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  .result-header{
+    background:linear-gradient(135deg,#1a3a4a,#1a2535);
+    padding:18px 20px;border-bottom:1px solid var(--border);text-align:center;
   }
-
-  .upload-title {
-    font-family: 'Fredoka One', cursive;
-    font-size: 18px;
-    color: var(--accent);
-    margin-bottom: 6px;
+  .result-title{font-family:'Fredoka One',cursive;font-size:20px;color:var(--gold);}
+  .result-username{font-size:14px;color:var(--accent);font-weight:700;margin-top:4px;}
+  .result-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;}
+  .stat-row{display:flex;gap:10px;}
+  .stat-box{flex:1;background:var(--card2);border-radius:12px;padding:12px 10px;text-align:center;border:1px solid var(--border);}
+  .stat-label{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--text2);margin-bottom:4px;}
+  .stat-input{
+    font-family:'Fredoka One',cursive;font-size:20px;width:100%;
+    background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.15);
+    color:inherit;text-align:center;outline:none;padding:2px 0;
   }
-
-  .upload-hint {
-    font-size: 12px;
-    color: var(--text2);
+  .stat-input.ab{color:var(--gold);}
+  .stat-input.gems{color:var(--accent);}
+  .stat-input.boost{color:#f472b6;}
+  .stat-input:focus{border-bottom-color:var(--accent);}
+  .parcelas-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .parcela-box{background:var(--card2);border-radius:12px;padding:12px;text-align:center;border:1px solid var(--border);}
+  .parcela-label{font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .parcela-label.common{color:var(--common);}
+  .parcela-label.rare{color:var(--rare);}
+  .parcela-label.epic{color:var(--epic);}
+  .parcela-label.legendary{color:var(--legendary);}
+  .parcela-input{
+    font-family:'Fredoka One',cursive;font-size:24px;width:100%;
+    background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.15);
+    color:inherit;text-align:center;outline:none;padding:2px 0;
   }
-
-  /* Preview */
-  .preview-wrap {
-    width: 100%;
-    max-width: 460px;
-    margin-top: 16px;
-    display: none;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 2px solid var(--border);
-    position: relative;
+  .parcela-input.common{color:var(--common);}
+  .parcela-input.rare{color:var(--rare);}
+  .parcela-input.epic{color:var(--epic);}
+  .parcela-input.legendary{color:var(--legendary);}
+  .parcela-input:focus{border-bottom-color:var(--accent);}
+  .edit-hint{font-size:11px;color:var(--text2);text-align:center;padding:4px;font-style:italic;}
+  .btn-save{
+    width:100%;padding:14px;background:linear-gradient(135deg,#16a34a,#065f46);
+    border:none;border-radius:12px;color:#fff;font-family:'Fredoka One',cursive;
+    font-size:16px;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 16px rgba(22,163,74,0.3);
   }
-
-  .preview-wrap img {
-    width: 100%;
-    max-height: 280px;
-    object-fit: cover;
-    display: block;
+  .btn-save:hover{transform:translateY(-2px);}
+  .btn-new{
+    display:none;width:100%;max-width:460px;margin-top:12px;padding:12px;
+    background:transparent;border:1px solid var(--border);border-radius:12px;
+    color:var(--text2);font-family:'Nunito',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:all 0.2s;
   }
-
-  .preview-badge {
-    position: absolute;
-    top: 10px; right: 10px;
-    background: rgba(0,200,255,0.9);
-    color: #000;
-    font-size: 11px;
-    font-weight: 800;
-    padding: 3px 10px;
-    border-radius: 20px;
+  .btn-new:hover{border-color:var(--accent);color:var(--accent);}
+  .error-box{
+    display:none;width:100%;max-width:460px;margin-top:16px;
+    background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);
+    border-radius:12px;padding:14px 18px;font-size:13px;color:#fca5a5;text-align:center;font-weight:700;
   }
-
-  /* Scan Button */
-  .btn-scan {
-    margin-top: 18px;
-    width: 100%;
-    max-width: 460px;
-    padding: 16px;
-    background: linear-gradient(135deg, var(--accent), #0080a0);
-    border: none;
-    border-radius: 14px;
-    color: #000;
-    font-family: 'Fredoka One', cursive;
-    font-size: 18px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: none;
-    box-shadow: 0 4px 20px rgba(0,200,255,0.3);
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:#16a34a;color:#fff;font-weight:800;font-size:14px;
+    padding:12px 24px;border-radius:50px;transition:transform 0.3s;z-index:999;pointer-events:none;
   }
-
-  .btn-scan:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,200,255,0.4); }
-  .btn-scan:active { transform: translateY(0); }
-  .btn-scan:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  /* Loader */
-  .loader {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    margin-top: 24px;
+  .toast.show{transform:translateX(-50%) translateY(0);}
+  canvas{display:none;}
+  .btn-back{
+    display:block;margin:0 auto 14px;padding:10px 24px;
+    background:transparent;border:2px solid var(--border);border-radius:12px;
+    color:var(--text2);font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;
+    cursor:pointer;transition:all 0.2s;letter-spacing:1px;
   }
-
-  .spinner {
-    width: 44px; height: 44px;
-    border: 3px solid rgba(0,200,255,0.2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+  .btn-back:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-cargar{
+    width:100%;padding:14px;margin-top:8px;
+    background:linear-gradient(135deg,#F5A623,#e8940f);border:none;border-radius:14px;
+    color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:15px;
+    cursor:pointer;transition:all 0.2s;letter-spacing:1px;
   }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .loader-text {
-    font-size: 13px;
-    color: var(--text2);
-    font-weight: 700;
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-  /* Result Card */
-  .result-card {
-    display: none;
-    width: 100%;
-    max-width: 460px;
-    margin-top: 24px;
-    background: var(--card);
-    border-radius: 20px;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    animation: slideUp 0.4s ease;
-  }
-
-  @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-
-  .result-header {
-    background: linear-gradient(135deg, #1a3a4a, #1a2535);
-    padding: 18px 20px;
-    border-bottom: 1px solid var(--border);
-    text-align: center;
-  }
-
-  .result-title {
-    font-family: 'Fredoka One', cursive;
-    font-size: 22px;
-    color: var(--gold);
-    letter-spacing: 1px;
-  }
-
-  .result-username {
-    font-size: 14px;
-    color: var(--accent);
-    font-weight: 700;
-    margin-top: 4px;
-  }
-
-  .result-body {
-    padding: 18px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  /* Row stats */
-  .stat-row {
-    display: flex;
-    gap: 10px;
-  }
-
-  .stat-box {
-    flex: 1;
-    background: var(--card2);
-    border-radius: 12px;
-    padding: 12px 14px;
-    text-align: center;
-    border: 1px solid var(--border);
-  }
-
-  .stat-label {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--text2);
-    margin-bottom: 4px;
-  }
-
-  .stat-value {
-    font-family: 'Fredoka One', cursive;
-    font-size: 22px;
-  }
-
-  .stat-value.ab    { color: var(--gold); }
-  .stat-value.gems  { color: var(--accent); }
-  .stat-value.boost { color: #f472b6; }
-
-  /* Parcelas grid */
-  .parcelas-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .parcela-box {
-    background: var(--card2);
-    border-radius: 12px;
-    padding: 12px;
-    text-align: center;
-    border: 1px solid var(--border);
-  }
-
-  .parcela-label {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .parcela-label.common    { color: var(--common); }
-  .parcela-label.rare      { color: var(--rare); }
-  .parcela-label.epic      { color: var(--epic); }
-  .parcela-label.legendary { color: var(--legendary); }
-
-  .parcela-value {
-    font-family: 'Fredoka One', cursive;
-    font-size: 26px;
-  }
-
-  .parcela-value.common    { color: var(--common); }
-  .parcela-value.rare      { color: var(--rare); }
-  .parcela-value.epic      { color: var(--epic); }
-  .parcela-value.legendary { color: var(--legendary); }
-
-  /* Save button */
-  .btn-save {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #16a34a, #065f46);
-    border: none;
-    border-radius: 12px;
-    color: #fff;
-    font-family: 'Fredoka One', cursive;
-    font-size: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-top: 4px;
-    box-shadow: 0 4px 16px rgba(22,163,74,0.3);
-  }
-
-  .btn-save:hover { transform: translateY(-2px); }
-
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: #16a34a;
-    color: #fff;
-    font-weight: 800;
-    font-size: 14px;
-    padding: 12px 24px;
-    border-radius: 50px;
-    transition: transform 0.3s ease;
-    z-index: 999;
-    pointer-events: none;
-  }
-
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  /* Error */
-  .error-box {
-    display: none;
-    width: 100%;
-    max-width: 460px;
-    margin-top: 16px;
-    background: rgba(239,68,68,0.1);
-    border: 1px solid rgba(239,68,68,0.3);
-    border-radius: 12px;
-    padding: 14px 18px;
-    font-size: 13px;
-    color: #fca5a5;
-    text-align: center;
-    font-weight: 700;
-  }
-
-  /* New scan */
-  .btn-new {
-    width: 100%;
-    max-width: 460px;
-    margin-top: 12px;
-    padding: 12px;
-    background: transparent;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--text2);
-    font-family: 'Nunito', sans-serif;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: none;
-  }
-
-  .btn-new:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-cargar:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(245,166,35,0.4);}
 </style>
 </head>
 <body>
@@ -379,8 +152,8 @@
   <div class="logo">🌎 Atlas Scanner</div>
   <div class="subtitle">Escanea tu perfil de Atlas Earth</div>
 </header>
+<button class="btn-back" onclick="volverAlIndex()">← Volver al inicio</button>
 
-<!-- Upload Zone -->
 <div class="upload-zone" id="uploadZone">
   <input type="file" id="fileInput" accept="image/*">
   <span class="upload-icon">📸</span>
@@ -388,25 +161,21 @@
   <div class="upload-hint">Toca aquí o arrastra la imagen<br>Abre tu perfil en Atlas Earth y toma screenshot</div>
 </div>
 
-<!-- Preview -->
 <div class="preview-wrap" id="previewWrap">
   <img id="previewImg" src="" alt="preview">
   <span class="preview-badge">✓ Lista</span>
 </div>
 
-<!-- Scan Button -->
-<button class="btn-scan" id="btnScan" onclick="scanImage()">🔍 ESCANEAR PERFIL</button>
+<button class="btn-scan" id="btnScan" onclick="startScan()">🔍 ESCANEAR PERFIL</button>
 
-<!-- Loader -->
 <div class="loader" id="loader">
   <div class="spinner"></div>
-  <div class="loader-text">Analizando imagen...</div>
+  <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="loader-text" id="loaderText">Procesando imagen...</div>
 </div>
 
-<!-- Error -->
 <div class="error-box" id="errorBox"></div>
 
-<!-- Result -->
 <div class="result-card" id="resultCard">
   <div class="result-header">
     <div class="result-title" id="resTitle">—</div>
@@ -415,49 +184,39 @@
   <div class="result-body">
     <div class="stat-row">
       <div class="stat-box">
-        <div class="stat-label">💰 Atlas Bucks</div>
-        <div class="stat-value ab" id="resAB">—</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">💎 Diamantes</div>
-        <div class="stat-value gems" id="resDiamonds">—</div>
-      </div>
-      <div class="stat-box">
         <div class="stat-label">📈 Aumento</div>
-        <div class="stat-value boost" id="resBoost">—</div>
+        <input class="stat-input boost" id="resBoost" type="text" value="">
       </div>
     </div>
-
     <div class="parcelas-grid">
       <div class="parcela-box">
         <div class="parcela-label common">Común</div>
-        <div class="parcela-value common" id="resCommon">—</div>
+        <input class="parcela-input common" id="resCommon" type="text" value="">
       </div>
       <div class="parcela-box">
         <div class="parcela-label rare">Raro</div>
-        <div class="parcela-value rare" id="resRare">—</div>
+        <input class="parcela-input rare" id="resRare" type="text" value="">
       </div>
       <div class="parcela-box">
         <div class="parcela-label epic">Épico</div>
-        <div class="parcela-value epic" id="resEpic">—</div>
+        <input class="parcela-input epic" id="resEpic" type="text" value="">
       </div>
       <div class="parcela-box">
         <div class="parcela-label legendary">Legendario</div>
-        <div class="parcela-value legendary" id="resLegendary">—</div>
+        <input class="parcela-input legendary" id="resLegendary" type="text" value="">
       </div>
     </div>
-
-    <button class="btn-save" onclick="saveToLocalStorage()">💾 GUARDAR EN LA APP</button>
+    <div class="edit-hint">✏️ Toca cualquier valor para corregirlo</div>
+    <button class="btn-cargar" onclick="cargarEnApp()">✅ CARGAR EN LA APP</button>
   </div>
 </div>
 
 <button class="btn-new" id="btnNew" onclick="resetScanner()">↩ Escanear otra imagen</button>
-
 <div class="toast" id="toast">✅ Datos guardados correctamente</div>
+<canvas id="canvas"></canvas>
 
 <script>
-  let imageBase64 = null;
-  let extractedData = null;
+  let imageFile = null;
 
   const fileInput   = document.getElementById('fileInput');
   const uploadZone  = document.getElementById('uploadZone');
@@ -468,148 +227,399 @@
   const resultCard  = document.getElementById('resultCard');
   const errorBox    = document.getElementById('errorBox');
   const btnNew      = document.getElementById('btnNew');
+  const progressBar = document.getElementById('progressBar');
+  const loaderText  = document.getElementById('loaderText');
 
-  // Drag & drop
   uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
   uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
-  uploadZone.addEventListener('drop', e => {
-    e.preventDefault();
-    uploadZone.classList.remove('dragover');
-    const file = e.dataTransfer.files[0];
-    if (file) handleFile(file);
-  });
-
-  fileInput.addEventListener('change', e => {
-    if (e.target.files[0]) handleFile(e.target.files[0]);
-  });
+  uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+  fileInput.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
 
   function handleFile(file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      imageBase64 = e.target.result.split(',')[1];
-      previewImg.src = e.target.result;
-      previewWrap.style.display = 'block';
-      btnScan.style.display = 'block';
-      errorBox.style.display = 'none';
-      resultCard.style.display = 'none';
-      btnNew.style.display = 'none';
-    };
-    reader.readAsDataURL(file);
+    imageFile = file;
+    previewImg.src = URL.createObjectURL(file);
+    previewWrap.style.display = 'block';
+    btnScan.style.display = 'block';
+    errorBox.style.display = 'none';
+    resultCard.style.display = 'none';
+    btnNew.style.display = 'none';
   }
 
-  async function scanImage() {
-    if (!imageBase64) return;
+  // ── Color extraction helpers ─────────────────────────────────────────────
+  const COLOR_PROFILES = {
+    comun:       { hMin:100, hMax:165, sMin:45, lMin:45, lMax:92 },
+    raro:        { hMin:195, hMax:240, sMin:45, lMin:45, lMax:92 },
+    epico:       { hMin:260, hMax:300, sMin:55, lMin:45, lMax:78 },
+    legendario:  { hMin:28,  hMax:58,  sMin:55, lMin:42, lMax:88 },
+    ab:          { hMin:100, hMax:165, sMin:40, lMin:40, lMax:92 },
+    gems:        { hMin:170, hMax:215, sMin:45, lMin:50, lMax:96 },
+  };
 
+  function rgbToHsl(r,g,b){
+    r/=255;g/=255;b/=255;
+    const max=Math.max(r,g,b),min=Math.min(r,g,b);
+    let h,s,l=(max+min)/2;
+    if(max===min){h=s=0;}
+    else{
+      const d=max-min;
+      s=l>0.5?d/(2-max-min):d/(max+min);
+      switch(max){
+        case r:h=((g-b)/d+(g<b?6:0))/6;break;
+        case g:h=((b-r)/d+2)/6;break;
+        case b:h=((r-g)/d+4)/6;break;
+      }
+    }
+    return[h*360,s*100,l*100];
+  }
+
+  function matchesColor(r,g,b,p){
+    const[h,s,l]=rgbToHsl(r,g,b);
+    return h>=p.hMin&&h<=p.hMax&&s>=p.sMin&&l>=p.lMin&&l<=p.lMax;
+  }
+
+  function filterBrightOnDark(srcCanvas) {
+    // Extracts bright/white pixels on dark background (for AB and diamonds numbers)
+    const{width:w,height:h}=srcCanvas;
+    const dst=document.createElement('canvas');
+    dst.width=w;dst.height=h;
+    const sid=srcCanvas.getContext('2d').getImageData(0,0,w,h);
+    const dctx=dst.getContext('2d');
+    const out=dctx.createImageData(w,h);
+    for(let i=0;i<sid.data.length;i+=4){
+      const r=sid.data[i],g=sid.data[i+1],b=sid.data[i+2];
+      // Keep pixels where ANY channel is bright (catches colored numbers: cyan, orange, white)
+      const v = (r > 150 || g > 150 || b > 150) ? 0 : 255;
+      out.data[i]=out.data[i+1]=out.data[i+2]=v;out.data[i+3]=255;
+    }
+    dctx.putImageData(out,0,0);
+    return dst;
+  }
+
+  function filterDarkOnLight(srcCanvas) {
+    // Extracts dark pixels on light background (AB and diamonds: dark numbers on beige box)
+    const{width:w,height:h}=srcCanvas;
+    const dst=document.createElement('canvas');
+    dst.width=w;dst.height=h;
+    const sid=srcCanvas.getContext('2d').getImageData(0,0,w,h);
+    const dctx=dst.getContext('2d');
+    const out=dctx.createImageData(w,h);
+    for(let i=0;i<sid.data.length;i+=4){
+      const r=sid.data[i],g=sid.data[i+1],b=sid.data[i+2];
+      const brightness=(r+g+b)/3;
+      // Dark pixels become black, light pixels become white
+      const v = brightness < 80 ? 0 : 255;
+      out.data[i]=out.data[i+1]=out.data[i+2]=v;out.data[i+3]=255;
+    }
+    dctx.putImageData(out,0,0);
+    return dst;
+  }
+
+  function loadImageToCanvas(file){
+    return new Promise(resolve=>{
+      const img=new Image();
+      img.onload=()=>{
+        const scale=Math.max(1,1800/img.width);
+        const c=document.createElement('canvas');
+        c.width=img.width*scale;c.height=img.height*scale;
+        c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+        resolve(c);
+      };
+      img.src=URL.createObjectURL(file);
+    });
+  }
+
+  function filterByColor(srcCanvas,profile){
+    const{width:w,height:h}=srcCanvas;
+    const dst=document.createElement('canvas');
+    dst.width=w;dst.height=h;
+    const sid=srcCanvas.getContext('2d').getImageData(0,0,w,h);
+    const dctx=dst.getContext('2d');
+    const out=dctx.createImageData(w,h);
+    for(let i=0;i<sid.data.length;i+=4){
+      const r=sid.data[i],g=sid.data[i+1],b=sid.data[i+2];
+      const v=matchesColor(r,g,b,profile)?0:255;
+      out.data[i]=out.data[i+1]=out.data[i+2]=v;out.data[i+3]=255;
+    }
+    dctx.putImageData(out,0,0);
+    return dst;
+  }
+
+  function cropVertical(src,t,b){
+    const w=src.width,h=src.height;
+    const y0=Math.floor(h*t),y1=Math.floor(h*b);
+    const dst=document.createElement('canvas');
+    dst.width=w;dst.height=y1-y0;
+    dst.getContext('2d').drawImage(src,0,y0,w,y1-y0,0,0,w,y1-y0);
+    return dst;
+  }
+
+  function cropRegion(src, x0pct, x1pct, y0pct, y1pct) {
+    const w=src.width, h=src.height;
+    const x0=Math.floor(w*x0pct), x1=Math.floor(w*x1pct);
+    const y0=Math.floor(h*y0pct), y1=Math.floor(h*y1pct);
+    const dst=document.createElement('canvas');
+    dst.width=x1-x0; dst.height=y1-y0;
+    dst.getContext('2d').drawImage(src,x0,y0,x1-x0,y1-y0,0,0,x1-x0,y1-y0);
+    return dst;
+  }
+
+  function canvasToBlob(c){return new Promise(r=>c.toBlob(r,'image/png'));}
+
+  async function ocrNumber(canvas){
+    const blob=await canvasToBlob(canvas);
+    const res=await Tesseract.recognize(blob,'eng',{tessedit_char_whitelist:'0123456789'});
+    const raw=res.data.text.replace(/\D/g,'').trim();
+    console.log('color-ocr:',JSON.stringify(res.data.text),'→',raw);
+    return raw||null;
+  }
+
+  async function startScan() {
+    if (!imageFile) return;
     btnScan.disabled = true;
     loader.style.display = 'flex';
     errorBox.style.display = 'none';
     resultCard.style.display = 'none';
-
-    const prompt = `Analiza esta captura de pantalla del juego Atlas Earth y extrae EXACTAMENTE los siguientes datos. Responde SOLO con un objeto JSON sin ningún texto adicional, sin markdown, sin backticks:
-
-{
-  "titulo": "el rango o título del jugador que aparece en letras grandes (ej: GOVERNOR DE YUCATÁN)",
-  "usuario": "el nombre de usuario (ej: AEMX_SOCRAM13)",
-  "atlas_bucks": "número junto al ícono de moneda verde/dorada pequeña (NO el número grande de renta)",
-  "diamantes": "número junto al ícono de diamante 💎",
-  "aumento_pct": "porcentaje de aumento de insignias (solo el número, ej: 20)",
-  "comun": "número de parcelas COMÚN en verde",
-  "raro": "número de parcelas RARO en azul",
-  "epico": "número de parcelas ÉPICO en morado",
-  "legendario": "número de parcelas LEGENDARIO en dorado/naranja"
-}
-
-Si no puedes leer algún valor con certeza, usa null. No inventes valores.`;
+    progressBar.style.width = '0%';
 
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{
-            role: 'user',
-            content: [
-              { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageBase64 } },
-              { type: 'text', text: prompt }
-            ]
-          }]
-        })
+      loaderText.textContent = 'Cargando imagen...';
+      const srcCanvas = await loadImageToCanvas(imageFile);
+      progressBar.style.width = '8%';
+
+      // Full OCR for text fields
+      loaderText.textContent = 'Leyendo texto...';
+      const fullBlob = await canvasToBlob(srcCanvas);
+      const fullResult = await Tesseract.recognize(fullBlob, 'spa+eng', {
+        logger: m => { if(m.status==='recognizing text') progressBar.style.width=(8+m.progress*27)+'%'; }
       });
+      const rawText = fullResult.data.text;
+      console.log('=== OCR RAW ===\n', rawText);
+      const parsed = parseAtlasText(rawText);
+      progressBar.style.width = '35%';
 
-      const data = await response.json();
-      const rawText = data.content.map(b => b.text || '').join('').trim();
+      // Color OCR per numeric field
+      const steps = [
+        { key:'comun',       label:'Común',       profile:COLOR_PROFILES.comun,       crop:[0.52,0.88] },
+        { key:'raro',        label:'Raro',         profile:COLOR_PROFILES.raro,        crop:[0.52,0.88] },
+        { key:'epico',       label:'Épico',        profile:COLOR_PROFILES.epico,       crop:[0.52,0.88] },
+        { key:'legendario',  label:'Legendario',   profile:COLOR_PROFILES.legendario,  crop:[0.52,0.88] },
 
-      let parsed;
-      try {
-        const clean = rawText.replace(/```json|```/g, '').trim();
-        parsed = JSON.parse(clean);
-      } catch {
-        throw new Error('No se pudo leer la imagen. Asegúrate de que sea una captura de perfil de Atlas Earth.');
+      ];
+
+      for(let si=0;si<steps.length;si++){
+        const{key,label,profile,crop}=steps[si];
+        loaderText.textContent=`Leyendo ${label}...`;
+        let cropped;
+        if(steps[si].region) {
+          const[rx0,rx1]=steps[si].region;
+          cropped=cropRegion(srcCanvas,rx0,rx1,crop[0],crop[1]);
+        } else {
+          cropped=cropVertical(srcCanvas,crop[0],crop[1]);
+        }
+        let filtered;
+        if(profile==='bright')      filtered=filterBrightOnDark(cropped);
+        else if(profile==='dark')   filtered=filterDarkOnLight(cropped);
+        else if(profile)            filtered=filterByColor(cropped,profile);
+        else                        filtered=cropped;
+        const num=await ocrNumber(filtered);
+        if(num) parsed[key]=num;
+        progressBar.style.width=(35+((si+1)/steps.length)*60)+'%';
       }
 
-      extractedData = parsed;
-      renderResult(parsed);
+      progressBar.style.width='100%';
+      loaderText.textContent='¡Listo!';
 
-    } catch (err) {
-      errorBox.textContent = err.message || 'Error al analizar la imagen. Intenta de nuevo.';
+      setTimeout(()=>{
+        renderResult(parsed);
+        loader.style.display='none';
+        btnScan.disabled=false;
+      },300);
+
+    } catch(err) {
+      console.error(err);
+      errorBox.textContent = 'Error al procesar la imagen. Intenta con una captura más nítida.';
       errorBox.style.display = 'block';
-    } finally {
       loader.style.display = 'none';
       btnScan.disabled = false;
     }
   }
 
+  function extractAbAndDiamonds(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const result = { ab: null, gems: null };
+    const topLines = lines.slice(0, 8).join(' ');
+    const cleanTop = topLines.replace(/\d+H\s*\d+M\s*\d+S/gi, '').replace(/\$[\d.]+/g, '');
+    const nums = [...cleanTop.matchAll(/\b(\d{1,4})\b/g)]
+      .map(m => m[1]).filter(n => +n > 0 && +n <= 9999);
+    const unique = [...new Set(nums)];
+    if (unique[0]) result.ab   = unique[0];
+    if (unique[1]) result.gems = unique[1];
+    console.log('AB/Diamonds candidates:', unique);
+    return result;
+  }
+
+  function parseAtlasText(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    const full  = text.toUpperCase();
+
+    const data = { titulo:null, usuario:null, aumento_pct:null, comun:null, raro:null, epico:null, legendario:null };
+
+    // TÍTULO
+    const titleKW = ['GOVERNOR','MAYOR','SHERIFF','PRESIDENT','LANDLORD','PIONEER','SETTLER','TYCOON','MOGUL','BARON','MAGNATE','DUKE','KING','EMPEROR','INVESTOR','DEVELOPER'];
+    for (const line of lines) {
+      if (titleKW.some(k => line.toUpperCase().includes(k)) && line.length > 4) {
+        data.titulo = line.replace(/[^\w\s\-ÁÉÍÓÚÑ]/gi,'').trim();
+        break;
+      }
+    }
+
+    // USUARIO: buscar línea con guión bajo o patrón LETRAS+NÚMEROS típico de Atlas Earth
+    // Debe estar cerca del título, ignorar labels del UI
+    const uiWords = /INSIGNIA|PASAPORT|PARCELA|COMUN|RARO|EPIC|LEGEND|TOTAL|AUMENTO|POSEIDA|TERREN|COMPRA|INVENT|TIENDA|EVENTO|ATLAS|BUCKS|DIAMAN|INFORMA|FEED|MAYOR|GOVERNOR|SHERIFF|PIONEER/i;
+    for (const line of lines) {
+      const clean = line.replace(/[^a-zA-Z0-9_]/g,'');
+      if (clean.includes('_') && clean.length >= 4 && clean.length <= 24 && !uiWords.test(clean)) {
+        data.usuario = clean; break;
+      }
+    }
+    // fallback: LETRAS+NÚMEROS sin guión bajo
+    if (!data.usuario) {
+      for (const line of lines) {
+        const clean = line.replace(/[^a-zA-Z0-9_]/g,'');
+        if (/^[A-Z]{2,}[0-9]{1,4}$/i.test(clean) && !uiWords.test(clean) && clean.length <= 20) {
+          data.usuario = clean; break;
+        }
+      }
+    }
+
+    // % AUMENTO — buscar número antes de % en contexto de aumento/insignias
+    const boostMatch = full.match(/INSIGNIAS[:\s]+(\d+)\s*%/)
+                    || full.match(/(\d+)\s*%\s*DE\s*AUMENTO/)
+                    || full.match(/AUMENTO[^0-9]{0,10}(\d+)\s*%/)
+                    || full.match(/(\d+)\s*%[\s\S]{0,20}AUMENTO/);
+    if (boostMatch) data.aumento_pct = boostMatch[1];
+    // fallback: buscar línea con % sola
+    if (!data.aumento_pct) {
+      for (const line of lines) {
+        const m = line.match(/^(\d+)\s*%$/);
+        if (m) { data.aumento_pct = m[1]; break; }
+      }
+    }
+
+    // HELPER: dado un índice de línea, buscar primer número en líneas siguientes (hasta 3)
+    function numAfter(i) {
+      for (let j = i+1; j <= Math.min(i+3, lines.length-1); j++) {
+        const m = lines[j].match(/\d+/);
+        if (m) return m[0];
+      }
+      return null;
+    }
+    // HELPER: dado un índice, buscar número en líneas anteriores (hasta 3)
+    function numBefore(i) {
+      for (let j = i-1; j >= Math.max(i-3, 0); j--) {
+        const m = lines[j].match(/\d+/);
+        if (m) return m[0];
+      }
+      return null;
+    }
+    // HELPER: número en la misma línea
+    function numInLine(i) {
+      const m = lines[i].match(/\d+/);
+      return m ? m[0] : null;
+    }
+
+    // PARCELAS — el número puede estar ANTES (encima) o DESPUÉS del label
+    for (let i = 0; i < lines.length; i++) {
+      const up = lines[i].toUpperCase();
+
+      if (!data.comun && up.match(/^COM[UÚ]N$|^COMUN$|^COM[UÚ]N\s*$/) ) {
+        data.comun = numBefore(i) || numAfter(i);
+      }
+      if (!data.raro && up.match(/^RARO$|^RARE$/) ) {
+        data.raro = numBefore(i) || numAfter(i);
+      }
+      if (!data.epico && up.match(/^[ÉE]PICO$|^EPIC$/) ) {
+        data.epico = numBefore(i) || numAfter(i);
+      }
+      if (!data.legendario && up.match(/^LEGENDARIO$|^LEGENDARY$/) ) {
+        data.legendario = numBefore(i) || numAfter(i);
+      }
+    }
+
+    // Fallback parcelas: buscar con contains si no se encontró con exact match
+    for (let i = 0; i < lines.length; i++) {
+      const up = lines[i].toUpperCase();
+      const near = [lines[i-1]||'', lines[i], lines[i+1]||''].join(' ');
+      const nums = (near.match(/\d+/g)||[]).filter(n => +n > 0 && +n < 99999);
+      const best = nums.sort((a,b)=>+b-+a)[0] || null;
+
+      if (!data.comun     && up.includes('COM')  && !up.includes('COMPRA')) data.comun     = best;
+      if (!data.raro      && up.includes('RARO'))                           data.raro      = best;
+      if (!data.epico     && (up.includes('EPIC')||up.includes('ÉPICO')))   data.epico     = best;
+      if (!data.legendario && up.includes('LEGEND'))                        data.legendario= best;
+    }
+
+    return data;
+  }
+
   function renderResult(d) {
-    document.getElementById('resTitle').textContent    = d.titulo    || '—';
-    document.getElementById('resUser').textContent     = d.usuario   || '—';
-    document.getElementById('resAB').textContent       = d.atlas_bucks ?? '—';
-    document.getElementById('resDiamonds').textContent = d.diamantes ?? '—';
-    document.getElementById('resBoost').textContent    = d.aumento_pct != null ? d.aumento_pct + '%' : '—';
-    document.getElementById('resCommon').textContent   = d.comun      ?? '—';
-    document.getElementById('resRare').textContent     = d.raro       ?? '—';
-    document.getElementById('resEpic').textContent     = d.epico      ?? '—';
-    document.getElementById('resLegendary').textContent = d.legendario ?? '—';
+    document.getElementById('resTitle').textContent = d.titulo  || 'No detectado';
+    document.getElementById('resUser').textContent  = d.usuario || 'No detectado';
+
+    document.getElementById('resBoost').value       = d.aumento_pct  ? d.aumento_pct + '%' : '';
+    document.getElementById('resCommon').value      = d.comun        || '';
+    document.getElementById('resRare').value        = d.raro         || '';
+    document.getElementById('resEpic').value        = d.epico        || '';
+    document.getElementById('resLegendary').value   = d.legendario   || '';
 
     resultCard.style.display = 'block';
     btnNew.style.display = 'block';
     btnScan.style.display = 'none';
-    resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    resultCard.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  function pctToInsignias(pct) {
+    const p = parseFloat(pct);
+    if (isNaN(p) || p <= 0) return 0;
+    if (p <= 5)  return 1;   // 1–10 insignias = 5%
+    if (p <= 10) return 11;  // 11–30 = 10%
+    if (p <= 15) return 31;  // 31–60 = 15%
+    if (p <= 20) return 61;  // 61–100 = 20%
+    return 101;              // 101+ = 25%
+  }
+
+  function cargarEnApp() {
+    const pct = document.getElementById('resBoost').value.replace('%','').trim();
+    const toSave = {
+      comun:      document.getElementById('resCommon').value,
+      raro:       document.getElementById('resRare').value,
+      epico:      document.getElementById('resEpic').value,
+      legendario: document.getElementById('resLegendary').value,
+      badges:     pctToInsignias(pct),
+      scanned_at: new Date().toISOString()
+    };
+    localStorage.setItem('atlas-scanner-data', JSON.stringify(toSave));
+    volverAlIndex();
+  }
+
+  function volverAlIndex() {
+    window.location.href = 'index.html';
   }
 
   function saveToLocalStorage() {
-    if (!extractedData) return;
-
-    const toSave = {
-      titulo:      extractedData.titulo      || '',
-      usuario:     extractedData.usuario     || '',
-      atlas_bucks: extractedData.atlas_bucks ?? '',
-      diamantes:   extractedData.diamantes   ?? '',
-      aumento_pct: extractedData.aumento_pct ?? '',
-      comun:       extractedData.comun       ?? '',
-      raro:        extractedData.raro        ?? '',
-      epico:       extractedData.epico       ?? '',
-      legendario:  extractedData.legendario  ?? '',
-      scanned_at:  new Date().toISOString()
-    };
-
-    localStorage.setItem('atlas-scanner-data', JSON.stringify(toSave));
-
-    const toast = document.getElementById('toast');
-    toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 2500);
+    cargarEnApp();
   }
 
   function resetScanner() {
-    imageBase64 = null;
-    extractedData = null;
+    imageFile = null;
     fileInput.value = '';
     previewWrap.style.display = 'none';
     btnScan.style.display = 'none';
+    btnScan.disabled = false;
     resultCard.style.display = 'none';
     btnNew.style.display = 'none';
     errorBox.style.display = 'none';
+    progressBar.style.width = '0%';
   }
 </script>
 </body>

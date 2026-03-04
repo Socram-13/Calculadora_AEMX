@@ -2844,9 +2844,19 @@
 
   <div class="grid">
     <div class="card">
-      <div class="card-title">
-        <span class="dot" style="background:#94a3b8;box-shadow:0 0 6px #94a3b8"></span>
-        Parcelas
+      <div class="card-title" style="justify-content:space-between;">
+        <span style="display:flex;align-items:center;gap:8px;">
+          <span class="dot" style="background:#94a3b8;box-shadow:0 0 6px #94a3b8"></span>
+          Parcelas
+        </span>
+        <button onclick="abrirScanner()" style="
+          display:flex;align-items:center;gap:5px;
+          background:linear-gradient(135deg,#F5A623,#e8940f);
+          border:none;border-radius:10px;padding:5px 12px;
+          font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;
+          color:#fff;cursor:pointer;letter-spacing:1px;
+          box-shadow:0 3px 8px rgba(245,166,35,0.4);
+          transition:transform 0.15s;">📷 ESCANEAR</button>
       </div>
 
       <div class="parcel-row common">
@@ -4882,5 +4892,52 @@
 
     window.addEventListener('popstate', () => { if (chatOpen) closeChatWidget(); });
   </script>
+<script>
+  /* ── Scanner bridge: lee datos del scanner al volver ── */
+  (function() {
+    function cargarDatosScanner() {
+      try {
+        const raw = localStorage.getItem('atlas-scanner-data');
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        // Solo cargar si los datos son recientes (menos de 5 minutos)
+        const age = Date.now() - new Date(d.scanned_at).getTime();
+        if (age > 5 * 60 * 1000) return;
+
+        const fields = { common: d.comun, rare: d.raro, epic: d.epico, legendary: d.legendario, badges: d.badges };
+        let cargado = false;
+        for (const [id, val] of Object.entries(fields)) {
+          if (val !== undefined && val !== '' && val !== null) {
+            const el = document.getElementById(id);
+            if (el) { el.value = val; cargado = true; }
+          }
+        }
+        if (cargado) {
+          localStorage.removeItem('atlas-scanner-data');
+          if (typeof calc === 'function') calc();
+          if (typeof window._fbSaveAll === 'function') window._fbSaveAll();
+          // Mostrar notificación
+          const toast = document.createElement('div');
+          toast.textContent = '📷 Datos del scanner cargados';
+          toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 20px;border-radius:12px;font-family:Nunito,sans-serif;font-weight:800;font-size:13px;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.3);';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        }
+      } catch(e) { console.warn('Scanner bridge error:', e); }
+    }
+
+    function abrirScanner() {
+      window.location.href = 'scanner.html';
+    }
+    window.abrirScanner = abrirScanner;
+
+    // Ejecutar al cargar
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', cargarDatosScanner);
+    } else {
+      cargarDatosScanner();
+    }
+  })();
+</script>
 </body>
 </html>
