@@ -2093,6 +2093,53 @@ const authReady = new Promise(resolve => {
   });
 });
 
+// ── Init: esperar sesión de Firebase antes de cualquier cosa ─────────────────
+(async () => {
+  const user = await authReady;
+  currentUser = user;
+
+  if (user) {
+    try {
+      const userRef = ref(database, 'users/' + user.uid);
+      const snap = await get(userRef);
+
+      if (snap.exists()) {
+        const userData = snap.val();
+
+        // Si ya cobró la recompensa → marcar todo
+        if (userData.guiasReward === true) {
+          rewardAlreadyClaimed = true;
+          const allVisited = [1,2,3,4,5,6,7,8,9,10];
+          localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
+          updateUI(allVisited);
+          lockRewardClaimed();
+          return;
+        }
+
+        // Si completó pero aún no cobró → marcar todo y mostrar popup
+        if (userData.guiasCompleted === true) {
+          const allVisited = [1,2,3,4,5,6,7,8,9,10];
+          localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
+          updateUI(allVisited);
+          localStorage.setItem('aemx_popup_seen', 'true');
+          document.getElementById('aura-popup').classList.add('visible');
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('No se pudo verificar estado en Firebase:', e);
+    }
+  }
+
+  // Sin reward ni completed: cargar progreso local
+  const progress = loadProgress();
+  if (progress) {
+    updateUI(progress.visited);
+  } else {
+    updateUI([]);
+  }
+})();
+
 // ── Session management ───────────────────────────────────────────────────────
 // Genera un ID de sesión único por carga de página
 // La sesión se invalida al salir (beforeunload) pero NO en recarga (pagehide con persisted)
@@ -2341,55 +2388,6 @@ window.claimReward = async function() {
   }
 };
 
-// ── Init ─────────────────────────────────────────────────────────────────────
-onAuthStateChanged(auth, async user => {
-  currentUser = user;
-
-  if (user) {
-    try {
-      const userRef = ref(database, 'users/' + user.uid);
-      const snap = await get(userRef);
-
-      if (snap.exists()) {
-        const userData = snap.val();
-
-        // Si ya cobró la recompensa (en cualquier dispositivo)
-        if (userData.guiasReward === true) {
-          rewardAlreadyClaimed = true;
-          const allVisited = [1,2,3,4,5,6,7,8,9,10];
-          localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
-          updateUI(allVisited);
-          lockRewardClaimed();
-          return;
-        }
-
-        // Si ya completó las guías (pero aún no cobró)
-        if (userData.guiasCompleted === true) {
-          const allVisited = [1,2,3,4,5,6,7,8,9,10];
-          localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
-          updateUI(allVisited);
-          localStorage.setItem('aemx_popup_seen', 'true');
-          document.getElementById('aura-popup').classList.add('visible');
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn('No se pudo verificar estado en Firebase:', e);
-    }
-  } else {
-    // user es null: Firebase aún no restauró la sesión, esperar authReady
-    const resolvedUser = await authReady;
-    if (resolvedUser) return; // onAuthStateChanged se volverá a disparar con el usuario real
-  }
-
-  // Sin sesión o sin completar: cargar progreso local
-  const progress = loadProgress();
-  if (progress) {
-    updateUI(progress.visited);
-  } else {
-    updateUI([]);
-  }
-});
 
 // ── goBack ────────────────────────────────────────────────────────────────────
 window.goBack = function() {
