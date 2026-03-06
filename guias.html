@@ -2247,6 +2247,7 @@ async function markGuidesCompleted() {
   if (user) {
     try {
       const userRef = ref(database, 'users/' + user.uid);
+      console.log('[AEMX] Usuario autenticado:', user.uid);
       const snap = await get(userRef);
 
       if (snap.exists()) {
@@ -2354,10 +2355,10 @@ onAuthStateChanged(auth, async user => {
 
         // Si ya cobró la recompensa (en cualquier dispositivo)
         if (userData.guiasReward === true) {
+          console.log('[AEMX] guiasReward=true → marcando todas');
           rewardAlreadyClaimed = true;
-          // Marcar todas las guías y sobreescribir localStorage
           const allVisited = [1,2,3,4,5,6,7,8,9,10];
-          saveProgress(allVisited);
+          localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
           updateUI(allVisited);
           lockRewardClaimed();
           return;
@@ -2365,9 +2366,9 @@ onAuthStateChanged(auth, async user => {
 
         // Si ya completó las guías (pero aún no cobró)
         if (userData.guiasCompleted === true) {
-          // Marcar todas las guías y sobreescribir localStorage
+          console.log('[AEMX] guiasCompleted=true → marcando todas');
           const allVisited = [1,2,3,4,5,6,7,8,9,10];
-          saveProgress(allVisited);
+          localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
           updateUI(allVisited);
           // Mostrar popup de recompensa pendiente
           localStorage.setItem('aemx_popup_seen', 'true');
@@ -2382,6 +2383,7 @@ onAuthStateChanged(auth, async user => {
 
   // Sin Firebase o sin completar: cargar progreso local
   const progress = loadProgress();
+  console.log('[AEMX] Sin completar en Firebase. localStorage visited:', progress ? progress.visited : []);
   if (progress) {
     updateUI(progress.visited);
   } else {
