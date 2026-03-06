@@ -2305,6 +2305,15 @@
           }
         }, 100);
         setTimeout(() => clearInterval(waitCoins), 5000);
+
+        // Cargar medallas compradas desde Firebase
+        const waitMedals = setInterval(() => {
+          if (window._loadOwnedMedals) {
+            clearInterval(waitMedals);
+            window._loadOwnedMedals();
+          }
+        }, 100);
+        setTimeout(() => clearInterval(waitMedals), 5000);
       } catch(e) { console.warn('Firebase sync error:', e); }
     }
 
@@ -4562,6 +4571,24 @@
 
     const _ownedMedals = {};
 
+    /* ── Cargar medallas de shop desde Firebase ─────────────── */
+    window._loadOwnedMedals = async function() {
+      const user = window._fbUser;
+      if (!user) return;
+      const _db  = window._fbDb;
+      const _ref = window._fbRef;
+      const _get = window._fbGet;
+      if (!_db || !_ref || !_get) return;
+      try {
+        const snap = await _get(_ref(_db, `users/${user.uid}/medals/shop`));
+        if (snap.exists()) {
+          const data = snap.val();
+          Object.keys(data).forEach(id => { if (data[id] === true) _ownedMedals[id] = true; });
+          updateMedals();
+        }
+      } catch(e) { console.warn('Error cargando medallas shop:', e); }
+    };
+
     /* ── Leer valores actuales del gamertag ─────────────────── */
     function _getParcelas() {
       return {
@@ -4677,32 +4704,46 @@
     }
 
     /* ── Compra de medallas shop ─────────────────────────────── */
-    function buyMedal(e, btn) {
-      e.stopPropagation(); // no abrir modal al clickear el botón
+    async function buyMedal(e, btn) {
+      e.stopPropagation();
       const badge = btn.closest('.mbadge.m-coins[data-medal-id]');
-      if (!badge) return;
-      const id    = badge.dataset.medalId;
-      const price = Number(badge.dataset.price || 0);
-      if (_ownedMedals[id]) { return; }
-      const coins = _getCoins();
-      if (coins < price) { alert(`❌ Coins insuficientes. Te faltan ${price - coins}.`); return; }
-      if (!confirm(`¿Comprar esta medalla por ${price} coins?`)) return;
-      _ownedMedals[id] = true;
-      updateMedals();
-    }
-
-    document.addEventListener('click', (e) => {
-      const badge = e.target.closest('.mbadge.m-coins[data-medal-id]');
       if (!badge) return;
       const id    = badge.dataset.medalId;
       const price = Number(badge.dataset.price || 0);
       if (_ownedMedals[id]) return;
       const coins = _getCoins();
-      if (coins < price) return;
-      if (!confirm(`¿Comprar esta medalla por ${price} coins?`)) return;
-      _ownedMedals[id] = true;
-      updateMedals();
-    });
+      if (coins < price) { alert(`❌ Coins insuficientes. Te faltan ${price - coins}.`); return; }
+      if (!confirm(`¿Comprar "${id}" por ${price} coins?`)) return;
+
+      const user    = window._fbUser;
+      const _db     = window._fbDb;
+      const _ref    = window._fbRef;
+      const _update = window._fbUpdate;
+
+      if (!user || !_db || !_ref || !_update) {
+        alert('❌ Debes iniciar sesión para comprar medallas.');
+        return;
+      }
+
+      try {
+        btn.disabled = true;
+        btn.textContent = '⏳';
+        const newCoins = coins - price;
+        // Guardar medalla y descontar coins en Firebase atómicamente
+        await _update(_ref(_db, `users/${user.uid}`), {
+          [`medals/shop/${id}`]: true,
+          coins: newCoins
+        });
+        _ownedMedals[id] = true;
+        if (window._coinsUpdateDisplay) window._coinsUpdateDisplay(newCoins);
+        updateMedals();
+      } catch(err) {
+        console.error('Error comprando medalla:', err);
+        alert('❌ Error al procesar la compra. Intenta de nuevo.');
+        btn.disabled = false;
+        btn.textContent = `🪙 ${price}`;
+      }
+    }
 
     /* ── Observar cambios en coins, location, parcelas ──────── */
     const _coinsEl = document.getElementById('coins-display');
