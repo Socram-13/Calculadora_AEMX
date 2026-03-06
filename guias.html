@@ -2355,16 +2355,24 @@ onAuthStateChanged(auth, async user => {
         // Si ya cobró la recompensa (en cualquier dispositivo)
         if (userData.guiasReward === true) {
           rewardAlreadyClaimed = true;
+          // Marcar todas las guías y sobreescribir localStorage
+          const allVisited = [1,2,3,4,5,6,7,8,9,10];
+          saveProgress(allVisited);
+          updateUI(allVisited);
           lockRewardClaimed();
           return;
         }
 
-        // Si ya completó las guías (pero aún no cobró), suprimir popup en futuras cargas
-        // Esto cubre el caso de otro dispositivo donde localStorage está vacío
+        // Si ya completó las guías (pero aún no cobró)
         if (userData.guiasCompleted === true) {
+          // Marcar todas las guías y sobreescribir localStorage
+          const allVisited = [1,2,3,4,5,6,7,8,9,10];
+          saveProgress(allVisited);
+          updateUI(allVisited);
+          // Mostrar popup de recompensa pendiente
           localStorage.setItem('aemx_popup_seen', 'true');
-          // Mostrar popup de recompensa pendiente si aún no fue visto en este dispositivo
           document.getElementById('aura-popup').classList.add('visible');
+          return;
         }
       }
     } catch (e) {
@@ -2372,19 +2380,7 @@ onAuthStateChanged(auth, async user => {
     }
   }
 
-  // Si ya completó todas las guías en Firebase, marcar todas como visitadas
-  if (user) {
-    try {
-      const snap2 = await get(ref(database, 'users/' + user.uid + '/guiasCompleted'));
-      if (snap2.exists() && snap2.val() === true) {
-        const allVisited = [1,2,3,4,5,6,7,8,9,10];
-        updateUI(allVisited);
-        return;
-      }
-    } catch (e) { /* continuar con localStorage */ }
-  }
-
-  // Cargar progreso local de sesión actual
+  // Sin Firebase o sin completar: cargar progreso local
   const progress = loadProgress();
   if (progress) {
     updateUI(progress.visited);
