@@ -2355,7 +2355,6 @@ onAuthStateChanged(auth, async user => {
 
         // Si ya cobró la recompensa (en cualquier dispositivo)
         if (userData.guiasReward === true) {
-          console.log('[AEMX] guiasReward=true → marcando todas');
           rewardAlreadyClaimed = true;
           const allVisited = [1,2,3,4,5,6,7,8,9,10];
           localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
@@ -2366,11 +2365,9 @@ onAuthStateChanged(auth, async user => {
 
         // Si ya completó las guías (pero aún no cobró)
         if (userData.guiasCompleted === true) {
-          console.log('[AEMX] guiasCompleted=true → marcando todas');
           const allVisited = [1,2,3,4,5,6,7,8,9,10];
           localStorage.setItem(LS_KEY, JSON.stringify({ timestamp: Date.now(), visited: allVisited }));
           updateUI(allVisited);
-          // Mostrar popup de recompensa pendiente
           localStorage.setItem('aemx_popup_seen', 'true');
           document.getElementById('aura-popup').classList.add('visible');
           return;
@@ -2379,11 +2376,14 @@ onAuthStateChanged(auth, async user => {
     } catch (e) {
       console.warn('No se pudo verificar estado en Firebase:', e);
     }
+  } else {
+    // user es null: Firebase aún no restauró la sesión, esperar authReady
+    const resolvedUser = await authReady;
+    if (resolvedUser) return; // onAuthStateChanged se volverá a disparar con el usuario real
   }
 
-  // Sin Firebase o sin completar: cargar progreso local
+  // Sin sesión o sin completar: cargar progreso local
   const progress = loadProgress();
-  console.log('[AEMX] Sin completar en Firebase. localStorage visited:', progress ? progress.visited : []);
   if (progress) {
     updateUI(progress.visited);
   } else {
