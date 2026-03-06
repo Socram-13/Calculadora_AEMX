@@ -1073,7 +1073,7 @@
           <div class="aura-popup-badge">MISIÓN COMPLETADA</div>
           <div class="aura-popup-title" id="aura-popup-title">¡LO<br>LOGRASTE!</div>
           <p class="aura-popup-msg" id="aura-popup-msg">Completaste las <strong>10 video-guías AURA</strong>. ¡Recibe tu recompensa de explorador!</p>
-          <div class="aura-popup-coins">🪙 +10 COINS</div>
+          <div class="aura-popup-coins"><img src="coin.png" alt="coin" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin-right:6px;"> +10 COINS</div>
           <button id="btn-claim-reward" onclick="claimReward()">⚡ RECLAMAR RECOMPENSA</button>
         </div>
         <img class="aura-popup-img" src="./aura.png" alt="AURA"/>
@@ -2242,32 +2242,43 @@ function markVisited(num) {
 
 // ── Mark guides completed ─────────────────────────────────────────────────────
 async function markGuidesCompleted() {
-  // Si ya está marcado localmente, solo mostrar popup
-  if (localStorage.getItem('aemx_popup_seen')) return;
-
   const user = currentUser || await authReady;
 
   if (user) {
     try {
-      const completedRef = ref(database, 'users/' + user.uid + '/guiasCompleted');
-      const snap = await get(completedRef);
+      const userRef = ref(database, 'users/' + user.uid);
+      const snap = await get(userRef);
 
-      // Si ya está en Firebase, no mostrar popup
-      if (snap.exists() && snap.val() === true) {
-        localStorage.setItem('aemx_popup_seen', 'true');
-        return;
+      if (snap.exists()) {
+        const userData = snap.val();
+
+        // Si ya cobró en cualquier dispositivo, bloquear completamente
+        if (userData.guiasReward === true) {
+          rewardAlreadyClaimed = true;
+          lockRewardClaimed();
+          return;
+        }
+
+        // Si ya completó (según Firebase), mostrar popup pendiente sin duplicar escritura
+        if (userData.guiasCompleted === true) {
+          localStorage.setItem('aemx_popup_seen', 'true');
+          document.getElementById('aura-popup').classList.add('visible');
+          return;
+        }
       }
 
-      // Guardar en Firebase que completó las guías
-      await set(completedRef, true);
+      // Primera vez completando: guardar en Firebase
+      await set(ref(database, 'users/' + user.uid + '/guiasCompleted'), true);
     } catch (e) {
       console.warn('No se pudo guardar guiasCompleted:', e);
     }
   }
 
-  // Mostrar popup (primera vez)
-  localStorage.setItem('aemx_popup_seen', 'true');
-  document.getElementById('aura-popup').classList.add('visible');
+  // Mostrar popup (primera vez o sin sesión activa)
+  if (!localStorage.getItem('aemx_popup_seen')) {
+    localStorage.setItem('aemx_popup_seen', 'true');
+    document.getElementById('aura-popup').classList.add('visible');
+  }
 }
 
 // ── Claim reward ─────────────────────────────────────────────────────────────
@@ -2341,7 +2352,7 @@ onAuthStateChanged(auth, async user => {
       if (snap.exists()) {
         const userData = snap.val();
 
-        // Si ya cobró la recompensa
+        // Si ya cobró la recompensa (en cualquier dispositivo)
         if (userData.guiasReward === true) {
           rewardAlreadyClaimed = true;
           lockRewardClaimed();
@@ -2349,8 +2360,11 @@ onAuthStateChanged(auth, async user => {
         }
 
         // Si ya completó las guías (pero aún no cobró), suprimir popup en futuras cargas
+        // Esto cubre el caso de otro dispositivo donde localStorage está vacío
         if (userData.guiasCompleted === true) {
           localStorage.setItem('aemx_popup_seen', 'true');
+          // Mostrar popup de recompensa pendiente si aún no fue visto en este dispositivo
+          document.getElementById('aura-popup').classList.add('visible');
         }
       }
     } catch (e) {
