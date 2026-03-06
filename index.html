@@ -2777,6 +2777,14 @@
 
         <div class="medals-section-label" id="medalShopSection">💰 SHOP (COINS)</div>
 
+        <div class="mbadge m-coins" data-medal-id="aura_fan" data-price="10">
+          <div class="mbadge-icon"><img src="coin.png" alt="Aura Fan" style="width:100%;height:100%;object-fit:cover;border-radius:11px;display:block;">
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">AURA FAN</div><div class="mbadge-tooltip-desc">Para los fans de las guías AURA.</div><div class="mbadge-tooltip-cost">🪙 10 coins</div></div>
+          </div>
+          <div class="mbadge-name">Aura Fan</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 10</button>
+        </div>
+
         <div class="mbadge m-coins" data-medal-id="orgullo_mx" data-price="50">
           <div class="mbadge-icon">🏟️
             <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">ORGULLO MX</div><div class="mbadge-tooltip-desc">Medalla patriótica mexicana.</div><div class="mbadge-tooltip-cost">🪙 50 coins</div></div>
@@ -3162,7 +3170,7 @@
 
   <!-- COINS COUNTER -->
   <div class="coins-bar" id="coins-bar" style="margin-top:16px;margin-bottom:0;display:none;">
-    <div class="coins-icon"><img src="coin.png" alt="coin" style="width:36px;height:36px;object-fit:contain;display:block;"></div>
+    <div class="coins-icon">🪙</div>
     <div class="coins-info">
       <div class="coins-label">AEMX Coins</div>
       <div class="coins-value" id="coins-display">—</div>
