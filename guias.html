@@ -2372,7 +2372,19 @@ onAuthStateChanged(auth, async user => {
     }
   }
 
-  // Cargar progreso de sesión actual
+  // Si ya completó todas las guías en Firebase, marcar todas como visitadas
+  if (user) {
+    try {
+      const snap2 = await get(ref(database, 'users/' + user.uid + '/guiasCompleted'));
+      if (snap2.exists() && snap2.val() === true) {
+        const allVisited = [1,2,3,4,5,6,7,8,9,10];
+        updateUI(allVisited);
+        return;
+      }
+    } catch (e) { /* continuar con localStorage */ }
+  }
+
+  // Cargar progreso local de sesión actual
   const progress = loadProgress();
   if (progress) {
     updateUI(progress.visited);
