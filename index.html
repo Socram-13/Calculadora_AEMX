@@ -4205,8 +4205,7 @@
   }
 
   async function loadProfile() {
-    let name = localStorage.getItem('atlas-username') || '';
-    if (name) { document.getElementById('username').value = name; adjustBadge(); }
+    // Username se carga solo desde Firebase para evitar mostrar nombres antiguos de localStorage
 
     let avatar = localStorage.getItem('atlas-avatar') || '';
     if (avatar) {
