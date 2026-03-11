@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Atlas Scanner</title>
+<title>Gamertag Stats Scanner</title>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
 <style>
@@ -149,7 +149,8 @@
 <body>
 
 <header>
-  <div class="logo">🌎 Atlas Scanner</div>
+  <img src="imagen_1.png" alt="AEMX" style="width:60px;height:60px;object-fit:contain;filter:drop-shadow(0 3px 6px rgba(0,0,0,0.3));margin-bottom:6px;">
+  <div class="logo">Gamertag Stats Scanner</div>
   <div class="subtitle">Escanea tu perfil de Atlas Earth</div>
 </header>
 <button class="btn-back" onclick="volverAlIndex()">← Volver al inicio</button>
@@ -255,6 +256,8 @@
     legendario:  { hMin:28,  hMax:58,  sMin:55, lMin:42, lMax:88 },
     ab:          { hMin:100, hMax:165, sMin:40, lMin:40, lMax:92 },
     gems:        { hMin:170, hMax:215, sMin:45, lMin:50, lMax:96 },
+    usuario:     { hMin:25,  hMax:45,  sMin:18, lMin:28, lMax:48 },
+    titulo:      { hMin:198, hMax:220, sMin:80, lMin:22, lMax:45 },
   };
 
   function rgbToHsl(r,g,b){
@@ -402,6 +405,42 @@
       console.log('=== OCR RAW ===\n', rawText);
       const parsed = parseAtlasText(rawText);
       progressBar.style.width = '35%';
+
+      // OCR específico para username por color #7A6240
+      loaderText.textContent = 'Leyendo usuario...';
+      const userCrop = cropVertical(srcCanvas, 0.18, 0.42);
+      const userFiltered = filterByColor(userCrop, COLOR_PROFILES.usuario);
+      const userBlob = await canvasToBlob(userFiltered);
+      const userResult = await Tesseract.recognize(userBlob, 'eng', {
+        logger: m => { if(m.status==='recognizing text') progressBar.style.width=(35+m.progress*5)+'%'; }
+      });
+      const userRaw = userResult.data.text;
+      console.log('=== USER OCR RAW ===\n', userRaw);
+      const userLines = userRaw.split('\n').map(l => l.trim()).filter(Boolean);
+      for (const line of userLines) {
+        const clean = line.replace(/[^a-zA-Z0-9_]/g, '');
+        if (clean.length >= 3 && clean.length <= 24 && /[a-zA-Z]/.test(clean)) {
+          // Extraer solo el token que contiene _ si existe
+          const tokenMatch = line.match(/[A-Za-z0-9]+_[A-Za-z0-9]+/);
+          if (tokenMatch) { parsed.usuario = tokenMatch[0]; break; }
+          if (clean.length >= 4) { parsed.usuario = clean; break; }
+        }
+      }
+
+      // OCR específico para título por color #0056A5
+      loaderText.textContent = 'Leyendo título...';
+      const tituloCrop = cropVertical(srcCanvas, 0.18, 0.42);
+      const tituloFiltered = filterByColor(tituloCrop, COLOR_PROFILES.titulo);
+      const tituloBlob = await canvasToBlob(tituloFiltered);
+      const tituloResult = await Tesseract.recognize(tituloBlob, 'spa+eng', {
+        logger: m => { if(m.status==='recognizing text') progressBar.style.width=(40+m.progress*5)+'%'; }
+      });
+      const tituloRaw = tituloResult.data.text;
+      console.log('=== TITULO OCR RAW ===\n', tituloRaw);
+      const tituloLines = tituloRaw.split('\n').map(l => l.trim()).filter(l => l.length >= 4);
+      if (tituloLines.length > 0) {
+        parsed.titulo = tituloLines[0].replace(/[^a-zA-ZÁÉÍÓÚáéíóúÑñ0-9\s\-]/g, '').trim();
+      }
 
       // Color OCR per numeric field
       const steps = [
@@ -606,6 +645,7 @@
   function cargarEnApp() {
     const pct = document.getElementById('resBoost').value.replace('%','').trim();
     const toSave = {
+      titulo_juego: document.getElementById('resTitle').textContent !== 'No detectado' ? document.getElementById('resTitle').textContent : '',
       comun:      document.getElementById('resCommon').value,
       raro:       document.getElementById('resRare').value,
       epico:      document.getElementById('resEpic').value,
