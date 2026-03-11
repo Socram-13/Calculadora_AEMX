@@ -4915,7 +4915,16 @@
         for (const [id, val] of Object.entries(fields)) {
           if (val !== undefined && val !== '' && val !== null) {
             const el = document.getElementById(id);
-            if (el) { el.value = val; cargado = true; }
+            if (!el) continue;
+            // Para insignias: solo sobreescribir si el valor calculado es mayor al guardado
+            if (id === 'badges') {
+              const actual = parseInt(el.value) || 0;
+              const nuevo  = parseInt(val)      || 0;
+              if (nuevo > actual) { el.value = nuevo; cargado = true; }
+              else                { cargado = true; } // igual cuenta como cargado para el resto
+            } else {
+              el.value = val; cargado = true;
+            }
           }
         }
         if (cargado) {
