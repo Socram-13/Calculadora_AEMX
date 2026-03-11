@@ -2251,7 +2251,7 @@
           };
           applyBorder(d.borderColor);
         }
-        if (d.startDate) { document.getElementById('start-date').value = d.startDate; }
+        if (d.startDate) { document.getElementById('start-date').value = d.startDate; if(typeof actualizarDiasJugando==='function') actualizarDiasJugando(); }
         if (d.country) {
           const _normC = (typeof normalizarPais === 'function') ? normalizarPais(d.country) : d.country;
           userCountry = _normC; window.userCountry = _normC;
@@ -2477,7 +2477,7 @@
     </div>
     <div class="profile-info">
       <div class="profile-name-label">Nombre de usuario</div>
-      <div style="display:flex;align-items:center;gap:0;flex-wrap:nowrap;">
+      <div style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;">
         <input
           type="text"
           id="username"
@@ -2492,7 +2492,7 @@
       <div class="profile-hint" style="font-size:9px;">Toca el avatar para cambiar foto</div>
       <span id="color-preview" style="display:none;"></span>
       <div style="margin-top:6px;display:flex;align-items:center;justify-content:center;gap:4px;font-family:'Nunito',sans-serif;font-weight:800;font-size:11px;color:var(--text2);letter-spacing:1px;">
-        <span style="opacity:0.5;">JUGANDO DESDE·</span>
+        <span id="days-playing" style="color:var(--gold);"></span><span id="days-playing-label" style="opacity:0.5;display:none;">DÍAS · </span><span style="opacity:0.5;">JUGANDO DESDE·</span>
         <input
           type="date"
           id="start-date"
@@ -4216,6 +4216,22 @@
   function saveStartDate() {
     const date = document.getElementById('start-date').value;
     localStorage.setItem('atlas-start-date', date);
+    actualizarDiasJugando();
+  }
+
+  function actualizarDiasJugando() {
+    const val = document.getElementById('start-date').value;
+    const dEl  = document.getElementById('days-playing');
+    const lEl  = document.getElementById('days-playing-label');
+    if (!val || !dEl) return;
+    const dias = Math.floor((Date.now() - new Date(val).getTime()) / 86400000);
+    if (dias >= 0) {
+      dEl.textContent = dias;
+      if (lEl) lEl.style.display = 'inline';
+    } else {
+      dEl.textContent = '';
+      if (lEl) lEl.style.display = 'none';
+    }
   }
 
   async function loadProfile() {
