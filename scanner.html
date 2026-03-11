@@ -429,7 +429,7 @@
 
       // OCR específico para título por color #0056A5
       loaderText.textContent = 'Leyendo título...';
-      const tituloCrop = cropVertical(srcCanvas, 0.18, 0.42);
+      const tituloCrop = cropVertical(srcCanvas, 0.28, 0.42);
       const tituloFiltered = filterByColor(tituloCrop, COLOR_PROFILES.titulo);
       const tituloBlob = await canvasToBlob(tituloFiltered);
       const tituloResult = await Tesseract.recognize(tituloBlob, 'spa+eng', {
