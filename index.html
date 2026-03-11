@@ -2212,6 +2212,12 @@
         const d = snap.val();
 
         if (d.username) { document.getElementById('username').value = d.username; if(window.adjustBadge) window.adjustBadge(); }
+        if (d.titulo_juego && d.titulo_juego.trim()) {
+          const tEl = document.getElementById('titulo-juego');
+          const tWrap = document.getElementById('titulo-juego-wrap');
+          if (tEl) tEl.textContent = d.titulo_juego.trim().toUpperCase();
+          if (tWrap) tWrap.style.display = 'block';
+        }
         // ✅ FIX: solo cargar avatar si existe y no está vacío
         if (d.avatar && d.avatar.length > 0) {
           const img = document.getElementById('avatar-img');
@@ -2293,16 +2299,17 @@
       if (!user) return;
 
       const data = {
-        username:    document.getElementById('username')?.value    || '',
-        borderColor: localStorage.getItem('atlas-avatar-border')   || '',
-        startDate:   document.getElementById('start-date')?.value  || '',
-        common:      document.getElementById('common')?.value      || 0,
-        rare:        document.getElementById('rare')?.value        || 0,
-        epic:        document.getElementById('epic')?.value        || 0,
-        legendary:   document.getElementById('legendary')?.value   || 0,
-        badges:      document.getElementById('badges')?.value      || 0,
-        diamonds:    document.getElementById('diamonds')?.value    || 0,
-        atlasbucks:  document.getElementById('atlasbucks')?.value  || 0,
+        username:     document.getElementById('username')?.value    || '',
+        borderColor:  localStorage.getItem('atlas-avatar-border')   || '',
+        startDate:    document.getElementById('start-date')?.value  || '',
+        common:       document.getElementById('common')?.value      || 0,
+        rare:         document.getElementById('rare')?.value        || 0,
+        epic:         document.getElementById('epic')?.value        || 0,
+        legendary:    document.getElementById('legendary')?.value   || 0,
+        badges:       document.getElementById('badges')?.value      || 0,
+        diamonds:     document.getElementById('diamonds')?.value    || 0,
+        atlasbucks:   document.getElementById('atlasbucks')?.value  || 0,
+        titulo_juego: document.getElementById('titulo-juego')?.textContent?.trim() || '',
       };
 
       // Solo incluir avatar cuando se indica explícitamente (botón guardar)
@@ -2319,6 +2326,7 @@
           else if (window.userCountry) data.country    = window.userCountry;
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
+          if (prev.titulo_juego && !data.titulo_juego) data.titulo_juego = prev.titulo_juego;
           data.clanMember        = prev.clanMember        === true;
           data.bannedChat        = prev.bannedChat        === true;
           data.bannedLeaderboard = prev.bannedLeaderboard === true;
