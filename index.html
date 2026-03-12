@@ -4900,6 +4900,8 @@
       chatOpen = !chatOpen;
       document.getElementById('chat-iframe-container').classList.toggle('open', chatOpen);
       document.getElementById('chat-fab').classList.toggle('open', chatOpen);
+      const themeBtn = document.getElementById('theme-toggle-btn');
+      if (themeBtn) themeBtn.style.display = chatOpen ? 'none' : '';
       if (window.innerWidth <= 480) {
         document.getElementById('chat-fab').style.display = chatOpen ? 'none' : 'flex';
       }
@@ -4922,6 +4924,8 @@
       chatOpen = false;
       document.getElementById('chat-iframe-container').classList.remove('open');
       document.getElementById('chat-fab').classList.remove('open');
+      const themeBtn = document.getElementById('theme-toggle-btn');
+      if (themeBtn) themeBtn.style.display = '';
       if (window.innerWidth <= 480) document.getElementById('chat-fab').style.display = 'flex';
     }
 
