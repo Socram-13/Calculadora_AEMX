@@ -35,7 +35,7 @@
     transition:all 0.25s;position:relative;overflow:hidden;
   }
   .upload-zone:hover,.upload-zone.dragover{border-color:var(--accent);background:rgba(0,200,255,0.06);}
-  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+  .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:10;-webkit-appearance:none;}
   .upload-icon{font-size:48px;margin-bottom:12px;display:block;}
   .upload-title{font-family:'Fredoka One',cursive;font-size:18px;color:var(--accent);margin-bottom:6px;}
   .upload-hint{font-size:12px;color:var(--text2);line-height:1.6;}
@@ -231,21 +231,40 @@
   const progressBar = document.getElementById('progressBar');
   const loaderText  = document.getElementById('loaderText');
 
+  // Android fix: explicit tap handler on zone triggers fileInput
+  uploadZone.addEventListener('click', (e) => {
+    if (e.target !== fileInput) fileInput.click();
+  });
   uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
   uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
   uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
   fileInput.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
 
   function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
     imageFile = file;
-    previewImg.src = URL.createObjectURL(file);
-    // Etapa 2: ocultar upload zone, mostrar preview + botón escanear
-    uploadZone.style.display = 'none';
-    previewWrap.style.display = 'block';
-    btnScan.style.display = 'block';
-    errorBox.style.display = 'none';
-    resultCard.style.display = 'none';
-    btnNew.style.display = 'none';
+    // Android FileReader fallback — más confiable que createObjectURL en WebView
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      previewImg.src = ev.target.result;
+      uploadZone.style.display = 'none';
+      previewWrap.style.display = 'block';
+      btnScan.style.display = 'block';
+      errorBox.style.display = 'none';
+      resultCard.style.display = 'none';
+      btnNew.style.display = 'none';
+    };
+    reader.onerror = function() {
+      // fallback a createObjectURL si FileReader falla
+      previewImg.src = URL.createObjectURL(file);
+      uploadZone.style.display = 'none';
+      previewWrap.style.display = 'block';
+      btnScan.style.display = 'block';
+      errorBox.style.display = 'none';
+      resultCard.style.display = 'none';
+      btnNew.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
   }
 
   // ── Color extraction helpers ─────────────────────────────────────────────
