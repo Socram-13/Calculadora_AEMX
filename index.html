@@ -2462,7 +2462,18 @@
     </div>
   </header>
 
-  <div class="profile-section">
+  <div class="profile-section" style="position:relative;">
+    <a href="https://www.facebook.com/share/v/18Vro7jyHH/" target="_blank" rel="noopener"
+       title="¿Qué es el Gamertag?"
+       style="position:absolute;top:10px;right:10px;z-index:10;
+              width:20px;height:20px;border-radius:50%;
+              background:#0056A5;color:#fff;
+              display:flex;align-items:center;justify-content:center;
+              font-family:'Fredoka One',cursive;font-size:11px;font-weight:700;
+              text-decoration:none;box-shadow:0 2px 6px rgba(0,86,165,0.5);
+              transition:transform 0.2s,box-shadow 0.2s;"
+       onmouseover="this.style.transform='scale(1.15)';this.style.boxShadow='0 4px 12px rgba(0,86,165,0.7)'"
+       onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 2px 6px rgba(0,86,165,0.5)'">i</a>
     <label for="avatar-input" style="display:none;" id="avatar-label"></label>
     <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
     <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
