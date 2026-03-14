@@ -462,11 +462,12 @@
       }
 
       // Color OCR per numeric field
+      // region:[x0,x1] excluye el recuadro TOTAL (izquierda) y lee solo los 4 recuadros de rareza (derecha)
       const steps = [
-        { key:'comun',       label:'Común',       profile:COLOR_PROFILES.comun,       crop:[0.52,0.88] },
-        { key:'raro',        label:'Raro',         profile:COLOR_PROFILES.raro,        crop:[0.52,0.88] },
-        { key:'epico',       label:'Épico',        profile:COLOR_PROFILES.epico,       crop:[0.52,0.88] },
-        { key:'legendario',  label:'Legendario',   profile:COLOR_PROFILES.legendario,  crop:[0.52,0.88] },
+        { key:'comun',       label:'Común',       profile:COLOR_PROFILES.comun,       crop:[0.52,0.88], region:[0.48,1.0] },
+        { key:'raro',        label:'Raro',         profile:COLOR_PROFILES.raro,        crop:[0.52,0.88], region:[0.48,1.0] },
+        { key:'epico',       label:'Épico',        profile:COLOR_PROFILES.epico,       crop:[0.52,0.88], region:[0.48,1.0] },
+        { key:'legendario',  label:'Legendario',   profile:COLOR_PROFILES.legendario,  crop:[0.52,0.88], region:[0.48,1.0] },
 
       ];
 
