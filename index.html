@@ -2779,6 +2779,13 @@
           <div class="mbadge-name">Portfolio Perfecto</div>
         </div>
 
+        <div class="mbadge m-legendary" data-medal-id="artemis2">
+          <div class="mbadge-icon"><img src="artemis2.png" alt="Artemis II" style="width:100%;height:100%;object-fit:cover;border-radius:11px;display:block;">
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">ARTEMIS II</div><div class="mbadge-tooltip-desc">Tu nombre viajó a la Luna. Participaste en la convocatoria NASA 2025-2026.</div></div>
+          </div>
+          <div class="mbadge-name">Artemis II</div>
+        </div>
+
         <div class="medals-section-label" id="medalShopSection">💰 SHOP (COINS)</div>
 
         <div class="mbadge m-coins" data-medal-id="aura_fan" data-price="10">
@@ -2851,6 +2858,26 @@
           </div>
           <div class="mbadge-name">Diamante</div>
           <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 500</button>
+        </div>
+
+        <!-- Botón de canje de código -->
+        <div style="grid-column: 1 / -1; margin-top: 20px;">
+          <button onclick="redeemArtemisCode()" style="
+            width: 100%;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #9C27B0, #673AB7);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 800;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+            transition: all 0.3s;
+          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(156, 39, 176, 0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(156, 39, 176, 0.4)'">
+            🔑 CANJEAR CÓDIGO ESPECIAL
+          </button>
         </div>
 
       </div>
@@ -4754,6 +4781,50 @@
         btn.textContent = `🪙 ${price}`;
       }
     }
+
+    /* ── Canje de código para medalla artemis2 ─────────────── */
+    async function redeemArtemisCode() {
+      const user = window._fbUser;
+      const _db = window._fbDb;
+      const _ref = window._fbRef;
+      const _update = window._fbUpdate;
+
+      if (!user || !_db || !_ref || !_update) {
+        alert('❌ Debes iniciar sesión para canjear códigos.');
+        return;
+      }
+
+      // Verificar si ya tiene la medalla
+      if (_ownedMedals['artemis2']) {
+        alert('✅ Ya tienes la medalla Artemis II desbloqueada.');
+        return;
+      }
+
+      const code = prompt('🔑 Ingresa el código de Artemis II:');
+      if (!code) return;
+
+      const validCode = 'M2M2026238900AII';
+      
+      if (code.trim() === validCode) {
+        try {
+          // Guardar medalla en Firebase
+          await _update(_ref(_db, `users/${user.uid}`), {
+            'medals/shop/artemis2': true
+          });
+          _ownedMedals['artemis2'] = true;
+          updateMedals();
+          alert('🎉 ¡Código correcto! Has desbloqueado la medalla Artemis II.');
+        } catch(err) {
+          console.error('Error canjeando código:', err);
+          alert('❌ Error al canjear el código. Intenta de nuevo.');
+        }
+      } else {
+        alert('❌ Código incorrecto. Verifica e intenta nuevamente.');
+      }
+    }
+
+    // Exponer función globalmente para el botón
+    window.redeemArtemisCode = redeemArtemisCode;
 
     /* ── Observar cambios en coins, location, parcelas ──────── */
     const _coinsEl = document.getElementById('coins-display');
