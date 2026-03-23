@@ -4830,12 +4830,19 @@
         });
         _ownedMedals[id] = true;
         if (window._coinsUpdateDisplay) window._coinsUpdateDisplay(newCoins);
-        updateMedals();
         
-        // Mensaje especial para Chuck Norris
+        // Mensaje especial y actualización visual para Chuck Norris
         if (id === 'chuck_norris') {
+          // Ocultar de shop inmediatamente
+          badge.style.display = 'none';
+          // Mostrar en míticas inmediatamente
+          const mythicBadge = document.querySelector('.mbadge[data-medal-id="chuck_norris_mythic"]');
+          if (mythicBadge) mythicBadge.style.display = 'flex';
+          
           alert('🔥 ¡Chuck Norris aprueba tu existencia! +10 coins');
         }
+        
+        updateMedals();
       } catch(err) {
         console.error('Error comprando medalla:', err);
         alert('❌ Error al procesar la compra. Intenta de nuevo.');
