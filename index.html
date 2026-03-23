@@ -4584,7 +4584,7 @@
     }
 
     /* ── Fila de preview medallas (comprimida) ───────────────── */
-    const RARITY_ORDER = ['legendary','coins','epic','rare','common'];
+    const RARITY_ORDER = ['mythic','legendary','coins','epic','rare','common'];
 
     function buildPreviewRow() {
       const row = document.getElementById('medalsPreviewRow');
@@ -4602,6 +4602,7 @@
 
         let rarity = 'common';
         if (b.classList.contains('m-legendary')) rarity = 'legendary';
+        else if (b.classList.contains('m-mythic'))  rarity = 'mythic';
         else if (b.classList.contains('m-epic'))  rarity = 'epic';
         else if (b.classList.contains('m-rare'))  rarity = 'rare';
         else if (b.classList.contains('m-coins')) rarity = 'coins';
