@@ -4780,7 +4780,14 @@
             }
           }
         } else {
-          b.classList.toggle('m-locked', !unlocked);
+          // Medallas míticas: chuck_norris_mythic se muestra si chuck_norris está owned
+          if (id === 'chuck_norris_mythic') {
+            const chuckOwned = !!_ownedMedals['chuck_norris'];
+            b.style.display = chuckOwned ? 'flex' : 'none';
+            b.classList.toggle('m-locked', false); // Nunca locked si se muestra
+          } else {
+            b.classList.toggle('m-locked', !unlocked);
+          }
         }
 
         if (unlocked) earned++;
