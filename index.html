@@ -19,6 +19,7 @@
     --rare: #2196F3;
     --common: #4CAF50;
     --legendary: #FF9800;
+    --mythic: #DC2626;
     --text: #3E2A10;
     --text2: #7a5c30;
     --accent: #F5A623;
@@ -1606,11 +1607,17 @@
   .mbadge.m-rare     .mbadge-icon { background: rgba(33,150,243,0.15);  border-color: rgba(33,150,243,0.5);  box-shadow: 0 3px 0 rgba(33,150,243,0.4); }
   .mbadge.m-epic     .mbadge-icon { background: rgba(156,39,176,0.15); border-color: rgba(156,39,176,0.5); box-shadow: 0 3px 0 rgba(156,39,176,0.4); }
   .mbadge.m-legendary .mbadge-icon { background: rgba(245,166,35,0.15);  border-color: rgba(245,166,35,0.5);  box-shadow: 0 3px 0 rgba(245,166,35,0.4); animation: mLegendaryGlow 2s ease-in-out infinite; }
+  .mbadge.m-mythic   .mbadge-icon { background: rgba(220,38,38,0.15);  border-color: rgba(220,38,38,0.6);  box-shadow: 0 3px 0 rgba(220,38,38,0.5); animation: mMythicGlow 2s ease-in-out infinite; }
   .mbadge.m-coins    .mbadge-icon { background: rgba(255,152,0,0.15); border-color: rgba(255,152,0,0.5); box-shadow: 0 3px 0 rgba(255,152,0,0.4); }
 
   @keyframes mLegendaryGlow {
     0%, 100% { box-shadow: 0 3px 0 rgba(245,166,35,0.4); }
     50%       { box-shadow: 0 5px 0 rgba(245,166,35,0.6), 0 0 20px rgba(245,166,35,0.3); }
+  }
+
+  @keyframes mMythicGlow {
+    0%, 100% { box-shadow: 0 3px 0 rgba(220,38,38,0.5); }
+    50%       { box-shadow: 0 5px 0 rgba(220,38,38,0.7), 0 0 25px rgba(220,38,38,0.5); }
   }
 
   .mbadge-tooltip {
@@ -2786,6 +2793,8 @@
           <div class="mbadge-name">Portfolio Perfecto</div>
         </div>
 
+        <div class="medals-section-label" id="medalMythicSection">🔴 MÍTICAS</div>
+
         <div class="medals-section-label" id="medalShopSection">💰 SHOP (COINS)</div>
 
         <div class="mbadge m-coins" data-medal-id="aura_fan" data-price="10">
@@ -2850,6 +2859,14 @@
           </div>
           <div class="mbadge-name">Phantom</div>
           <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 400</button>
+        </div>
+
+        <div class="mbadge m-coins m-mythic" data-medal-id="chuck_norris" data-price="-10">
+          <div class="mbadge-icon"><img src="chuck.png" alt="Chuck Norris" style="width:100%;height:100%;object-fit:cover;border-radius:11px;display:block;">
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">CHUCK NORRIS</div><div class="mbadge-tooltip-desc">En conmemoración a la leyenda (1940-2026). Chuck Norris no ve anuncios… los anuncios se activan al verlo.</div><div class="mbadge-tooltip-cost">∞ VALOR INCALCULABLE</div></div>
+          </div>
+          <div class="mbadge-name">Chuck Norris</div>
+          <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">∞</button>
         </div>
 
         <div class="mbadge m-coins" data-medal-id="diamante" data-price="500">
@@ -4738,7 +4755,13 @@
           b.classList.toggle('m-owned',  owned);
           b.classList.toggle('m-locked', !owned && coins < price);
           const btn = b.querySelector('.mbadge-buy-btn');
-          if (btn) btn.textContent = owned ? '✔ TUYA' : `🪙 ${price}`;
+          if (btn) {
+            if (id === 'chuck_norris') {
+              btn.textContent = owned ? '✔ TUYA' : '∞';
+            } else {
+              btn.textContent = owned ? '✔ TUYA' : `🪙 ${price}`;
+            }
+          }
         } else {
           b.classList.toggle('m-locked', !unlocked);
         }
@@ -4760,8 +4783,14 @@
       const price = Number(badge.dataset.price || 0);
       if (_ownedMedals[id]) return;
       const coins = _getCoins();
-      if (coins < price) { alert(`❌ Coins insuficientes. Te faltan ${price - coins}.`); return; }
-      if (!confirm(`¿Comprar "${id}" por ${price} coins?`)) return;
+      
+      // Chuck Norris te paga (precio negativo)
+      if (price < 0) {
+        if (!confirm(`💰 ¿Obtener la medalla legendaria de Chuck Norris?`)) return;
+      } else {
+        if (coins < price) { alert(`❌ Coins insuficientes. Te faltan ${price - coins}.`); return; }
+        if (!confirm(`¿Comprar "${id}" por ${price} coins?`)) return;
+      }
 
       const user    = window._fbUser;
       const _db     = window._fbDb;
@@ -4776,8 +4805,8 @@
       try {
         btn.disabled = true;
         btn.textContent = '⏳';
-        const newCoins = coins - price;
-        // Guardar medalla y descontar coins en Firebase atómicamente
+        const newCoins = coins - price; // Si price es negativo, SUMA coins
+        // Guardar medalla y actualizar coins en Firebase atómicamente
         await _update(_ref(_db, `users/${user.uid}`), {
           [`medals/shop/${id}`]: true,
           coins: newCoins
@@ -4785,11 +4814,16 @@
         _ownedMedals[id] = true;
         if (window._coinsUpdateDisplay) window._coinsUpdateDisplay(newCoins);
         updateMedals();
+        
+        // Mensaje especial para Chuck Norris
+        if (id === 'chuck_norris') {
+          alert('🔥 ¡Chuck Norris aprueba tu existencia! +10 coins');
+        }
       } catch(err) {
         console.error('Error comprando medalla:', err);
         alert('❌ Error al procesar la compra. Intenta de nuevo.');
         btn.disabled = false;
-        btn.textContent = `🪙 ${price}`;
+        btn.textContent = price < 0 ? '∞' : `🪙 ${price}`;
       }
     }
 
@@ -4864,6 +4898,7 @@
       'rare':      { label: 'RARA',       color: '#60a5fa',  bg: 'rgba(96,165,250,0.12)',  border: 'rgba(96,165,250,0.45)'  },
       'epic':      { label: 'ÉPICA',      color: '#c084fc',  bg: 'rgba(192,132,252,0.12)', border: 'rgba(192,132,252,0.45)' },
       'legendary': { label: 'LEGENDARIA', color: '#ffd700',  bg: 'rgba(255,215,0,0.12)',   border: 'rgba(255,215,0,0.45)'   },
+      'mythic':    { label: 'MÍTICA',     color: '#ef4444',  bg: 'rgba(220,38,38,0.12)',   border: 'rgba(220,38,38,0.55)'   },
       'coins':     { label: 'SHOP',       color: '#ffaa00',  bg: 'rgba(255,170,0,0.12)',   border: 'rgba(255,170,0,0.45)'   },
     };
 
@@ -4872,6 +4907,7 @@
       if (badge.classList.contains('m-rare'))     return 'rare';
       if (badge.classList.contains('m-epic'))     return 'epic';
       if (badge.classList.contains('m-legendary'))return 'legendary';
+      if (badge.classList.contains('m-mythic'))   return 'mythic';
       if (badge.classList.contains('m-coins'))    return 'coins';
       return 'common';
     }
