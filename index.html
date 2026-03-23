@@ -1607,7 +1607,7 @@
   .mbadge.m-rare     .mbadge-icon { background: rgba(33,150,243,0.15);  border-color: rgba(33,150,243,0.5);  box-shadow: 0 3px 0 rgba(33,150,243,0.4); }
   .mbadge.m-epic     .mbadge-icon { background: rgba(156,39,176,0.15); border-color: rgba(156,39,176,0.5); box-shadow: 0 3px 0 rgba(156,39,176,0.4); }
   .mbadge.m-legendary .mbadge-icon { background: rgba(245,166,35,0.15);  border-color: rgba(245,166,35,0.5);  box-shadow: 0 3px 0 rgba(245,166,35,0.4); animation: mLegendaryGlow 2s ease-in-out infinite; }
-  .mbadge.m-mythic   .mbadge-icon { background: rgba(220,38,38,0.15);  border-color: rgba(220,38,38,0.6);  box-shadow: 0 3px 0 rgba(220,38,38,0.5); animation: mMythicGlow 2s ease-in-out infinite; }
+  .mbadge.m-mythic   .mbadge-icon { background: rgba(220,38,38,0.15) !important;  border-color: rgba(220,38,38,0.6) !important;  box-shadow: 0 3px 0 rgba(220,38,38,0.5); animation: mMythicGlow 2s ease-in-out infinite !important; }
   .mbadge.m-coins    .mbadge-icon { background: rgba(255,152,0,0.15); border-color: rgba(255,152,0,0.5); box-shadow: 0 3px 0 rgba(255,152,0,0.4); }
 
   @keyframes mLegendaryGlow {
@@ -2794,6 +2794,13 @@
         </div>
 
         <div class="medals-section-label" id="medalMythicSection">🔴 MÍTICAS</div>
+
+        <div class="mbadge m-mythic" data-medal-id="chuck_norris_mythic" style="display:none;">
+          <div class="mbadge-icon"><img src="chuck.png" alt="Chuck Norris" style="width:100%;height:100%;object-fit:cover;border-radius:11px;display:block;">
+            <div class="mbadge-tooltip"><div class="mbadge-tooltip-name">CHUCK NORRIS</div><div class="mbadge-tooltip-desc">En conmemoración a la leyenda (1940-2026). Chuck Norris no ve anuncios… los anuncios se activan al verlo.</div></div>
+          </div>
+          <div class="mbadge-name">Chuck Norris</div>
+        </div>
 
         <div class="medals-section-label" id="medalShopSection">💰 SHOP (COINS)</div>
 
@@ -4752,8 +4759,18 @@
           const price = Number(b.dataset.price || 0);
           const coins = _getCoins();
           const owned = !!_ownedMedals[id];
-          b.classList.toggle('m-owned',  owned);
-          b.classList.toggle('m-locked', !owned && coins < price);
+          
+          // Chuck Norris: ocultar de shop si ya es owned
+          if (id === 'chuck_norris' && owned) {
+            b.style.display = 'none';
+            // Mostrar en sección míticas
+            const mythicBadge = document.querySelector('.mbadge[data-medal-id="chuck_norris_mythic"]');
+            if (mythicBadge) mythicBadge.style.display = '';
+          } else {
+            b.classList.toggle('m-owned',  owned);
+            b.classList.toggle('m-locked', !owned && coins < price);
+          }
+          
           const btn = b.querySelector('.mbadge-buy-btn');
           if (btn) {
             if (id === 'chuck_norris') {
