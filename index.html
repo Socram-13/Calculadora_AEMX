@@ -4765,7 +4765,7 @@
             b.style.display = 'none';
             // Mostrar en sección míticas
             const mythicBadge = document.querySelector('.mbadge[data-medal-id="chuck_norris_mythic"]');
-            if (mythicBadge) mythicBadge.style.display = '';
+            if (mythicBadge) mythicBadge.style.display = 'flex';
           } else {
             b.classList.toggle('m-owned',  owned);
             b.classList.toggle('m-locked', !owned && coins < price);
