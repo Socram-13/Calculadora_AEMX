@@ -2278,6 +2278,11 @@
           if (_hasScannerData && _scannerFields.has(k)) return;
           if (d[k] !== undefined) { document.getElementById(k).value = d[k]; }
         });
+        
+        // Cargar horasCalculo (default: 24 si no existe)
+        if (d.horasCalculo !== undefined) {
+          document.getElementById('horas-calculo').value = d.horasCalculo;
+        }
 
         if(window.calc) window.calc();
         window.clanMember = d.clanMember === true;
@@ -2317,6 +2322,7 @@
         badges:       document.getElementById('badges')?.value      || 0,
         diamonds:     document.getElementById('diamonds')?.value    || 0,
         atlasbucks:   document.getElementById('atlasbucks')?.value  || 0,
+        horasCalculo: document.getElementById('horas-calculo')?.value || 24,
         titulo_juego: document.getElementById('titulo-juego')?.textContent?.trim() || '',
       };
 
@@ -2384,7 +2390,7 @@
     };
 
     document.addEventListener('DOMContentLoaded', () => {
-      ['common','rare','epic','legendary','badges','diamonds','atlasbucks','start-date','username'].forEach(id => {
+      ['common','rare','epic','legendary','badges','diamonds','atlasbucks','horas-calculo','start-date','username'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('change', () => { if(window._fbUser) window._fbSaveAll(); });
       });
@@ -3101,6 +3107,21 @@
         </div>
       </div>
 
+      <div class="divider"></div>
+
+      <div class="booster-row">
+        <div class="booster-icon">⏰</div>
+        <div class="booster-info">
+          <div class="booster-name">Horas de Cálculo Diario</div>
+          <div class="booster-desc">Ajusta las horas activas por día</div>
+        </div>
+        <div class="counter">
+          <button class="counter-btn" onclick="changeHours(-1)">−</button>
+          <input type="number" id="horas-calculo" value="24" min="1" max="24" oninput="calc()">
+          <button class="counter-btn" onclick="changeHours(1)">+</button>
+        </div>
+      </div>
+
       <div class="tier-info" id="tier-info" style="flex-direction:column;gap:6px;text-align:center;">
         <div style="font-family:'Fredoka One',cursive;font-size:9px;letter-spacing:3px;color:var(--text2);text-transform:uppercase;">Parcelas que puedes comprar</div>
         <div style="display:flex;align-items:baseline;justify-content:center;gap:8px;">
@@ -3140,7 +3161,7 @@
           <td class="rt-boost" id="r-hour">$0.00000000</td>
         </tr>
         <tr>
-          <td><div class="rt-period"><span class="dot"></span>Por Día</div></td>
+          <td><div class="rt-period"><span class="dot"></span>Por Día <span id="hours-label" style="font-size:9px;color:var(--text2);">(24h)</span></div></td>
           <td class="rt-base" id="r-day-base">$0.000000</td>
           <td class="rt-boost" id="r-day">$0.000000</td>
         </tr>
@@ -3201,6 +3222,9 @@
         <span class="breakdown-label" style="font-weight:700;color:var(--gold)">💫 Total anual estimado</span>
         <span class="breakdown-value" style="color:var(--gold);font-size:15px;font-weight:700;text-shadow:none;" id="b-year">$0.00</span>
       </div>
+      <div style="text-align:center;font-size:10px;color:var(--text2);margin-top:8px;font-style:italic;">
+        <span id="hours-calc-note">Calculado con 24 horas diarias de funcionamiento</span>
+      </div>
 
       <div style="margin-top:16px;padding:14px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.25);border-radius:10px;">
         <div style="font-family:'Fredoka One',cursive;font-size:9px;letter-spacing:3px;color:#c8851a;text-transform:uppercase;margin-bottom:12px;">🚀 SRB 50×</div>
@@ -3209,7 +3233,7 @@
           <span class="breakdown-value" id="b-single-event" style="color:#c8851a;">$0.0000</span>
         </div>
         <div class="breakdown-row" style="margin-bottom:6px;">
-          <span class="breakdown-label">Horas normales del mes <span style="font-size:10px;color:var(--text2)">(≈720h − 64h evento)</span></span>
+          <span class="breakdown-label">Horas normales del mes <span id="month-hours-calc" style="font-size:10px;color:var(--text2)">(≈720h − 64h evento)</span></span>
           <span class="breakdown-value" id="b-event-normal-hours">656 h</span>
         </div>
         <div class="breakdown-row" style="margin-bottom:6px;">
@@ -3526,6 +3550,14 @@
     calc();
   }
 
+  function changeHours(delta) {
+    const el = document.getElementById('horas-calculo');
+    const current = parseInt(el.value) || 24;
+    const newValue = Math.max(1, Math.min(24, current + delta));
+    el.value = newValue;
+    calc();
+  }
+
   function fmt(n, decimals = 6) {
     if (n >= 0.01) return '$' + n.toFixed(2);
     if (n >= 0.0001) return '$' + n.toFixed(4);
@@ -3670,19 +3702,23 @@
 
     const boostedPerSec = basePerSec * badgeBoost * adBoost;
 
+    // Obtener horas de cálculo configuradas (default: 24)
+    const horasCalculo = parseInt(document.getElementById('horas-calculo').value) || 24;
+    const secsPerDay = horasCalculo * 3600; // segundos en el día según horas configuradas
+    
     const perMin   = boostedPerSec * 60;
     const perHour  = boostedPerSec * 3600;
-    const perDay   = boostedPerSec * 86400;
+    const perDay   = boostedPerSec * secsPerDay;
     const perWeek  = perDay * 7;
     const perMonth = perDay * 30;
 
-    const basePerMonth = basePerSec * 86400 * 30;
+    const basePerMonth = basePerSec * secsPerDay * 30;
     const badgeExtra = basePerMonth * (badgeBoost - 1);
     const adExtra = basePerMonth * badgeBoost * (adBoost - 1);
 
     const basePerMin  = basePerSec * 60;
     const basePerHour = basePerSec * 3600;
-    const basePerDay  = basePerSec * 86400;
+    const basePerDay  = basePerSec * secsPerDay;
     const basePerWeek = basePerDay * 7;
     const basePerMo   = basePerDay * 30;
     const basePerYear = basePerDay * 365;
@@ -3721,7 +3757,7 @@
     const EVENT_BOOST  = 50;
     const EVENT_HOURS  = 32;
     const EVENTS_MONTH = 2;
-    const MONTH_HOURS  = 30 * 24;
+    const MONTH_HOURS  = 30 * horasCalculo; // Usar horas configuradas
     const TOTAL_EVT_H  = EVENT_HOURS * EVENTS_MONTH;
     const NORMAL_HOURS = MONTH_HOURS - TOTAL_EVT_H;
 
@@ -3744,13 +3780,18 @@
     document.getElementById('b-event-income').textContent      = fmt(incomeAllEvts);
     document.getElementById('b-event-total').textContent       = fmt(totalWithEvents);
 
-    const YEAR_HOURS    = 365 * 24;
+    const YEAR_HOURS    = 365 * horasCalculo; // Usar horas configuradas
     const YEAR_EVT_H    = EVENT_HOURS * EVENTS_MONTH * 12;
     const YEAR_NORMAL_H = YEAR_HOURS - YEAR_EVT_H;
     const perYear = (boostedPerHour * YEAR_NORMAL_H) + (eventPerHour * YEAR_EVT_H);
     document.getElementById('r-year').textContent = fmt(perYear);
     document.getElementById('r-year-base').textContent = fmt(basePerYear);
     document.getElementById('b-year').textContent = '$' + perYear.toFixed(4);
+
+    // Actualizar textos dinámicos según horas configuradas
+    document.getElementById('hours-label').textContent = `(${horasCalculo}h)`;
+    document.getElementById('hours-calc-note').textContent = `Calculado con ${horasCalculo} horas diarias de funcionamiento`;
+    document.getElementById('month-hours-calc').textContent = `(≈${MONTH_HOURS}h − 64h evento)`;
 
     if (boostedPerSec > 0) {
       const secsFor1 = 1 / boostedPerSec;
@@ -3940,6 +3981,7 @@
       badges:     document.getElementById('badges').value,
       diamonds:   document.getElementById('diamonds').value,
       atlasbucks: document.getElementById('atlasbucks').value,
+      horasCalculo: document.getElementById('horas-calculo').value,
       explorer:   explorerActive,
       startDate:  document.getElementById('start-date').value,
     };
@@ -3964,6 +4006,7 @@
         badges:     document.getElementById('badges').value,
         diamonds:   document.getElementById('diamonds').value,
         atlasbucks: document.getElementById('atlasbucks').value,
+        horasCalculo: document.getElementById('horas-calculo').value,
         explorer:   explorerActive,
         startDate:  document.getElementById('start-date').value,
       }));
@@ -3975,7 +4018,7 @@
   async function loadData() {
     let data = null;
     const params = new URLSearchParams(window.location.search);
-    const urlKeys = ['common','rare','epic','legendary','badges','diamonds','atlasbucks','explorer'];
+    const urlKeys = ['common','rare','epic','legendary','badges','diamonds','atlasbucks','horasCalculo','explorer'];
     if (urlKeys.some(k => params.has(k))) {
       data = {};
       urlKeys.forEach(k => {
@@ -3987,8 +4030,11 @@
       if (local) { try { data = JSON.parse(local); } catch(e) {} }
     }
     if (!data) return;
-    ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
-      if (data[k] !== undefined) document.getElementById(k).value = data[k];
+    ['common','rare','epic','legendary','badges','diamonds','atlasbucks','horasCalculo'].forEach(k => {
+      if (data[k] !== undefined) {
+        const el = document.getElementById(k === 'horasCalculo' ? 'horas-calculo' : k);
+        if (el) el.value = data[k];
+      }
     });
     if (data.startDate) document.getElementById('start-date').value = data.startDate;
     if (data.explorer === false || data.explorer === 'false') {
