@@ -935,6 +935,132 @@
     }
     .btn-edit-country:hover { background: #a78bfa; color: #fff; box-shadow: 0 0 14px rgba(167,139,250,0.4); }
 
+    /* ── Historial de Parcelas ── */
+    .historial-section { margin-top: 16px; }
+    .historial-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .historial-card::before {
+      content: '';
+      display: block;
+      height: 2px;
+      background: linear-gradient(90deg, var(--glow), var(--glow2));
+    }
+    .historial-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--panel2);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .historial-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--glow);
+    }
+    .historial-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-snapshot {
+      background: rgba(0,255,157,0.1);
+      border: 1px solid var(--glow2);
+      border-radius: 7px;
+      color: var(--glow2);
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-snapshot:hover { background: rgba(0,255,157,0.2); box-shadow: 0 0 12px rgba(0,255,157,0.3); }
+    .btn-snapshot:disabled { opacity: 0.4; cursor: not-allowed; }
+    .historial-body { padding: 16px; }
+    .historial-controls {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .historial-select-wrap {
+      flex: 1;
+      min-width: 200px;
+    }
+    .historial-select-wrap label {
+      display: block;
+      font-size: 9px;
+      color: var(--text2);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    #historialUserSelect {
+      width: 100%;
+      max-height: 140px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      padding: 6px 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #historialUserSelect:focus { border-color: var(--glow); }
+    #historialUserSelect option { padding: 3px 6px; background: var(--panel2); }
+    .btn-render-chart {
+      background: rgba(0,200,255,0.1);
+      border: 1px solid var(--glow);
+      border-radius: 7px;
+      color: var(--glow);
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      padding: 7px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      align-self: flex-end;
+    }
+    .btn-render-chart:hover { background: rgba(0,200,255,0.2); box-shadow: 0 0 12px rgba(0,200,255,0.3); }
+    .historial-chart-wrap {
+      position: relative;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      min-height: 300px;
+    }
+    .historial-empty {
+      text-align: center;
+      color: var(--text2);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 60px 0;
+    }
+    .historial-snapshot-info {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--text2);
+      letter-spacing: 1px;
+    }
+
     /* ── Toast ── */
     .toast {
       position: fixed;
@@ -1869,9 +1995,38 @@
       </div>
     </div>
 
+    <!-- ══ HISTORIAL DE PARCELAS ══ -->
+    <div class="historial-section">
+      <div class="historial-card">
+        <div class="historial-header">
+          <span class="historial-title">📊 HISTORIAL DE PARCELAS</span>
+          <div class="historial-header-right">
+            <span class="historial-snapshot-info" id="historialSnapshotCount">—</span>
+            <button class="btn-snapshot" id="btnSnapshot" onclick="saveSnapshot()">💾 GUARDAR SNAPSHOT</button>
+          </div>
+        </div>
+        <div class="historial-body">
+          <div class="historial-controls">
+            <div class="historial-select-wrap">
+              <label>Selecciona usuarios (Ctrl+clic para varios)</label>
+              <select id="historialUserSelect" multiple size="6">
+                <option disabled>Cargando usuarios...</option>
+              </select>
+            </div>
+            <button class="btn-render-chart" onclick="renderHistorialChart()">📈 VER GRÁFICA</button>
+          </div>
+          <div class="historial-chart-wrap">
+            <div class="historial-empty" id="historialEmpty">Guarda al menos un snapshot y selecciona usuarios para ver la gráfica.</div>
+            <canvas id="historialChart" style="display:none;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script>
     // ── Mini mapa Leaflet ──
     const miniMap = L.map('mini-map', {
@@ -2060,6 +2215,7 @@
         document.getElementById('adminEmail').textContent = user.displayName || user.email;
         loadUsers();
         loadAvisoSlots(); // Cargar los 5 slots de avisos programables
+        loadHistorialData(); // Cargar snapshots del historial
         // Cargar toda la config de una sola vez — sin sockets permanentes
         get(ref(db, 'config')).then((snap) => {
           const cfg = snap.exists() ? snap.val() : {};
@@ -2651,6 +2807,196 @@ function updateStats() {
       if (e.key === 'Enter') window.saveCountry();
       if (e.key === 'Escape') window.closeCountryModal();
     });
+
+    // ══ HISTORIAL DE PARCELAS ══
+
+    let historialData = {};   // { 'YYYY-MM': { uid: { username, parcelas } } }
+    let historialChart = null;
+
+    // Colores para las líneas de la gráfica
+    const CHART_COLORS = [
+      '#00c8ff','#00ff9d','#c084fc','#60a5fa',
+      '#facc15','#4ade80','#f472b6','#fb923c',
+      '#a78bfa','#34d399','#f87171','#38bdf8',
+    ];
+
+    // Guardar snapshot del mes actual
+    window.saveSnapshot = async function() {
+      const btn = document.getElementById('btnSnapshot');
+      btn.disabled = true;
+      btn.textContent = '⏳ GUARDANDO...';
+
+      try {
+        const now  = new Date();
+        const key  = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+        // Solo usuarios no baneados
+        const activos = allUsers.filter(u => !u.bannedChat && !u.bannedLeaderboard);
+
+        const payload = {};
+        activos.forEach(u => {
+          payload[u.uid] = { username: u.username, parcelas: u.total };
+        });
+
+        await set(ref(db, `historial/${key}`), payload);
+        showToast(`📊 Snapshot ${key} guardado (${activos.length} usuarios)`);
+        await loadHistorialData();
+      } catch(e) {
+        showToast('Error al guardar snapshot', true);
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 GUARDAR SNAPSHOT';
+      }
+    };
+
+    // Cargar todos los snapshots desde Firebase
+    async function loadHistorialData() {
+      try {
+        const snap = await get(ref(db, 'historial'));
+        historialData = {};
+
+        if (snap.exists()) {
+          snap.forEach(monthSnap => {
+            historialData[monthSnap.key] = monthSnap.val();
+          });
+        }
+
+        const meses = Object.keys(historialData).length;
+        document.getElementById('historialSnapshotCount').textContent =
+          meses > 0 ? `${meses} snapshot${meses > 1 ? 's' : ''}` : 'Sin snapshots';
+
+        poblarSelectorUsuarios();
+      } catch(e) {
+        console.error('Error cargando historial:', e);
+      }
+    }
+
+    // Llenar el selector con todos los usuarios que aparecen en el historial
+    function poblarSelectorUsuarios() {
+      const select = document.getElementById('historialUserSelect');
+      const meses  = Object.keys(historialData).sort();
+
+      if (meses.length === 0) {
+        select.innerHTML = '<option disabled>Sin snapshots aún</option>';
+        return;
+      }
+
+      // Recopilar usuarios únicos de todos los meses
+      const usuariosMap = {}; // uid → username
+      meses.forEach(mes => {
+        Object.entries(historialData[mes]).forEach(([uid, data]) => {
+          if (!usuariosMap[uid]) usuariosMap[uid] = data.username;
+        });
+      });
+
+      // Ordenar por nombre
+      const sorted = Object.entries(usuariosMap).sort((a, b) => a[1].localeCompare(b[1]));
+
+      select.innerHTML = sorted
+        .map(([uid, username]) => `<option value="${uid}">${username}</option>`)
+        .join('');
+    }
+
+    // Renderizar la gráfica con los usuarios seleccionados
+    window.renderHistorialChart = function() {
+      const select   = document.getElementById('historialUserSelect');
+      const selectedUids = Array.from(select.selectedOptions).map(o => o.value);
+
+      if (selectedUids.length === 0) {
+        showToast('Selecciona al menos un usuario', true);
+        return;
+      }
+
+      const meses = Object.keys(historialData).sort();
+      if (meses.length === 0) {
+        showToast('No hay snapshots guardados', true);
+        return;
+      }
+
+      // Construir datasets
+      const datasets = selectedUids.map((uid, i) => {
+        const color    = CHART_COLORS[i % CHART_COLORS.length];
+        const username = historialData[meses[0]]?.[uid]?.username
+          || historialData[meses.find(m => historialData[m][uid])]?.[uid]?.username
+          || uid;
+
+        const data = meses.map(mes => historialData[mes]?.[uid]?.parcelas ?? null);
+
+        return {
+          label: username,
+          data,
+          borderColor: color,
+          backgroundColor: color + '22',
+          pointBackgroundColor: color,
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          tension: 0.3,
+          fill: false,
+          spanGaps: true,
+        };
+      });
+
+      // Labels de meses en formato legible
+      const labels = meses.map(m => {
+        const [y, mo] = m.split('-');
+        const nombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        return `${nombres[parseInt(mo) - 1]} ${y}`;
+      });
+
+      // Mostrar canvas, ocultar empty
+      document.getElementById('historialEmpty').style.display = 'none';
+      const canvas = document.getElementById('historialChart');
+      canvas.style.display = 'block';
+
+      // Destruir gráfica anterior si existe
+      if (historialChart) { historialChart.destroy(); historialChart = null; }
+
+      historialChart = new Chart(canvas, {
+        type: 'line',
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: {
+                color: '#cce4ff',
+                font: { family: 'Rajdhani', size: 13, weight: '600' },
+                usePointStyle: true,
+                padding: 16,
+              }
+            },
+            tooltip: {
+              backgroundColor: '#0b1626',
+              borderColor: '#1a3a5c',
+              borderWidth: 1,
+              titleColor: '#00c8ff',
+              bodyColor: '#cce4ff',
+              titleFont: { family: 'Orbitron', size: 10 },
+              bodyFont:  { family: 'Rajdhani', size: 13 },
+              callbacks: {
+                label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y?.toLocaleString() ?? '—'} parcelas`,
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#6b8ab0', font: { family: 'Share Tech Mono', size: 11 } },
+              grid:  { color: 'rgba(26,58,92,0.5)' },
+            },
+            y: {
+              ticks: {
+                color: '#6b8ab0',
+                font:  { family: 'Share Tech Mono', size: 11 },
+                callback: v => v.toLocaleString(),
+              },
+              grid: { color: 'rgba(26,58,92,0.5)' },
+            }
+          }
+        }
+      });
+    };
 
     // ── Toast ──
     let toastTimer;
