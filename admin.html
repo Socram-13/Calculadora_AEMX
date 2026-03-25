@@ -2431,6 +2431,8 @@
   const usersMap = {};
   allUsers.forEach(u => { usersMap[u.uid] = u; });
   loadActiveCodes(usersMap);
+  // Actualizar selector del historial con usuarios en vivo
+  if (typeof poblarSelectorUsuarios === 'function') poblarSelectorUsuarios();
 }
 
 function updateStats() {
@@ -2872,33 +2874,24 @@ function updateStats() {
       }
     }
 
-    // Llenar el selector con todos los usuarios que aparecen en el historial
+    // Llenar el selector con usuarios activos (no baneados)
     function poblarSelectorUsuarios() {
-      const select = document.getElementById('historialUserSelect');
-      const meses  = Object.keys(historialData).sort();
+      const select  = document.getElementById('historialUserSelect');
+      const activos = allUsers
+        .filter(u => !u.bannedChat && !u.bannedLeaderboard)
+        .sort((a, b) => a.username.localeCompare(b.username));
 
-      if (meses.length === 0) {
-        select.innerHTML = '<option disabled>Sin snapshots aún</option>';
+      if (activos.length === 0) {
+        select.innerHTML = '<option disabled>Sin usuarios activos</option>';
         return;
       }
 
-      // Recopilar usuarios únicos de todos los meses
-      const usuariosMap = {}; // uid → username
-      meses.forEach(mes => {
-        Object.entries(historialData[mes]).forEach(([uid, data]) => {
-          if (!usuariosMap[uid]) usuariosMap[uid] = data.username;
-        });
-      });
-
-      // Ordenar por nombre
-      const sorted = Object.entries(usuariosMap).sort((a, b) => a[1].localeCompare(b[1]));
-
-      select.innerHTML = sorted
-        .map(([uid, username]) => `<option value="${uid}">${username}</option>`)
+      select.innerHTML = activos
+        .map(u => `<option value="${u.uid}">${u.username} (${u.total.toLocaleString()})</option>`)
         .join('');
     }
 
-    // Renderizar la gráfica con los usuarios seleccionados
+        // Renderizar la gráfica con los usuarios seleccionados
     window.renderHistorialChart = function() {
       const select   = document.getElementById('historialUserSelect');
       const selectedUids = Array.from(select.selectedOptions).map(o => o.value);
