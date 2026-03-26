@@ -4460,41 +4460,68 @@
     } catch(e) {}
   }
 
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      function(pos) {
-        var lat = pos.coords.latitude;
-        var lon = pos.coords.longitude;
-        fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=es")
-          .then(function(res) { return res.json(); })
-          .then(function(data) {
-            var ciudad = data.city || data.locality || "";
-            var estado = data.principalSubdivision || "";
-            if (ciudad) actualizarCiudad(ciudad, estado);
-            if (data.countryName) actualizarPais(data.countryName);
-          })
-          .catch(function() {
-            fetch("https://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json&accept-language=es")
-              .then(function(r) { return r.json(); })
-              .then(function(d) {
-                var ciudad = d.address && (d.address.city || d.address.town || d.address.village || "");
-                var estado = d.address && (d.address.state || "");
-                var pais   = d.address && (d.address.country || "");
-                if (ciudad) actualizarCiudad(ciudad, estado);
-                if (pais)   actualizarPais(pais);
-              }).catch(function() {});
-          });
-      },
-      function() {
-        // GPS denegado o error → fallback por IP
-        ubicacionPorIP();
-      },
-      { timeout: 8000 }
-    );
-  } else {
-    // Navegador sin soporte GPS → fallback por IP
-    ubicacionPorIP();
-  }
+  // Intentar ubicación por IP primero; si no hay ciudad, pedir GPS como fallback
+  (async function() {
+    var ciudadObtenida = false;
+    var elLoc = document.getElementById("user-location");
+
+    // 1. Intentar por IP
+    try {
+      var r1 = await fetch("https://get.geojs.io/v1/ip/geo.json");
+      var d1 = await r1.json();
+      if (d1.country) actualizarPais(d1.country);
+      if (d1.city && d1.region) { actualizarCiudad(d1.city, d1.region); ciudadObtenida = true; }
+    } catch(e) {}
+
+    if (!ciudadObtenida) {
+      try {
+        var r2 = await fetch("https://api.ip.sb/geoip");
+        var d2 = await r2.json();
+        if (d2.country) actualizarPais(d2.country);
+        if (d2.city && d2.region) { actualizarCiudad(d2.city, d2.region); ciudadObtenida = true; }
+      } catch(e) {}
+    }
+
+    if (!ciudadObtenida) {
+      try {
+        var r3 = await fetch("https://ipapi.co/json/", { headers: { "Accept": "application/json" } });
+        var d3 = await r3.json();
+        if (d3.country_name) actualizarPais(d3.country_name);
+        if (d3.city && d3.region) { actualizarCiudad(d3.city, d3.region); ciudadObtenida = true; }
+      } catch(e) {}
+    }
+
+    // 2. Solo si ninguna IP devolvió ciudad, pedir GPS
+    if (!ciudadObtenida && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        function(pos) {
+          var lat = pos.coords.latitude;
+          var lon = pos.coords.longitude;
+          fetch("https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=" + lat + "&longitude=" + lon + "&localityLanguage=es")
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              var ciudad = data.city || data.locality || "";
+              var estado = data.principalSubdivision || "";
+              if (ciudad) actualizarCiudad(ciudad, estado);
+              if (data.countryName) actualizarPais(data.countryName);
+            })
+            .catch(function() {
+              fetch("https://nominatim.openstreetmap.org/reverse?lat=" + lat + "&lon=" + lon + "&format=json&accept-language=es")
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                  var ciudad = d.address && (d.address.city || d.address.town || d.address.village || "");
+                  var estado = d.address && (d.address.state || "");
+                  var pais   = d.address && (d.address.country || "");
+                  if (ciudad) actualizarCiudad(ciudad, estado);
+                  if (pais)   actualizarPais(pais);
+                }).catch(function() {});
+            });
+        },
+        function() {},
+        { timeout: 8000 }
+      );
+    }
+  })();
 
   async function initVisitCounter() {
     const wrapper = document.createElement('div');
