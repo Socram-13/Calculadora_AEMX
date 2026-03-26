@@ -4464,8 +4464,6 @@
     if (elLoc && elLoc.textContent === "...") elLoc.textContent = "—";
   }
 
-  setTimeout(ubicacionPorIP, 300);
-
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       function(pos) {
@@ -4491,8 +4489,15 @@
               }).catch(function() {});
           });
       },
-      function() {}
+      function() {
+        // GPS denegado o error → fallback por IP
+        ubicacionPorIP();
+      },
+      { timeout: 8000 }
     );
+  } else {
+    // Navegador sin soporte GPS → fallback por IP
+    ubicacionPorIP();
   }
 
   async function initVisitCounter() {
