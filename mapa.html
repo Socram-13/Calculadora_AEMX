@@ -342,6 +342,113 @@
       .stats-bar { gap: 6px; }
       .stat-num { font-size: 18px; }
     }
+
+    /* ── ZOOM SLIDER ── */
+    .zoom-slider-wrap {
+      position: absolute;
+      right: 14px;
+      bottom: 36px;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 8px;
+      box-shadow: 0 0 16px rgba(0,200,255,0.15);
+    }
+    .zoom-slider-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--glow);
+      letter-spacing: 1px;
+    }
+    .zoom-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      writing-mode: vertical-lr;
+      direction: rtl;
+      width: 4px;
+      height: 120px;
+      background: var(--border);
+      outline: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .zoom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--glow);
+      box-shadow: 0 0 8px var(--glow);
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+    .zoom-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--glow);
+      box-shadow: 0 0 8px var(--glow);
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+    .zoom-btn-sm {
+      font-family: 'Orbitron', monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--glow);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      padding: 0;
+    }
+    .zoom-btn-sm:hover { border-color: var(--glow); background: rgba(0,200,255,0.1); }
+
+    /* ── FULLSCREEN BTN ── */
+    .fullscreen-btn {
+      position: absolute;
+      right: 14px;
+      top: 14px;
+      z-index: 999;
+      font-family: 'Orbitron', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text2);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      box-shadow: 0 0 10px rgba(0,200,255,0.1);
+    }
+    .fullscreen-btn:hover { border-color: var(--glow); color: var(--glow); }
+    .fullscreen-btn svg { width: 13px; height: 13px; }
+
+    /* Fullscreen mode */
+    .map-wrap.is-fullscreen {
+      position: fixed !important;
+      inset: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      z-index: 9999 !important;
+    }
+    .map-wrap.is-fullscreen #map {
+      height: 100vh !important;
+    }
   </style>
 </head>
 <body>
@@ -383,12 +490,31 @@
   </div>
 
   <!-- Mapa -->
-  <div class="map-wrap">
+  <div class="map-wrap" id="mapWrap">
     <div class="map-loading" id="mapLoading">
       <div class="spinner"></div>
       <div class="loading-text">CARGANDO MAPA...</div>
     </div>
     <div id="map"></div>
+
+    <!-- Botón pantalla completa -->
+    <button class="fullscreen-btn" id="fullscreenBtn" title="Pantalla completa">
+      <svg id="fsIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 3 21 3 21 9"></polyline>
+        <polyline points="9 21 3 21 3 15"></polyline>
+        <line x1="21" y1="3" x2="14" y2="10"></line>
+        <line x1="3" y1="21" x2="10" y2="14"></line>
+      </svg>
+      FULLSCREEN
+    </button>
+
+    <!-- Slider de zoom -->
+    <div class="zoom-slider-wrap" id="zoomSliderWrap">
+      <span class="zoom-slider-label" id="zoomLevel">Z5</span>
+      <button class="zoom-btn-sm" id="zoomIn">+</button>
+      <input type="range" class="zoom-slider" id="zoomSlider" min="4" max="10" step="1" value="5">
+      <button class="zoom-btn-sm" id="zoomOut">−</button>
+    </div>
   </div>
 
   <!-- Leyenda -->
@@ -893,6 +1019,77 @@
       renderMapa(raw);
     });
   }
+
+  // ── Zoom suave con scroll ──
+  map.scrollWheelZoom.disable();
+  let zoomAccum = 0;
+  let zoomTimer = null;
+  map.getContainer().addEventListener('wheel', (e) => {
+    e.preventDefault();
+    zoomAccum += e.deltaY > 0 ? -0.4 : 0.4;
+    clearTimeout(zoomTimer);
+    zoomTimer = setTimeout(() => {
+      const target = Math.round(map.getZoom() + zoomAccum);
+      map.setZoom(Math.max(4, Math.min(10, target)), { animate: true });
+      zoomAccum = 0;
+    }, 60);
+  }, { passive: false });
+
+  // ── Slider de zoom ──
+  const zoomSlider  = document.getElementById('zoomSlider');
+  const zoomLevelEl = document.getElementById('zoomLevel');
+  const zoomInBtn   = document.getElementById('zoomIn');
+  const zoomOutBtn  = document.getElementById('zoomOut');
+
+  function syncSlider() {
+    const z = map.getZoom();
+    zoomSlider.value    = z;
+    zoomLevelEl.textContent = `Z${z}`;
+  }
+  map.on('zoomend', syncSlider);
+
+  zoomSlider.addEventListener('input', () => {
+    map.setZoom(parseInt(zoomSlider.value), { animate: true });
+  });
+  zoomInBtn.addEventListener('click', () => {
+    map.setZoom(Math.min(10, map.getZoom() + 1), { animate: true });
+  });
+  zoomOutBtn.addEventListener('click', () => {
+    map.setZoom(Math.max(4, map.getZoom() - 1), { animate: true });
+  });
+
+  // ── Pantalla completa ──
+  const mapWrap       = document.getElementById('mapWrap');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const fsIcon        = document.getElementById('fsIcon');
+
+  const ICON_EXPAND = `
+    <polyline points="15 3 21 3 21 9"></polyline>
+    <polyline points="9 21 3 21 3 15"></polyline>
+    <line x1="21" y1="3" x2="14" y2="10"></line>
+    <line x1="3" y1="21" x2="10" y2="14"></line>`;
+  const ICON_COLLAPSE = `
+    <polyline points="4 14 10 14 10 20"></polyline>
+    <polyline points="20 10 14 10 14 4"></polyline>
+    <line x1="10" y1="14" x2="3" y2="21"></line>
+    <line x1="21" y1="3" x2="14" y2="10"></line>`;
+
+  let isFullscreen = false;
+
+  fullscreenBtn.addEventListener('click', () => {
+    isFullscreen = !isFullscreen;
+    mapWrap.classList.toggle('is-fullscreen', isFullscreen);
+    fsIcon.innerHTML = isFullscreen ? ICON_COLLAPSE : ICON_EXPAND;
+    fullscreenBtn.querySelector('span') && (fullscreenBtn.querySelector('span').textContent = isFullscreen ? 'SALIR' : 'FULLSCREEN');
+    // Reemplazar texto del botón
+    fullscreenBtn.childNodes.forEach(n => { if (n.nodeType === 3) n.textContent = isFullscreen ? ' SALIR' : ' FULLSCREEN'; });
+    setTimeout(() => map.invalidateSize(), 200);
+  });
+
+  // ESC para salir de fullscreen
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isFullscreen) fullscreenBtn.click();
+  });
 
   // ── Auth — solo acceso desde admin ──
   const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
