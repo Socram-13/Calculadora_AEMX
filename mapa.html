@@ -1315,8 +1315,9 @@
   });
 
   // Exponer variables globales para el script de municipios
-  window._map          = map;
-  window._playerMarkers = playerMarkers;
+  window._map           = map;
+  window._playerMarkers = playerMarkers;   // misma referencia al array
+  window._getGeojson    = () => geojsonLayer;
 
 </script>
 
@@ -1496,9 +1497,13 @@
 
   document.getElementById('toggleJugadores').addEventListener('click', () => {
     jugadoresVisible = !jugadoresVisible;
-    const pm = window._playerMarkers || [];
     const map = window._map;
+    const pm  = window._playerMarkers || [];
+    // Ocultar/mostrar marcadores de jugadores
     pm.forEach(m => jugadoresVisible ? m.addTo(map) : map.removeLayer(m));
+    // Ocultar/mostrar capa GeoJSON de estados
+    const geo = window._getGeojson && window._getGeojson();
+    if (geo) jugadoresVisible ? geo.addTo(map) : map.removeLayer(geo);
     document.getElementById('toggleJugadores').classList.toggle('active', jugadoresVisible);
   });
 
