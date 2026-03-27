@@ -1413,22 +1413,26 @@
   async function buscarSugerencias(q) {
     if (q.length < 2) { hideSuggestions(); return; }
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Mexico')}&format=json&limit=6&accept-language=es&addressdetails=1`;
-      const res  = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=es&bbox=-118.4,14.5,-86.7,32.7`;
+      const res  = await fetch(url);
       const data = await res.json();
-      if (!data.length) { hideSuggestions(); return; }
-      showSuggestions(data);
+      if (!data.features || !data.features.length) { hideSuggestions(); return; }
+      // Filtrar solo resultados en México
+      const mexico = data.features.filter(f => f.properties.country === 'México' || f.properties.country === 'Mexico');
+      if (!mexico.length) { hideSuggestions(); return; }
+      showSuggestions(mexico);
     } catch(e) { hideSuggestions(); }
   }
 
   function showSuggestions(results) {
     suggestionsBox.innerHTML = '';
     results.forEach(r => {
-      const coords  = [parseFloat(r.lat), parseFloat(r.lon)];
-      // Nombre legible: usar display_name recortado al primer par de partes relevantes
-      const parts   = r.display_name.split(',').map(s => s.trim());
-      const label   = parts.slice(0, 3).join(', ');
-      const item    = document.createElement('div');
+      const props  = r.properties;
+      const coords = [r.geometry.coordinates[1], r.geometry.coordinates[0]];
+      // Construir label legible
+      const parts = [props.name, props.city || props.county, props.state].filter(Boolean);
+      const label = parts.join(', ');
+      const item  = document.createElement('div');
       item.className = 'suggestion-item';
       item.textContent = label;
       item.addEventListener('mousedown', (e) => {
