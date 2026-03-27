@@ -911,7 +911,7 @@
     Object.values(estadoLayers).forEach(l => map.removeLayer(l));
     estadoLayers = {};
     playerMarkers.forEach(m => map.removeLayer(m));
-    playerMarkers = [];
+    playerMarkers.splice(0); // mutar el mismo array, no reasignar
     networkLines.forEach(l => map.removeLayer(l));
     networkLines = [];
     if (geojsonLayer) { map.removeLayer(geojsonLayer); geojsonLayer = null; }
