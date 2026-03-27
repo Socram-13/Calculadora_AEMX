@@ -602,10 +602,10 @@
       border: 1px solid #ff4d4d;
       border-top: none;
       border-radius: 0 0 8px 8px;
-      z-index: 9999;
+      z-index: 99999;
       max-height: 200px;
       overflow-y: auto;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
     }
     .suggestion-item {
       padding: 8px 14px;
@@ -1413,26 +1413,29 @@
   async function buscarSugerencias(q) {
     if (q.length < 2) { hideSuggestions(); return; }
     try {
-      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=6&lang=es&bbox=-118.4,14.5,-86.7,32.7`;
+      // Photon: bbox = lon_min,lat_min,lon_max,lat_max (México)
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=es&bbox=-118.4,14.5,-86.7,32.7`;
       const res  = await fetch(url);
+      if (!res.ok) { hideSuggestions(); return; }
       const data = await res.json();
       if (!data.features || !data.features.length) { hideSuggestions(); return; }
-      // Filtrar solo resultados en México
-      const mexico = data.features.filter(f => f.properties.country === 'México' || f.properties.country === 'Mexico');
-      if (!mexico.length) { hideSuggestions(); return; }
-      showSuggestions(mexico);
-    } catch(e) { hideSuggestions(); }
+      showSuggestions(data.features);
+    } catch(e) {
+      console.error('Photon error:', e);
+      hideSuggestions();
+    }
   }
 
-  function showSuggestions(results) {
+  function showSuggestions(features) {
     suggestionsBox.innerHTML = '';
-    results.forEach(r => {
+    let shown = 0;
+    features.forEach(r => {
       const props  = r.properties;
+      if (!props.name) return;
       const coords = [r.geometry.coordinates[1], r.geometry.coordinates[0]];
-      // Construir label legible
-      const parts = [props.name, props.city || props.county, props.state].filter(Boolean);
-      const label = parts.join(', ');
-      const item  = document.createElement('div');
+      const parts  = [props.name, props.city || props.county || props.district, props.state].filter(Boolean);
+      const label  = [...new Set(parts)].join(', '); // evitar duplicados
+      const item   = document.createElement('div');
       item.className = 'suggestion-item';
       item.textContent = label;
       item.addEventListener('mousedown', (e) => {
@@ -1442,8 +1445,10 @@
         hideSuggestions();
       });
       suggestionsBox.appendChild(item);
+      shown++;
     });
-    suggestionsBox.style.display = 'block';
+    if (shown > 0) suggestionsBox.style.display = 'block';
+    else hideSuggestions();
   }
 
   function hideSuggestions() {
