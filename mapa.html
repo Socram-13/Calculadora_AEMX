@@ -1158,14 +1158,15 @@
     return [base[0]+jitter[0], base[1]+jitter[1]];
   }
 
-  // Geocodificación exacta con Nominatim (en segundo plano)
+  // Geocodificación exacta vía proxy CORS (en segundo plano)
   async function geocodeExact(city) {
     if (!city) return null;
     const key = city.toLowerCase().trim();
     if (CITY_COORDS_CACHE[key]) return CITY_COORDS_CACHE[key];
     try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ', Mexico')}&format=json&limit=1&accept-language=es`;
-      const res  = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      const nominatim = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ', Mexico')}&format=json&limit=1&accept-language=es`;
+      const url = `https://corsproxy.io/?url=${encodeURIComponent(nominatim)}`;
+      const res  = await fetch(url);
       const data = await res.json();
       if (data[0]) {
         const coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
@@ -1421,19 +1422,15 @@
   async function buscarSugerencias(q) {
     if (q.length < 2) { hideSuggestions(); return; }
     try {
-      const url = `https://nominatim.openstreetmap.org/search?` +
-        `q=${encodeURIComponent(q + ' Mexico')}` +
-        `&format=json&limit=8&addressdetails=1&accept-language=es` +
-        `&countrycodes=mx`;
-      const res  = await fetch(url, {
-        headers: { 'Accept-Language': 'es', 'User-Agent': 'AEMX-Map/1.0' }
-      });
+      const nominatim = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ' Mexico')}&format=json&limit=8&addressdetails=1&accept-language=es&countrycodes=mx`;
+      const url = `https://corsproxy.io/?url=${encodeURIComponent(nominatim)}`;
+      const res  = await fetch(url);
       if (!res.ok) { hideSuggestions(); return; }
       const data = await res.json();
       if (!data.length) { hideSuggestions(); return; }
       showSuggestions(data);
     } catch(e) {
-      console.error('Nominatim error:', e);
+      console.error('Geocoding error:', e);
       hideSuggestions();
     }
   }
