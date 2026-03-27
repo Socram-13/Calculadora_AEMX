@@ -561,11 +561,62 @@
       margin-left: 2px;
     }
     .municipio-del:hover { color: #ff4d4d; }
+    /* ── TOGGLE LAYER BUTTONS ── */
+    .toggle-layer-btn {
+      font-family: 'Orbitron', monospace;
+      font-size: 8px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text2);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .toggle-layer-btn.active {
+      border-color: var(--glow);
+      color: var(--glow);
+      background: rgba(0,200,255,0.08);
+    }
+    .toggle-layer-btn.active#toggleMunicipios {
+      border-color: #ff4d4d;
+      color: #ff4d4d;
+      background: rgba(255,77,77,0.08);
+    }
+    .toggle-layer-btn:hover { opacity: 0.8; }
+
     .municipios-empty {
       color: var(--text2);
       font-size: 12px;
       font-style: italic;
     }
+    .municipio-suggestions {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0; right: 0;
+      background: var(--panel2);
+      border: 1px solid #ff4d4d;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      z-index: 9999;
+      max-height: 200px;
+      overflow-y: auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+    .suggestion-item {
+      padding: 8px 14px;
+      font-size: 13px;
+      color: var(--text);
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .suggestion-item:last-child { border-bottom: none; }
+    .suggestion-item:hover { background: rgba(255,77,77,0.15); color: #ff9999; }
   </style>
 </head>
 <body>
@@ -646,13 +697,24 @@
       <div style="width:12px;height:12px;border-radius:50%;background:var(--glow);box-shadow:0 0 6px var(--glow)"></div>
       Jugador
     </div>
+    <div style="margin-left:12px;display:flex;gap:8px;">
+      <button class="toggle-layer-btn active" id="toggleJugadores" title="Mostrar/ocultar jugadores">
+        👤 JUGADORES
+      </button>
+      <button class="toggle-layer-btn active" id="toggleMunicipios" title="Mostrar/ocultar municipios">
+        📍 MUNICIPIOS
+      </button>
+    </div>
   </div>
 
   <!-- Panel Municipios -->
   <div class="municipios-panel">
     <div class="municipios-title">📍 MUNICIPIOS DE INTERÉS</div>
-    <div class="municipios-input-row">
-      <input type="text" class="municipios-input" id="municipioInput" placeholder="Ej: Mérida, Valladolid, Tizimín...">
+    <div class="municipios-input-row" style="position:relative;">
+      <div style="flex:1;position:relative;">
+        <input type="text" class="municipios-input" id="municipioInput" placeholder="Ej: Mérida, Valladolid, Tizimín..." autocomplete="off">
+        <div class="municipio-suggestions" id="municipioSuggestions"></div>
+      </div>
       <button class="municipios-add-btn" id="municipioAddBtn">+ AGREGAR</button>
     </div>
     <div class="municipios-list" id="municipiosList">
@@ -1253,7 +1315,7 @@
 
   // ── MUNICIPIOS ──
   const LS_KEY = 'aemx_municipios';
-  let municipioMarkers = {}; // nombre → L.marker
+  let municipioMarkers = {};
 
   function municipioIcon() {
     const html = `
@@ -1291,15 +1353,13 @@
     const list  = getMunicipios();
     const el    = document.getElementById('municipiosList');
     const empty = document.getElementById('municipiosEmpty');
-    // Limpiar tags (dejar el empty span)
     [...el.querySelectorAll('.municipio-tag')].forEach(t => t.remove());
     empty.style.display = list.length ? 'none' : '';
     list.forEach(m => {
       const tag = document.createElement('div');
       tag.className = 'municipio-tag';
-      tag.dataset.name = m.name;
       tag.innerHTML = `
-        <div class="municipio-dot ${m.coords ? '' : 'loading'}" id="dot-${CSS.escape(m.name)}"></div>
+        <div class="municipio-dot" id="dot-${CSS.escape(m.name)}"></div>
         <span>${m.name}</span>
         <button class="municipio-del" title="Eliminar">×</button>
       `;
@@ -1319,59 +1379,115 @@
       </div>
     `);
     municipioMarkers[m.name] = marker;
-    // Actualizar dot a rojo
-    const dot = document.getElementById(`dot-${CSS.escape(m.name)}`);
-    if (dot) dot.classList.remove('loading');
   }
 
   function removeMunicipio(name) {
     if (municipioMarkers[name]) { map.removeLayer(municipioMarkers[name]); delete municipioMarkers[name]; }
-    const list = getMunicipios().filter(m => m.name !== name);
-    saveMunicipios(list);
+    saveMunicipios(getMunicipios().filter(m => m.name !== name));
     renderMunicipiosList();
   }
 
-  async function addMunicipio(name) {
+  function addMunicipio(name, coords) {
     const trimmed = name.trim();
     if (!trimmed) return;
     const list = getMunicipios();
-    if (list.find(m => m.name.toLowerCase() === trimmed.toLowerCase())) return; // ya existe
-    const entry = { name: trimmed, coords: null };
+    if (list.find(m => m.name.toLowerCase() === trimmed.toLowerCase())) return;
+    const entry = { name: trimmed, coords };
     list.push(entry);
     saveMunicipios(list);
     renderMunicipiosList();
-    // Geocodificar en segundo plano
-    try {
-      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed + ', Mexico')}&format=json&limit=1&accept-language=es`;
-      const res  = await fetch(url, { headers: { 'Accept-Language': 'es' } });
-      const data = await res.json();
-      if (data[0]) {
-        entry.coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        // Actualizar en localStorage
-        const updated = getMunicipios().map(m => m.name === trimmed ? entry : m);
-        saveMunicipios(updated);
-        addMarkerMunicipio(entry);
-      }
-    } catch(e) {}
+    addMarkerMunicipio(entry);
   }
 
   // Cargar municipios guardados al iniciar
   getMunicipios().forEach(m => addMarkerMunicipio(m));
   renderMunicipiosList();
 
-  // Eventos UI
-  document.getElementById('municipioAddBtn').addEventListener('click', async () => {
-    const input = document.getElementById('municipioInput');
-    const btn   = document.getElementById('municipioAddBtn');
-    if (!input.value.trim()) return;
-    btn.disabled = true;
-    await addMunicipio(input.value);
-    input.value = '';
-    btn.disabled = false;
-    input.focus();
+  // ── Autocomplete ──
+  const municipioInput   = document.getElementById('municipioInput');
+  const municipioAddBtn  = document.getElementById('municipioAddBtn');
+  const suggestionsBox   = document.getElementById('municipioSuggestions');
+  let selectedSuggestion = null; // { name, coords }
+  let searchTimer        = null;
+
+  async function buscarSugerencias(q) {
+    if (q.length < 2) { hideSuggestions(); return; }
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ', Mexico')}&format=json&limit=6&accept-language=es&addressdetails=1`;
+      const res  = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      const data = await res.json();
+      if (!data.length) { hideSuggestions(); return; }
+      showSuggestions(data);
+    } catch(e) { hideSuggestions(); }
+  }
+
+  function showSuggestions(results) {
+    suggestionsBox.innerHTML = '';
+    results.forEach(r => {
+      const coords  = [parseFloat(r.lat), parseFloat(r.lon)];
+      // Nombre legible: usar display_name recortado al primer par de partes relevantes
+      const parts   = r.display_name.split(',').map(s => s.trim());
+      const label   = parts.slice(0, 3).join(', ');
+      const item    = document.createElement('div');
+      item.className = 'suggestion-item';
+      item.textContent = label;
+      item.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        selectedSuggestion = { name: label, coords };
+        municipioInput.value = label;
+        hideSuggestions();
+      });
+      suggestionsBox.appendChild(item);
+    });
+    suggestionsBox.style.display = 'block';
+  }
+
+  function hideSuggestions() {
+    suggestionsBox.style.display = 'none';
+    suggestionsBox.innerHTML = '';
+  }
+
+  municipioInput.addEventListener('input', () => {
+    selectedSuggestion = null;
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => buscarSugerencias(municipioInput.value), 350);
   });
-  document.getElementById('municipioInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('municipioAddBtn').click();
+
+  municipioInput.addEventListener('blur', () => setTimeout(hideSuggestions, 150));
+  municipioInput.addEventListener('keydown', e => {
+    if (e.key === 'Escape') hideSuggestions();
+    if (e.key === 'Enter') municipioAddBtn.click();
+  });
+
+  municipioAddBtn.addEventListener('click', () => {
+    const val = municipioInput.value.trim();
+    if (!val) return;
+    if (selectedSuggestion) {
+      addMunicipio(selectedSuggestion.name, selectedSuggestion.coords);
+    } else {
+      // Si escribió sin seleccionar sugerencia, intentar con lo que hay
+      addMunicipio(val, null);
+    }
+    municipioInput.value = '';
+    selectedSuggestion = null;
+    hideSuggestions();
+    municipioInput.focus();
+  });
+
+  // ── Toggle capas ──
+  let jugadoresVisible  = true;
+  let municipiosVisible = true;
+
+  document.getElementById('toggleJugadores').addEventListener('click', () => {
+    jugadoresVisible = !jugadoresVisible;
+    playerMarkers.forEach(m => jugadoresVisible ? m.addTo(map) : map.removeLayer(m));
+    document.getElementById('toggleJugadores').classList.toggle('active', jugadoresVisible);
+  });
+
+  document.getElementById('toggleMunicipios').addEventListener('click', () => {
+    municipiosVisible = !municipiosVisible;
+    Object.values(municipioMarkers).forEach(m => municipiosVisible ? m.addTo(map) : map.removeLayer(m));
+    document.getElementById('toggleMunicipios').classList.toggle('active', municipiosVisible);
   });
 
 </script>
