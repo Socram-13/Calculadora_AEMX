@@ -1313,9 +1313,16 @@
     }
   });
 
-  // ── MUNICIPIOS ──
+  // Exponer variables globales para el script de municipios
+  window._map          = map;
+  window._playerMarkers = playerMarkers;
+
+</script>
+
+<script>
+  // ── MUNICIPIOS (script separado, fuera del módulo) ──
   const LS_KEY = 'aemx_municipios';
-  let municipioMarkers = {};
+  const municipioMarkers = {};
 
   function municipioIcon() {
     const html = `
@@ -1370,6 +1377,8 @@
 
   function addMarkerMunicipio(m) {
     if (!m.coords) return;
+    const map = window._map;
+    if (!map) return;
     if (municipioMarkers[m.name]) map.removeLayer(municipioMarkers[m.name]);
     const marker = L.marker(m.coords, { icon: municipioIcon() }).addTo(map);
     marker.bindPopup(`
@@ -1382,7 +1391,9 @@
   }
 
   function removeMunicipio(name) {
-    if (municipioMarkers[name]) { map.removeLayer(municipioMarkers[name]); delete municipioMarkers[name]; }
+    const map = window._map;
+    if (map && municipioMarkers[name]) map.removeLayer(municipioMarkers[name]);
+    delete municipioMarkers[name];
     saveMunicipios(getMunicipios().filter(m => m.name !== name));
     renderMunicipiosList();
   }
@@ -1399,21 +1410,17 @@
     addMarkerMunicipio(entry);
   }
 
-  // Cargar municipios guardados al iniciar
-  getMunicipios().forEach(m => addMarkerMunicipio(m));
-  renderMunicipiosList();
-
   // ── Autocomplete ──
-  const municipioInput   = document.getElementById('municipioInput');
-  const municipioAddBtn  = document.getElementById('municipioAddBtn');
-  const suggestionsBox   = document.getElementById('municipioSuggestions');
-  let selectedSuggestion = null; // { name, coords }
+  let selectedSuggestion = null;
   let searchTimer        = null;
+
+  const municipioInput  = document.getElementById('municipioInput');
+  const municipioAddBtn = document.getElementById('municipioAddBtn');
+  const suggestionsBox  = document.getElementById('municipioSuggestions');
 
   async function buscarSugerencias(q) {
     if (q.length < 2) { hideSuggestions(); return; }
     try {
-      // Photon: bbox = lon_min,lat_min,lon_max,lat_max (México)
       const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=es&bbox=-118.4,14.5,-86.7,32.7`;
       const res  = await fetch(url);
       if (!res.ok) { hideSuggestions(); return; }
@@ -1434,7 +1441,7 @@
       if (!props.name) return;
       const coords = [r.geometry.coordinates[1], r.geometry.coordinates[0]];
       const parts  = [props.name, props.city || props.county || props.district, props.state].filter(Boolean);
-      const label  = [...new Set(parts)].join(', '); // evitar duplicados
+      const label  = [...new Set(parts)].join(', ');
       const item   = document.createElement('div');
       item.className = 'suggestion-item';
       item.textContent = label;
@@ -1461,7 +1468,6 @@
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => buscarSugerencias(municipioInput.value), 350);
   });
-
   municipioInput.addEventListener('blur', () => setTimeout(hideSuggestions, 150));
   municipioInput.addEventListener('keydown', e => {
     if (e.key === 'Escape') hideSuggestions();
@@ -1474,7 +1480,6 @@
     if (selectedSuggestion) {
       addMunicipio(selectedSuggestion.name, selectedSuggestion.coords);
     } else {
-      // Si escribió sin seleccionar sugerencia, intentar con lo que hay
       addMunicipio(val, null);
     }
     municipioInput.value = '';
@@ -1489,16 +1494,31 @@
 
   document.getElementById('toggleJugadores').addEventListener('click', () => {
     jugadoresVisible = !jugadoresVisible;
-    playerMarkers.forEach(m => jugadoresVisible ? m.addTo(map) : map.removeLayer(m));
+    const pm = window._playerMarkers || [];
+    const map = window._map;
+    pm.forEach(m => jugadoresVisible ? m.addTo(map) : map.removeLayer(m));
     document.getElementById('toggleJugadores').classList.toggle('active', jugadoresVisible);
   });
 
   document.getElementById('toggleMunicipios').addEventListener('click', () => {
     municipiosVisible = !municipiosVisible;
+    const map = window._map;
     Object.values(municipioMarkers).forEach(m => municipiosVisible ? m.addTo(map) : map.removeLayer(m));
     document.getElementById('toggleMunicipios').classList.toggle('active', municipiosVisible);
   });
 
+  // Cargar municipios guardados al iniciar (esperar a que el mapa esté listo)
+  window.addEventListener('load', () => {
+    const tryLoad = () => {
+      if (window._map) {
+        getMunicipios().forEach(m => addMarkerMunicipio(m));
+        renderMunicipiosList();
+      } else {
+        setTimeout(tryLoad, 300);
+      }
+    };
+    tryLoad();
+  });
 </script>
 </body>
 </html>
