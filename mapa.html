@@ -561,6 +561,9 @@
     attributionControl: true,
     minZoom: 4,
     maxZoom: 10,
+    zoomSnap: 0.25,
+    zoomDelta: 0.5,
+    wheelPxPerZoomLevel: 120,
   });
 
   // Tile oscuro
@@ -942,18 +945,31 @@
     document.getElementById('mapLoading').classList.add('hidden');
   }
 
-  // ── Geocodificación simple ciudad → coords ──
-  // Usamos las coordenadas del estado como fallback; para coords exactas de ciudad
-  // hacemos una geocodificación batch con Nominatim la primera vez.
+  // ── Geocodificación ──
   const CITY_COORDS_CACHE = {};
 
-  async function geocodeCity(city, sinCiudad) {
-    // Jugador sin ciudad: posición aleatoria alrededor del centro de México
+  // Coords inmediatas desde el estado (sin esperar Nominatim)
+  function coordsInstant(city, sinCiudad) {
     if (sinCiudad || !city) {
       const base = [23.6345, -102.5528];
       const jitter = [(Math.random()-0.5)*8, (Math.random()-0.5)*8];
       return [base[0]+jitter[0], base[1]+jitter[1]];
     }
+    const estado = extractEstado(city);
+    if (estado && ESTADO_COORDS[estado]) {
+      const base   = ESTADO_COORDS[estado];
+      const jitter = [(Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5];
+      return [base[0]+jitter[0], base[1]+jitter[1]];
+    }
+    // Fallback centro de México
+    const base = [23.6345, -102.5528];
+    const jitter = [(Math.random()-0.5)*8, (Math.random()-0.5)*8];
+    return [base[0]+jitter[0], base[1]+jitter[1]];
+  }
+
+  // Geocodificación exacta con Nominatim (en segundo plano)
+  async function geocodeExact(city) {
+    if (!city) return null;
     const key = city.toLowerCase().trim();
     if (CITY_COORDS_CACHE[key]) return CITY_COORDS_CACHE[key];
     try {
@@ -966,16 +982,6 @@
         return coords;
       }
     } catch(e) {}
-    // Fallback a coordenadas del estado
-    const estado = extractEstado(city);
-    if (estado && ESTADO_COORDS[estado]) {
-      // Agregar pequeña variación para no apilar marcadores
-      const base = ESTADO_COORDS[estado];
-      const jitter = [(Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5];
-      const coords = [base[0]+jitter[0], base[1]+jitter[1]];
-      CITY_COORDS_CACHE[key] = coords;
-      return coords;
-    }
     return null;
   }
 
@@ -1006,33 +1012,38 @@
         });
       });
 
-      // Geocodificar en paralelo (máx 5 a la vez para no saturar Nominatim)
+      // ── Paso 1: asignar coords instantáneas del estado y renderizar YA ──
+      raw.forEach(p => {
+        p.coords = coordsInstant(p.city, p.sinCiudad);
+      });
+      renderMapa(raw);
+
+      // ── Paso 2: geocodificar exacto en segundo plano y mover marcadores ──
       const batch = 5;
       for (let i = 0; i < raw.length; i += batch) {
-        await Promise.all(raw.slice(i, i + batch).map(async p => {
-          p.coords = await geocodeCity(p.city, p.sinCiudad);
+        await Promise.all(raw.slice(i, i + batch).map(async (p, idx) => {
+          if (p.sinCiudad || !p.city) return; // sin ciudad no hay mejor dato
+          const exact = await geocodeExact(p.city);
+          if (!exact) return;
+          // Mover el marcador existente si las coords cambiaron
+          const marker = playerMarkers[raw.indexOf(p)];
+          if (marker) {
+            marker.setLatLng(exact);
+            p.coords = exact;
+          }
         }));
-        // Pequeña pausa entre batches para respetar rate limit de Nominatim
         if (i + batch < raw.length) await new Promise(r => setTimeout(r, 300));
       }
-
-      renderMapa(raw);
     });
   }
 
   // ── Zoom suave con scroll ──
   map.scrollWheelZoom.disable();
-  let zoomAccum = 0;
-  let zoomTimer = null;
   map.getContainer().addEventListener('wheel', (e) => {
     e.preventDefault();
-    zoomAccum += e.deltaY > 0 ? -0.4 : 0.4;
-    clearTimeout(zoomTimer);
-    zoomTimer = setTimeout(() => {
-      const target = Math.round(map.getZoom() + zoomAccum);
-      map.setZoom(Math.max(4, Math.min(10, target)), { animate: true });
-      zoomAccum = 0;
-    }, 60);
+    const delta = e.deltaY > 0 ? -0.25 : 0.25;
+    const target = Math.max(4, Math.min(10, map.getZoom() + delta));
+    map.setZoom(target, { animate: true });
   }, { passive: false });
 
   // ── Slider de zoom ──
@@ -1041,21 +1052,26 @@
   const zoomInBtn   = document.getElementById('zoomIn');
   const zoomOutBtn  = document.getElementById('zoomOut');
 
+  // Slider con pasos de 0.25
+  zoomSlider.min  = 4;
+  zoomSlider.max  = 10;
+  zoomSlider.step = 0.25;
+
   function syncSlider() {
     const z = map.getZoom();
-    zoomSlider.value    = z;
-    zoomLevelEl.textContent = `Z${z}`;
+    zoomSlider.value = z;
+    zoomLevelEl.textContent = `Z${z.toFixed(1)}`;
   }
-  map.on('zoomend', syncSlider);
+  map.on('zoom', syncSlider);
 
   zoomSlider.addEventListener('input', () => {
-    map.setZoom(parseInt(zoomSlider.value), { animate: true });
+    map.setZoom(parseFloat(zoomSlider.value), { animate: true });
   });
   zoomInBtn.addEventListener('click', () => {
-    map.setZoom(Math.min(10, map.getZoom() + 1), { animate: true });
+    map.setZoom(Math.min(10, map.getZoom() + 0.5), { animate: true });
   });
   zoomOutBtn.addEventListener('click', () => {
-    map.setZoom(Math.max(4, map.getZoom() - 1), { animate: true });
+    map.setZoom(Math.max(4, map.getZoom() - 0.5), { animate: true });
   });
 
   // ── Pantalla completa ──
