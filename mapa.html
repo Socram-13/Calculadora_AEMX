@@ -449,6 +449,123 @@
     .map-wrap.is-fullscreen #map {
       height: 100vh !important;
     }
+
+    /* ── PANEL MUNICIPIOS ── */
+    .municipios-panel {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-top: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+    .municipios-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #ff4d4d, transparent);
+    }
+    .municipios-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: #ff4d4d;
+      text-shadow: 0 0 10px rgba(255,77,77,0.4);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .municipios-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .municipios-input {
+      flex: 1;
+      background: var(--panel2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .municipios-input:focus { border-color: #ff4d4d; }
+    .municipios-input::placeholder { color: var(--text2); }
+    .municipios-add-btn {
+      font-family: 'Orbitron', monospace;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: 1px solid #ff4d4d;
+      background: rgba(255,77,77,0.1);
+      color: #ff4d4d;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .municipios-add-btn:hover { background: rgba(255,77,77,0.2); box-shadow: 0 0 10px rgba(255,77,77,0.3); }
+    .municipios-add-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .municipios-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+    .municipio-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,77,77,0.1);
+      border: 1px solid rgba(255,77,77,0.4);
+      border-radius: 20px;
+      padding: 4px 12px 4px 10px;
+      font-size: 12px;
+      color: #ff9999;
+      transition: all 0.2s;
+    }
+    .municipio-tag:hover { border-color: #ff4d4d; }
+    .municipio-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #ff4d4d;
+      box-shadow: 0 0 6px #ff4d4d;
+      flex-shrink: 0;
+    }
+    .municipio-dot.loading {
+      background: var(--text2);
+      box-shadow: none;
+      animation: pulse-dot 1s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 0.3; } 50% { opacity: 1; }
+    }
+    .municipio-del {
+      background: none;
+      border: none;
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      padding: 0;
+      transition: color 0.2s;
+      margin-left: 2px;
+    }
+    .municipio-del:hover { color: #ff4d4d; }
+    .municipios-empty {
+      color: var(--text2);
+      font-size: 12px;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -531,9 +648,19 @@
     </div>
   </div>
 
-</div>
+  <!-- Panel Municipios -->
+  <div class="municipios-panel">
+    <div class="municipios-title">📍 MUNICIPIOS DE INTERÉS</div>
+    <div class="municipios-input-row">
+      <input type="text" class="municipios-input" id="municipioInput" placeholder="Ej: Mérida, Valladolid, Tizimín...">
+      <button class="municipios-add-btn" id="municipioAddBtn">+ AGREGAR</button>
+    </div>
+    <div class="municipios-list" id="municipiosList">
+      <span class="municipios-empty" id="municipiosEmpty">No hay municipios agregados.</span>
+    </div>
+  </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+</div>
 <script type="module">
   import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
   import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
@@ -1120,6 +1247,129 @@
       // Sin sesión — redirigir a admin
       window.location.href = 'admin.html';
     }
+  });
+
+  // ── MUNICIPIOS ──
+  const LS_KEY = 'aemx_municipios';
+  let municipioMarkers = {}; // nombre → L.marker
+
+  function municipioIcon() {
+    const html = `
+      <div style="
+        width:20px;height:20px;border-radius:50%;
+        background:#ff4d4d;
+        border:2px solid #fff;
+        box-shadow:0 0 10px #ff4d4d,0 0 20px #ff4d4d88;
+        display:flex;align-items:center;justify-content:center;
+      ">
+        <div style="width:6px;height:6px;border-radius:50%;background:#fff;"></div>
+      </div>
+      <div style="
+        width:0;height:0;
+        border-left:4px solid transparent;
+        border-right:4px solid transparent;
+        border-top:5px solid #ff4d4d;
+        margin:-1px auto 0;
+        filter:drop-shadow(0 2px 4px #ff4d4d88);
+      "></div>
+    `;
+    return L.divIcon({ html, className: '', iconSize: [20, 26], iconAnchor: [10, 26], popupAnchor: [0, -28] });
+  }
+
+  function getMunicipios() {
+    try { return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveMunicipios(list) {
+    localStorage.setItem(LS_KEY, JSON.stringify(list));
+  }
+
+  function renderMunicipiosList() {
+    const list  = getMunicipios();
+    const el    = document.getElementById('municipiosList');
+    const empty = document.getElementById('municipiosEmpty');
+    // Limpiar tags (dejar el empty span)
+    [...el.querySelectorAll('.municipio-tag')].forEach(t => t.remove());
+    empty.style.display = list.length ? 'none' : '';
+    list.forEach(m => {
+      const tag = document.createElement('div');
+      tag.className = 'municipio-tag';
+      tag.dataset.name = m.name;
+      tag.innerHTML = `
+        <div class="municipio-dot ${m.coords ? '' : 'loading'}" id="dot-${CSS.escape(m.name)}"></div>
+        <span>${m.name}</span>
+        <button class="municipio-del" title="Eliminar">×</button>
+      `;
+      tag.querySelector('.municipio-del').addEventListener('click', () => removeMunicipio(m.name));
+      el.appendChild(tag);
+    });
+  }
+
+  function addMarkerMunicipio(m) {
+    if (!m.coords) return;
+    if (municipioMarkers[m.name]) map.removeLayer(municipioMarkers[m.name]);
+    const marker = L.marker(m.coords, { icon: municipioIcon() }).addTo(map);
+    marker.bindPopup(`
+      <div style="min-width:160px;">
+        <div class="popup-state-title" style="color:#ff4d4d;">📍 ${m.name.toUpperCase()}</div>
+        <div class="popup-count">MUNICIPIO DE INTERÉS</div>
+      </div>
+    `);
+    municipioMarkers[m.name] = marker;
+    // Actualizar dot a rojo
+    const dot = document.getElementById(`dot-${CSS.escape(m.name)}`);
+    if (dot) dot.classList.remove('loading');
+  }
+
+  function removeMunicipio(name) {
+    if (municipioMarkers[name]) { map.removeLayer(municipioMarkers[name]); delete municipioMarkers[name]; }
+    const list = getMunicipios().filter(m => m.name !== name);
+    saveMunicipios(list);
+    renderMunicipiosList();
+  }
+
+  async function addMunicipio(name) {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    const list = getMunicipios();
+    if (list.find(m => m.name.toLowerCase() === trimmed.toLowerCase())) return; // ya existe
+    const entry = { name: trimmed, coords: null };
+    list.push(entry);
+    saveMunicipios(list);
+    renderMunicipiosList();
+    // Geocodificar en segundo plano
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(trimmed + ', Mexico')}&format=json&limit=1&accept-language=es`;
+      const res  = await fetch(url, { headers: { 'Accept-Language': 'es' } });
+      const data = await res.json();
+      if (data[0]) {
+        entry.coords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        // Actualizar en localStorage
+        const updated = getMunicipios().map(m => m.name === trimmed ? entry : m);
+        saveMunicipios(updated);
+        addMarkerMunicipio(entry);
+      }
+    } catch(e) {}
+  }
+
+  // Cargar municipios guardados al iniciar
+  getMunicipios().forEach(m => addMarkerMunicipio(m));
+  renderMunicipiosList();
+
+  // Eventos UI
+  document.getElementById('municipioAddBtn').addEventListener('click', async () => {
+    const input = document.getElementById('municipioInput');
+    const btn   = document.getElementById('municipioAddBtn');
+    if (!input.value.trim()) return;
+    btn.disabled = true;
+    await addMunicipio(input.value);
+    input.value = '';
+    btn.disabled = false;
+    input.focus();
+  });
+  document.getElementById('municipioInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('municipioAddBtn').click();
   });
 
 </script>
