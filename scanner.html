@@ -392,8 +392,54 @@
   async function ocrNumber(canvas){
     const blob=await canvasToBlob(canvas);
     const res=await Tesseract.recognize(blob,'eng',{tessedit_char_whitelist:'0123456789'});
-    const raw=res.data.text.replace(/\D/g,'').trim();
+    let raw=res.data.text.replace(/\D/g,'').trim();
     console.log('color-ocr:',JSON.stringify(res.data.text),'→',raw);
+
+    // Si Tesseract leyó un solo dígito, verificar si hay más dígitos
+    // erosionando horizontalmente para separar dígitos pegados y contar grupos
+    if (raw && raw.length === 1) {
+      const ctx = canvas.getContext('2d');
+      const id = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const w = canvas.width, h = canvas.height;
+
+      // Erosión horizontal: un pixel es negro solo si él Y sus vecinos izq/der son negros
+      // Esto separa dígitos pegados por sus bordes
+      const eroded = new Array(w).fill(false);
+      const dark = (x, y) => {
+        const i = (y * w + x) * 4;
+        return (id.data[i] + id.data[i+1] + id.data[i+2]) / 3 < 128;
+      };
+      for (let x = 1; x < w-1; x++) {
+        for (let y = 0; y < h; y++) {
+          if (dark(x,y) && dark(x-1,y) && dark(x+1,y)) {
+            eroded[x] = true; break;
+          }
+        }
+      }
+
+      // Medir ancho y alto del bloque negro
+      let xMin = w, xMax = 0, yMin = h, yMax = 0;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          if (dark(x,y)) {
+            if (x < xMin) xMin = x;
+            if (x > xMax) xMax = x;
+            if (y < yMin) yMin = y;
+            if (y > yMax) yMax = y;
+          }
+        }
+      }
+      const bw = xMax - xMin;
+      const bh = yMax - yMin;
+      const ratio = bh > 0 ? bw / bh : 0;
+      console.log('bloque negro ancho:', bw, 'alto:', bh, 'ratio:', ratio.toFixed(2), 'raw:', raw);
+      // Si el bloque es casi tan ancho como alto o más, probablemente son 2 dígitos iguales
+      if (ratio >= 0.7 && raw.length === 1) {
+        raw = raw + raw;
+        console.log('corregido a:', raw);
+      }
+    }
+
     return raw||null;
   }
 
@@ -462,12 +508,14 @@
       }
 
       // Color OCR per numeric field
-      // region:[x0,x1] excluye el recuadro TOTAL (izquierda) y lee solo los 4 recuadros de rareza (derecha)
+      // Sin título las parcelas están ~7% más arriba en la imagen
+      const _y0 = parsed.titulo ? 0.52 : 0.45;
+      const _y1 = parsed.titulo ? 0.88 : 0.81;
       const steps = [
-        { key:'comun',       label:'Común',       profile:COLOR_PROFILES.comun,       crop:[0.52,0.88], region:[0.48,1.0] },
-        { key:'raro',        label:'Raro',         profile:COLOR_PROFILES.raro,        crop:[0.52,0.88], region:[0.48,1.0] },
-        { key:'epico',       label:'Épico',        profile:COLOR_PROFILES.epico,       crop:[0.52,0.88], region:[0.48,1.0] },
-        { key:'legendario',  label:'Legendario',   profile:COLOR_PROFILES.legendario,  crop:[0.52,0.88], region:[0.48,1.0] },
+        { key:'comun',       label:'Común',       profile:COLOR_PROFILES.comun,       crop:[_y0,_y1], region:[0.48,1.0] },
+        { key:'raro',        label:'Raro',         profile:COLOR_PROFILES.raro,        crop:[_y0,_y1], region:[0.48,1.0] },
+        { key:'epico',       label:'Épico',        profile:COLOR_PROFILES.epico,       crop:[_y0,_y1], region:[0.48,1.0] },
+        { key:'legendario',  label:'Legendario',   profile:COLOR_PROFILES.legendario,  crop:[_y0,_y1], region:[0.48,1.0] },
 
       ];
 
@@ -489,6 +537,27 @@
         const num=await ocrNumber(filtered);
         if(num) parsed[key]=num;
         progressBar.style.width=(35+((si+1)/steps.length)*60)+'%';
+      }
+
+      // Fallback legendario: el OCR lee "TOTAL ' 5" donde 5 es legendario
+      if (!parsed.legendario) {
+        const lines2 = rawText.split('\n').map(l => l.trim()).filter(Boolean);
+        let afterParcelas = false;
+        for (const ln of lines2) {
+          if (ln.toUpperCase().includes('PARCELAS')) { afterParcelas = true; continue; }
+          if (!afterParcelas) continue;
+          // Buscar específicamente la línea con TOTAL que contiene el legendario
+          if (ln.toUpperCase().includes('TOTAL')) {
+            const ms = [...ln.matchAll(/(\d{1,4})/g)];
+            for (const m of ms) {
+              const n = +m[1];
+              if (n > 0 && n < 9999 && n !== +parsed.comun && n !== +parsed.raro && n !== +parsed.epico) {
+                parsed.legendario = m[1];
+              }
+            }
+          }
+        }
+        console.log('Fallback legendario:', parsed.legendario);
       }
 
       progressBar.style.width='100%';
@@ -529,6 +598,7 @@
   }
 
   function parseAtlasText(text) {
+    text = text.replace(/(Insignias\s*:\s*)S(\s*%)/gi, '$15$2').replace(/(:\s*)S(\s*%)/gi, '$15$2');
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     const full  = text.toUpperCase();
 
