@@ -2891,29 +2891,7 @@
           <button class="mbadge-buy-btn" onclick="buyMedal(event, this)">🪙 500</button>
         </div>
 
-        <!-- Sección de códigos especiales -->
-        <div class="medals-section-label" id="artemisCodeSection" style="margin-top: 24px;">🚀 CÓDIGOS ESPECIALES</div>
 
-        <!-- Botón de canje de código Artemis II -->
-        <div id="artemis-redeem-container" style="grid-column: 1 / -1;">
-          <button id="artemis-redeem-btn" onclick="redeemArtemisCode()" style="
-            width: 100%;
-            padding: 14px 20px;
-            background: linear-gradient(135deg, #9C27B0, #673AB7);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-family: 'Nunito', sans-serif;
-            font-weight: 800;
-            font-size: 15px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
-            transition: all 0.3s;
-            display: none;
-          " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(156, 39, 176, 0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(156, 39, 176, 0.4)'">
-            🔑 CANJEAR CÓDIGO ARTEMIS II
-          </button>
-        </div>
 
       </div>
     </div>
@@ -4811,12 +4789,7 @@
       if (shopSection) shopSection.style.display = esMx ? '' : 'none';
       shopBadges.forEach(b => { b.style.display = esMx ? '' : 'none'; });
 
-      // ── Visibilidad del botón Artemis II ──
-      const artemisBtn = document.getElementById('artemis-redeem-btn');
-      if (artemisBtn) {
-        const hasArtemis = !!_ownedMedals['artemis2'];
-        artemisBtn.style.display = hasArtemis ? 'none' : 'block';
-      }
+
 
       const badges = document.querySelectorAll('.mbadge[data-medal-id]');
       let earned = 0;
@@ -4934,49 +4907,7 @@
       }
     }
 
-    /* ── Canje de código para medalla artemis2 ─────────────── */
-    async function redeemArtemisCode() {
-      const user = window._fbUser;
-      const _db = window._fbDb;
-      const _ref = window._fbRef;
-      const _update = window._fbUpdate;
 
-      if (!user || !_db || !_ref || !_update) {
-        alert('❌ Debes iniciar sesión para canjear códigos.');
-        return;
-      }
-
-      // Verificar si ya tiene la medalla
-      if (_ownedMedals['artemis2']) {
-        alert('✅ Ya tienes la medalla Artemis II desbloqueada.');
-        return;
-      }
-
-      const code = prompt('🔑 Ingresa el código de Artemis II:');
-      if (!code) return;
-
-      const validCode = 'M2M2026238900AII';
-      
-      if (code.trim() === validCode) {
-        try {
-          // Guardar medalla en Firebase
-          await _update(_ref(_db, `users/${user.uid}`), {
-            'medals/shop/artemis2': true
-          });
-          _ownedMedals['artemis2'] = true;
-          updateMedals();
-          alert('🎉 ¡Código correcto! Has desbloqueado la medalla Artemis II.');
-        } catch(err) {
-          console.error('Error canjeando código:', err);
-          alert('❌ Error al canjear el código. Intenta de nuevo.');
-        }
-      } else {
-        alert('❌ Código incorrecto. Verifica e intenta nuevamente.');
-      }
-    }
-
-    // Exponer función globalmente para el botón
-    window.redeemArtemisCode = redeemArtemisCode;
 
     /* ── Observar cambios en coins, location, parcelas ──────── */
     const _coinsEl = document.getElementById('coins-display');
