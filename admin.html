@@ -2284,7 +2284,7 @@
         await set(ref(db, `config/avisos/slot${index}`), avisoSlots[index]);
         showToast(`💾 Mensaje ${index + 1} guardado`);
         updateAvisoUI(index);
-        updateActiveAviso();
+        await updateActiveAviso();
       } catch(e) {
         showToast('Error al guardar mensaje', true);
       }
@@ -2304,10 +2304,10 @@
       toggle.textContent = slot.enabled ? 'ACTIVADO' : 'DESACTIVADO';
       toggle.classList.toggle('enabled', slot.enabled);
 
-      // Actualizar inputs
-      textArea.disabled = !slot.enabled;
-      startInput.disabled = !slot.enabled;
-      endInput.disabled = !slot.enabled;
+      // Actualizar inputs — siempre editables
+      textArea.disabled = false;
+      startInput.disabled = false;
+      endInput.disabled = false;
 
       // Actualizar status del tab
       const now = new Date();
