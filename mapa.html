@@ -1152,9 +1152,9 @@
       const jitter = [(Math.random()-0.5)*1.5, (Math.random()-0.5)*1.5];
       return [base[0]+jitter[0], base[1]+jitter[1]];
     }
-    // Fallback centro de México
-    const base = [23.6345, -102.5528];
-    const jitter = [(Math.random()-0.5)*8, (Math.random()-0.5)*8];
+    // Fallback centro del mundo (jugador sin ciudad reconocida fuera de México)
+    const base = [20.0, 0.0];
+    const jitter = [(Math.random()-0.5)*40, (Math.random()-0.5)*60];
     return [base[0]+jitter[0], base[1]+jitter[1]];
   }
 
@@ -1164,7 +1164,7 @@
     const key = city.toLowerCase().trim();
     if (CITY_COORDS_CACHE[key]) return CITY_COORDS_CACHE[key];
     try {
-      const nominatim = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ', Mexico')}&format=json&limit=1&accept-language=es`;
+      const nominatim = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1&accept-language=es`;
       const url = `https://corsproxy.io/?url=${encodeURIComponent(nominatim)}`;
       const res  = await fetch(url);
       const data = await res.json();
@@ -1187,7 +1187,7 @@
       snapshot.forEach(child => {
         const d = child.val();
         if (!d.username) return;
-        if (d.country !== 'Mexico') return;
+
         if (d.bannedLeaderboard) return;
         const common    = parseInt(d.common)    || 0;
         const rare      = parseInt(d.rare)      || 0;
