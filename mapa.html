@@ -429,15 +429,60 @@ const CIUDAD_ESTADO = {
   'zacatecas':'Zacatecas','pachuca':'Hidalgo','querétaro':'Querétaro','cuernavaca':'Morelos',
   'tlaxcala':'Tlaxcala','la paz':'Baja California Sur','tampico':'Tamaulipas',
 };
-function coordsInstant(city, sinCiudad) {
-  if (sinCiudad || !city) return [20+(Math.random()-0.5)*40, (Math.random()-0.5)*60];
+const PAIS_COORDS = {
+  'México': [23.6345, -102.5528],
+  'Mexico': [23.6345, -102.5528],
+  'Estados Unidos': [37.0902, -95.7129],
+  'USA': [37.0902, -95.7129],
+  'United States': [37.0902, -95.7129],
+  'Colombia': [4.5709, -74.2973],
+  'Argentina': [-38.4161, -63.6167],
+  'España': [40.4637, -3.7492],
+  'Spain': [40.4637, -3.7492],
+  'Chile': [-35.6751, -71.5430],
+  'Perú': [-9.1900, -75.0152],
+  'Peru': [-9.1900, -75.0152],
+  'Venezuela': [6.4238, -66.5897],
+  'Ecuador': [-1.8312, -78.1834],
+  'Brasil': [-14.2350, -51.9253],
+  'Brazil': [-14.2350, -51.9253],
+  'Uruguay': [-32.5228, -55.7658],
+  'Paraguay': [-23.4425, -58.4438],
+  'Bolivia': [-16.2902, -63.5887],
+  'Costa Rica': [9.7489, -83.7534],
+  'Panamá': [8.5380, -80.7821],
+  'Panama': [8.5380, -80.7821],
+  'Guatemala': [15.7835, -90.2308],
+  'Honduras': [15.2000, -86.2419],
+  'El Salvador': [13.7942, -88.8965],
+  'Nicaragua': [12.8654, -85.2072],
+  'República Dominicana': [18.7357, -70.1627],
+  'Dominican Republic': [18.7357, -70.1627],
+  'Cuba': [21.5218, -77.7812],
+  'Puerto Rico': [18.2208, -66.5901],
+};
+function coordsInstant(city, sinCiudad, country) {
+  // Si no tiene ciudad, usar el centro del país
+  if (sinCiudad || !city) {
+    if (country && PAIS_COORDS[country]) {
+      const base = PAIS_COORDS[country];
+      return [base[0] + (Math.random()-0.5)*2, base[1] + (Math.random()-0.5)*2];
+    }
+    // Si no tiene país, usar centro de México por defecto
+    return [23.6345 + (Math.random()-0.5)*2, -102.5528 + (Math.random()-0.5)*2];
+  }
   const parts  = city.split(',');
   const estado = parts.length>=2 ? parts[parts.length-1].trim() : CIUDAD_ESTADO[city.toLowerCase().trim()]||null;
   if (estado && ESTADO_COORDS[estado]) {
     const b = ESTADO_COORDS[estado];
     return [b[0]+(Math.random()-0.5)*1.5, b[1]+(Math.random()-0.5)*1.5];
   }
-  return [20+(Math.random()-0.5)*40, (Math.random()-0.5)*60];
+  // Si tiene ciudad pero no la encontramos, también usar centro del país
+  if (country && PAIS_COORDS[country]) {
+    const base = PAIS_COORDS[country];
+    return [base[0] + (Math.random()-0.5)*2, base[1] + (Math.random()-0.5)*2];
+  }
+  return [23.6345 + (Math.random()-0.5)*2, -102.5528 + (Math.random()-0.5)*2];
 }
 
 // ── Load players ──
@@ -451,7 +496,7 @@ async function loadPlayers(currentUid) {
       const total = (parseInt(d.common)||0)+(parseInt(d.rare)||0)+(parseInt(d.epic)||0)+(parseInt(d.legendary)||0);
       raw.push({ uid:child.key, username:d.username, borderColor:d.borderColor||'', city:d.city||'', country:d.country||'', total, isYou:child.key===currentUid, sinCiudad:!d.city });
     });
-    raw.forEach(p => { p.coords = coordsInstant(p.city, p.sinCiudad); });
+    raw.forEach(p => { p.coords = coordsInstant(p.city, p.sinCiudad, p.country); });
     renderGlobe(raw);
 
     const batch = 5;
