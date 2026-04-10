@@ -3153,6 +3153,14 @@
           <td class="rt-base" id="r-month-base">$0.0000</td>
           <td class="rt-boost highlight" id="r-month">$0.0000</td>
         </tr>
+        <tr style="background:rgba(251,191,36,0.02);border-top:1px solid rgba(251,191,36,0.1);">
+          <td>
+            <div class="rt-period" style="color:#c8851a"><span class="dot" style="background:#fbbf24;box-shadow:0 0 4px #fbbf24"></span>SRB por Hora</div>
+            <div style="font-size:10px;color:#92400e;font-family:'Nunito',sans-serif;font-weight:800;margin-top:3px;padding-left:14px;">50× boost · 1h</div>
+          </td>
+          <td class="rt-base" id="r-srb-hour-base">$0.00000000</td>
+          <td class="rt-boost" id="r-srb-hour" style="color:#c8851a;text-shadow:0 0 12px rgba(251,191,36,0.4);">$0.00000000</td>
+        </tr>
         <tr style="background:rgba(251,191,36,0.04);border-top:1px solid rgba(251,191,36,0.15);">
           <td>
             <div class="rt-period" style="color:#c8851a"><span class="dot" style="background:#fbbf24;box-shadow:0 0 4px #fbbf24"></span>SRB 50×</div>
@@ -3746,6 +3754,9 @@
     const incomeNormal     = boostedPerHour * NORMAL_HOURS;
     const incomeAllEvts    = eventPerHour  * TOTAL_EVT_H;
     const totalWithEvents  = incomeNormal  + incomeAllEvts;
+
+    document.getElementById('r-srb-hour-base').textContent     = '$' + (basePerSec * 3600).toFixed(8);
+    document.getElementById('r-srb-hour').textContent          = '$' + (eventPerHour).toFixed(8);
 
     document.getElementById('r-single-event-base').textContent = fmt(basePerSec * 3600 * EVENT_HOURS);
     document.getElementById('r-single-event').textContent      = fmt(incomeSingleEvt);
