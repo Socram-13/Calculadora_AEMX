@@ -1213,17 +1213,24 @@
       // ── Paso 2: geocodificar exacto en segundo plano y mover marcadores ──
       const batch = 5;
       for (let i = 0; i < raw.length; i += batch) {
+        let algoCambio = false;
         await Promise.all(raw.slice(i, i + batch).map(async (p, idx) => {
-          if (p.sinCiudad || !p.city) return; // sin ciudad no hay mejor dato
+          if (p.sinCiudad || !p.city) return;
           const exact = await geocodeExact(p.city);
           if (!exact) return;
-          // Mover el marcador existente si las coords cambiaron
           const marker = playerMarkers[raw.indexOf(p)];
           if (marker) {
             marker.setLatLng(exact);
             p.coords = exact;
+            algoCambio = true;
           }
         }));
+        // Redibujar líneas de red con coords actualizadas
+        if (algoCambio) {
+          networkLines.forEach(l => map.removeLayer(l));
+          networkLines = [];
+          renderRed(raw);
+        }
         if (i + batch < raw.length) await new Promise(r => setTimeout(r, 300));
       }
     });
