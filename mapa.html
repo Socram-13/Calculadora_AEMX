@@ -215,7 +215,15 @@ const GLOBE_R = 1.0;
 
 // ── Globo ──
 const globeGeo  = new THREE.SphereGeometry(GLOBE_R, 64, 64);
-const globeMat  = new THREE.MeshPhongMaterial({ color:0x0a1a30, emissive:0x001525, specular:0x112244, shininess:15 });
+const textureLoader = new THREE.TextureLoader();
+const earthTexture = textureLoader.load('https://unpkg.com/three-globe/example/img/earth-blue-marble.jpg');
+const globeMat  = new THREE.MeshPhongMaterial({ 
+  map: earthTexture,
+  color:0xffffff, 
+  emissive:0x001525, 
+  specular:0x112244, 
+  shininess:15 
+});
 const globeMesh = new THREE.Mesh(globeGeo, globeMat);
 
 // Atmósfera
