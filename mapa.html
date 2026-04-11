@@ -286,9 +286,9 @@ const municipiosGroup = new THREE.Group();
 const estadosGroup    = new THREE.Group();
 pivot.add(markersGroup, linesGroup, municipiosGroup, estadosGroup);
 
-// ── Polígonos de Estados ──
+// ── Polígonos de Estados con líneas ──
 const estadosConJugadores = new Set();
-const estadosPolygons = {};
+const estadosLines = {};
 
 // GeoJSON con coordenadas más precisas de estados de México
 const MEXICO_ESTADOS_GEOJSON = {
@@ -329,56 +329,44 @@ const MEXICO_ESTADOS_GEOJSON = {
   ]
 };
 
-function createEstadoPolygon(feature) {
+function createEstadoBorder(feature) {
   const coords = feature.geometry.coordinates[0];
-  const vertices = [];
-  const indices = [];
+  const points = [];
   
-  // Crear puntos en la superficie de la esfera
-  const points3D = coords.map(([lng, lat]) => latLngToVec3(lat, lng, GLOBE_R * 1.003));
-  
-  // Crear geometría usando los puntos
-  for (let i = 0; i < points3D.length; i++) {
-    vertices.push(points3D[i].x, points3D[i].y, points3D[i].z);
+  // Crear puntos en la superficie de la esfera con más detalle
+  for (let i = 0; i < coords.length; i++) {
+    const [lng, lat] = coords[i];
+    const nextCoord = coords[(i + 1) % coords.length];
+    const [nextLng, nextLat] = nextCoord;
+    
+    // Interpolar puntos entre cada par de coordenadas para seguir la curvatura
+    const steps = 5;
+    for (let j = 0; j < steps; j++) {
+      const t = j / steps;
+      const interpLat = lat + (nextLat - lat) * t;
+      const interpLng = lng + (nextLng - lng) * t;
+      points.push(latLngToVec3(interpLat, interpLng, GLOBE_R * 1.004));
+    }
   }
   
-  // Crear triángulos (triangulación simple desde el centro)
-  const center = new THREE.Vector3();
-  points3D.forEach(p => center.add(p));
-  center.divideScalar(points3D.length);
-  
-  const centerIdx = points3D.length;
-  vertices.push(center.x, center.y, center.z);
-  
-  for (let i = 0; i < points3D.length; i++) {
-    const next = (i + 1) % points3D.length;
-    indices.push(i, next, centerIdx);
-  }
-  
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
-  
-  const material = new THREE.MeshBasicMaterial({
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({
     color: 0x1a3a5c,
     transparent: true,
-    opacity: 0.0,
-    side: THREE.DoubleSide,
-    depthWrite: false
+    opacity: 0,
+    linewidth: 2
   });
   
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.userData.estadoName = feature.properties.name;
-  mesh.renderOrder = -1;
-  return mesh;
+  const line = new THREE.Line(geometry, material);
+  line.userData.estadoName = feature.properties.name;
+  return line;
 }
 
 function initEstados() {
   MEXICO_ESTADOS_GEOJSON.features.forEach(feature => {
-    const polygon = createEstadoPolygon(feature);
-    estadosPolygons[feature.properties.name] = polygon;
-    estadosGroup.add(polygon);
+    const border = createEstadoBorder(feature);
+    estadosLines[feature.properties.name] = border;
+    estadosGroup.add(border);
   });
 }
 
@@ -392,13 +380,13 @@ function updateEstadosIluminacion(players) {
     }
   });
   
-  Object.entries(estadosPolygons).forEach(([nombre, mesh]) => {
+  Object.entries(estadosLines).forEach(([nombre, line]) => {
     if (estadosConJugadores.has(nombre)) {
-      mesh.material.color.setHex(0x00ff9d);
-      mesh.material.opacity = 0.15;
+      line.material.color.setHex(0x00ff9d);
+      line.material.opacity = 0.8;
     } else {
-      mesh.material.color.setHex(0x1a3a5c);
-      mesh.material.opacity = 0.0;
+      line.material.color.setHex(0x1a3a5c);
+      line.material.opacity = 0.0;
     }
   });
 }
