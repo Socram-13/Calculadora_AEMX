@@ -391,8 +391,6 @@ function updateEstadosIluminacion(players) {
   });
 }
 
-initEstados();
-
 // ── Helpers ──
 function makeSprite(hexColor, size = 0.030) {
   const c = document.createElement('canvas');
@@ -756,6 +754,9 @@ window._removeMunicipioGlobe = name=>{
   const s=window._municipioSprites?.[name];
   if(s){municipiosGroup.remove(s);delete window._municipioSprites[name];}
 };
+
+// Inicializar estados
+initEstados();
 </script>
 
 <script>
