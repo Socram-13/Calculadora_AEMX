@@ -47,41 +47,6 @@
 
 ---
 
-## 🚀 Instalación y Uso
-
-Este proyecto no requiere build ni instalación de dependencias. Todo corre en el navegador.
-
-### 1. Clona o descarga el repositorio
-
-```bash
-git clone https://github.com/tu-usuario/aemx-gamertag.git
-```
-
-### 2. Configura Firebase
-
-Asegúrate de que la configuración de Firebase en los archivos HTML apunte a tu proyecto:
-
-```javascript
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "aemx-chat.firebaseapp.com",
-  databaseURL: "https://aemx-chat-default-rtdb.firebaseio.com",
-  projectId: "aemx-chat",
-  storageBucket: "aemx-chat.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
-};
-```
-
-### 3. Configura las reglas de Firebase
-
-En Firebase Realtime Database, configura las reglas de seguridad para restringir acceso solo a usuarios autenticados.
-
-### 4. Despliega en GitHub Pages
-
-Sube los archivos al repositorio y activa GitHub Pages desde `Settings > Pages > Branch: main`.
-
----
 
 ## 🏅 Sistema de Medallas
 
