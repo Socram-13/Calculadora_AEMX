@@ -382,8 +382,9 @@ function updateEstadosIluminacion(players) {
     const hasPlayers = estadosConJugadores.has(nombre);
     
     if (line.material) {
-      line.material.opacity = hasPlayers ? 0.9 : 0;
-      line.material.color.setHex(hasPlayers ? 0x00ff9d : 0x1a3a5c);
+      // Temporalmente todas visibles para debugging
+      line.material.opacity = hasPlayers ? 0.9 : 0.3;
+      line.material.color.setHex(hasPlayers ? 0x00ff9d : 0xff4d4d);
     }
   });
 }
