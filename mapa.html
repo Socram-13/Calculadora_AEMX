@@ -413,9 +413,12 @@ function updateEstadosIluminacion(players) {
   
   Object.entries(estadosMeshes).forEach(([nombre, mesh]) => {
     if (estadosConJugadores.has(nombre)) {
-      mesh.material.opacity = 0.3;
+      mesh.material.opacity = 0.5;
+      mesh.material.color.setHex(0x00ff9d);
     } else {
-      mesh.material.opacity = 0;
+      // Temporalmente visible para debugging
+      mesh.material.opacity = 0.15;
+      mesh.material.color.setHex(0x1a3a5c);
     }
   });
 }
