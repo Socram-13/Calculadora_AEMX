@@ -333,61 +333,87 @@ function createEstadoPolygon(feature) {
   const coords = feature.geometry.coordinates[0];
   if (!coords || coords.length < 3) return null;
   
-  const vertices = [];
-  const indices = [];
+  // Crear un grupo para los sprites del estado
+  const estadoGroup = new THREE.Group();
+  estadoGroup.userData.estadoName = feature.properties.name;
   
-  // Convertir coordenadas a puntos 3D en la esfera
-  const points3D = [];
+  // Calcular bounding box
+  let minLat = Infinity, maxLat = -Infinity;
+  let minLng = Infinity, maxLng = -Infinity;
   
-  // Simplificar si hay muchos puntos (tomar cada N puntos)
-  const step = Math.max(1, Math.floor(coords.length / 40));
-  
-  for (let i = 0; i < coords.length; i += step) {
-    const [lng, lat] = coords[i];
-    const point = latLngToVec3(lat, lng, GLOBE_R * 1.003);
-    points3D.push(point);
-  }
-  
-  if (points3D.length < 3) return null;
-  
-  // Calcular centro del polígono en 3D
-  const center = new THREE.Vector3();
-  points3D.forEach(p => center.add(p));
-  center.divideScalar(points3D.length);
-  center.normalize().multiplyScalar(GLOBE_R * 1.003);
-  
-  // Crear geometría usando triangulación en abanico desde el centro
-  points3D.forEach((p, i) => {
-    vertices.push(p.x, p.y, p.z);
+  coords.forEach(([lng, lat]) => {
+    minLat = Math.min(minLat, lat);
+    maxLat = Math.max(maxLat, lat);
+    minLng = Math.min(minLng, lng);
+    maxLng = Math.max(maxLng, lng);
   });
   
-  const centerIdx = points3D.length;
-  vertices.push(center.x, center.y, center.z);
+  // Crear sprites en una cuadrícula sobre el área del estado
+  const gridSize = 8; // Cantidad de sprites por dimensión
+  const latStep = (maxLat - minLat) / gridSize;
+  const lngStep = (maxLng - minLng) / gridSize;
   
-  // Crear triángulos conectando centro con cada par de puntos adyacentes
-  for (let i = 0; i < points3D.length; i++) {
-    const next = (i + 1) % points3D.length;
-    indices.push(centerIdx, i, next);
+  for (let i = 0; i < gridSize; i++) {
+    for (let j = 0; j < gridSize; j++) {
+      const lat = minLat + latStep * (i + 0.5);
+      const lng = minLng + lngStep * (j + 0.5);
+      
+      // Verificar si el punto está dentro del polígono (simplificado)
+      if (isPointInPolygon([lng, lat], coords)) {
+        const sprite = createEstadoSprite();
+        sprite.position.copy(latLngToVec3(lat, lng, GLOBE_R * 1.004));
+        estadoGroup.add(sprite);
+      }
+    }
   }
   
-  const geometry = new THREE.BufferGeometry();
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-  geometry.setIndex(indices);
-  geometry.computeVertexNormals();
+  return estadoGroup.children.length > 0 ? estadoGroup : null;
+}
+
+function createEstadoSprite() {
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  const cx = 32, cy = 32;
   
-  const material = new THREE.MeshBasicMaterial({
-    color: 0x00ff9d,
+  const grd = ctx.createRadialGradient(cx, cy, 0, cx, cy, 32);
+  grd.addColorStop(0, 'rgba(0, 255, 157, 0.8)');
+  grd.addColorStop(1, 'rgba(0, 255, 157, 0)');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+  ctx.fill();
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  const material = new THREE.SpriteMaterial({
+    map: texture,
     transparent: true,
     opacity: 0,
-    side: THREE.DoubleSide,
-    depthWrite: false
+    depthTest: false
   });
   
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.userData.estadoName = feature.properties.name;
-  mesh.renderOrder = 1;
+  const sprite = new THREE.Sprite(material);
+  sprite.scale.set(0.08, 0.08, 0.08);
   
-  return mesh;
+  return sprite;
+}
+
+// Función simple para verificar si un punto está dentro de un polígono
+function isPointInPolygon(point, polygon) {
+  const [x, y] = point;
+  let inside = false;
+  
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+    
+    const intersect = ((yi > y) !== (yj > y)) &&
+      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    
+    if (intersect) inside = !inside;
+  }
+  
+  return inside;
 }
 
 function initEstados() {
@@ -411,15 +437,16 @@ function updateEstadosIluminacion(players) {
     }
   });
   
-  Object.entries(estadosMeshes).forEach(([nombre, mesh]) => {
-    if (estadosConJugadores.has(nombre)) {
-      mesh.material.opacity = 0.5;
-      mesh.material.color.setHex(0x00ff9d);
-    } else {
-      // Temporalmente visible para debugging
-      mesh.material.opacity = 0.15;
-      mesh.material.color.setHex(0x1a3a5c);
-    }
+  Object.entries(estadosMeshes).forEach(([nombre, group]) => {
+    const hasPlayers = estadosConJugadores.has(nombre);
+    const opacity = hasPlayers ? 0.6 : 0;
+    
+    // Actualizar todos los sprites del grupo
+    group.children.forEach(sprite => {
+      if (sprite.material) {
+        sprite.material.opacity = opacity;
+      }
+    });
   });
 }
 
