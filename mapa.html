@@ -333,28 +333,43 @@ function createEstadoPolygon(feature) {
   const coords = feature.geometry.coordinates[0];
   if (!coords || coords.length < 3) return null;
   
-  // Crear puntos en la superficie de la esfera para el contorno
-  const points = [];
+  const group = new THREE.Group();
+  group.userData.estadoName = feature.properties.name;
   
-  coords.forEach(([lng, lat]) => {
-    points.push(latLngToVec3(lat, lng, GLOBE_R * 1.004));
-  });
+  // Crear segmentos de línea entre cada par de puntos
+  for (let i = 0; i < coords.length; i++) {
+    const [lng1, lat1] = coords[i];
+    const [lng2, lat2] = coords[(i + 1) % coords.length];
+    
+    const p1 = latLngToVec3(lat1, lng1, GLOBE_R * 1.004);
+    const p2 = latLngToVec3(lat2, lng2, GLOBE_R * 1.004);
+    
+    // Crear un cilindro entre los dos puntos
+    const direction = new THREE.Vector3().subVectors(p2, p1);
+    const length = direction.length();
+    
+    if (length < 0.001) continue; // Saltar puntos muy cercanos
+    
+    const geometry = new THREE.CylinderGeometry(0.002, 0.002, length, 4);
+    const material = new THREE.MeshBasicMaterial({
+      color: 0x00ff9d,
+      transparent: true,
+      opacity: 0
+    });
+    
+    const cylinder = new THREE.Mesh(geometry, material);
+    
+    // Posicionar y orientar el cilindro
+    cylinder.position.copy(p1).add(p2).multiplyScalar(0.5);
+    cylinder.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direction.normalize()
+    );
+    
+    group.add(cylinder);
+  }
   
-  // Cerrar el polígono
-  points.push(points[0].clone());
-  
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({
-    color: 0x00ff9d,
-    transparent: true,
-    opacity: 0,
-    linewidth: 2
-  });
-  
-  const line = new THREE.Line(geometry, material);
-  line.userData.estadoName = feature.properties.name;
-  
-  return line;
+  return group.children.length > 0 ? group : null;
 }
 
 function initEstados() {
@@ -378,14 +393,16 @@ function updateEstadosIluminacion(players) {
     }
   });
   
-  Object.entries(estadosMeshes).forEach(([nombre, line]) => {
+  Object.entries(estadosMeshes).forEach(([nombre, group]) => {
     const hasPlayers = estadosConJugadores.has(nombre);
     
-    if (line.material) {
-      // Temporalmente todas visibles para debugging
-      line.material.opacity = hasPlayers ? 0.9 : 0.3;
-      line.material.color.setHex(hasPlayers ? 0x00ff9d : 0xff4d4d);
-    }
+    // Actualizar todos los cilindros del grupo
+    group.children.forEach(cylinder => {
+      if (cylinder.material) {
+        cylinder.material.opacity = hasPlayers ? 0.9 : 0.3;
+        cylinder.material.color.setHex(hasPlayers ? 0x00ff9d : 0xff4d4d);
+      }
+    });
   });
 }
 
