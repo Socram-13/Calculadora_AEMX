@@ -4515,8 +4515,20 @@
   async function initVisitCounter() {
     const wrapper = document.createElement('div');
     wrapper.id = 'visit-wrapper';
+    // Logo izquierda
+    const logoEl = document.createElement('img');
+    logoEl.src = 'S13.png';
+    Object.assign(logoEl.style, {
+      position: 'fixed', bottom: '14px', left: '18px', zIndex: '99999',
+      width: '52px', height: '52px', objectFit: 'contain', borderRadius: '14px',
+      opacity: '0.55', transition: 'opacity 0.3s', cursor: 'default',
+    });
+    logoEl.onmouseenter = () => logoEl.style.opacity = '0.85';
+    logoEl.onmouseleave = () => logoEl.style.opacity = '0.55';
+    document.body.appendChild(logoEl);
+
+    // Contador derecha
     wrapper.innerHTML = `
-      <img src="S13.png" style="width:52px;height:52px;object-fit:contain;border-radius:14px;" />
       <span id="visit-count-display" style="font-family:'Nunito',sans-serif;font-weight:800;font-size:15px;color:var(--text2);letter-spacing:3px;background:var(--panel);border:2px solid var(--border);border-radius:10px;padding:3px 10px;">00000000</span>
     `;
     Object.assign(wrapper.style, {
