@@ -437,11 +437,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 });
             }
 
-            function sendMessage() {
+            const MAX_MESSAGES = 20;
+
+            async function sendMessage() {
                 const input = document.getElementById('messageInput');
                 const message = input.value.trim();
                 if (message && currentUsername) {
-                    push(ref(database, 'messages'), {
+                    await push(ref(database, 'messages'), {
                         username: currentUsername,
                         text: message,
                         timestamp: serverTimestamp(),
@@ -449,6 +451,16 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     });
                     input.value = '';
                     input.focus();
+
+                    // Borrar el más antiguo si hay más de MAX_MESSAGES
+                    try {
+                        const snap = await get(query(ref(database, 'messages'), orderByChild('timestamp'), limitToLast(MAX_MESSAGES + 1)));
+                        if (snap.size > MAX_MESSAGES) {
+                            let oldest = null;
+                            snap.forEach(child => { if (!oldest) oldest = child; });
+                            if (oldest) await remove(oldest.ref);
+                        }
+                    } catch(e) { console.error('trim messages error:', e); }
                 }
             }
 
@@ -517,30 +529,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 }
             });
 
-            // ✅ clearOldMessages solo descarga mensajes viejos (no todo el nodo)
-            async function clearOldMessages() {
-                if (!ttlLoaded) return;
-                if (chatTTL === 0) return;
-                const now = Date.now();
-                const cutoff = now - chatTTL * 60 * 60 * 1000;
-                try {
-                    const oldQuery = query(
-                        ref(database, 'messages'),
-                        orderByChild('timestamp'),
-                        endAt(cutoff)
-                    );
-                    const snapshot = await get(oldQuery);
-                    if (!snapshot.exists()) return;
-                    const deletePromises = [];
-                    snapshot.forEach((child) => {
-                        const ts = child.val().timestamp;
-                        if (ts && ts > 0 && ts <= cutoff) deletePromises.push(remove(child.ref));
-                    });
-                    if (deletePromises.length > 0) await Promise.all(deletePromises);
-                } catch(e) { console.error('clearOldMessages error:', e); }
-            }
-
-            setInterval(clearOldMessages, 60 * 60 * 1000);
+            // clearOldMessages deshabilitado — el límite se maneja por cantidad (MAX_MESSAGES) en sendMessage
+            async function clearOldMessages() { /* deshabilitado */ }
 
             const urlParams = new URLSearchParams(window.location.search);
             const urlColor = urlParams.get('color') || '';
