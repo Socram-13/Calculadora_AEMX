@@ -3236,6 +3236,35 @@
         </div>
       </div>
     </div>
+
+    <!-- ══ ATLAS BUCKS TOTALES ══ -->
+    <div style="margin-top:16px;padding:14px;background:rgba(245,166,35,0.08);border:2px solid rgba(245,166,35,0.35);border-radius:14px;">
+      <div style="font-family:'Fredoka One',cursive;font-size:9px;letter-spacing:3px;color:#c8851a;text-transform:uppercase;margin-bottom:12px;">💰 Valor de la Cuenta</div>
+
+      <div class="breakdown-row" style="margin-bottom:6px;">
+        <span class="breakdown-label">Parcelas (<span id="v-total-parcels">0</span> × 100 AB)</span>
+        <span class="breakdown-value" style="color:#c8851a;" id="v-parcels-ab">0 AB</span>
+      </div>
+      <div class="breakdown-row" style="margin-bottom:6px;">
+        <span class="breakdown-label">Insignias (<span id="v-total-badges">0</span> × 200 AB)</span>
+        <span class="breakdown-value" style="color:#c8851a;" id="v-badges-ab">0 AB</span>
+      </div>
+      <div class="breakdown-row" style="margin-bottom:6px;">
+        <span class="breakdown-label">Atlas Bucks disponibles</span>
+        <span class="breakdown-value" style="color:#c8851a;" id="v-ab-raw">0 AB</span>
+      </div>
+
+      <div class="breakdown-row breakdown-separator" style="border-top:1px solid rgba(245,166,35,0.3);padding-top:10px;margin-top:4px;">
+        <span class="breakdown-label" style="font-weight:700;color:var(--text);">🏦 Atlas Bucks Totales</span>
+        <span class="breakdown-value" style="color:#c8851a;font-size:17px;font-weight:900;" id="v-ab-total">0 AB</span>
+      </div>
+      <div class="breakdown-row" style="margin-top:8px;padding:10px 0 0;border-top:1px solid rgba(245,166,35,0.2);">
+        <span class="breakdown-label" style="font-weight:700;color:var(--gold);">💵 Valor estimado de la cuenta</span>
+        <span class="breakdown-value" style="color:#059669;font-size:18px;font-weight:900;text-shadow:0 0 12px rgba(5,150,105,0.3);" id="v-usd-total">$0.00 USD</span>
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--text2);margin-top:8px;font-style:italic;">100 AB = $5.00 USD</div>
+    </div>
+  </div>
   </div>
 
   <!-- COINS COUNTER -->
@@ -3781,6 +3810,21 @@
     document.getElementById('hours-label').textContent = `(${horasCalculo}h)`;
     document.getElementById('hours-calc-note').textContent = `Calculado con ${horasCalculo} horas diarias de funcionamiento`;
     document.getElementById('month-hours-calc').textContent = `(≈${MONTH_HOURS}h − 64h evento)`;
+
+    // ── Valor de la cuenta ──
+    const abParcelas = total * 100;
+    const abInsignias = badges * 200;
+    const abDisponibles = ab;
+    const abTotal = abParcelas + abInsignias + abDisponibles;
+    const usdTotal = (abTotal / 100) * 5;
+
+    document.getElementById('v-total-parcels').textContent = total;
+    document.getElementById('v-total-badges').textContent  = badges;
+    document.getElementById('v-parcels-ab').textContent    = abParcelas.toLocaleString() + ' AB';
+    document.getElementById('v-badges-ab').textContent     = abInsignias.toLocaleString() + ' AB';
+    document.getElementById('v-ab-raw').textContent        = abDisponibles.toLocaleString() + ' AB';
+    document.getElementById('v-ab-total').textContent      = abTotal.toLocaleString() + ' AB';
+    document.getElementById('v-usd-total').textContent     = '$' + usdTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USD';
 
     if (boostedPerSec > 0) {
       const secsFor1 = 1 / boostedPerSec;
