@@ -2640,9 +2640,11 @@ function updateStats() {
 
       if (action === 'deleteUser') {
         try {
+          console.log('Intentando eliminar usuario:', uid, username);
           await remove(ref(db, `users/${uid}`));
           showToast(`🗑️ ${username} eliminado de la base de datos`);
         } catch(e) {
+          console.error('Error al eliminar usuario:', e.code, e.message, e);
           showToast('Error al eliminar usuario', true);
         }
         return;
