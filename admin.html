@@ -838,6 +838,13 @@
     }
     .btn-ban:hover { background: var(--danger); color: #fff; box-shadow: 0 0 14px rgba(255,68,102,0.4); }
 
+    .btn-delete {
+      color: #ff6644;
+      border-color: rgba(255,100,68,0.5);
+      background: rgba(255,100,68,0.08);
+    }
+    .btn-delete:hover { background: #ff6644; color: #fff; box-shadow: 0 0 14px rgba(255,100,68,0.5); }
+
     /* Country change badge */
     .country-changed {
       display: inline-flex;
@@ -2499,6 +2506,7 @@ function updateStats() {
 
         const actionBtns = [];
         actionBtns.push(`<button class="btn-action btn-edit-country" onclick="editCountry('${u.uid}','${u.username}','${u.country}')">✎ PAÍS</button>`);
+        actionBtns.push(`<button class="btn-action btn-delete" onclick="confirmAction('deleteUser','${u.uid}','${u.username}')">🗑️ ELIMINAR</button>`);
         if (isBannedChat) {
           actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanChat','${u.uid}','${u.username}')">✓ CHAT</button>`);
         } else {
@@ -2599,16 +2607,18 @@ function updateStats() {
 
     window.confirmAction = function(action, uid, username) {
       const messages = {
-        banChat:  `¿Bloquear a <strong>${username}</strong> del chat?`,
-        unbanChat:`¿Desbloquear a <strong>${username}</strong> del chat?`,
-        banLb:    `¿Bloquear a <strong>${username}</strong> del leaderboard?`,
-        unbanLb:  `¿Desbloquear a <strong>${username}</strong> del leaderboard?`,
+        banChat:    `¿Bloquear a <strong>${username}</strong> del chat?`,
+        unbanChat:  `¿Desbloquear a <strong>${username}</strong> del chat?`,
+        banLb:      `¿Bloquear a <strong>${username}</strong> del leaderboard?`,
+        unbanLb:    `¿Desbloquear a <strong>${username}</strong> del leaderboard?`,
+        deleteUser: `⚠️ ¿Eliminar permanentemente a <strong>${username}</strong> de la base de datos? Esta acción <strong>no se puede deshacer</strong>.`,
       };
       const titles = {
-        banChat:  'BLOQUEAR CHAT',
-        unbanChat:'DESBLOQUEAR CHAT',
-        banLb:    'BLOQUEAR RANKING',
-        unbanLb:  'DESBLOQUEAR RANKING',
+        banChat:    'BLOQUEAR CHAT',
+        unbanChat:  'DESBLOQUEAR CHAT',
+        banLb:      'BLOQUEAR RANKING',
+        unbanLb:    'DESBLOQUEAR RANKING',
+        deleteUser: '🗑️ ELIMINAR USUARIO',
       };
       document.getElementById('modalTitle').textContent = titles[action];
       document.getElementById('modalBody').innerHTML    = messages[action];
@@ -2627,6 +2637,16 @@ function updateStats() {
       if (action === 'unbanChat') updates.bannedChat = false;
       if (action === 'banLb')     updates.bannedLeaderboard = true;
       if (action === 'unbanLb')   updates.bannedLeaderboard = false;
+
+      if (action === 'deleteUser') {
+        try {
+          await remove(ref(db, `users/${uid}`));
+          showToast(`🗑️ ${username} eliminado de la base de datos`);
+        } catch(e) {
+          showToast('Error al eliminar usuario', true);
+        }
+        return;
+      }
 
       try {
         await update(ref(db, `users/${uid}`), updates);
