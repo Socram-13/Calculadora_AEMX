@@ -2830,7 +2830,7 @@ function updateStats() {
 
       try {
         const now  = new Date();
-        const key  = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const key  = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
 
         // Solo usuarios no baneados
         const activos = allUsers.filter(u => !u.bannedChat && !u.bannedLeaderboard);
