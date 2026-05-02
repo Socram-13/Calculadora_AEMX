@@ -191,6 +191,65 @@
         .denied-box button:hover { background:#ff0066;color:#fff; }
         @media (max-width:380px) { .chat-header h2{font-size:13px} .send-button{padding:12px;font-size:11px} }
 
+        /* ── BORRAR MENSAJE (ADMIN) ── */
+        .btn-delete-msg {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 2px 4px;
+            opacity: 0.5;
+            transition: opacity .2s;
+            align-self: center;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .message:hover .btn-delete-msg { display: block; }
+        .btn-delete-msg:hover { opacity: 1; }
+
+        #deleteConfirmDialog {
+            position: fixed;
+            inset: 0;
+            background: rgba(10,14,26,.7);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #deleteConfirmBox {
+            background: var(--bg-panel);
+            border: 1px solid #ff4466;
+            border-radius: 12px;
+            padding: 24px 28px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255,40,80,.25);
+            min-width: 220px;
+        }
+        #deleteConfirmBox p {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            margin-bottom: 18px;
+            text-transform: uppercase;
+        }
+        .delete-confirm-btns { display: flex; gap: 10px; justify-content: center; }
+        .delete-confirm-btns button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            letter-spacing: 1px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all .2s;
+        }
+        #deleteCancelBtn { border-color: var(--text-secondary); color: var(--text-secondary); background: none; }
+        #deleteCancelBtn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        #deleteConfirmBtn { border-color: #ff4466; color: #ff4466; background: none; }
+        #deleteConfirmBtn:hover { background: #ff4466; color: #fff; }
+
         /* ── TOOLTIP TOUR ── */
         .btn-tooltip {
             position: fixed;
@@ -460,7 +519,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     messages.slice(-20).forEach((msg) => {
                         if (!msg.username || !msg.text) return;
                         const isAdminMsg = msg.isAdmin === true || (currentUserIsAdmin && msg.username === currentUsername);
-                        addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.borderColor || '', isAdminMsg);
+                        addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.borderColor || '', isAdminMsg, msg.key);
                     });
                     container.scrollTop = container.scrollHeight;
                 });
@@ -503,7 +562,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
 
-            function addMessageToUI(author, text, timestamp, isOwn = false, msgBorderColor = '', isAdmin = false) {
+            function addMessageToUI(author, text, timestamp, isOwn = false, msgBorderColor = '', isAdmin = false, msgKey = '') {
                 // Protección: ignorar mensajes sin datos mínimos
                 if (!author || !text) return;
                 const container = document.getElementById('messagesContainer');
@@ -512,6 +571,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 const borderColor = isAdmin ? '#ff4466' : msgBorderColor;
                 const borderStyle = borderColor ? `border:2px solid ${borderColor};box-shadow:0 0 8px ${borderColor}40;` : '';
                 const avatarHTML = '🧑🏻‍🚀';
+                const deleteBtnHTML = currentUserIsAdmin && msgKey
+                    ? `<button class="btn-delete-msg" data-key="${msgKey}" title="Borrar mensaje">🗑</button>`
+                    : '';
                 container.insertAdjacentHTML('beforeend', `
                     <div class="message ${ownClass} ${adminClass}">
                         <div class="message-avatar" style="${borderStyle}">${avatarHTML}</div>
@@ -519,11 +581,44 @@ const userRef = ref(database, 'chat_presence/' + userId);
                             <div class="message-author">${isAdmin && isOwn ? '' : author}${isAdmin ? ' <span class="admin-badge">ADMIN</span>' : ''}</div>
                             <div class="message-text">${escapeHtml(text)}</div>
                         </div>
+                        ${deleteBtnHTML}
                     </div>
                 `);
             }
 
-            function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+            // Delegación de eventos para botones de borrado
+            document.getElementById('messagesContainer').addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-delete-msg');
+                if (!btn) return;
+                const key = btn.dataset.key;
+                if (!key) return;
+                showDeleteConfirm(key);
+            });
+
+            function showDeleteConfirm(key) {
+                const prev = document.getElementById('deleteConfirmDialog');
+                if (prev) prev.remove();
+                const dialog = document.createElement('div');
+                dialog.id = 'deleteConfirmDialog';
+                dialog.innerHTML = `
+                    <div id="deleteConfirmBox">
+                        <p>¿Borrar este mensaje?</p>
+                        <div class="delete-confirm-btns">
+                            <button id="deleteCancelBtn">Cancelar</button>
+                            <button id="deleteConfirmBtn">Borrar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(dialog);
+                document.getElementById('deleteCancelBtn').onclick = () => dialog.remove();
+                document.getElementById('deleteConfirmBtn').onclick = async () => {
+                    dialog.remove();
+                    try { await remove(ref(database, 'messages/' + key)); }
+                    catch(e) { console.error('Error al borrar mensaje:', e); }
+                };
+            }
+
+                        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
             function changeTheme(theme) {
                 document.body.className = theme ? `theme-${theme}` : '';
