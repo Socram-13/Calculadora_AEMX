@@ -190,6 +190,42 @@
         .denied-box button { background:none;border:1px solid #ff0066;border-radius:8px;color:#ff0066;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;padding:8px 20px;cursor:pointer; }
         .denied-box button:hover { background:#ff0066;color:#fff; }
         @media (max-width:380px) { .chat-header h2{font-size:13px} .send-button{padding:12px;font-size:11px} }
+
+        /* ── TOOLTIP TOUR ── */
+        .btn-tooltip {
+            position: fixed;
+            background: var(--bg-panel);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 12px rgba(0,255,136,.3);
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity .3s ease, transform .3s ease;
+        }
+        .btn-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .btn-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 6px 6px 6px;
+            border-style: solid;
+            border-color: transparent transparent var(--primary-color) transparent;
+        }
     </style>
 </head>
 <body>
@@ -716,6 +752,84 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
   document.addEventListener('DOMContentLoaded', run);
   window.addEventListener('pageshow', run);
+})();
+</script>
+
+<script>
+/* ── TOOLTIP TOUR ── */
+(function() {
+    const TOUR = [
+        { selector: 'a.btn-guias[href*="helpshift"]', text: 'Soporte técnico' },
+        { selector: '#btnVisor',                       text: 'Visor HUD' },
+        { selector: 'a.btn-leaderboard',               text: 'Leaderboard' },
+        { selector: 'a.btn-guias[href="guias.html"]',  text: 'Guías' },
+        { selector: '#btnTransacciones',               text: 'Coins' },
+        { selector: '#btnMarco',                       text: 'Marco de perfil' },
+        { selector: '#btnMute',                        text: 'Sonido' },
+        { selector: '.btn-close-chat',                 text: 'Cerrar' },
+    ];
+
+    const DURATION = 2500;
+    const FADE     = 350;
+
+    let tip, current = 0, timer;
+
+    function createTip() {
+        tip = document.createElement('div');
+        tip.className = 'btn-tooltip';
+        document.body.appendChild(tip);
+    }
+
+    function visibleTargets() {
+        return TOUR.filter(t => {
+            const el = document.querySelector(t.selector);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+        });
+    }
+
+    function showNext() {
+        const targets = visibleTargets();
+        if (!targets.length) { timer = setTimeout(showNext, 3000); return; }
+
+        current = current % targets.length;
+        const { selector, text } = targets[current];
+        const el = document.querySelector(selector);
+        const rect = el.getBoundingClientRect();
+
+        tip.textContent = text;
+        tip.classList.remove('visible');
+
+        // Posicionar debajo del botón
+        const tipW = tip.offsetWidth || 120;
+        let left = rect.left + rect.width / 2 - tipW / 2;
+        left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+        tip.style.left = left + 'px';
+        tip.style.top  = (rect.bottom + 8) + 'px';
+
+        // Ajustar flecha al centro del botón
+        const arrowLeft = (rect.left + rect.width / 2) - left;
+        tip.style.setProperty('--arrow-left', arrowLeft + 'px');
+
+        requestAnimationFrame(() => { tip.classList.add('visible'); });
+
+        timer = setTimeout(() => {
+            tip.classList.remove('visible');
+            current++;
+            timer = setTimeout(showNext, FADE);
+        }, DURATION);
+    }
+
+    // Soporte para flecha dinámica vía CSS variable
+    const styleArrow = document.createElement('style');
+    styleArrow.textContent = '.btn-tooltip::before { left: var(--arrow-left, 50%); transform: translateX(-50%); }';
+    document.head.appendChild(styleArrow);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        createTip();
+        timer = setTimeout(showNext, 1500);
+    });
 })();
 </script>
 
