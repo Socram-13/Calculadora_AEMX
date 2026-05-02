@@ -2419,6 +2419,7 @@
         updatedAt:         d.updatedAt || null,
         bannedChat:        !!d.bannedChat,
         bannedLeaderboard: !!d.bannedLeaderboard,
+        bannedWrite:       !!d.bannedWrite,
         clanMember:        !!d.clanMember,
         countryHistory:    Array.isArray(d.countryHistory) ? d.countryHistory : []
       });
@@ -2495,14 +2496,16 @@ function updateStats() {
         const isClanMember  = u.clanMember === true;
         const isBannedChat  = u.bannedChat;
         const isBannedLb    = u.bannedLeaderboard;
-        const anyBanned     = isBannedChat || isBannedLb;
+        const isBannedWrite = u.bannedWrite;
+        const anyBanned     = isBannedChat || isBannedLb || isBannedWrite;
         const rowClass      = anyBanned ? 'banned-row' : '';
         const delay         = Math.min(i * 0.03, 0.5);
 
         const statusBadges = [];
-        if (isBannedChat) statusBadges.push(`<span class="status-badge banned">💬 CHAT</span>`);
-        if (isBannedLb)   statusBadges.push(`<span class="status-badge banned">🏆 RANKING</span>`);
-        if (!anyBanned)   statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
+        if (isBannedChat)  statusBadges.push(`<span class="status-badge banned">💬 CHAT</span>`);
+        if (isBannedLb)    statusBadges.push(`<span class="status-badge banned">🏆 RANKING</span>`);
+        if (isBannedWrite) statusBadges.push(`<span class="status-badge banned">🚫 ESCRITURA</span>`);
+        if (!anyBanned)    statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
 
         const actionBtns = [];
         actionBtns.push(`<button class="btn-action btn-edit-country" onclick="editCountry('${u.uid}','${u.username}','${u.country}')">✎ PAÍS</button>`);
@@ -2516,6 +2519,11 @@ function updateStats() {
           actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanLb','${u.uid}','${u.username}')">✓ RANKING</button>`);
         } else {
           actionBtns.push(`<button class="btn-action btn-ban" onclick="confirmAction('banLb','${u.uid}','${u.username}')">✕ RANKING</button>`);
+        }
+        if (isBannedWrite) {
+          actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanWrite','${u.uid}','${u.username}')">✓ ESCRITURA</button>`);
+        } else {
+          actionBtns.push(`<button class="btn-action btn-ban" style="background:rgba(255,68,102,0.18);border-color:rgba(255,68,102,0.5);" onclick="confirmAction('banWrite','${u.uid}','${u.username}')">🚫 ESCRITURA</button>`);
         }
 
         return `
@@ -2611,6 +2619,8 @@ function updateStats() {
         unbanChat:  `¿Desbloquear a <strong>${username}</strong> del chat?`,
         banLb:      `¿Bloquear a <strong>${username}</strong> del leaderboard?`,
         unbanLb:    `¿Desbloquear a <strong>${username}</strong> del leaderboard?`,
+        banWrite:   `⚠️ ¿Bloquear escritura a Firebase de <strong>${username}</strong>? Ya no podrá guardar ningún dato.`,
+        unbanWrite: `¿Permitir escritura a Firebase de <strong>${username}</strong>?`,
         deleteUser: `⚠️ ¿Eliminar permanentemente a <strong>${username}</strong> de la base de datos? Esta acción <strong>no se puede deshacer</strong>.`,
       };
       const titles = {
@@ -2618,6 +2628,8 @@ function updateStats() {
         unbanChat:  'DESBLOQUEAR CHAT',
         banLb:      'BLOQUEAR RANKING',
         unbanLb:    'DESBLOQUEAR RANKING',
+        banWrite:   '🚫 BLOQUEAR ESCRITURA',
+        unbanWrite: '✓ PERMITIR ESCRITURA',
         deleteUser: '🗑️ ELIMINAR USUARIO',
       };
       document.getElementById('modalTitle').textContent = titles[action];
@@ -2633,10 +2645,12 @@ function updateStats() {
     async function executeAction(action, uid, username) {
       closeModal();
       const updates = {};
-      if (action === 'banChat')   updates.bannedChat = true;
-      if (action === 'unbanChat') updates.bannedChat = false;
-      if (action === 'banLb')     updates.bannedLeaderboard = true;
-      if (action === 'unbanLb')   updates.bannedLeaderboard = false;
+      if (action === 'banChat')    updates.bannedChat = true;
+      if (action === 'unbanChat')  updates.bannedChat = false;
+      if (action === 'banLb')      updates.bannedLeaderboard = true;
+      if (action === 'unbanLb')    updates.bannedLeaderboard = false;
+      if (action === 'banWrite')   updates.bannedWrite = true;
+      if (action === 'unbanWrite') updates.bannedWrite = false;
 
       if (action === 'deleteUser') {
         try {
@@ -2653,10 +2667,12 @@ function updateStats() {
       try {
         await update(ref(db, `users/${uid}`), updates);
         const msgs = {
-          banChat:  `${username} bloqueado del chat`,
-          unbanChat:`${username} desbloqueado del chat`,
-          banLb:    `${username} bloqueado del ranking`,
-          unbanLb:  `${username} desbloqueado del ranking`,
+          banChat:   `${username} bloqueado del chat`,
+          unbanChat: `${username} desbloqueado del chat`,
+          banLb:     `${username} bloqueado del ranking`,
+          unbanLb:   `${username} desbloqueado del ranking`,
+          banWrite:  `🚫 ${username} bloqueado de escritura a Firebase`,
+          unbanWrite:`✓ ${username} puede volver a escribir datos`,
         };
         showToast(msgs[action]);
       } catch(e) {

@@ -2311,6 +2311,17 @@
       const user = window._fbUser;
       if (!user) return;
 
+      // ── Verificar si el admin bloqueó la escritura ──
+      try {
+        const writeSnap = await get(ref(db, `users/${user.uid}/bannedWrite`));
+        if (writeSnap.exists() && writeSnap.val() === true) {
+          console.warn('AEMX: escritura bloqueada por admin');
+          const s = document.getElementById('save-status');
+          if (s) { s.textContent = '🚫 Escritura bloqueada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 3000); }
+          return;
+        }
+      } catch(e) { /* si falla la verificación, permitir escritura */ }
+
       const data = {
         username:     document.getElementById('username')?.value    || '',
         borderColor:  localStorage.getItem('atlas-avatar-border')   || '',
@@ -2367,6 +2378,8 @@
       const user = window._fbUser;
       if (!user || !cityText) return;
       try {
+        const wSnap = await get(ref(db, `users/${user.uid}/bannedWrite`));
+        if (wSnap.exists() && wSnap.val() === true) return;
         await update(ref(db, `users/${user.uid}`), { city: cityText });
       } catch(e) { console.warn('Firebase city error:', e); }
     };
@@ -2375,6 +2388,8 @@
       const user = window._fbUser;
       if (!user || !newCountry) return;
       try {
+        const wSnap = await get(ref(db, `users/${user.uid}/bannedWrite`));
+        if (wSnap.exists() && wSnap.val() === true) return;
         const snap = await get(ref(db, `users/${user.uid}/country`));
         const prev = snap.exists() ? snap.val() : null;
         if (prev === newCountry) return;
@@ -3413,6 +3428,11 @@
     window._awardDailyCoin = async function() {
       if (!window._fbUser) return;
       const uid = window._fbUser.uid;
+      // Verificar bloqueo de escritura
+      try {
+        const wSnap = await window._fbGet(window._fbRef(window._fbDb, `users/${uid}/bannedWrite`));
+        if (wSnap.exists() && wSnap.val() === true) return;
+      } catch(e) {}
       const hoy = await fechaCDMX();
       const _db  = window._fbDb;
       const _ref = window._fbRef;
@@ -4922,6 +4942,13 @@
       const id    = badge.dataset.medalId;
       const price = Number(badge.dataset.price || 0);
       if (_ownedMedals[id]) return;
+      // Verificar bloqueo de escritura
+      if (window._fbUser) {
+        try {
+          const wSnap = await window._fbGet(window._fbRef(window._fbDb, `users/${window._fbUser.uid}/bannedWrite`));
+          if (wSnap.exists() && wSnap.val() === true) return;
+        } catch(e2) {}
+      }
       const coins = _getCoins();
       
       // Chuck Norris te paga (precio negativo)
