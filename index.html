@@ -2143,6 +2143,44 @@
       transform: translateX(0) translateY(10px) scale(1);
     }
   }
+  /* ── Banner cuenta bloqueada ── */
+  #banned-write-banner {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 99999;
+    background: linear-gradient(135deg, #7f0000, #b91c1c);
+    color: #fff;
+    text-align: center;
+    padding: 14px 20px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    border-bottom: 3px solid #ff4466;
+  }
+  #banned-write-banner.visible {
+    display: block;
+  }
+  #banned-write-banner .ban-icon {
+    font-size: 20px;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  #banned-write-banner .ban-sub {
+    display: block;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0.85;
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+  /* Empujar el contenido para que no quede debajo del banner */
+  body.write-banned .container {
+    padding-top: 80px;
+  }
+
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -2287,6 +2325,21 @@
         if(window.calc) window.calc();
         window.clanMember = d.clanMember === true;
 
+        // Aplicar bloqueo de escritura si corresponde
+        const isBannedWrite = d.bannedWrite === true;
+        window._userBannedWrite = isBannedWrite;
+        if (typeof applyWriteBan === 'function') applyWriteBan(isBannedWrite);
+        else {
+          // Si applyWriteBan aún no cargó, esperar
+          const waitBan = setInterval(() => {
+            if (typeof applyWriteBan === 'function') {
+              clearInterval(waitBan);
+              applyWriteBan(isBannedWrite);
+            }
+          }, 100);
+          setTimeout(() => clearInterval(waitBan), 5000);
+        }
+
         const waitCoins = setInterval(() => {
           if (window._coinsLoad) {
             clearInterval(waitCoins);
@@ -2305,6 +2358,74 @@
         setTimeout(() => clearInterval(waitMedals), 5000);
       } catch(e) { console.warn('Firebase sync error:', e); }
     }
+
+
+    // ── Aplicar bloqueo de escritura en la UI ──
+    function applyWriteBan(banned) {
+      const banner = document.getElementById('banned-write-banner');
+      const IDS_INPUTS  = ['common','rare','epic','legendary','badges','diamonds','atlasbucks','horas-calculo','username','start-date'];
+      const IDS_BUTTONS = ['btn-share-data','btn-checkin'];
+
+      if (banned) {
+        // Mostrar banner
+        if (banner) banner.classList.add('visible');
+        document.body.classList.add('write-banned');
+
+        // Deshabilitar inputs
+        IDS_INPUTS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = true; el.style.opacity = '0.45'; el.style.cursor = 'not-allowed'; }
+        });
+
+        // Deshabilitar botones de contadores + / -
+        document.querySelectorAll('.counter-btn').forEach(btn => {
+          btn.disabled = true;
+          btn.style.opacity = '0.35';
+          btn.style.cursor = 'not-allowed';
+        });
+
+        // Deshabilitar botón guardar y checkin
+        IDS_BUTTONS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = true; el.style.opacity = '0.35'; el.style.cursor = 'not-allowed'; }
+        });
+
+        // Deshabilitar botones de medallas shop
+        document.querySelectorAll('.mbadge-buy-btn').forEach(btn => {
+          btn.disabled = true;
+          btn.style.opacity = '0.35';
+          btn.style.cursor = 'not-allowed';
+        });
+
+        // Deshabilitar scanner
+        const btnScanner = document.querySelector('button[onclick="abrirScanner()"]');
+        if (btnScanner) { btnScanner.disabled = true; btnScanner.style.opacity = '0.35'; btnScanner.style.cursor = 'not-allowed'; }
+
+      } else {
+        // Quitar banner
+        if (banner) banner.classList.remove('visible');
+        document.body.classList.remove('write-banned');
+
+        // Rehabilitar todo
+        IDS_INPUTS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = false; el.style.opacity = ''; el.style.cursor = ''; }
+        });
+        document.querySelectorAll('.counter-btn').forEach(btn => {
+          btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
+        });
+        IDS_BUTTONS.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = false; el.style.opacity = ''; el.style.cursor = ''; }
+        });
+        document.querySelectorAll('.mbadge-buy-btn').forEach(btn => {
+          btn.disabled = false; btn.style.opacity = ''; btn.style.cursor = '';
+        });
+        const btnScanner = document.querySelector('button[onclick="abrirScanner()"]');
+        if (btnScanner) { btnScanner.disabled = false; btnScanner.style.opacity = ''; btnScanner.style.cursor = ''; }
+      }
+    }
+    window.applyWriteBan = applyWriteBan;
 
     // ✅ FIX PRINCIPAL: _fbSaveAll ahora siempre incluye el avatar desde localStorage
     window._fbSaveAll = async function(includeAvatar = false) {
@@ -2456,6 +2577,12 @@
     if (savedColor && window.applyThemeColor) window.applyThemeColor(savedColor);
   }
 </script>
+<div id="banned-write-banner">
+  <span class="ban-icon">🚫</span>
+  TU CUENTA TIENE ESCRITURA RESTRINGIDA
+  <span class="ban-sub">Un administrador ha bloqueado tu acceso. No puedes guardar datos hasta que el bloqueo sea removido.</span>
+</div>
+
 <div class="container">
   <header>
     <div class="header-bar">
