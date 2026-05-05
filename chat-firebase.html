@@ -982,7 +982,25 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                 // Mensaje 2 — 5s después del mensaje 1
                 setTimeout(() => {
-                    const lista = BOTONES.map(b => `• ${b}`).join('<br>');
+                    const esClan = window._userEsClan === true;
+                    const botonesGenerales = [
+                        '🎧 Soporte técnico',
+                        '🏆 Ranking',
+                        '📚 Guías',
+                        '🔔 Sonido',
+                        '✕ Cerrar'
+                    ];
+                    const botonesClan = [
+                        '🎧 Soporte técnico',
+                        '👁 Visor HUD',
+                        '🏆 Ranking',
+                        '📚 Guías',
+                        '🪙 Coins',
+                        '🖼️ Marco AEMX',
+                        '🔔 Sonido',
+                        '✕ Cerrar'
+                    ];
+                    const lista = (esClan ? botonesClan : botonesGenerales).map(b => `• ${b}`).join('<br>');
                     addAuraMessage('En la sección de arriba podrás encontrar los botones de acceso a las siguientes secciones:<br><br>' + lista);
                 }, 7000);
 
