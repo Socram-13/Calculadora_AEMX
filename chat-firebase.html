@@ -894,7 +894,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 <script>
 /* ── AURA — Asistente Universal de Recursos de AEMX ── */
 (function() {
-    const AURA_AVATAR = 'https://raw.githubusercontent.com/Socram-13/GamerTag_AEMX/main/AURA.png';
+    const AURA_AVATAR = 'https://raw.githubusercontent.com/Socram-13/GamerTag_AEMX/main/aura.png';
     const AURA_NAME   = 'A.U.R.A.';
     const LS_FIRST    = 'aura_first_visit';
     const LS_LAST_TS  = 'aura_last_visit_ts';
@@ -955,6 +955,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
         try { localStorage.setItem(LS_LAST_TS, Date.now().toString()); } catch(e) {}
     }
 
+    function precargarImagen(callback) {
+        const img = new Image();
+        img.onload  = callback;
+        img.onerror = callback; // Si falla, continúa igual
+        img.src = AURA_AVATAR;
+    }
+
     function lanzarAura() {
         const container = document.getElementById('messagesContainer');
         if (!container) { setTimeout(lanzarAura, 300); return; }
@@ -962,41 +969,43 @@ const userRef = ref(database, 'chat_presence/' + userId);
         let esPrimera = false;
         try { esPrimera = !localStorage.getItem(LS_FIRST); } catch(e) {}
 
-        if (esPrimera) {
-            // Marcar primera visita y guardar timestamp
-            try { localStorage.setItem(LS_FIRST, '1'); } catch(e) {}
-            guardarVisita();
+        precargarImagen(() => {
+            if (esPrimera) {
+                // Marcar primera visita y guardar timestamp
+                try { localStorage.setItem(LS_FIRST, '1'); } catch(e) {}
+                guardarVisita();
 
-            // Mensaje 1 — 1.5s
-            setTimeout(() => {
-                addAuraMessage('¡Hola Explorador! Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. ¡Bienvenido al chat!');
-            }, 1500);
+                // Mensaje 1 — 2s después de que cargue la imagen
+                setTimeout(() => {
+                    addAuraMessage('¡Hola Explorador! Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. ¡Bienvenido al chat!');
+                }, 2000);
 
-            // Mensaje 2 — 4.5s
-            setTimeout(() => {
-                const lista = BOTONES.map(b => `• ${b}`).join('<br>');
-                addAuraMessage('En la sección de arriba podrás encontrar los botones de acceso a las siguientes secciones:<br><br>' + lista);
-            }, 4500);
+                // Mensaje 2 — 5s después del mensaje 1
+                setTimeout(() => {
+                    const lista = BOTONES.map(b => `• ${b}`).join('<br>');
+                    addAuraMessage('En la sección de arriba podrás encontrar los botones de acceso a las siguientes secciones:<br><br>' + lista);
+                }, 7000);
 
-            // Mensaje 3 — 7.5s
-            setTimeout(() => {
-                addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!');
-            }, 7500);
+                // Mensaje 3 — 5s después del mensaje 2
+                setTimeout(() => {
+                    addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!');
+                }, 12000);
 
-        } else {
-            // Visitas posteriores — guardar nuevo timestamp y mostrar saludo con horas
-            const horas = horasDesdeUltimaVisita();
-            guardarVisita();
+            } else {
+                // Visitas posteriores — guardar nuevo timestamp y mostrar saludo con horas
+                const horas = horasDesdeUltimaVisita();
+                guardarVisita();
 
-            const horasTexto = horas === null ? 'un tiempo' :
-                               horas === 0    ? 'menos de una hora' :
-                               horas === 1    ? '1 hora' :
-                               `${horas} horas`;
+                const horasTexto = horas === null ? 'un tiempo' :
+                                   horas === 0    ? 'menos de una hora' :
+                                   horas === 1    ? '1 hora' :
+                                   `${horas} horas`;
 
-            setTimeout(() => {
-                addAuraMessage(`¡Hola Explorador! Han pasado <strong>${horasTexto}</strong> desde tu última visita. ¿En qué podemos ayudarte hoy?`);
-            }, 1500);
-        }
+                setTimeout(() => {
+                    addAuraMessage(`¡Hola Explorador! Han pasado <strong>${horasTexto}</strong> desde tu última visita. ¿En qué podemos ayudarte hoy?`);
+                }, 2000);
+            }
+        });
     }
 
     if (document.readyState === 'loading') {
