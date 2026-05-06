@@ -215,6 +215,28 @@
             color: #00bfff;
             text-shadow: 0 0 6px rgba(0,191,255,.3);
             box-shadow: 0 0 10px rgba(0,191,255,.1);
+            padding-bottom: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+        .aura-timer-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: rgba(0,191,255,.15);
+        }
+        .aura-timer-fill {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, transparent, #00bfff);
+            transform-origin: right center;
+            transition: width linear;
+            box-shadow: 0 0 6px rgba(0,191,255,.6);
         }
 
         /* ── BORRAR MENSAJE (ADMIN) ── */
@@ -934,6 +956,21 @@ const userRef = ref(database, 'chat_presence/' + userId);
         `;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
+
+        // ── Barra de tiempo regresiva ──
+        const timerBar = document.createElement('div');
+        timerBar.className = 'aura-timer-bar';
+        const timerFill = document.createElement('div');
+        timerFill.className = 'aura-timer-fill';
+        timerBar.appendChild(timerFill);
+        const textElBar = div.querySelector('.message-text');
+        if (textElBar) textElBar.appendChild(timerBar);
+
+        // Iniciar animación: de 100% a 0% en AUTO_DELETE_MS
+        requestAnimationFrame(() => {
+            timerFill.style.transition = `width ${AUTO_DELETE_MS}ms linear`;
+            timerFill.style.width = '0%';
+        });
 
         // ── Efecto Typewriter ──
         const textEl = div.querySelector('.message-text');
