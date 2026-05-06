@@ -976,10 +976,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
         if (textElBar) textElBar.appendChild(timerBar);
 
         // Iniciar animación: de 100% a 0% en AUTO_DELETE_MS
-        requestAnimationFrame(() => {
+        // Forzar reflow antes de iniciar la transición
+        timerFill.style.width = '100%';
+        timerFill.getBoundingClientRect(); // fuerza reflow
+        setTimeout(() => {
             timerFill.style.transition = `width ${AUTO_DELETE_MS}ms linear`;
             timerFill.style.width = '0%';
-        });
+        }, 50);
 
         // ── Efecto Typewriter ──
         const textEl = div.querySelector('.message-text');
