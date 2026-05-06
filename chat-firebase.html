@@ -935,6 +935,50 @@ const userRef = ref(database, 'chat_presence/' + userId);
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
 
+        // ── Efecto Typewriter ──
+        const textEl = div.querySelector('.message-text');
+        if (textEl) {
+            const fullHTML = textEl.innerHTML;
+            textEl.innerHTML = '';
+            textEl.style.visibility = 'visible';
+
+            // Extraer texto plano preservando tags HTML
+            const temp = document.createElement('div');
+            temp.innerHTML = fullHTML;
+
+            // Función para animar nodo por nodo
+            function typeNode(node, parent, onDone) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const chars = node.textContent.split('');
+                    let i = 0;
+                    const span = document.createTextNode('');
+                    parent.appendChild(span);
+                    const interval = setInterval(() => {
+                        span.textContent += chars[i++];
+                        container.scrollTop = container.scrollHeight;
+                        if (i >= chars.length) { clearInterval(interval); onDone(); }
+                    }, 18);
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    const clone = document.createElement(node.tagName);
+                    Array.from(node.attributes).forEach(a => clone.setAttribute(a.name, a.value));
+                    parent.appendChild(clone);
+                    typeChildren(Array.from(node.childNodes), clone, onDone);
+                } else {
+                    onDone();
+                }
+            }
+
+            function typeChildren(nodes, parent, onDone) {
+                if (!nodes.length) { onDone(); return; }
+                const [first, ...rest] = nodes;
+                typeNode(first, parent, () => typeChildren(rest, parent, onDone));
+            }
+
+            typeChildren(Array.from(temp.childNodes), textEl, () => {
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
         // Auto-borrar después de 3 minutos
         setTimeout(() => {
             if (div && div.parentNode) {
