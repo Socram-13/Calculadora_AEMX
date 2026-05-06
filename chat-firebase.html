@@ -233,10 +233,19 @@
             right: 0;
             height: 100%;
             width: 100%;
-            background: linear-gradient(90deg, transparent, #00bfff);
-            transform-origin: right center;
+            background: rgba(0,191,255,.25);
             transition: width linear;
-            box-shadow: 0 0 6px rgba(0,191,255,.6);
+        }
+        .aura-timer-fill::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            right: -1px;
+            width: 2px;
+            height: calc(100% + 4px);
+            background: #00bfff;
+            box-shadow: 0 0 6px #00bfff, 0 0 12px rgba(0,191,255,.6);
+            border-radius: 2px;
         }
 
         /* ── BORRAR MENSAJE (ADMIN) ── */
