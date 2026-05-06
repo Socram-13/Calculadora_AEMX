@@ -215,38 +215,9 @@
             color: #00bfff;
             text-shadow: 0 0 6px rgba(0,191,255,.3);
             box-shadow: 0 0 10px rgba(0,191,255,.1);
-            padding-bottom: 14px;
-            position: relative;
-            overflow: hidden;
+
         }
-        .aura-timer-bar {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: rgba(0,191,255,.15);
-        }
-        .aura-timer-fill {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, rgba(0,191,255,.4), rgba(0,191,255,.08));
-            transition: width linear;
-            box-shadow: 0 0 6px rgba(0,191,255,.4);
-        }
-        .aura-timer-marker {
-            position: absolute;
-            top: -2px;
-            height: calc(100% + 4px);
-            width: 2px;
-            background: #00bfff;
-            box-shadow: 0 0 6px #00bfff, 0 0 12px rgba(0,191,255,.8);
-            border-radius: 2px;
-            transition: left linear;
-        }
+
 
         /* ── BORRAR MENSAJE (ADMIN) ── */
         .message-bubble-wrap {
@@ -975,8 +946,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
         timerMarker.className = 'aura-timer-marker';
         timerBar.appendChild(timerFill);
         timerBar.appendChild(timerMarker);
-        const textElBar = div.querySelector('.message-text');
-        if (textElBar) textElBar.appendChild(timerBar);
+        const bubbleWrap = div.querySelector('.message-bubble-wrap');
+        if (bubbleWrap) bubbleWrap.appendChild(timerBar);
 
         // Iniciar animación — esperar a que el elemento esté en el DOM con dimensiones reales
         setTimeout(() => {
