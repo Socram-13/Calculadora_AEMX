@@ -549,6 +549,10 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                     if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
                         if (newest.username !== currentUsername) window.playPopSound();
+                        // ── AURA keyword detector ──
+                        if (newest.username === currentUsername && window._auraCheckMessage) {
+                            window._auraCheckMessage(newest.text, true);
+                        }
                     }
                     window._lastNewestKey = newestKey;
                     window._lastNewestTs  = newestTs;
@@ -1031,6 +1035,120 @@ const userRef = ref(database, 'chat_presence/' + userId);
     } else {
         lanzarAura();
     }
+
+    /* ── SISTEMA DE RESPUESTAS POR PALABRAS CLAVE ── */
+    const AURA_KB = [
+        {
+            keys: ['vegetaci', 'vegeta', 'plantas', 'arboles', 'árbol', 'arbol'],
+            clan: false,
+            resp: '🌿 <strong>Estrategia de Vegetación:</strong> La distribución de parcelas sigue un patrón predecible. Las Legendarias suelen estar rodeadas de Épicas y Raras, y la vegetación del mapa sigue la misma dirección que las parcelas de mayor rareza. ¡Úsala como brújula para encontrar los mejores terrenos! Consulta la sección 📚 Guías para ver la guía completa.'
+        },
+        {
+            keys: ['parcel', 'terreno', 'comprar', 'rareza', 'rara', 'epic', 'legendar', 'comun', 'común'],
+            clan: false,
+            resp: '🗺️ <strong>Tipos de Parcelas:</strong> Existen 4 rarezas: 🟢 Comunes, 🔵 Raras, 🟣 Épicas y 🟡 Legendarias. Para comprar tu primer terreno necesitas Atlas Bucks (AB). Te recomendamos comprar en zonas turísticas o de alto tráfico para maximizar tus insignias y revalorización futura.'
+        },
+        {
+            keys: ['mejor', 'upgrade', 'personaliz'],
+            clan: false,
+            resp: '🚫 <strong>Mejoras de Parcelas:</strong> ¡Cuidado! Las mejoras cuestan 2,500 AB (equivalente a 25 parcelas comunes) pero solo dan el beneficio de 4 comunes. Es mucho mejor invertir ese dinero en comprar más terrenos. Revisa la sección 📚 Guías para más detalles.'
+        },
+        {
+            keys: ['vend', 'mercado', 'comision', 'comisión'],
+            clan: false,
+            resp: '🏷️ <strong>Vender Parcelas:</strong> Puedes vender parcelas que ya posees, pero debes estar físicamente cerca de ellas. Atlas Earth retiene una <strong>comisión del 20%</strong> sobre el valor de venta. El resto se abona en Atlas Bucks cuando otro jugador la compra. Puedes cancelar la venta si aún no ha sido comprada.'
+        },
+        {
+            keys: ['referid', 'invit', 'amigo'],
+            clan: false,
+            resp: '🤝 <strong>Referidos:</strong> Puedes invitar amigos a Atlas Earth usando tu enlace de referido. Cuando tu referido realice compras en el juego, tú obtienes beneficios. Consulta la sección 📚 Guías → Referidos para ver los detalles completos.'
+        },
+        {
+            keys: ['insignia', 'pasaporte', 'badge'],
+            clan: false,
+            resp: '🏅 <strong>Insignias de Pasaporte:</strong> Cada insignia cuesta 200 AB y representa una zona (ciudad, estado o país). Si eres VIP de una zona, ganas el <strong>10% (20 AB)</strong> cada vez que alguien compra una insignia de tu área. ¡Son una fuente de ingresos pasivos!'
+        },
+        {
+            keys: ['vip', 'mayor', 'gobernador', 'presidente'],
+            clan: false,
+            resp: '👑 <strong>Rangos VIP:</strong><br>🥉 <strong>Mayor</strong> — más parcelas en tu ciudad<br>🥈 <strong>Gobernador</strong> — más parcelas en tu estado<br>🥇 <strong>Presidente</strong> — más parcelas en todo el país<br><br>Ganas el 10% de cada insignia vendida en tu zona. ¡Puedes tener los 3 rangos simultáneamente!'
+        },
+        {
+            keys: ['minijuego', 'mini juego', 'juego', 'racer', 'fishing', 'pesca', 'golf', 'warship', 'barco', 'bowling', 'boliche'],
+            clan: false,
+            resp: '🎮 <strong>Minijuegos:</strong> Hay 5 minijuegos activos: 🏎️ Racer, 🎣 Fishing V2, ⛳ Golf, 🚢 Warship y 🎳 Bowling. Cada evento tiene un bote inicial de <strong>3,000 AB</strong> que crece con los participantes. ¡Las partidas son gratuitas! Consulta la sección 📚 Guías para consejos de cada juego.'
+        },
+        {
+            keys: ['coin', 'atlas buck', 'ab ', ' ab', 'moneda', 'dinero', 'gana'],
+            clan: false,
+            resp: '🪙 <strong>Cómo ganar Atlas Bucks:</strong> Puedes ganar AB viendo anuncios, recolectando diamantes en el mapa, completando minijuegos, recibiendo renta de tus parcelas o comprándolos directamente. Recuerda que completar las 10 video-guías también te da <strong>+10 COINS AEMX</strong> como recompensa.'
+        },
+        {
+            keys: ['paypal', 'retir', 'cobr', 'pago', 'efectivo', 'real'],
+            clan: false,
+            resp: '💰 <strong>Retiro a PayPal:</strong> Atlas Earth permite retirar ganancias a PayPal una vez que alcances el mínimo requerido. Consulta la sección 📚 Guías → PayPal para ver los requisitos actualizados y el proceso paso a paso.'
+        },
+        {
+            keys: ['guia', 'guía', 'video', 'tutorial', 'aprender'],
+            clan: false,
+            resp: '📚 <strong>Video-Guías AURA:</strong> Tenemos 10 video-guías disponibles que cubren desde los primeros pasos hasta estrategias avanzadas. Si completas las 10, recibes <strong>+10 COINS AEMX</strong> de recompensa. Encuéntralas en el botón 📚 Guías en la parte superior.'
+        },
+        {
+            keys: ['ec ', ' ec', 'club explorador', 'explorer club', 'pase', 'season pass', 'sp ', ' sp', 'temporada'],
+            clan: false,
+            resp: '🎫 <strong>Suscripciones EC y SP:</strong> El Club de Explorador (EC) y el Pase de Temporada (SP) son suscripciones premium que otorgan beneficios exclusivos como bonos de renta, acceso a eventos especiales y más. Consulta la sección 📚 Guías para ver cuál conviene más según tu estilo de juego.'
+        },
+        {
+            keys: ['salto', 'caida', 'caída', 'tope', 'crel', 'c.r.e.l'],
+            clan: false,
+            resp: '📈 <strong>Saltos y C.R.E.L.:</strong> Los saltos son incrementos de renta que ocurren al acumular parcelas. El C.R.E.L. (Coeficiente de Rendimiento por Escala de Lotes) es la fórmula que determina cuándo y cuánto sube tu renta. Consulta las Guías 05, 06 y 07 en la sección 📚 Guías para dominar esta mecánica.'
+        },
+        {
+            keys: ['horizontal', 'pantalla', 'modo landscape', 'rotar'],
+            clan: false,
+            resp: '📱 <strong>Modo Horizontal:</strong> Atlas Earth tiene un modo horizontal que puede darte ventajas visuales al explorar el mapa. Consulta la sección 📚 Guías → Modo Horizontal para ver cómo activarlo correctamente en tu dispositivo.'
+        },
+        {
+            keys: ['visor', 'hud'],
+            clan: true,
+            resp: '👁 <strong>Visor HUD AEMX:</strong> El Visor HUD es una herramienta exclusiva para miembros AEMX que te permite visualizar información avanzada del juego. Accede desde el botón 👁 Visor HUD en la parte superior del chat.'
+        },
+        {
+            keys: ['marco', 'frame', 'borde', 'editor'],
+            clan: true,
+            resp: '🖼️ <strong>Marco AEMX:</strong> El Marco AEMX es un distintivo visual exclusivo para miembros del clan. Puedes personalizarlo desde el botón 🖼️ Marco AEMX en la parte superior del chat.'
+        }
+    ];
+
+    let _auraLastReply = 0;
+    const AURA_COOLDOWN = 10000; // 10 segundos entre respuestas
+    const _auraRecentTopics = {}; // { keyword: timestamp }
+    const AURA_TOPIC_COOLDOWN = 5 * 60 * 1000; // no repite el mismo tema en 5 min
+
+    window._auraCheckMessage = function(text, isOwn) {
+        if (!isOwn) return;
+        const now = Date.now();
+        if (now - _auraLastReply < AURA_COOLDOWN) return;
+
+        const lower = ' ' + text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') + ' ';
+        const esClan = window._userEsClan === true;
+
+        for (const entry of AURA_KB) {
+            if (entry.clan && !esClan) continue;
+            const matched = entry.keys.some(k => lower.includes(k));
+            if (!matched) continue;
+
+            // Cooldown por tema
+            const topicKey = entry.keys[0];
+            if (_auraRecentTopics[topicKey] && now - _auraRecentTopics[topicKey] < AURA_TOPIC_COOLDOWN) continue;
+
+            _auraLastReply = now;
+            _auraRecentTopics[topicKey] = now;
+
+            setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
+            break;
+        }
+    };
 })();
 </script>
 
