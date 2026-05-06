@@ -1123,9 +1123,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '🎮 <strong>Minijuegos:</strong> Hay 5 minijuegos activos: 🏎️ Racer, 🎣 Fishing V2, ⛳ Golf, 🚢 Warship y 🎳 Bowling. Cada evento tiene un bote inicial de <strong>3,000 AB</strong> que crece con los participantes. ¡Las partidas son gratuitas! Consulta la sección 📚 Guías para consejos de cada juego.'
         },
         {
-            keys: ['coin', 'atlas buck', 'ab ', ' ab', 'moneda', 'dinero', 'gana'],
+            keys: ['atlas buck', ' ab ', 'atlas bucks', 'diamante', 'anuncio', 'renta'],
             clan: false,
-            resp: '🪙 <strong>Cómo ganar Atlas Bucks:</strong> Puedes ganar AB viendo anuncios, recolectando diamantes en el mapa, completando minijuegos, recibiendo renta de tus parcelas o comprándolos directamente. Recuerda que completar las 10 video-guías también te da <strong>+10 COINS AEMX</strong> como recompensa.'
+            resp: '💰 <strong>Atlas Bucks (AB):</strong> Son la moneda principal del juego. Puedes ganarlos viendo anuncios, recolectando diamantes en el mapa, recibiendo renta de tus parcelas, ganando minijuegos o comprándolos directamente. ¡Úsalos estratégicamente comprando más parcelas en lugar de gastarlos en mejoras!'
+        },
+        {
+            keys: ['coin aemx', 'coins aemx', 'coin ', ' coin', 'moneda aemx', 'medalla', 'intercambio', 'gamertag'],
+            clan: false,
+            resp: '🪙 <strong>Coins AEMX:</strong> Son la moneda interna de nuestra comunidad. Puedes usarlos para obtener <strong>medallas en tu GamerTag AEMX</strong> y también están diseñados para un sistema de <strong>intercambio entre exploradores</strong>. Puedes ganar Coins completando las 10 video-guías (+10 Coins) y participando en actividades de la comunidad.'
         },
         {
             keys: ['paypal', 'retir', 'cobr', 'pago', 'efectivo', 'real'],
@@ -1143,9 +1148,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '🎫 <strong>Suscripciones EC y SP:</strong> El Club de Explorador (EC) y el Pase de Temporada (SP) son suscripciones premium que otorgan beneficios exclusivos como bonos de renta, acceso a eventos especiales y más. Consulta la sección 📚 Guías para ver cuál conviene más según tu estilo de juego.'
         },
         {
-            keys: ['salto', 'caida', 'caída', 'tope', 'crel', 'c.r.e.l'],
+            keys: ['salto', 'caida', 'caída', 'tope', 'tabla de salto'],
             clan: false,
-            resp: '📈 <strong>Saltos y C.R.E.L.:</strong> Los saltos son incrementos de renta que ocurren al acumular parcelas. El C.R.E.L. (Coeficiente de Rendimiento por Escala de Lotes) es la fórmula que determina cuándo y cuánto sube tu renta. Consulta las Guías 05, 06 y 07 en la sección 📚 Guías para dominar esta mecánica.'
+            resp: '📈 <strong>Topes, Caídas y Saltos:</strong> Los saltos son incrementos de renta que ocurren al acumular cierta cantidad de parcelas. Las caídas suceden cuando pierdes parcelas y bajas de nivel de renta. Conocer los topes te ayuda a planificar cuándo comprar para maximizar cada salto. Consulta las Guías 05 y 06 en la sección 📚 Guías.'
+        },
+        {
+            keys: ['crel', 'c.r.e.l', 'coeficiente', 'rendimiento', 'escala'],
+            clan: false,
+            resp: '📊 <strong>C.R.E.L.:</strong> El Coeficiente de Rendimiento por Escala de Lotes es la fórmula que determina cuánto genera cada parcela según la cantidad total que posees. Cuantas más parcelas acumules, mayor es el rendimiento por unidad. Dominar el C.R.E.L. es clave para optimizar tu inversión. Consulta la Guía 07 en la sección 📚 Guías.'
         },
         {
             keys: ['horizontal', 'pantalla', 'modo landscape', 'rotar'],
