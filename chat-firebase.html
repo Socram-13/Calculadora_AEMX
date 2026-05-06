@@ -230,22 +230,22 @@
         .aura-timer-fill {
             position: absolute;
             top: 0;
-            right: 0;
+            left: 0;
             height: 100%;
             width: 100%;
-            background: rgba(0,191,255,.25);
+            background: linear-gradient(90deg, rgba(0,191,255,.4), rgba(0,191,255,.08));
             transition: width linear;
+            box-shadow: 0 0 6px rgba(0,191,255,.4);
         }
-        .aura-timer-fill::after {
-            content: '';
+        .aura-timer-marker {
             position: absolute;
             top: -2px;
-            right: -1px;
-            width: 2px;
             height: calc(100% + 4px);
+            width: 2px;
             background: #00bfff;
-            box-shadow: 0 0 6px #00bfff, 0 0 12px rgba(0,191,255,.6);
+            box-shadow: 0 0 6px #00bfff, 0 0 12px rgba(0,191,255,.8);
             border-radius: 2px;
+            transition: left linear;
         }
 
         /* ── BORRAR MENSAJE (ADMIN) ── */
@@ -971,18 +971,25 @@ const userRef = ref(database, 'chat_presence/' + userId);
         timerBar.className = 'aura-timer-bar';
         const timerFill = document.createElement('div');
         timerFill.className = 'aura-timer-fill';
+        const timerMarker = document.createElement('div');
+        timerMarker.className = 'aura-timer-marker';
         timerBar.appendChild(timerFill);
+        timerBar.appendChild(timerMarker);
         const textElBar = div.querySelector('.message-text');
         if (textElBar) textElBar.appendChild(timerBar);
 
-        // Iniciar animación: de 100% a 0% en AUTO_DELETE_MS
-        // Forzar reflow antes de iniciar la transición
-        timerFill.style.width = '100%';
-        timerFill.getBoundingClientRect(); // fuerza reflow
-        setTimeout(() => {
-            timerFill.style.transition = `width ${AUTO_DELETE_MS}ms linear`;
-            timerFill.style.width = '0%';
-        }, 50);
+        // Iniciar animación usando JS con setInterval para máxima compatibilidad
+        const startTime = Date.now();
+        const barWidth = () => timerBar.offsetWidth || 200;
+        const animTimer = setInterval(() => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / AUTO_DELETE_MS, 1);
+            const remaining = 1 - progress;
+            const pct = remaining * 100;
+            timerFill.style.width = pct + '%';
+            timerMarker.style.left = (pct - (2 / barWidth() * 100)) + '%';
+            if (progress >= 1) clearInterval(animTimer);
+        }, 100);
 
         // ── Efecto Typewriter ──
         const textEl = div.querySelector('.message-text');
