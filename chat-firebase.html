@@ -1110,6 +1110,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
     /* ── SISTEMA DE RESPUESTAS POR PALABRAS CLAVE ── */
     const AURA_KB = [
         {
+            keys: ['quien es aura', 'que es aura', 'quién es aura', 'qué es aura', 'quien eres', 'quién eres', 'que eres', 'qué eres', 'aura es', 'eres aura', 'presentate', 'preséntate'],
+            clan: false,
+            resp: 'Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. Fui creada para administrar la información de la comunidad AEMX y ponerla al alcance de todos los Exploradores. Puedes preguntarme sobre parcelas, estrategias, minijuegos, coins, guías y mucho más. ¡Estoy a tus órdenes, Explorador!'
+        },
+        {
             keys: ['vegetaci', 'vegeta', 'plantas', 'arboles', 'árbol', 'arbol'],
             clan: false,
             resp: '🌿 <strong>Estrategia de Vegetación:</strong> La distribución de parcelas sigue un patrón predecible. Las Legendarias suelen estar rodeadas de Épicas y Raras, y la vegetación del mapa sigue la misma dirección que las parcelas de mayor rareza. ¡Úsala como brújula para encontrar los mejores terrenos! Consulta la sección 📚 Guías para ver la guía completa.'
