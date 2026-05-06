@@ -978,18 +978,18 @@ const userRef = ref(database, 'chat_presence/' + userId);
         const textElBar = div.querySelector('.message-text');
         if (textElBar) textElBar.appendChild(timerBar);
 
-        // Iniciar animación usando JS con setInterval para máxima compatibilidad
-        const startTime = Date.now();
-        const barWidth = () => timerBar.offsetWidth || 200;
-        const animTimer = setInterval(() => {
-            const elapsed = Date.now() - startTime;
-            const progress = Math.min(elapsed / AUTO_DELETE_MS, 1);
-            const remaining = 1 - progress;
-            const pct = remaining * 100;
-            timerFill.style.width = pct + '%';
-            timerMarker.style.left = (pct - (2 / barWidth() * 100)) + '%';
-            if (progress >= 1) clearInterval(animTimer);
-        }, 100);
+        // Iniciar animación — esperar a que el elemento esté en el DOM con dimensiones reales
+        setTimeout(() => {
+            const startTime = Date.now();
+            const animTimer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / AUTO_DELETE_MS, 1);
+                const pct = (1 - progress) * 100;
+                timerFill.style.width = pct + '%';
+                timerMarker.style.left = pct + '%';
+                if (progress >= 1) clearInterval(animTimer);
+            }, 100);
+        }, 200);
 
         // ── Efecto Typewriter ──
         const textEl = div.querySelector('.message-text');
