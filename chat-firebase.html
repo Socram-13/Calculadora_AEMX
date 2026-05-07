@@ -552,6 +552,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
                         if (newest.username !== currentUsername) window.playPopSound();
                         // ── AURA keyword detector ──
+                        console.log('[AURA-CHECK] newest.username:', newest.username, '| currentUsername:', currentUsername, '| match:', newest.username === currentUsername);
                         if (newest.username === currentUsername && window._auraCheckMessage) {
                             window._auraCheckMessage(newest.text, true);
                         }
