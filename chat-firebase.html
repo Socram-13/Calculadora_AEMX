@@ -549,11 +549,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     if (!window._lastNewestKey) window._lastNewestKey = null;
                     if (!window._lastNewestTs) window._lastNewestTs = 0;
 
-                    console.log('[AURA-GATE] init:', chatInitialized, '| newestKey:', newestKey, '| lastKey:', window._lastNewestKey, '| newestTs:', newestTs, '| lastTs:', window._lastNewestTs);
                     if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
                         if (newest.username !== currentUsername) window.playPopSound();
                         // ── AURA keyword detector ──
-                        console.log('[AURA-CHECK] newest.username:', newest.username, '| currentUsername:', currentUsername, '| match:', newest.username === currentUsername);
                         if (newest.username === currentUsername && window._auraCheckMessage) {
                             window._auraCheckMessage(newest.text, true);
                         }
@@ -1230,9 +1228,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         let data = null;
         try {
             const raw = localStorage.getItem('atlas-earth-calc-data');
-            console.log('[AURA-PERFIL] raw localStorage:', raw ? raw.substring(0, 300) : 'NULL');
             if (raw) data = JSON.parse(raw);
-        } catch(e) { console.log('[AURA-PERFIL] parse error:', e.message); }
 
         // Sin datos
         if (!data) {
@@ -1242,7 +1238,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         // Verificar país México
         const pais = (data.country || '').toLowerCase().replace(/é/g, 'e');
-        console.log('[AURA-PERFIL] country:', JSON.stringify(data.country), '| pais normalizado:', pais);
         const esMexico = !data.country || pais.includes('mexico') || pais === '';
         if (!esMexico) {
             addAuraMessage('El analisis de perfil esta disponible unicamente para Exploradores de Mexico por el momento.');
