@@ -4191,6 +4191,7 @@
         startDate:  document.getElementById('start-date').value,
       }));
     } catch(e) {}
+    saveUsername();
     showStatus('✔ Datos guardados');
     if(window._fbSaveAll) window._fbSaveAll(true); // true = incluir avatar
   }
