@@ -719,10 +719,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 document.documentElement.style.setProperty('--border-color', urlColor);
             }
 
-            // ── Username: URL param → localStorage de la app (nunca Google) ──
+            // ── Username: URL param → localStorage propio → localStorage del parent ──
             const urlUsername = (urlParams.get('username') || '').trim().toUpperCase();
             const localUsername = (() => { try { return (localStorage.getItem('atlas-username') || '').trim().toUpperCase(); } catch(e) { return ''; } })();
-            const resolvedUsername = urlUsername || localUsername || '';
+            const parentUsername = (() => { try { return (window.parent.localStorage.getItem('atlas-username') || '').trim().toUpperCase(); } catch(e) { return ''; } })();
+            const resolvedUsername = urlUsername || localUsername || parentUsername || '';
 
             // Avatar removido — se usa emoji fijo 🧑🏻‍🚀
 
