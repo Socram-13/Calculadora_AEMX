@@ -1330,10 +1330,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
     window._auraCheckMessage = function(text, isOwn) {
         if (!isOwn) return;
-        console.log('[AURA] mensaje recibido:', JSON.stringify(text));
         const now = Date.now();
-        if (now - _auraLastReply < AURA_COOLDOWN) { console.log('[AURA] bloqueado por cooldown'); return; }
-
         const lower = ' ' + text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') + ' ';
         const esClan = window._userEsClan === true;
 
@@ -1343,6 +1340,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
             analizarPerfilAura();
             return;
         }
+
+        if (now - _auraLastReply < AURA_COOLDOWN) return;
 
         for (const entry of AURA_KB) {
             if (entry.clan && !esClan) continue;
