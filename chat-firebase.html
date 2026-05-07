@@ -1331,7 +1331,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
     window._auraCheckMessage = function(text, isOwn) {
         if (!isOwn) return;
         const now = Date.now();
-        const lower = ' ' + text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') + ' ';
+        const lower = ' ' + text.toLowerCase() + ' ';
         const esClan = window._userEsClan === true;
 
         // ── Disparador de análisis de perfil (sin cooldown, es comando explícito) ──
