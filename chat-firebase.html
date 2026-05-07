@@ -1241,10 +1241,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
 
         // Verificar país México
-        const pais = (data.country || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-        const esMexico = pais.includes('mexico');
+        const pais = (data.country || '').toLowerCase().replace(/é/g, 'e');
+        console.log('[AURA-PERFIL] country:', JSON.stringify(data.country), '| pais normalizado:', pais);
+        const esMexico = !data.country || pais.includes('mexico') || pais === '';
         if (!esMexico) {
-            addAuraMessage('El análisis de perfil está disponible únicamente para Exploradores de México por el momento.');
+            addAuraMessage('El analisis de perfil esta disponible unicamente para Exploradores de Mexico por el momento.');
+            return;
+        }fil está disponible únicamente para Exploradores de México por el momento.');
             return;
         }
 
