@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+    <title>CHAT - ATLAS EARTH MÉXICO</title><!-- v2.2 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #00ff88;
+            --secondary-color: #00ffff;
+            --accent-color: #ffff00;
+            --danger-color: #ff0066;
+            --bg-dark: #0a0e1a;
+            --bg-panel: #0f1419;
+            --text-primary: #ffffff;
+            --text-secondary: #8f9bb3;
+            --border-color: var(--primary-color);
+        }
+        body.theme-cyan { --primary-color:#00ffff;--secondary-color:#00aaff;--accent-color:#0088ff; }
+        body.theme-purple { --primary-color:#aa00ff;--secondary-color:#ff00ff;--accent-color:#ff00aa; }
+        body.theme-orange { --primary-color:#ff8800;--secondary-color:#ffaa00;--accent-color:#ffdd00; }
+        body { font-family:'Rajdhani',sans-serif;background:var(--bg-dark);color:var(--text-primary);overflow:hidden;height:100vh;position:relative; }
+        body::before { content:'';position:fixed;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(var(--primary-color) 1px,transparent 1px),linear-gradient(90deg,var(--primary-color) 1px,transparent 1px);background-size:50px 50px;opacity:.03;pointer-events:none;z-index:0; }
+        .chat-container { display:grid;grid-template-columns:1fr;height:100vh;position:relative;z-index:1; }
+        .sidebar { background:var(--bg-panel);border-right:2px solid var(--border-color);box-shadow:0 0 20px rgba(0,255,136,.3);display:flex;flex-direction:column;position:relative;overflow:hidden; }
+        .sidebar::before { content:'';position:absolute;top:0;right:0;width:2px;height:100%;background:linear-gradient(180deg,transparent 0%,var(--primary-color) 50%,transparent 100%);animation:borderPulse 3s ease-in-out infinite;pointer-events:none; }
+        @keyframes borderPulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+        .sidebar-header { padding:24px;border-bottom:2px solid var(--border-color);background:linear-gradient(135deg,rgba(0,255,136,.1) 0%,transparent 100%);position:relative; }
+        .sidebar-header::after { content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--primary-color);box-shadow:0 0 10px var(--primary-color);pointer-events:none; }
+        .sidebar-title { font-family:'Orbitron',sans-serif;font-size:20px;font-weight:900;letter-spacing:2px;color:var(--primary-color);text-transform:uppercase;text-shadow:0 0 10px var(--primary-color);margin-bottom:8px; }
+        .online-status { display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px; }
+        .status-dot { width:8px;height:8px;background:var(--primary-color);border-radius:50%;animation:pulse 2s ease-in-out infinite;box-shadow:0 0 10px var(--primary-color); }
+        @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.2);opacity:.7} }
+        .guides-list { flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;pointer-events:all;position:relative;z-index:10; }
+        .guide-item { display:flex;align-items:center;gap:10px;padding:11px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(0,255,136,.35);border-radius:6px;text-decoration:none;color:var(--text-primary);transition:all .2s ease;position:relative;overflow:hidden;pointer-events:all;cursor:pointer;-webkit-tap-highlight-color:rgba(0,255,136,.2);touch-action:manipulation; }
+        .guide-item::before { content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--primary-color);transform:scaleY(0);transition:transform .2s ease;pointer-events:none; }
+        .guide-item:hover { background:rgba(0,255,136,.12);border-color:var(--primary-color);transform:translateX(4px);box-shadow:0 0 12px rgba(0,255,136,.15); }
+        .guide-item:hover::before { transform:scaleY(1); }
+        .guide-item-icon { font-size:18px;width:32px;text-align:center;flex-shrink:0; }
+        .guide-item-text { flex:1;font-size:13px;font-weight:600;letter-spacing:.3px;color:var(--text-primary);transition:color .2s;line-height:1.3; }
+        .guide-item-arrow { font-size:18px;color:var(--primary-color);transition:all .2s;flex-shrink:0;opacity:.7; }
+        .guide-item:hover .guide-item-arrow { transform:translateX(3px); }
+        .chat-main { display:flex;flex-direction:column;background:var(--bg-dark);position:relative;height:100dvh;overflow:hidden; }
+        .chat-header { padding:20px 32px;border-bottom:2px solid var(--border-color);background:var(--bg-panel);box-shadow:0 0 20px rgba(0,255,136,.2);position:relative; }
+        .chat-header::after { content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,var(--primary-color) 50%,transparent 100%);animation:headerGlow 3s ease-in-out infinite; }
+        @keyframes headerGlow { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+        /* ── Header row ── */
+        .chat-header-content { display:flex;justify-content:center;align-items:center;gap:6px;overflow-x:auto;overflow-y:visible;scrollbar-width:none;-ms-overflow-style:none;padding-bottom:2px; }
+        .chat-header-content::-webkit-scrollbar { display:none; }
+
+        /* Spacer empuja cerrar a la derecha */
+        .header-spacer { flex:0;min-width:0; }
+
+        /* ── BOTÓN CERRAR ── */
+        .btn-close-chat { display:flex;align-items:center;justify-content:center;width:32px;height:32px;flex-shrink:0;background:rgba(255,60,80,.1);border:1px solid rgba(255,60,80,.45);border-radius:8px;color:#ff5566;font-size:16px;line-height:1;cursor:pointer;transition:all .2s ease; }
+        .btn-close-chat:hover { background:rgba(255,60,80,.28);border-color:#ff5566;color:#fff;box-shadow:0 0 14px rgba(255,60,80,.5);transform:scale(1.1); }
+        .btn-close-chat:active { transform:scale(.93); }
+
+        .btn-guias { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #00ff9d;border-radius:8px;color:#00ff9d;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;text-decoration:none;flex-shrink:0; }
+        .btn-guias:hover { background:#00ff9d;color:#060b14;box-shadow:0 0 16px rgba(0,255,157,.4); }
+        .btn-leaderboard { display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--primary-color);border-radius:8px;color:var(--primary-color);font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;text-decoration:none;flex-shrink:0; }
+        .btn-leaderboard:hover { background:var(--primary-color);color:#060b14;box-shadow:0 0 16px rgba(0,255,136,.4); }
+        .btn-transacciones { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #ffd700;border-radius:8px;color:#ffd700;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;text-decoration:none;flex-shrink:0; }
+        .btn-transacciones:hover { background:#ffd700;color:#060b14;box-shadow:0 0 16px rgba(255,215,0,.4); }
+        .btn-transacciones.hidden { display:none; }
+        .btn-presencia { display:flex;align-items:center;gap:6px;background:none;border:1px solid #00ff9d;border-radius:8px;color:#00ff9d;font-family:'Orbitron',sans-serif;font-size:9px;font-weight:700;letter-spacing:2px;padding:6px 12px;cursor:pointer;transition:all .2s;white-space:nowrap;text-decoration:none; }
+        .btn-presencia:hover { background:#00ff9d;color:#060b14;box-shadow:0 0 16px rgba(0,255,157,.4); }
+        .btn-mute { display:flex;align-items:center;justify-content:center;background:none;border:1px solid var(--border-color,#1a3a5c);border-radius:8px;color:var(--text-secondary,#6b8ab0);font-size:14px;width:32px;height:32px;cursor:pointer;transition:all .2s;flex-shrink:0; }
+        .btn-mute:hover { border-color:#ffd700;color:#ffd700; }
+        .btn-mute.muted { border-color:#ff4466;color:#ff4466; }
+        .chat-header h2 { font-family:'Orbitron',sans-serif;font-size:24px;font-weight:900;letter-spacing:3px;color:var(--primary-color);text-transform:uppercase;text-shadow:0 0 15px var(--primary-color); }
+        .chat-subtitle { font-size:12px;color:var(--text-secondary);margin-top:4px;text-transform:uppercase;letter-spacing:1px; }
+        .messages-container { flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px; }
+        .message { display:flex;gap:8px;animation:messageSlide .3s ease-out;align-items:flex-end;max-width:80%; }
+        .message { align-self:flex-start;flex-direction:row; }
+        .message.own { align-self:flex-end;flex-direction:row-reverse; }
+        @keyframes messageSlide { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .message-avatar { width:32px;height:32px;min-width:32px;min-height:32px;aspect-ratio:1/1;border-radius:50%;border:2px solid var(--primary-color);background:rgba(0,255,136,.08);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;box-shadow:0 0 8px rgba(0,255,136,.3); }
+        .message-content { display:flex;flex-direction:column;gap:2px; }
+        .message.own .message-content { align-items:flex-end; }
+        .message-author { font-weight:700;font-size:11px;color:var(--primary-color);text-transform:uppercase;letter-spacing:.5px;padding:0 4px; }
+        .message.own .message-author { display:none; }
+        .message.own.admin-msg .message-author { display:flex; justify-content:flex-end; }
+        /* ── Mensajes del ADMIN ── */
+        .message.admin-msg .message-author { color:#ff4466; }
+        .message.admin-msg:not(.own) .message-text { background:rgba(255,40,80,.10);border-color:rgba(255,40,80,.3);color:#ffe0e6; }
+        .message.admin-msg.own .message-text { background:rgba(255,40,80,.15);border-color:rgba(255,40,80,.4);color:#ffe0e6; }
+        .message.admin-msg .message-avatar { border-color:#ff4466;box-shadow:0 0 10px rgba(255,40,80,.5); }
+        .admin-badge { font-size:9px;font-family:'Orbitron',sans-serif;letter-spacing:1px;color:#ff4466;border:1px solid #ff4466;border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:4px; }
+        .message-text { font-size:14px;line-height:1.5;color:var(--text-primary);background:var(--bg-dark);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:8px 14px;word-break:break-word;white-space:pre-wrap; }
+        .message:not(.own) .message-text { border-bottom-left-radius:4px;background:rgba(255,255,255,.05); }
+        .message.own .message-text { border-bottom-right-radius:4px;background:rgba(0,255,136,.12);border-color:rgba(0,255,136,.25);color:#e0ffe8; }
+        .chat-input-container { padding:20px 32px;border-top:2px solid var(--border-color);background:var(--bg-panel);box-shadow:0 0 30px rgba(0,255,136,.2);position:relative; }
+        .chat-input-container::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent 0%,var(--primary-color) 50%,transparent 100%); }
+        .input-wrapper { display:flex;gap:12px;align-items:center; }
+        .chat-input { flex:1;background:rgba(255,255,255,.05);border:2px solid var(--border-color);border-radius:4px;padding:14px 18px;color:var(--text-primary);font-size:14px;font-family:'Rajdhani',sans-serif;outline:none;transition:all .3s ease;box-shadow:inset 0 0 10px rgba(0,0,0,.5); }
+        .chat-input:focus { border-color:var(--primary-color);background:rgba(0,255,136,.05);box-shadow:inset 0 0 10px rgba(0,0,0,.5),0 0 20px rgba(0,255,136,.3); }
+        .chat-input::placeholder { color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;font-size:12px; }
+        .send-button { background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;padding:14px 32px;border-radius:4px;color:var(--bg-dark);font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:1px;cursor:pointer;transition:all .3s ease;font-family:'Orbitron',sans-serif;box-shadow:0 0 20px rgba(0,255,136,.5);position:relative;overflow:hidden; }
+        .send-button::before { content:'';position:absolute;top:50%;left:50%;width:0;height:0;background:rgba(255,255,255,.3);border-radius:50%;transform:translate(-50%,-50%);transition:width .6s,height .6s; }
+        .send-button:hover::before { width:300px;height:300px; }
+        .send-button:hover { transform:translateY(-2px);box-shadow:0 0 30px rgba(0,255,136,.8); }
+        .send-button:active { transform:translateY(0); }
+        .theme-selector { display:flex;gap:8px; }
+        .theme-btn { width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.3);cursor:pointer;transition:all .3s ease;position:relative; }
+        .theme-btn:hover { transform:scale(1.1);border-color:rgba(255,255,255,.8); }
+        .theme-btn.active { border-color:white;box-shadow:0 0 15px currentColor; }
+        .theme-btn.green { background:linear-gradient(135deg,#00ff88,#00ffff); }
+        .theme-btn.cyan { background:linear-gradient(135deg,#00ffff,#00aaff); }
+        .theme-btn.purple { background:linear-gradient(135deg,#aa00ff,#ff00ff); }
+        .theme-btn.orange { background:linear-gradient(135deg,#ff8800,#ffdd00); }
+        .username-modal { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(10,14,26,.95);display:none;align-items:center;justify-content:center;z-index:1000; }
+        .username-modal.visible { display:flex; }
+        .auth-overlay { position:fixed;inset:0;background:rgba(10,14,26,.97);display:none;align-items:center;justify-content:center;z-index:2000;backdrop-filter:blur(6px); }
+        .auth-overlay.visible { display:flex; }
+        .auth-box { background:#0f1419;border:1px solid var(--primary-color);border-radius:16px;padding:40px 36px;max-width:380px;width:90%;text-align:center;box-shadow:0 0 40px rgba(0,255,136,.15); }
+        .auth-box h2 { font-family:'Orbitron',monospace;font-size:16px;color:var(--primary-color);letter-spacing:3px;margin-bottom:8px; }
+        .auth-box p { font-family:'Rajdhani',sans-serif;color:var(--text-secondary);font-size:13px;margin-bottom:28px;letter-spacing:1px; }
+        .auth-btn-google { display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 20px;background:linear-gradient(135deg,#1a3a5c,#0b1626);border:1px solid var(--primary-color);border-radius:10px;color:var(--primary-color);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;cursor:pointer;transition:all .2s;margin-bottom:12px; }
+        .auth-btn-google:hover { background:var(--primary-color);color:#060b14; }
+        .auth-error { margin-top:14px;font-family:'Rajdhani',sans-serif;font-size:12px;color:var(--danger-color);letter-spacing:1px;min-height:18px; }
+        .username-form { background:var(--bg-panel);border:2px solid var(--primary-color);border-radius:8px;padding:40px;box-shadow:0 0 50px rgba(0,255,136,.5);max-width:400px;width:90%; }
+        .username-form h3 { font-family:'Orbitron',sans-serif;font-size:24px;color:var(--primary-color);text-transform:uppercase;margin-bottom:24px;text-align:center;text-shadow:0 0 15px var(--primary-color); }
+        .username-form input { width:100%;background:rgba(255,255,255,.05);border:2px solid var(--border-color);border-radius:4px;padding:14px 18px;color:var(--text-primary);font-size:16px;font-family:'Rajdhani',sans-serif;outline:none;margin-bottom:24px;text-transform:uppercase; }
+        .username-form input:focus { border-color:var(--primary-color);box-shadow:0 0 20px rgba(0,255,136,.3); }
+        .username-form button { width:100%;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:none;padding:14px;border-radius:4px;color:var(--bg-dark);font-weight:700;font-size:16px;text-transform:uppercase;cursor:pointer;font-family:'Orbitron',sans-serif;box-shadow:0 0 20px rgba(0,255,136,.5); }
+        .username-form button:hover { box-shadow:0 0 30px rgba(0,255,136,.8); }
+        .ticker-bar { display:none;align-items:center;height:40px;background:linear-gradient(90deg,rgba(255,170,0,.15),rgba(255,170,0,.05));border-bottom:1px solid rgba(255,170,0,.4);overflow:hidden;position:relative;flex-shrink:0; }
+        .ticker-bar.visible { display:flex; }
+        .ticker-label { font-family:'Orbitron',sans-serif;font-size:8px;font-weight:700;letter-spacing:2px;color:#ffaa00;background:rgba(255,170,0,.2);border-right:1px solid rgba(255,170,0,.4);padding:0 10px;height:100%;display:flex;align-items:center;white-space:nowrap;flex-shrink:0;text-shadow:0 0 8px rgba(255,170,0,.6); }
+        .ticker-track { flex:1;overflow:hidden;position:relative;height:100%; }
+        .ticker-text { display:inline-block;white-space:nowrap;font-family:'Rajdhani',sans-serif;font-size:19px;font-weight:700;letter-spacing:1px;color:#ffe066;line-height:40px;animation:tickerScroll 60s linear infinite; }
+        @keyframes tickerScroll { 0%{transform:translateX(100vw)} 100%{transform:translateX(-100%)} }
+        ::-webkit-scrollbar { width:4px; }
+        ::-webkit-scrollbar-track { background:var(--bg-panel); }
+        ::-webkit-scrollbar-thumb { background:var(--primary-color);border-radius:4px;box-shadow:0 0 10px var(--primary-color); }
+        ::-webkit-scrollbar-thumb:hover { background:var(--secondary-color); }
+        .menu-toggle { display:none;background:none;border:none;cursor:pointer;flex-direction:column;gap:5px;padding:4px; }
+        .menu-toggle span { display:block;width:24px;height:2px;min-height:2px;max-height:2px;border-radius:2px;background:var(--primary-color);transition:all .3s ease;box-shadow:0 0 6px var(--primary-color);border:none;padding:0;margin:0; }
+        .sidebar-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50; }
+        .sidebar-overlay.active { display:block; }
+        @media (max-width:768px) {
+            body { overflow:hidden; }
+            .chat-container { grid-template-columns:1fr;height:100dvh; }
+            .sidebar { position:fixed;top:0;left:0;height:100%;width:280px;z-index:100;transform:translateX(-100%);transition:transform .3s ease;box-shadow:4px 0 30px rgba(0,255,136,.3); }
+            .sidebar.open { transform:translateX(0); }
+            .chat-header { padding:8px 12px; }
+            .chat-header h2 { font-size:16px;letter-spacing:1px; }
+            .chat-subtitle { font-size:10px; }
+            .chat-header-content { gap:5px;padding-bottom:2px;-webkit-overflow-scrolling:touch; }
+            .btn-presencia { order:-1; }
+            .btn-leaderboard { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-marco { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-visor { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-transacciones { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-presencia .pr-text { display:inline;font-size:8px;letter-spacing:1px; }
+            .btn-presencia { padding:6px 10px;font-size:13px;flex-shrink:0;background:rgba(0,255,157,.12);box-shadow:0 0 10px rgba(0,255,157,.25); }
+            .btn-mute { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .btn-guias { width:30px;height:30px;font-size:14px;padding:0;flex-shrink:0; }
+            .menu-toggle { display:flex;flex-shrink:0; }
+            .theme-selector { gap:6px; }
+            .theme-btn { width:24px;height:24px; }
+            .messages-container { padding:12px 10px;gap:8px; }
+            .message { max-width:88%; }
+            .message-avatar { width:28px;height:28px;min-width:28px;min-height:28px;font-size:11px; }
+            .message-text { font-size:13px;padding:7px 12px; }
+            .message-author { font-size:10px; }
+            .chat-input-container { padding:10px 12px;padding-bottom:max(50px,env(safe-area-inset-bottom)); }
+            .chat-input { padding:12px 14px;font-size:14px; }
+            .send-button { padding:12px 18px;font-size:12px;letter-spacing:.5px; }
+            .username-form { padding:28px 20px;width:92%; }
+            .username-form h3 { font-size:18px; }
+        }
+        .btn-marco { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #facc15;border-radius:8px;color:#facc15;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;flex-shrink:0; }
+        .btn-marco:hover { background:#facc15;color:#060b14;box-shadow:0 0 16px rgba(250,204,21,.4); }
+        .btn-marco:disabled { opacity:.3;cursor:not-allowed; }
+        .btn-visor { display:flex;align-items:center;justify-content:center;background:none;border:1px solid #00c8ff;border-radius:8px;color:#00c8ff;font-size:16px;width:32px;height:32px;cursor:pointer;transition:all .2s;flex-shrink:0; }
+        .btn-visor:hover { background:#00c8ff;color:#060b14;box-shadow:0 0 16px rgba(0,200,255,.4); }
+        .btn-visor.hidden { display:none; }
+        .denied-modal { display:none;position:fixed;inset:0;background:rgba(10,14,26,.92);z-index:3000;align-items:center;justify-content:center; }
+        .denied-modal.active { display:flex; }
+        .denied-box { background:#0f1419;border:1px solid #ff0066;border-radius:16px;padding:36px 32px;max-width:340px;width:90%;text-align:center;box-shadow:0 0 40px rgba(255,0,102,.2); }
+        .denied-box h3 { font-family:'Orbitron',sans-serif;font-size:14px;color:#ff0066;letter-spacing:3px;margin-bottom:12px; }
+        .denied-box p { font-family:'Rajdhani',sans-serif;color:#8f9bb3;font-size:13px;letter-spacing:1px;margin-bottom:24px; }
+        .denied-box button { background:none;border:1px solid #ff0066;border-radius:8px;color:#ff0066;font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;padding:8px 20px;cursor:pointer; }
+        .denied-box button:hover { background:#ff0066;color:#fff; }
+        @media (max-width:380px) { .chat-header h2{font-size:13px} .send-button{padding:12px;font-size:11px} }
+
+        /* ── MENSAJES DE AURA ── */
+        .message.aura-msg .message-avatar {
+            border-color: #00bfff;
+            box-shadow: 0 0 12px rgba(0,191,255,.6);
+            background: rgba(0,191,255,.1);
+            padding: 0;
+            overflow: hidden;
+        }
+        .message.aura-msg .message-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .message.aura-msg .message-author {
+            color: #00bfff;
+            text-shadow: 0 0 8px rgba(0,191,255,.7);
+        }
+        .message.aura-msg .message-text {
+            background: rgba(0,191,255,.08);
+            border-color: rgba(0,191,255,.3);
+            color: #00bfff;
+            text-shadow: 0 0 6px rgba(0,191,255,.3);
+            box-shadow: 0 0 10px rgba(0,191,255,.1);
+
+        }
+
+
+        /* ── BORRAR MENSAJE (ADMIN) ── */
+        .message-bubble-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        .message.own .message-bubble-wrap { align-self: flex-end; }
+        .btn-delete-msg {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: var(--bg-panel);
+            border: 1px solid #ff4466;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 11px;
+            line-height: 1;
+            color: #ffffff;
+            opacity: 0;
+            transition: opacity .2s;
+            z-index: 10;
+        }
+        .message:hover .btn-delete-msg { opacity: 0.7; }
+        .btn-delete-msg:hover { opacity: 1 !important; }
+
+        #deleteConfirmDialog {
+            position: fixed;
+            inset: 0;
+            background: rgba(10,14,26,.7);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #deleteConfirmBox {
+            background: var(--bg-panel);
+            border: 1px solid #ff4466;
+            border-radius: 12px;
+            padding: 24px 28px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(255,40,80,.25);
+            min-width: 220px;
+        }
+        #deleteConfirmBox p {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 14px;
+            letter-spacing: 1px;
+            color: var(--text-primary);
+            margin-bottom: 18px;
+            text-transform: uppercase;
+        }
+        .delete-confirm-btns { display: flex; gap: 10px; justify-content: center; }
+        .delete-confirm-btns button {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            letter-spacing: 1px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 1px solid;
+            transition: all .2s;
+        }
+        #deleteCancelBtn { border-color: var(--text-secondary); color: var(--text-secondary); background: none; }
+        #deleteCancelBtn:hover { border-color: var(--text-primary); color: var(--text-primary); }
+        #deleteConfirmBtn { border-color: #ff4466; color: #ff4466; background: none; }
+        #deleteConfirmBtn:hover { background: #ff4466; color: #fff; }
+
+        /* ── TOOLTIP TOUR ── */
+        .btn-tooltip {
+            position: fixed;
+            background: var(--bg-panel);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 12px rgba(0,255,136,.3);
+            opacity: 0;
+            transform: translateY(4px);
+            transition: opacity .3s ease, transform .3s ease;
+        }
+        .btn-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .btn-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 0 6px 6px 6px;
+            border-style: solid;
+            border-color: transparent transparent var(--primary-color) transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-overlay" id="authOverlay">
+        <div class="auth-box">
+            <h2>ACCESO AL CHAT</h2>
+            <p>Debes iniciar sesión para participar</p>
+            <button class="auth-btn-google" id="btnGoogle" onclick="authWithGoogle()">
+                <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+                CONTINUAR CON GOOGLE
+            </button>
+            <div class="auth-error" id="authError"></div>
+        </div>
+    </div>
+
+    <div class="username-modal hidden" id="usernameModal">
+        <div class="username-form">
+            <h3>Ingresa tu nombre</h3>
+            <input type="text" id="usernameInput" placeholder="Tu nombre de jugador..." maxlength="20">
+            <button onclick="setUsername()">ENTRAR AL CHAT</button>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-main">
+            <div class="ticker-bar" id="tickerBar">
+                <div class="ticker-label">📢 AVISO</div>
+                <div class="ticker-track">
+                    <div class="ticker-text" id="tickerText"></div>
+                </div>
+            </div>
+
+            <div class="chat-header">
+                <div class="chat-header-content">
+                    <a class="btn-guias" href="https://atlasreality.helpshift.com/hc/es/3-atlas-earth/" target="_blank" title="Soporte técnico">🎧</a>
+                    <button class="btn-visor hidden" id="btnVisor" onclick="abrirVisor()" title="Visor HUD">👁</button>
+                    <a class="btn-leaderboard" href="leaderboard.html" target="_blank">🏆</a>
+                    <a class="btn-guias" href="guias.html" target="_top">📚</a>
+                    <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙</a>
+                    
+                    <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️</button>
+                    <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
+                    <!-- spacer empuja cerrar al extremo derecho -->
+                    <div class="header-spacer"></div>
+                    <!-- ✅ BOTÓN CERRAR CHAT -->
+                    <button class="btn-close-chat" onclick="closeChatFromInside()" title="Cerrar chat">✕</button>
+                </div>
+            </div>
+
+            <div class="messages-container" id="messagesContainer"></div>
+
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <input type="text" class="chat-input" id="messageInput" placeholder="Escribe tu mensaje..." onkeypress="handleKeyPress(event)" disabled>
+                    <button class="send-button" onclick="sendMessage()" id="sendBtn" disabled>ENVIAR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="denied-modal" id="deniedModal">
+        <div class="denied-box">
+            <h3>⛔ ACCESO DENEGADO</h3>
+            <p>Solo los miembros del clan AEMX pueden acceder al editor de marco.</p>
+            <button onclick="document.getElementById('deniedModal').classList.remove('active')">CERRAR</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get, query, limitToLast, orderByChild, endAt } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+        import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
+            authDomain: "aemx-chat.firebaseapp.com",
+            databaseURL: "https://aemx-chat-default-rtdb.firebaseio.com",
+            projectId: "aemx-chat",
+            storageBucket: "aemx-chat.firebasestorage.app",
+            messagingSenderId: "267113002594",
+            appId: "1:267113002594:web:4099e7537d950f5753433b",
+            measurementId: "G-K84EVPE46R"
+        };
+
+        const app = initializeApp(firebaseConfig, 'chat-app');
+        const database = getDatabase(app);
+        const auth = getAuth(app);
+        const authOverlay = document.getElementById('authOverlay');
+
+        function showAuthError(msg) { document.getElementById('authError').textContent = msg; }
+
+        // Detecta si estamos dentro de un iframe
+        const enIframe = window.self !== window.top;
+
+        window.authWithGoogle = async function() {
+            showAuthError('');
+            try {
+                const provider = new GoogleAuthProvider();
+                // Siempre popup — nunca redirigir window.top para no destruir la sesión del padre
+                await signInWithPopup(auth, provider).catch((err) => {
+                    // Si el popup fue bloqueado, abrir el chat en ventana nueva
+                    if (err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request') {
+                        window.open(window.location.href, '_blank');
+                        showAuthError('Popup bloqueado. Se abrió el chat en una ventana nueva.');
+                    } else {
+                        throw err;
+                    }
+                });
+            } catch(e) {
+                showAuthError('Error al iniciar con Google. Intenta de nuevo.');
+                console.error(e);
+            }
+        };
+
+        window.showEmailForm = undefined;
+        window.hideEmailForm = undefined;
+
+        // ✅ Listener de visibilidad del botón COINS fuera de initChat
+        // Se activa en cuanto carga el módulo, sin esperar login ni username
+        onValue(ref(database, 'config/btnTransaccionesActivo'), (snap) => {
+            const activo = snap.exists() ? snap.val() : false;
+            // Guardar estado de config para combinarlo con el clan check
+            window._transaccionesConfigActivo = activo;
+            actualizarBtnTransacciones();
+        });
+
+        function actualizarBtnTransacciones() {
+            const btn = document.getElementById('btnTransacciones');
+            if (!btn) return;
+            const configActivo = window._transaccionesConfigActivo === true;
+            const esClan = window._userEsClan === true;
+            btn.classList.toggle('hidden', !(configActivo && esClan));
+        }
+        window._actualizarBtnTransacciones = actualizarBtnTransacciones;
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                get(ref(database, `users/${user.uid}`)).then(snap => {
+                    if (snap.exists() && snap.val().bannedChat) {
+                        authOverlay.classList.add('visible');
+                        document.getElementById('authError').textContent = '⛔ Tu cuenta ha sido bloqueada del chat.';
+                        return;
+                    }
+                    // ── Verificar clan para el botón de transacciones ──
+                    const data = snap.exists() ? snap.val() : {};
+                    const esClan = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
+                    window._userEsClan = esClan;
+                    actualizarBtnTransacciones();
+                    document.getElementById('btnVisor')?.classList.toggle('hidden', !esClan);
+
+                    authOverlay.classList.remove('visible');
+                    initChat(user);
+                }).catch(() => {
+                    window._userEsClan = false;
+                    actualizarBtnTransacciones();
+                    document.getElementById('btnVisor')?.classList.add('hidden');
+                    authOverlay.classList.remove('visible');
+                    initChat(user);
+                });
+            } else {
+                // Sin sesión: ocultar botón
+                window._userEsClan = false;
+                actualizarBtnTransacciones();
+                document.getElementById('btnVisor')?.classList.add('hidden');
+                authOverlay.classList.add('visible');
+            }
+        });
+
+        function initChat(firebaseUser) {
+            let currentUsername = '';
+            let userId = '';
+            const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
+            const currentUserIsAdmin = firebaseUser.email === ADMIN_EMAIL;
+            console.log('[ADMIN CHECK] email:', firebaseUser.email, '| isAdmin:', currentUserIsAdmin);
+
+            window.setUsername = setUsername;
+            window.sendMessage = sendMessage;
+            window.handleKeyPress = handleKeyPress;
+            window.changeTheme = changeTheme;
+
+            function setUsername() {
+                const input = document.getElementById('usernameInput');
+                const username = input.value.trim().toUpperCase();
+                if (username && username.length >= 3) {
+                    currentUsername = username;
+                    userId = 'user_' + Date.now();
+                    document.getElementById('usernameModal').classList.remove('visible');
+                    document.getElementById('messageInput').disabled = false;
+                    document.getElementById('sendBtn').disabled = false;
+                    // document.getElementById('messageInput').focus(); // (desactivado para evitar teclado automático en móvil)
+const userRef = ref(database, 'chat_presence/' + userId);
+                    set(userRef, {
+                        username: currentUsername,
+                        timestamp: serverTimestamp()
+                    });
+                    onDisconnect(userRef).remove();
+                    loadMessages();
+                    loadUsers();
+                } else {
+                    alert('Por favor ingresa un nombre de al menos 3 caracteres');
+                }
+            }
+
+            function loadMessages() {
+                const messagesRef = ref(database, 'messages');
+                // ✅ Limitar descarga: solo los últimos 50 mensajes
+                const recentMessagesQuery = query(messagesRef, limitToLast(20));
+                let lastMessageCount = 0;
+                let chatInitialized = false;
+                onValue(recentMessagesQuery, (snapshot) => {
+                    const container = document.getElementById('messagesContainer');
+                    container.innerHTML = '';
+                    const messages = [];
+                    snapshot.forEach((childSnapshot) => { messages.push({ key: childSnapshot.key, ...childSnapshot.val() }); });
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+                    const total = messages.length;
+                    // ✅ Con lista limitada, detectamos novedad por el último mensaje
+                    const newest = total ? messages[total - 1] : null;
+                    const newestKey = newest ? newest.key : null;
+                    const newestTs  = newest && newest.timestamp ? newest.timestamp : 0;
+
+                    if (!window._lastNewestKey) window._lastNewestKey = null;
+                    if (!window._lastNewestTs) window._lastNewestTs = 0;
+
+                    if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
+                        if (newest.username !== currentUsername) window.playPopSound();
+                        // ── AURA keyword detector ──
+                        if (newest.username === currentUsername && window._auraCheckMessage) {
+                            window._auraCheckMessage(newest.text, true);
+                        }
+                    }
+                    window._lastNewestKey = newestKey;
+                    window._lastNewestTs  = newestTs;
+
+                    lastMessageCount = total;
+                    chatInitialized = true;
+                    messages.slice(-20).forEach((msg) => {
+                        if (!msg.username || !msg.text) return;
+                        const isAdminMsg = msg.isAdmin === true || (currentUserIsAdmin && msg.username === currentUsername);
+                        addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.borderColor || '', isAdminMsg, msg.key);
+                    });
+                    container.scrollTop = container.scrollHeight;
+                });
+            }
+
+            function loadUsers() {
+                const usersRef = ref(database, 'chat_presence');
+                onValue(usersRef, (snapshot) => {
+                    const el = document.getElementById('onlineCount');
+                    if (el) el.textContent = `${snapshot.size} EN LÍNEA`;
+                });
+            }
+
+            const MAX_MESSAGES = 20;
+
+            async function sendMessage() {
+                const input = document.getElementById('messageInput');
+                const message = input.value.trim();
+                if (message && currentUsername) {
+                    await push(ref(database, 'messages'), {
+                        username: currentUsername,
+                        text: message,
+                        timestamp: serverTimestamp(),
+                        ...(currentUserIsAdmin && { isAdmin: true }),
+                    });
+                    input.value = '';
+                    input.focus();
+
+                    // Borrar el más antiguo si hay más de MAX_MESSAGES
+                    try {
+                        const snap = await get(query(ref(database, 'messages'), orderByChild('timestamp'), limitToLast(MAX_MESSAGES + 1)));
+                        if (snap.size > MAX_MESSAGES) {
+                            let oldest = null;
+                            snap.forEach(child => { if (!oldest) oldest = child; });
+                            if (oldest) await remove(oldest.ref);
+                        }
+                    } catch(e) { console.error('trim messages error:', e); }
+                }
+            }
+
+            function handleKeyPress(event) { if (event.key === 'Enter') sendMessage(); }
+
+            function addMessageToUI(author, text, timestamp, isOwn = false, msgBorderColor = '', isAdmin = false, msgKey = '') {
+                // Protección: ignorar mensajes sin datos mínimos
+                if (!author || !text) return;
+                const container = document.getElementById('messagesContainer');
+                const ownClass = isOwn ? 'own' : '';
+                const adminClass = isAdmin ? 'admin-msg' : '';
+                const borderColor = isAdmin ? '#ff4466' : msgBorderColor;
+                const borderStyle = borderColor ? `border:2px solid ${borderColor};box-shadow:0 0 8px ${borderColor}40;` : '';
+                const avatarHTML = '🧑🏻‍🚀';
+                const deleteBtnHTML = currentUserIsAdmin && msgKey
+                    ? `<button class="btn-delete-msg" data-key="${msgKey}" title="Borrar mensaje">🗑</button>`
+                    : '';
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="message ${ownClass} ${adminClass}">
+                        <div class="message-avatar" style="${borderStyle}">${avatarHTML}</div>
+                        <div class="message-content">
+                            <div class="message-author">${isAdmin && isOwn ? '' : author}${isAdmin ? ' <span class="admin-badge">ADMIN</span>' : ''}</div>
+                            <div class="message-bubble-wrap">
+                                ${deleteBtnHTML}
+                                <div class="message-text">${escapeHtml(text)}</div>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            }
+
+            // Delegación de eventos para botones de borrado
+            document.getElementById('messagesContainer').addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-delete-msg');
+                if (!btn) return;
+                const key = btn.dataset.key;
+                if (!key) return;
+                showDeleteConfirm(key);
+            });
+
+            function showDeleteConfirm(key) {
+                const prev = document.getElementById('deleteConfirmDialog');
+                if (prev) prev.remove();
+                const dialog = document.createElement('div');
+                dialog.id = 'deleteConfirmDialog';
+                dialog.innerHTML = `
+                    <div id="deleteConfirmBox">
+                        <p>¿Borrar este mensaje?</p>
+                        <div class="delete-confirm-btns">
+                            <button id="deleteCancelBtn">Cancelar</button>
+                            <button id="deleteConfirmBtn">Borrar</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(dialog);
+                document.getElementById('deleteCancelBtn').onclick = () => dialog.remove();
+                document.getElementById('deleteConfirmBtn').onclick = async () => {
+                    dialog.remove();
+                    try { await remove(ref(database, 'messages/' + key)); }
+                    catch(e) { console.error('Error al borrar mensaje:', e); }
+                };
+            }
+
+                        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+            function changeTheme(theme) {
+                document.body.className = theme ? `theme-${theme}` : '';
+                document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+            }
+
+            document.getElementById('usernameInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') setUsername(); });
+
+            // ✅ Un solo listener para todo el nodo config (ahorra 2 lecturas en tiempo real)
+            let chatTTL = null;
+            let ttlLoaded = false;
+
+            function loadTicker(texto) {
+                const bar = document.getElementById('tickerBar');
+                const txt = document.getElementById('tickerText');
+                if (texto && texto.trim()) {
+                    txt.textContent = texto.trim();
+                    bar.classList.add('visible');
+                    txt.style.animationDuration = Math.max(20, texto.length * 0.12) + 's';
+                } else {
+                    bar.classList.remove('visible');
+                }
+            }
+
+            onValue(ref(database, 'config'), (snap) => {
+                const cfg = snap.exists() ? snap.val() : {};
+
+                // Aviso ticker
+                loadTicker(cfg.aviso || '');
+
+                // TTL del chat
+                const nuevoTTL = cfg.chatTTL !== undefined ? cfg.chatTTL : 24;
+                if (!ttlLoaded) {
+                    chatTTL = nuevoTTL;
+                    ttlLoaded = true;
+                    clearOldMessages();
+                } else {
+                    chatTTL = nuevoTTL;
+                }
+            });
+
+            // clearOldMessages deshabilitado — el límite se maneja por cantidad (MAX_MESSAGES) en sendMessage
+            async function clearOldMessages() { /* deshabilitado */ }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlColor = urlParams.get('color') || '';
+            if (urlColor) {
+                document.documentElement.style.setProperty('--primary-color', urlColor);
+                document.documentElement.style.setProperty('--border-color', urlColor);
+            }
+
+            // ── Username: URL param → localStorage de la app (nunca Google) ──
+            const urlUsername = (urlParams.get('username') || '').trim().toUpperCase();
+            const localUsername = (() => { try { return (localStorage.getItem('atlas-username') || '').trim().toUpperCase(); } catch(e) { return ''; } })();
+            const resolvedUsername = urlUsername || localUsername || '';
+
+            // Avatar removido — se usa emoji fijo 🧑🏻‍🚀
+
+            if (resolvedUsername && resolvedUsername.length >= 3) {
+                document.getElementById('usernameInput').value = resolvedUsername;
+                setUsername();
+            } else {
+                document.getElementById('usernameModal').classList.add('visible');
+                // document.getElementById('usernameInput').focus(); // (desactivado para evitar teclado automático en móvil)
+}
+
+        } // fin initChat
+
+        // ── Botón Marco ──
+        window.abrirVisor = async function() {
+            const user = auth.currentUser;
+            if (!user) { document.getElementById('deniedModal').classList.add('active'); return; }
+            const ventana = window.open('', '_blank');
+            try {
+                const snap = await get(ref(database, 'users/' + user.uid));
+                const data = snap.exists() ? snap.val() : {};
+                const esMiembro = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
+                if (esMiembro) {
+                    ventana.location.href = 'visor_hud_aemx.html';
+                } else {
+                    ventana.close();
+                    setTimeout(() => document.getElementById('deniedModal').classList.add('active'), 100);
+                }
+            } catch(e) {
+                console.error('Error verificando membresía:', e);
+                ventana.close();
+            }
+        };
+
+        window.abrirMarco = async function() {
+            const user = auth.currentUser;
+            if (!user) { document.getElementById('deniedModal').classList.add('active'); return; }
+            const ventana = window.open('', '_top');
+            try {
+                const snap = await get(ref(database, 'users/' + user.uid));
+                const data = snap.exists() ? snap.val() : {};
+                const esMiembro = data.clanMember === true || data.role === 'admin' || data.role === 'moderator';
+                if (esMiembro) {
+                    ventana.location.href = 'editor_marco.html';
+                } else {
+                    ventana.location.href = window.location.href;
+                    setTimeout(() => document.getElementById('deniedModal').classList.add('active'), 300);
+                }
+            } catch(e) {
+                console.error('Error verificando membresía:', e);
+                ventana.location.href = window.location.href;
+            }
+        };
+    </script>
+
+    <script>
+        var audioCtx = null;
+        var soundMuted = false;
+        try { soundMuted = localStorage.getItem('chat-muted') === 'true'; } catch(e) {}
+
+        function initAudioCtx() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                document.removeEventListener('touchstart', initAudioCtx);
+                document.removeEventListener('click', initAudioCtx);
+                document.removeEventListener('keydown', initAudioCtx);
+            }
+            if (audioCtx.state === 'suspended') audioCtx.resume().catch(function(){});
+        }
+
+        document.addEventListener('touchstart', initAudioCtx, { passive: true });
+        document.addEventListener('click', initAudioCtx, { passive: true });
+        document.addEventListener('keydown', initAudioCtx, { passive: true });
+
+        function playPopSound() {
+            if (soundMuted || !audioCtx || audioCtx.state === 'suspended') return;
+            try {
+                var osc = audioCtx.createOscillator();
+                var gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.15);
+            } catch(e) {}
+        }
+        window.playPopSound = playPopSound;
+
+        function toggleMute() {
+            soundMuted = !soundMuted;
+            try { localStorage.setItem('chat-muted', soundMuted ? 'true' : 'false'); } catch(e) {}
+            var btn = document.getElementById('btnMute');
+            if (btn) {
+                btn.textContent = soundMuted ? '🔕' : '🔔';
+                btn.className = soundMuted ? 'btn-mute muted' : 'btn-mute';
+                btn.title = soundMuted ? 'Activar sonido' : 'Silenciar notificaciones';
+            }
+        }
+
+        // ✅ Cerrar chat — avisa al padre si está en iframe, o cierra la ventana
+        function closeChatFromInside() {
+            if (window.parent && window.parent !== window) {
+                window.parent.postMessage({ type: 'CLOSE_CHAT' }, '*');
+            } else {
+                window.close();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var btn = document.getElementById('btnMute');
+            if (btn && soundMuted) {
+                btn.textContent = '🔕';
+                btn.className = 'btn-mute muted';
+                btn.title = 'Activar sonido';
+            }
+        });
+    </script>
+
+<script>
+/* ANTI-TECLADO MÓVIL (iOS/Android):
+   - Evita que el navegador abra teclado al cargar (focus restaurado / autofoco raro)
+   - Pone inputs en readonly hasta que el usuario toque el campo
+*/
+(function () {
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  if (!isTouch) return;
+
+  function arm(input) {
+    if (!input) return;
+
+    // Evita teclado aunque el navegador intente enfocar
+    input.setAttribute('readonly', 'readonly');
+    input.blur();
+
+    // Si algo lo enfoca, lo desenfocamos mientras siga readonly
+    input.addEventListener('focus', () => {
+      if (input.hasAttribute('readonly')) {
+        input.blur();
+      }
+    });
+
+    const enable = () => {
+      input.removeAttribute('readonly');
+      input.focus();
+    };
+
+    // Solo habilitar/enfocar con interacción del usuario
+    input.addEventListener('touchstart', enable, { once: true, passive: true });
+    input.addEventListener('click', enable, { once: true, passive: true });
+  }
+
+  function run() {
+    arm(document.getElementById('messageInput'));
+    arm(document.getElementById('usernameInput'));
+
+    // Blindaje extra: iOS a veces restaura focus al volver (bfcache)
+    setTimeout(() => {
+      const a = document.activeElement;
+      if (a && (a.id === 'messageInput' || a.id === 'usernameInput')) a.blur();
+    }, 0);
+    setTimeout(() => {
+      const a = document.activeElement;
+      if (a && (a.id === 'messageInput' || a.id === 'usernameInput')) a.blur();
+    }, 250);
+  }
+
+  document.addEventListener('DOMContentLoaded', run);
+  window.addEventListener('pageshow', run);
+})();
+</script>
+
+<script>
+/* ── AURA — Asistente Universal de Recursos de AEMX ── */
+(function() {
+    const AURA_AVATAR = 'https://github.com/Socram-13/GamerTag_AEMX/blob/main/aura.png?raw=true';
+    const AURA_NAME   = 'A.U.R.A.';
+    const LS_FIRST    = 'aura_first_visit';
+    const LS_LAST_TS  = 'aura_last_visit_ts';
+    const AUTO_DELETE_MS = 3 * 60 * 1000; // 3 minutos
+
+    const BOTONES = [
+        '🎧 Soporte técnico',
+        '👁 Visor HUD',
+        '🏆 Ranking',
+        '📚 Guías',
+        '🪙 Coins',
+        '🖼️ Marco AEMX',
+        '🔔 Sonido',
+        '✕ Cerrar'
+    ];
+
+    function addAuraMessage(text) {
+        const container = document.getElementById('messagesContainer');
+        if (!container) return;
+
+        const div = document.createElement('div');
+        div.className = 'message aura-msg';
+        div.innerHTML = `
+            <div class="message-avatar">
+                <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+            </div>
+            <div class="message-content">
+                <div class="message-author">${AURA_NAME}</div>
+                <div class="message-bubble-wrap">
+                    <div class="message-text">${text}</div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+
+        // ── Barra de tiempo regresiva ──
+        const timerBar = document.createElement('div');
+        timerBar.className = 'aura-timer-bar';
+        const timerFill = document.createElement('div');
+        timerFill.className = 'aura-timer-fill';
+        const timerMarker = document.createElement('div');
+        timerMarker.className = 'aura-timer-marker';
+        timerBar.appendChild(timerFill);
+        timerBar.appendChild(timerMarker);
+        const bubbleWrap = div.querySelector('.message-bubble-wrap');
+        if (bubbleWrap) bubbleWrap.appendChild(timerBar);
+
+        // Iniciar animación — esperar a que el elemento esté en el DOM con dimensiones reales
+        setTimeout(() => {
+            const startTime = Date.now();
+            const animTimer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / AUTO_DELETE_MS, 1);
+                const pct = (1 - progress) * 100;
+                timerFill.style.width = pct + '%';
+                timerMarker.style.left = pct + '%';
+                if (progress >= 1) clearInterval(animTimer);
+            }, 100);
+        }, 200);
+
+        // ── Efecto Typewriter ──
+        const textEl = div.querySelector('.message-text');
+        if (textEl) {
+            const fullHTML = textEl.innerHTML;
+            textEl.innerHTML = '';
+            textEl.style.visibility = 'visible';
+
+            // Extraer texto plano preservando tags HTML
+            const temp = document.createElement('div');
+            temp.innerHTML = fullHTML;
+
+            // Función para animar nodo por nodo
+            function typeNode(node, parent, onDone) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    const chars = node.textContent.split('');
+                    let i = 0;
+                    const span = document.createTextNode('');
+                    parent.appendChild(span);
+                    const interval = setInterval(() => {
+                        span.textContent += chars[i++];
+                        container.scrollTop = container.scrollHeight;
+                        if (i >= chars.length) { clearInterval(interval); onDone(); }
+                    }, 18);
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    const clone = document.createElement(node.tagName);
+                    Array.from(node.attributes).forEach(a => clone.setAttribute(a.name, a.value));
+                    parent.appendChild(clone);
+                    typeChildren(Array.from(node.childNodes), clone, onDone);
+                } else {
+                    onDone();
+                }
+            }
+
+            function typeChildren(nodes, parent, onDone) {
+                if (!nodes.length) { onDone(); return; }
+                const [first, ...rest] = nodes;
+                typeNode(first, parent, () => typeChildren(rest, parent, onDone));
+            }
+
+            typeChildren(Array.from(temp.childNodes), textEl, () => {
+                container.scrollTop = container.scrollHeight;
+            });
+        }
+
+        // Auto-borrar después de 3 minutos
+        setTimeout(() => {
+            if (div && div.parentNode) {
+                div.style.transition = 'opacity 0.5s ease';
+                div.style.opacity = '0';
+                setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 500);
+            }
+        }, AUTO_DELETE_MS);
+    }
+
+    function horasDesdeUltimaVisita() {
+        try {
+            const ts = parseInt(localStorage.getItem(LS_LAST_TS) || '0', 10);
+            if (!ts) return null;
+            const diff = Date.now() - ts;
+            const horas = Math.floor(diff / (1000 * 60 * 60));
+            return horas;
+        } catch(e) { return null; }
+    }
+
+    function guardarVisita() {
+        try { localStorage.setItem(LS_LAST_TS, Date.now().toString()); } catch(e) {}
+    }
+
+    function precargarImagen(callback) {
+        const img = new Image();
+        img.onload  = callback;
+        img.onerror = callback; // Si falla, continúa igual
+        img.src = AURA_AVATAR;
+    }
+
+    function lanzarAura() {
+        const container = document.getElementById('messagesContainer');
+        if (!container) { setTimeout(lanzarAura, 300); return; }
+
+        let esPrimera = false;
+        try { esPrimera = !localStorage.getItem(LS_FIRST); } catch(e) {}
+
+        precargarImagen(() => {
+            if (esPrimera) {
+                // Marcar primera visita y guardar timestamp
+                try { localStorage.setItem(LS_FIRST, '1'); } catch(e) {}
+                guardarVisita();
+
+                // Mensaje 1 — 2s después de que cargue la imagen
+                setTimeout(() => {
+                    addAuraMessage('¡Hola Explorador! Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. ¡Bienvenido al chat!');
+                }, 2000);
+
+                // Mensaje 2 — 5s después del mensaje 1
+                setTimeout(() => {
+                    const esClan = window._userEsClan === true;
+                    const botonesGenerales = [
+                        '🎧 Soporte técnico',
+                        '🏆 Ranking',
+                        '📚 Guías',
+                        '🔔 Sonido',
+                        '✕ Cerrar'
+                    ];
+                    const botonesClan = [
+                        '🎧 Soporte técnico',
+                        '👁 Visor HUD',
+                        '🏆 Ranking',
+                        '📚 Guías',
+                        '🪙 Coins',
+                        '🖼️ Marco AEMX',
+                        '🔔 Sonido',
+                        '✕ Cerrar'
+                    ];
+                    const lista = (esClan ? botonesClan : botonesGenerales).map(b => `• ${b}`).join('<br>');
+                    addAuraMessage('En la sección de arriba podrás encontrar los botones de acceso a las siguientes secciones:<br><br>' + lista);
+                }, 7000);
+
+                // Mensaje 3 — 5s después del mensaje 2
+                setTimeout(() => {
+                    addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!');
+                }, 12000);
+
+            } else {
+                // Visitas posteriores — guardar nuevo timestamp y mostrar saludo con horas
+                const horas = horasDesdeUltimaVisita();
+                guardarVisita();
+
+                const horasTexto = horas === null ? 'un tiempo' :
+                                   horas === 0    ? 'menos de una hora' :
+                                   horas === 1    ? '1 hora' :
+                                   `${horas} horas`;
+
+                setTimeout(() => {
+                    addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. En que podemos ayudarte hoy?');
+                }, 2000);
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', lanzarAura);
+    } else {
+        lanzarAura();
+    }
+
+    /* ── SISTEMA DE RESPUESTAS POR PALABRAS CLAVE ── */
+    const AURA_KB = [
+        {
+            keys: ['quien es aura', 'que es aura', 'quién es aura', 'qué es aura', 'quien eres', 'quién eres', 'que eres', 'qué eres', 'aura es', 'eres aura', 'presentate', 'preséntate'],
+            clan: false,
+            resp: 'Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. Fui creada para administrar la información de la comunidad AEMX y ponerla al alcance de todos los Exploradores. Puedes preguntarme sobre parcelas, estrategias, minijuegos, coins, guías y mucho más. ¡Estoy a tus órdenes, Explorador!'
+        },
+        {
+            keys: ['vegetaci', 'vegeta', 'plantas', 'arboles', 'árbol', 'arbol'],
+            clan: false,
+            resp: '🌿 <strong>Estrategia de Vegetación:</strong> La distribución de parcelas sigue un patrón predecible. Las Legendarias suelen estar rodeadas de Épicas y Raras, y la vegetación del mapa sigue la misma dirección que las parcelas de mayor rareza. ¡Úsala como brújula para encontrar los mejores terrenos! Consulta la sección 📚 Guías para ver la guía completa.'
+        },
+        {
+            keys: ['parcel', 'terreno', 'comprar', 'rareza', 'rara', 'epic', 'legendar', 'comun', 'común'],
+            clan: false,
+            resp: '🗺️ <strong>Tipos de Parcelas:</strong> Existen 4 rarezas: 🟢 Comunes, 🔵 Raras, 🟣 Épicas y 🟡 Legendarias. Para comprar tu primer terreno necesitas Atlas Bucks (AB). Te recomendamos comprar en zonas turísticas o de alto tráfico para maximizar tus insignias y revalorización futura.'
+        },
+        {
+            keys: ['mejor', 'upgrade', 'personaliz'],
+            clan: false,
+            resp: '🚫 <strong>Mejoras de Parcelas:</strong> ¡Cuidado! Las mejoras cuestan 2,500 AB (equivalente a 25 parcelas comunes) pero solo dan el beneficio de 4 comunes. Es mucho mejor invertir ese dinero en comprar más terrenos. Revisa la sección 📚 Guías para más detalles.'
+        },
+        {
+            keys: ['diversif', 'diversidad', 'variar', 'variedad', 'concentr', 'zona', 'zonas', 'repartir'],
+            clan: false,
+            resp: '🏚️ <strong>Diversificar Parcelas:</strong> No concentres todas tus parcelas en una sola zona. Distribuirlas en distintas áreas te protege contra competidores que quieran quitarte el dominio de una zona, y aumenta tus probabilidades de tener parcelas raras en distintos puntos del mapa. ¡Una cartera diversificada es más resistente y rentable a largo plazo! Consulta la Guía 10 en la sección 📚 Guías.'
+        },
+        {
+            keys: ['primeros pasos', 'empezar', 'comenzar', 'inicio', 'nuevo', 'instalar', 'gps', 'configurar', 'cuenta'],
+            clan: false,
+            resp: '🚀 <strong>Primeros Pasos:</strong> Para comenzar en Atlas Earth: activa tu <strong>GPS</strong> para ver el mapa de tu entorno, completa el tutorial básico, <strong>verifica tu cuenta</strong> para no perder tu progreso y asegúrate de tener conexión estable. Para tu primer terreno, selecciona una ubicación cercana y cómprala con los Atlas Bucks iniciales que recibes al registrarte. Consulta la Guía 01 en la sección 📚 Guías para más detalles.'
+        },
+        {
+            keys: ['insignia', 'pasaporte', 'badge'],
+            clan: false,
+            resp: '🏅 <strong>Insignias de Pasaporte:</strong> Cada insignia cuesta 200 AB y representa una zona (ciudad, estado o país). Si eres VIP de una zona, ganas el <strong>10% (20 AB)</strong> cada vez que alguien compra una insignia de tu área. ¡Son una fuente de ingresos pasivos!'
+        },
+        {
+            keys: ['vip', 'mayor', 'gobernador', 'presidente'],
+            clan: false,
+            resp: '👑 <strong>Rangos VIP:</strong><br>🥉 <strong>Mayor</strong> — más parcelas en tu ciudad<br>🥈 <strong>Gobernador</strong> — más parcelas en tu estado<br>🥇 <strong>Presidente</strong> — más parcelas en todo el país<br><br>Ganas el 10% de cada insignia vendida en tu zona. ¡Puedes tener los 3 rangos simultáneamente!'
+        },
+        {
+            keys: ['minijuego', 'mini juego', 'juego', 'racer', 'fishing', 'pesca', 'golf', 'warship', 'barco', 'bowling', 'boliche'],
+            clan: false,
+            resp: '🎮 <strong>Minijuegos:</strong> Hay 5 minijuegos activos: 🏎️ Racer, 🎣 Fishing V2, ⛳ Golf, 🚢 Warship y 🎳 Bowling. Cada evento tiene un bote inicial de <strong>3,000 AB</strong> que crece con los participantes. ¡Las partidas son gratuitas! Consulta la sección 📚 Guías para consejos de cada juego.'
+        },
+        {
+            keys: ['atlas buck', ' ab ', 'atlas bucks', 'diamante', 'anuncio', 'renta'],
+            clan: false,
+            resp: '💰 <strong>Atlas Bucks (AB):</strong> Son la moneda principal del juego. Puedes ganarlos viendo anuncios, recolectando diamantes en el mapa, recibiendo renta de tus parcelas, ganando minijuegos o comprándolos directamente. ¡Úsalos estratégicamente comprando más parcelas en lugar de gastarlos en mejoras!'
+        },
+        {
+            keys: ['coin aemx', 'coins aemx', 'coin ', ' coin', 'moneda aemx', 'medalla', 'intercambio', 'gamertag'],
+            clan: false,
+            resp: '🪙 <strong>Coins AEMX:</strong> Son la moneda interna de nuestra comunidad. Puedes usarlos para obtener <strong>medallas en tu GamerTag AEMX</strong> y también están diseñados para un sistema de <strong>intercambio entre exploradores</strong>. Puedes ganar Coins completando las 10 video-guías (+10 Coins) y participando en actividades de la comunidad.'
+        },
+        {
+            keys: ['paypal', 'retir', 'cobr', 'pago', 'efectivo', 'real'],
+            clan: false,
+            resp: '💰 <strong>Retiro a PayPal:</strong> Atlas Earth permite retirar ganancias a PayPal una vez que alcances el mínimo requerido. Consulta la sección 📚 Guías → PayPal para ver los requisitos actualizados y el proceso paso a paso.'
+        },
+        {
+            keys: ['guia', 'guía', 'video', 'tutorial', 'aprender'],
+            clan: false,
+            resp: '📚 <strong>Video-Guías AURA:</strong> Tenemos 10 video-guías disponibles que cubren desde los primeros pasos hasta estrategias avanzadas. Si completas las 10, recibes <strong>+10 COINS AEMX</strong> de recompensa. Encuéntralas en el botón 📚 Guías en la parte superior.'
+        },
+        {
+            keys: ['ec ', ' ec', 'club explorador', 'explorer club', 'pase', 'season pass', 'sp ', ' sp', 'temporada'],
+            clan: false,
+            resp: '🎫 <strong>Suscripciones EC y SP:</strong> El Club de Explorador (EC) y el Pase de Temporada (SP) son suscripciones premium que otorgan beneficios exclusivos como bonos de renta, acceso a eventos especiales y más. Consulta la sección 📚 Guías para ver cuál conviene más según tu estilo de juego.'
+        },
+        {
+            keys: ['salto', 'caida', 'caída', 'tope', 'tabla de salto'],
+            clan: false,
+            resp: '📈 <strong>Topes, Caídas y Saltos:</strong> Los saltos son incrementos de renta que ocurren al acumular cierta cantidad de parcelas. Las caídas suceden cuando pierdes parcelas y bajas de nivel de renta. Conocer los topes te ayuda a planificar cuándo comprar para maximizar cada salto. Consulta las Guías 05 y 06 en la sección 📚 Guías.'
+        },
+        {
+            keys: ['crel', 'c.r.e.l', 'coeficiente', 'rendimiento', 'escala'],
+            clan: false,
+            resp: '📊 <strong>C.R.E.L.:</strong> El Coeficiente de Rendimiento por Escala de Lotes es la fórmula que determina cuánto genera cada parcela según la cantidad total que posees. Cuantas más parcelas acumules, mayor es el rendimiento por unidad. Dominar el C.R.E.L. es clave para optimizar tu inversión. Consulta la Guía 07 en la sección 📚 Guías.'
+        },
+        {
+            keys: ['horizontal', 'pantalla', 'modo landscape', 'rotar'],
+            clan: false,
+            resp: '📱 <strong>Modo Horizontal:</strong> Atlas Earth tiene un modo horizontal que puede darte ventajas visuales al explorar el mapa. Consulta la sección 📚 Guías → Modo Horizontal para ver cómo activarlo correctamente en tu dispositivo.'
+        },
+        {
+            keys: ['visor', 'hud'],
+            clan: true,
+            resp: '👁 <strong>Visor HUD AEMX:</strong> El Visor HUD es una herramienta exclusiva para miembros AEMX que te permite visualizar información avanzada del juego. Accede desde el botón 👁 Visor HUD en la parte superior del chat.'
+        },
+        {
+            keys: ['marco', 'frame', 'borde', 'editor'],
+            clan: true,
+            resp: '🖼️ <strong>Marco AEMX:</strong> El Marco AEMX es un distintivo visual exclusivo para miembros del clan. Puedes personalizarlo desde el botón 🖼️ Marco AEMX en la parte superior del chat.'
+        }
+    ];
+
+    let _auraLastReply = 0;
+    const AURA_COOLDOWN = 10000; // 10 segundos entre respuestas
+    const _auraRecentTopics = {}; // { keyword: timestamp }
+    const AURA_TOPIC_COOLDOWN = 5 * 60 * 1000; // no repite el mismo tema en 5 min
+
+    // ── TABLA DE SALTOS MEXICO ──
+    const SALTOS_MX = [
+        { tope: 50,  salto: 63,  siguiente: 63  },
+        { tope: 85,  salto: 100, siguiente: 100 },
+        { tope: 100, salto: 130, siguiente: 130 },
+        { tope: 140, salto: 152, siguiente: 152 },
+        { tope: 175, salto: 209, siguiente: 209 },
+        { tope: 225, salto: 238, siguiente: 238 },
+        { tope: 300, salto: 336, siguiente: 336 },
+        { tope: 400, salto: 455, siguiente: 455 },
+    ];
+
+    function analizarPerfilAura() {
+        // Leer datos del localStorage del index
+        let data = null;
+        try {
+            const raw = localStorage.getItem('atlas-earth-calc-data');
+            if (raw) data = JSON.parse(raw);
+
+        // Sin datos
+        if (!data) {
+            addAuraMessage('No encontré datos de tu perfil, Explorador. Visita la sección principal e ingresa tus datos para que pueda analizarlos.');
+            return;
+        }
+
+        // Verificar país México
+        const pais = (data.country || '').toLowerCase().replace(/é/g, 'e');
+        const esMexico = !data.country || pais.includes('mexico') || pais === '';
+        if (!esMexico) {
+            addAuraMessage('El analisis de perfil esta disponible unicamente para Exploradores de Mexico por el momento.');
+            return;
+        }
+
+        // Leer datos
+        const username = localStorage.getItem('atlas-username') || data.username || 'Explorador';
+        const common   = parseInt(data.common    || 0, 10);
+        const rare     = parseInt(data.rare      || 0, 10);
+        const epic     = parseInt(data.epic      || 0, 10);
+        const legendary= parseInt(data.legendary || 0, 10);
+        const badges   = parseInt(data.badges    || 0, 10);
+        const ab       = parseFloat(data.atlasbucks || 0);
+        const total    = common + rare + epic + legendary;
+        const abParcelas = Math.floor(ab / 100);
+
+        // Determinar estado en la tabla de saltos
+        let estado = '';
+        let accion = '';
+        let faltanParaSalto = 0;
+
+        if (total >= 455) {
+            estado = 'zona libre';
+            accion = '¡Has alcanzado la zona libre de ganancias! Cada parcela que compres solo suma más rendimiento. Sigue expandiendo tu territorio.';
+            faltanParaSalto = 0;
+        } else {
+            let zonaActual = null;
+            for (let i = 0; i < SALTOS_MX.length; i++) {
+                const z = SALTOS_MX[i];
+                const prevSalto = i === 0 ? 0 : SALTOS_MX[i-1].salto;
+                if (total >= prevSalto && total < z.tope) {
+                    // Zona de subida hacia el tope
+                    zonaActual = { tipo: 'subida', tope: z.tope, salto: z.salto };
+                    faltanParaSalto = z.tope - total;
+                    break;
+                } else if (total === z.tope) {
+                    // En el tope exacto
+                    zonaActual = { tipo: 'tope', tope: z.tope, salto: z.salto };
+                    faltanParaSalto = z.salto - total;
+                    break;
+                } else if (total > z.tope && total < z.salto) {
+                    // En caída
+                    zonaActual = { tipo: 'caida', tope: z.tope, salto: z.salto };
+                    faltanParaSalto = z.salto - total;
+                    break;
+                }
+            }
+
+            if (!zonaActual) {
+                // Después del último salto antes de 455
+                const ultimo = SALTOS_MX[SALTOS_MX.length - 1];
+                zonaActual = { tipo: 'subida', tope: ultimo.tope, salto: ultimo.salto };
+                faltanParaSalto = 455 - total;
+            }
+
+            if (zonaActual.tipo === 'subida') {
+                estado = 'en subida';
+                accion = 'Estas en subida hacia el tope de <strong>' + zonaActual.tope + ' parcelas</strong>. Te faltan <strong>' + faltanParaSalto + ' parcelas</strong> para llegar al tope.';
+            } else if (zonaActual.tipo === 'tope') {
+                estado = 'en tope';
+                accion = 'Alcanzaste el tope de <strong>' + zonaActual.tope + ' parcelas</strong>. Debes avanzar directo al salto en <strong>' + zonaActual.salto + ' parcelas</strong> - te faltan <strong>' + faltanParaSalto + '</strong>.';
+            } else if (zonaActual.tipo === 'caida') {
+                estado = 'en caída';
+                accion = 'Estas en zona de caida. Debes avanzar directo al siguiente salto en <strong>' + zonaActual.salto + ' parcelas</strong> - te faltan <strong>' + faltanParaSalto + '</strong>. No te detengas!';
+            }
+        }
+
+        // Recomendación de Atlas Bucks
+        let abMsg = '';
+        if (faltanParaSalto > 0) {
+            const abNecesarios = faltanParaSalto * 100;
+            if (abParcelas >= faltanParaSalto) {
+                abMsg = ' Con tus <strong>' + ab.toLocaleString() + ' AB</strong> puedes comprar <strong>' + abParcelas + ' parcelas</strong> ahora mismo. Es momento de comprar!';
+            } else {
+                const abFaltan = abNecesarios - ab;
+                abMsg = ' Tienes <strong>' + ab.toLocaleString() + ' AB</strong> (' + abParcelas + ' parcelas). Te faltan <strong>' + Math.ceil(abFaltan).toLocaleString() + ' AB</strong> mas para completar el objetivo. Sigue juntando!';
+            }
+        }
+
+        // Construir mensaje final
+        const desglose = common + ' comunes, ' + rare + ' raras, ' + epic + ' epicas y ' + legendary + ' legendarias';
+        const msg = '\u00a1Hola <strong>' + username + '</strong>! Aqui esta tu analisis:<br><br>' +
+            `Tienes <strong>${total} parcelas</strong> (${desglose}) y <strong>${badges} insignias</strong>.<br><br>` +
+            `${accion}${abMsg}`;
+
+        setTimeout(() => { addAuraMessage(msg); }, 1500);
+    }
+
+    window._auraCheckMessage = function(text, isOwn) {
+        if (!isOwn) return;
+        const now = Date.now();
+        const lower = ' ' + text.toLowerCase() + ' ';
+        const esClan = window._userEsClan === true;
+
+        // ── Disparador de análisis de perfil (sin cooldown, es comando explícito) ──
+        if (lower.includes('analiza mi perfil') || lower.includes('mi progreso') || lower.includes('aura perfil') || lower.includes('aura progreso')) {
+            _auraLastReply = now;
+            analizarPerfilAura();
+            return;
+        }
+
+        if (now - _auraLastReply < AURA_COOLDOWN) return;
+
+        for (const entry of AURA_KB) {
+            if (entry.clan && !esClan) continue;
+            const matched = entry.keys.some(k => lower.includes(k));
+            if (!matched) continue;
+
+            // Cooldown por tema
+            const topicKey = entry.keys[0];
+            if (_auraRecentTopics[topicKey] && now - _auraRecentTopics[topicKey] < AURA_TOPIC_COOLDOWN) continue;
+
+            _auraLastReply = now;
+            _auraRecentTopics[topicKey] = now;
+
+            setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
+            break;
+        }
+    };
+})();
+</script>
+
+<script>
+/* ── TOOLTIP TOUR ── */
+(function() {
+    const TOUR = [
+        { selector: 'a.btn-guias[href*="helpshift"]', text: 'Soporte técnico' },
+        { selector: '#btnVisor',                       text: 'Visor HUD' },
+        { selector: 'a.btn-leaderboard',               text: 'Ranking' },
+        { selector: 'a.btn-guias[href="guias.html"]',  text: 'Guías' },
+        { selector: '#btnTransacciones',               text: 'Coins' },
+        { selector: '#btnMarco',                       text: 'Marco AEMX' },
+        { selector: '#btnMute',                        text: 'Sonido' },
+        { selector: '.btn-close-chat',                 text: 'Cerrar' },
+    ];
+
+    const DURATION = 2500;
+    const FADE     = 350;
+
+    let tip, current = 0, timer;
+
+    function createTip() {
+        tip = document.createElement('div');
+        tip.className = 'btn-tooltip';
+        document.body.appendChild(tip);
+    }
+
+    function visibleTargets() {
+        return TOUR.filter(t => {
+            const el = document.querySelector(t.selector);
+            if (!el) return false;
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden' && el.offsetParent !== null;
+        });
+    }
+
+    function showNext() {
+        const targets = visibleTargets();
+        if (!targets.length) { timer = setTimeout(showNext, 3000); return; }
+
+        current = current % targets.length;
+        const { selector, text } = targets[current];
+        const el = document.querySelector(selector);
+        const rect = el.getBoundingClientRect();
+
+        tip.textContent = text;
+        tip.classList.remove('visible');
+
+        // Posicionar debajo del botón
+        const tipW = tip.offsetWidth || 120;
+        let left = rect.left + rect.width / 2 - tipW / 2;
+        left = Math.max(8, Math.min(left, window.innerWidth - tipW - 8));
+        tip.style.left = left + 'px';
+        tip.style.top  = (rect.bottom + 8) + 'px';
+
+        // Ajustar flecha al centro del botón
+        const arrowLeft = (rect.left + rect.width / 2) - left;
+        tip.style.setProperty('--arrow-left', arrowLeft + 'px');
+
+        requestAnimationFrame(() => { tip.classList.add('visible'); });
+
+        timer = setTimeout(() => {
+            tip.classList.remove('visible');
+            current++;
+            timer = setTimeout(showNext, FADE);
+        }, DURATION);
+    }
+
+    // Soporte para flecha dinámica vía CSS variable
+    const styleArrow = document.createElement('style');
+    styleArrow.textContent = '.btn-tooltip::before { left: var(--arrow-left, 50%); transform: translateX(-50%); }';
+    document.head.appendChild(styleArrow);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        createTip();
+        timer = setTimeout(showNext, 1500);
+    });
+})();
+</script>
+
+</body>
+</html>
