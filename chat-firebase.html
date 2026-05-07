@@ -510,6 +510,7 @@
                 const username = input.value.trim().toUpperCase();
                 if (username && username.length >= 3) {
                     currentUsername = username;
+                    window._currentUsername = username;
                     userId = 'user_' + Date.now();
                     document.getElementById('usernameModal').classList.remove('visible');
                     document.getElementById('messageInput').disabled = false;
@@ -1246,7 +1247,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
 
         // Leer datos
-        const username = localStorage.getItem('atlas-username') || data.username || 'Explorador';
+        const username = window._currentUsername || localStorage.getItem('atlas-username') || data.username || 'Explorador';
         const common   = parseInt(data.common    || 0, 10);
         const rare     = parseInt(data.rare      || 0, 10);
         const epic     = parseInt(data.epic      || 0, 10);
