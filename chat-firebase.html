@@ -1211,6 +1211,123 @@ const userRef = ref(database, 'chat_presence/' + userId);
     const _auraRecentTopics = {}; // { keyword: timestamp }
     const AURA_TOPIC_COOLDOWN = 5 * 60 * 1000; // no repite el mismo tema en 5 min
 
+    // ── TABLA DE SALTOS MEXICO ──
+    const SALTOS_MX = [
+        { tope: 50,  salto: 63,  siguiente: 63  },
+        { tope: 85,  salto: 100, siguiente: 100 },
+        { tope: 100, salto: 130, siguiente: 130 },
+        { tope: 140, salto: 152, siguiente: 152 },
+        { tope: 175, salto: 209, siguiente: 209 },
+        { tope: 225, salto: 238, siguiente: 238 },
+        { tope: 300, salto: 336, siguiente: 336 },
+        { tope: 400, salto: 455, siguiente: 455 },
+    ];
+
+    function analizarPerfilAura() {
+        // Leer datos del localStorage del index
+        let data = null;
+        try {
+            const raw = localStorage.getItem('atlas-earth-calc-data');
+            if (raw) data = JSON.parse(raw);
+        } catch(e) {}
+
+        // Sin datos
+        if (!data) {
+            addAuraMessage('No encontré datos de tu perfil, Explorador. Visita la sección principal e ingresa tus datos para que pueda analizarlos.');
+            return;
+        }
+
+        // Verificar país México
+        const pais = (data.country || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+        const esMexico = pais.includes('mexico');
+        if (!esMexico) {
+            addAuraMessage('El análisis de perfil está disponible únicamente para Exploradores de México por el momento.');
+            return;
+        }
+
+        // Leer datos
+        const username = data.username || localStorage.getItem('atlas-username') || 'Explorador';
+        const common   = parseInt(data.common    || 0, 10);
+        const rare     = parseInt(data.rare      || 0, 10);
+        const epic     = parseInt(data.epic      || 0, 10);
+        const legendary= parseInt(data.legendary || 0, 10);
+        const badges   = parseInt(data.badges    || 0, 10);
+        const ab       = parseFloat(data.atlasbucks || 0);
+        const total    = common + rare + epic + legendary;
+        const abParcelas = Math.floor(ab / 100);
+
+        // Determinar estado en la tabla de saltos
+        let estado = '';
+        let accion = '';
+        let faltanParaSalto = 0;
+
+        if (total >= 455) {
+            estado = 'zona libre';
+            accion = '¡Has alcanzado la zona libre de ganancias! Cada parcela que compres solo suma más rendimiento. Sigue expandiendo tu territorio.';
+            faltanParaSalto = 0;
+        } else {
+            let zonaActual = null;
+            for (let i = 0; i < SALTOS_MX.length; i++) {
+                const z = SALTOS_MX[i];
+                const prevSalto = i === 0 ? 0 : SALTOS_MX[i-1].salto;
+                if (total >= prevSalto && total < z.tope) {
+                    // Zona de subida hacia el tope
+                    zonaActual = { tipo: 'subida', tope: z.tope, salto: z.salto };
+                    faltanParaSalto = z.tope - total;
+                    break;
+                } else if (total === z.tope) {
+                    // En el tope exacto
+                    zonaActual = { tipo: 'tope', tope: z.tope, salto: z.salto };
+                    faltanParaSalto = z.salto - total;
+                    break;
+                } else if (total > z.tope && total < z.salto) {
+                    // En caída
+                    zonaActual = { tipo: 'caida', tope: z.tope, salto: z.salto };
+                    faltanParaSalto = z.salto - total;
+                    break;
+                }
+            }
+
+            if (!zonaActual) {
+                // Después del último salto antes de 455
+                const ultimo = SALTOS_MX[SALTOS_MX.length - 1];
+                zonaActual = { tipo: 'subida', tope: ultimo.tope, salto: ultimo.salto };
+                faltanParaSalto = 455 - total;
+            }
+
+            if (zonaActual.tipo === 'subida') {
+                estado = 'en subida';
+                accion = `Estás en subida hacia el tope de <strong>${zonaActual.tope} parcelas</strong>. Te faltan <strong>${faltanParaSalto} parcelas</strong> para llegar al tope.`;
+            } else if (zonaActual.tipo === 'tope') {
+                estado = 'en tope';
+                accion = `Alcanzaste el tope de <strong>${zonaActual.tope} parcelas</strong>. Debes avanzar directo al salto en <strong>${zonaActual.salto} parcelas</strong> — te faltan <strong>${faltanParaSalto}</strong>.`;
+            } else if (zonaActual.tipo === 'caida') {
+                estado = 'en caída';
+                accion = `Estás en zona de caída. Debes avanzar directo al siguiente salto en <strong>${zonaActual.salto} parcelas</strong> — te faltan <strong>${faltanParaSalto}</strong>. ¡No te detengas!`;
+            }
+        }
+
+        // Recomendación de Atlas Bucks
+        let abMsg = '';
+        if (faltanParaSalto > 0) {
+            const abNecesarios = faltanParaSalto * 100;
+            if (abParcelas >= faltanParaSalto) {
+                abMsg = ` Con tus <strong>${ab.toLocaleString()} AB</strong> puedes comprar <strong>${abParcelas} parcelas</strong> ahora mismo. ¡Es momento de comprar!`;
+            } else {
+                const abFaltan = abNecesarios - ab;
+                abMsg = ` Tienes <strong>${ab.toLocaleString()} AB</strong> (${abParcelas} parcelas). Te faltan <strong>${Math.ceil(abFaltan).toLocaleString()} AB</strong> más para completar el objetivo. ¡Sigue juntando!`;
+            }
+        }
+
+        // Construir mensaje final
+        const desglose = `${common} comunes, ${rare} raras, ${epic} épicas y ${legendary} legendarias`;
+        const msg = `¡Hola <strong>${username}</strong>! Aquí está tu análisis:<br><br>` +
+            `Tienes <strong>${total} parcelas</strong> (${desglose}) y <strong>${badges} insignias</strong>.<br><br>` +
+            `${accion}${abMsg}`;
+
+        setTimeout(() => { addAuraMessage(msg); }, 1500);
+    }
+
     window._auraCheckMessage = function(text, isOwn) {
         if (!isOwn) return;
         const now = Date.now();
@@ -1218,6 +1335,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         const lower = ' ' + text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') + ' ';
         const esClan = window._userEsClan === true;
+
+        // ── Disparador de análisis de perfil ──
+        if (lower.includes('aura analiza mi perfil') || lower.includes('aura cual es mi progreso') || lower.includes('aura cuál es mi progreso')) {
+            _auraLastReply = now;
+            analizarPerfilAura();
+            return;
+        }
 
         for (const entry of AURA_KB) {
             if (entry.clan && !esClan) continue;
