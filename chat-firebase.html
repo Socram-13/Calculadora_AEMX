@@ -1336,8 +1336,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
         const lower = ' ' + text.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '') + ' ';
         const esClan = window._userEsClan === true;
 
-        // ── Disparador de análisis de perfil ──
-        if (lower.includes('aura analiza mi perfil') || lower.includes('aura cual es mi progreso') || lower.includes('aura cuál es mi progreso')) {
+        // ── Disparador de análisis de perfil (sin cooldown, es comando explícito) ──
+        if (lower.includes('analiza mi perfil') || lower.includes('mi progreso') || lower.includes('aura perfil') || lower.includes('aura progreso')) {
             _auraLastReply = now;
             analizarPerfilAura();
             return;
