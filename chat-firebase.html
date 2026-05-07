@@ -549,6 +549,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     if (!window._lastNewestKey) window._lastNewestKey = null;
                     if (!window._lastNewestTs) window._lastNewestTs = 0;
 
+                    console.log('[AURA-GATE] init:', chatInitialized, '| newestKey:', newestKey, '| lastKey:', window._lastNewestKey, '| newestTs:', newestTs, '| lastTs:', window._lastNewestTs);
                     if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
                         if (newest.username !== currentUsername) window.playPopSound();
                         // ── AURA keyword detector ──
@@ -1229,8 +1230,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
         let data = null;
         try {
             const raw = localStorage.getItem('atlas-earth-calc-data');
+            console.log('[AURA-PERFIL] raw localStorage:', raw ? raw.substring(0, 100) : 'NULL');
             if (raw) data = JSON.parse(raw);
-        } catch(e) {}
+        } catch(e) { console.log('[AURA-PERFIL] error:', e); }
 
         // Sin datos
         if (!data) {
