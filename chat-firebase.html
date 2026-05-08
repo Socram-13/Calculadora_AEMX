@@ -1403,6 +1403,134 @@ const userRef = ref(database, 'chat_presence/' + userId);
         setTimeout(() => { addAuraMessage(msg); }, 1500);
     }
 
+    // ── PREGUNTAS PERSONALIZADAS CON DATOS DEL USUARIO ──
+    function getDatosUsuario() {
+        try {
+            const raw = localStorage.getItem('atlas-earth-calc-data');
+            return raw ? JSON.parse(raw) : null;
+        } catch(e) { return null; }
+    }
+
+    function responderDatosPerfil(tipo) {
+        const data = getDatosUsuario();
+        if (!data) {
+            addAuraMessage('No encontré datos de tu perfil, Explorador. Visita la sección principal e ingresa tus datos primero.');
+            return;
+        }
+
+        const common    = parseInt(data.common    || 0, 10);
+        const rare      = parseInt(data.rare      || 0, 10);
+        const epic      = parseInt(data.epic      || 0, 10);
+        const legendary = parseInt(data.legendary || 0, 10);
+        const badges    = parseInt(data.badges    || 0, 10);
+        const ab        = parseFloat(data.atlasbucks || 0);
+        const total     = common + rare + epic + legendary;
+        const abParcelas = Math.floor(ab / 100);
+
+        const BONOS = [
+            { min: 1,   max: 10,  bono: 5  },
+            { min: 11,  max: 30,  bono: 10 },
+            { min: 31,  max: 60,  bono: 15 },
+            { min: 61,  max: 100, bono: 20 },
+            { min: 101, max: 9999,bono: 25 },
+        ];
+
+        let msg = '';
+
+        if (tipo === 'total') {
+            msg = '🗺️ Tienes <strong>' + total + ' parcelas</strong> en total.';
+
+        } else if (tipo === 'comunes') {
+            msg = '🟢 Tienes <strong>' + common + ' parcelas comunes</strong>.';
+
+        } else if (tipo === 'raras') {
+            msg = '🔵 Tienes <strong>' + rare + ' parcelas raras</strong>.';
+
+        } else if (tipo === 'epicas') {
+            msg = '🟣 Tienes <strong>' + epic + ' parcelas épicas</strong>.';
+
+        } else if (tipo === 'legendarias') {
+            msg = '🟡 Tienes <strong>' + legendary + ' parcelas legendarias</strong>.';
+
+        } else if (tipo === 'faltan_salto') {
+            if (total >= 455) {
+                msg = '🎉 Ya estás en <strong>zona libre</strong>. No tienes un siguiente salto, ¡cada parcela que compres solo suma!';
+            } else {
+                let faltanParaSalto = 0;
+                for (let i = 0; i < SALTOS_MX.length; i++) {
+                    const z = SALTOS_MX[i];
+                    const prevSalto = i === 0 ? 0 : SALTOS_MX[i-1].salto;
+                    if ((total >= prevSalto && total < z.tope) || total === z.tope || (total > z.tope && total < z.salto)) {
+                        faltanParaSalto = (total < z.tope ? z.tope : z.salto) - total;
+                        break;
+                    }
+                }
+                if (!faltanParaSalto) faltanParaSalto = 455 - total;
+                msg = '📈 Te faltan <strong>' + faltanParaSalto + ' parcelas</strong> para el siguiente salto.';
+            }
+
+        } else if (tipo === 'ab') {
+            msg = '💰 Tienes <strong>' + ab.toLocaleString() + ' Atlas Bucks</strong>.';
+
+        } else if (tipo === 'comprar_parcelas') {
+            msg = '🛒 Con tus <strong>' + ab.toLocaleString() + ' AB</strong> puedes comprar <strong>' + abParcelas + ' parcelas</strong>.';
+
+        } else if (tipo === 'alcanzan_ab') {
+            if (total >= 455) {
+                msg = '✅ Ya estás en zona libre. Puedes comprar <strong>' + abParcelas + ' parcelas</strong> con tus AB actuales.';
+            } else {
+                let faltanParaSalto = 0;
+                for (let i = 0; i < SALTOS_MX.length; i++) {
+                    const z = SALTOS_MX[i];
+                    const prevSalto = i === 0 ? 0 : SALTOS_MX[i-1].salto;
+                    if ((total >= prevSalto && total < z.tope) || total === z.tope || (total > z.tope && total < z.salto)) {
+                        faltanParaSalto = (total < z.tope ? z.tope : z.salto) - total;
+                        break;
+                    }
+                }
+                if (!faltanParaSalto) faltanParaSalto = 455 - total;
+                const abNecesarios = faltanParaSalto * 100;
+                if (ab >= abNecesarios) {
+                    msg = '✅ ¡Sí te alcanzan! Necesitas <strong>' + abNecesarios.toLocaleString() + ' AB</strong> para el siguiente salto y tienes <strong>' + ab.toLocaleString() + ' AB</strong>. ¡Es momento de comprar!';
+                } else {
+                    msg = '❌ Aún no te alcanzan. Necesitas <strong>' + abNecesarios.toLocaleString() + ' AB</strong> para el siguiente salto y tienes <strong>' + ab.toLocaleString() + ' AB</strong>. Te faltan <strong>' + (abNecesarios - ab).toLocaleString() + ' AB</strong>.';
+                }
+            }
+
+        } else if (tipo === 'insignias') {
+            msg = '🏅 Tienes <strong>' + badges + ' insignias</strong>.';
+
+        } else if (tipo === 'pct_renta') {
+            const tramo = BONOS.find(t => badges >= t.min && badges <= t.max) || (badges === 0 ? { bono: 0 } : BONOS[BONOS.length-1]);
+            msg = '📊 Tu % de renta actual es <strong>+' + tramo.bono + '%</strong> con ' + badges + ' insignias.';
+
+        } else if (tipo === 'faltan_pct') {
+            const tramoActual = BONOS.find(t => badges >= t.min && badges <= t.max) || BONOS[0];
+            const idxActual = BONOS.indexOf(tramoActual);
+            const tramoSig = BONOS[idxActual + 1];
+            if (!tramoSig || badges >= 101) {
+                msg = '🏆 Ya tienes el <strong>% máximo de renta (+25%)</strong>. ¡Felicidades Explorador!';
+            } else {
+                const faltan = tramoSig.min - badges;
+                msg = '🏅 Te faltan <strong>' + faltan + ' insignias</strong> para pasar de <strong>+' + tramoActual.bono + '%</strong> a <strong>+' + tramoSig.bono + '%</strong> de renta.';
+            }
+
+        } else if (tipo === 'ab_pct') {
+            const tramoActual = BONOS.find(t => badges >= t.min && badges <= t.max) || BONOS[0];
+            const idxActual = BONOS.indexOf(tramoActual);
+            const tramoSig = BONOS[idxActual + 1];
+            if (!tramoSig || badges >= 101) {
+                msg = '🏆 Ya tienes el <strong>% máximo de renta (+25%)</strong>. No necesitas más insignias.';
+            } else {
+                const faltan = tramoSig.min - badges;
+                const abNecesarios = faltan * 200;
+                msg = '💰 Necesitas <strong>' + abNecesarios.toLocaleString() + ' AB</strong> para comprar <strong>' + faltan + ' insignias</strong> y subir a <strong>+' + tramoSig.bono + '%</strong> de renta.';
+            }
+        }
+
+        setTimeout(() => { addAuraMessage(msg); }, 1500);
+    }
+
     window._auraCheckMessage = function(text, isOwn) {
         if (!isOwn) return;
         // Solo responder si el mensaje menciona @aura
@@ -1416,6 +1544,30 @@ const userRef = ref(database, 'chat_presence/' + userId);
             _auraLastReply = now;
             analizarPerfilAura();
             return;
+        }
+
+        // ── Preguntas personalizadas con datos del usuario ──
+        const preguntas = [
+            { keys: ['cuantas parcelas tengo en total', 'cuantas parcelas tengo'],       tipo: 'total' },
+            { keys: ['cuantas comunes tengo'],                                             tipo: 'comunes' },
+            { keys: ['cuantas raras tengo'],                                               tipo: 'raras' },
+            { keys: ['cuantas epicas tengo', 'cuántas épicas tengo'],                     tipo: 'epicas' },
+            { keys: ['cuantas legendarias tengo'],                                         tipo: 'legendarias' },
+            { keys: ['cuantas parcelas me faltan para el siguiente salto', 'faltan para el salto', 'faltan para el siguiente salto'], tipo: 'faltan_salto' },
+            { keys: ['cuantos ab tengo', 'cuántos ab tengo'],                             tipo: 'ab' },
+            { keys: ['cuantas parcelas puedo comprar'],                                   tipo: 'comprar_parcelas' },
+            { keys: ['me alcanzan los ab para el siguiente salto', 'alcanzan los ab'],    tipo: 'alcanzan_ab' },
+            { keys: ['cuantas insignias tengo'],                                           tipo: 'insignias' },
+            { keys: ['cual es mi % de renta', 'cual es mi porcentaje de renta', 'mi % de renta'], tipo: 'pct_renta' },
+            { keys: ['cuantas insignias me faltan para el siguiente %', 'insignias me faltan para el siguiente %', 'insignias me faltan para subir %'], tipo: 'faltan_pct' },
+            { keys: ['cuantos ab necesito para el siguiente %', 'ab necesito para el siguiente %', 'ab necesito para subir %'], tipo: 'ab_pct' },
+        ];
+        for (const p of preguntas) {
+            if (p.keys.some(k => lower.includes(k))) {
+                _auraLastReply = now;
+                responderDatosPerfil(p.tipo);
+                return;
+            }
         }
 
         // ── Solo @aura sin nada más → saludo ──
