@@ -1321,11 +1321,50 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
+        // ── Recomendación de insignias ──
+        const BONOS_INSIGNIAS = [
+            { min: 1,   max: 10,  bono: 5  },
+            { min: 11,  max: 30,  bono: 10 },
+            { min: 31,  max: 60,  bono: 15 },
+            { min: 61,  max: 100, bono: 20 },
+            { min: 101, max: 9999,bono: 25 },
+        ];
+
+        let insigniasMsg = '';
+
+        if (badges < 101) {
+            // Tramo actual y siguiente
+            const tramoActual   = BONOS_INSIGNIAS.find(t => badges >= t.min && badges <= t.max) || BONOS_INSIGNIAS[0];
+            const idxActual     = BONOS_INSIGNIAS.indexOf(tramoActual);
+            const tramoSig      = BONOS_INSIGNIAS[idxActual + 1];
+
+            if (tramoSig) {
+                const faltanInsignias   = tramoSig.min - badges;
+                const mitadTramo        = Math.ceil((tramoActual.max - tramoActual.min + 1) / 2);
+                const abInsignias       = faltanInsignias * 200;
+                const abParaSalto       = faltanParaSalto * 100;
+
+                // Regla 1: zona libre (≥455 parcelas) y aún no tiene 101 insignias
+                const esZonaLibre = total >= 455;
+
+                // Regla 2: cualquier nivel, cerca del siguiente tramo, tiene AB y son menores que los del salto
+                const cercaDelSiguiente = faltanInsignias <= mitadTramo;
+                const tieneABInsignias  = ab >= abInsignias;
+                const ABmenorQueSalto   = faltanParaSalto === 0 || ab < abParaSalto;
+
+                if (esZonaLibre) {
+                    insigniasMsg = '<br><br>🏅 <strong>Recomendación de insignias:</strong> Tienes bono de renta de <strong>+' + tramoActual.bono + '%</strong> (' + badges + ' insignias). Comprando <strong>' + faltanInsignias + ' insignias más</strong> (' + abInsignias.toLocaleString() + ' AB) alcanzarías <strong>+' + tramoSig.bono + '%</strong> de bono. ¡Ya estás en zona libre, es buen momento para mejorar tu bono!';
+                } else if (cercaDelSiguiente && tieneABInsignias && ABmenorQueSalto) {
+                    insigniasMsg = '<br><br>🏅 <strong>Opción alternativa — insignias:</strong> También podrías comprar <strong>' + faltanInsignias + ' insignias</strong> (' + abInsignias.toLocaleString() + ' AB) para subir tu bono de renta de <strong>+' + tramoActual.bono + '%</strong> a <strong>+' + tramoSig.bono + '%</strong>. Te cuesta menos AB que llegar al siguiente salto de parcelas.';
+                }
+            }
+        }
+
         // Construir mensaje final
         const desglose = common + ' comunes, ' + rare + ' raras, ' + epic + ' epicas y ' + legendary + ' legendarias';
         const msg = '\u00a1Hola <strong>' + username + '</strong>! Aqui esta tu analisis:<br><br>' +
             `Tienes <strong>${total} parcelas</strong> (${desglose}) y <strong>${badges} insignias</strong>.<br><br>` +
-            `${accion}${abMsg}`;
+            `${accion}${abMsg}${insigniasMsg}`;
 
         setTimeout(() => { addAuraMessage(msg); }, 1500);
     }
