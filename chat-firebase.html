@@ -1394,11 +1394,42 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
-        // Construir mensaje final
-        const desglose = common + ' comunes, ' + rare + ' raras, ' + epic + ' epicas y ' + legendary + ' legendarias';
-        const msg = '\u00a1Hola <strong>' + username + '</strong>! Aqui esta tu analisis:<br><br>' +
-            `Tienes <strong>${total} parcelas</strong> (${desglose}) y <strong>${badges} insignias</strong>.<br><br>` +
-            `${accion}${abMsg}${insigniasMsg}`;
+        // ── Construir reporte ──
+        const BONOS_LABEL = [
+            { min: 0,   max: 0,   bono: 0  },
+            { min: 1,   max: 10,  bono: 5  },
+            { min: 11,  max: 30,  bono: 10 },
+            { min: 31,  max: 60,  bono: 15 },
+            { min: 61,  max: 100, bono: 20 },
+            { min: 101, max: 9999,bono: 25 },
+        ];
+        const tramoRenta = BONOS_LABEL.find(t => badges >= t.min && badges <= t.max) || BONOS_LABEL[0];
+
+        const sep = '━━━━━━━━━━━━━━━━━━━';
+
+        const msg =
+            sep + '<br>' +
+            '👤 <strong>Reporte de Explorador — ' + username + '</strong><br>' +
+            sep + '<br><br>' +
+
+            '🗺️ <strong>PARCELAS</strong> — Total: <strong>' + total + '</strong><br>' +
+            '&nbsp;&nbsp;🟢 Comunes:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>' + common + '</strong><br>' +
+            '&nbsp;&nbsp;🔵 Raras:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>' + rare + '</strong><br>' +
+            '&nbsp;&nbsp;🟣 Épicas:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<strong>' + epic + '</strong><br>' +
+            '&nbsp;&nbsp;🟡 Legendarias: <strong>' + legendary + '</strong><br><br>' +
+
+            '🏅 <strong>INSIGNIAS</strong><br>' +
+            '&nbsp;&nbsp;' + badges + ' insignias — <strong>+' + tramoRenta.bono + '% de renta</strong><br><br>' +
+
+            '💰 <strong>ATLAS BUCKS</strong><br>' +
+            '&nbsp;&nbsp;<strong>' + ab.toLocaleString() + ' AB</strong> disponibles (' + abParcelas + ' parcelas)<br><br>' +
+
+            '📈 <strong>ESTADO</strong><br>' +
+            '&nbsp;&nbsp;' + accion + (abMsg ? '<br><br>&nbsp;&nbsp;' + abMsg : '') + '<br>' +
+
+            (insigniasMsg ? '<br>💡 <strong>RECOMENDACIÓN</strong><br>&nbsp;&nbsp;' + insigniasMsg.replace('<br><br>🏅 <strong>Recomendación de insignias:</strong> ', '').replace('<br><br>🏅 <strong>Opción alternativa — insignias:</strong> ', '') + '<br>' : '') +
+
+            '<br>' + sep;
 
         setTimeout(() => { addAuraMessage(msg); }, 1500);
     }
