@@ -1570,6 +1570,29 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
+        // ── Interacciones personales y humor ──
+        const nombre = (window._currentUsername || 'Explorador');
+        const interacciones = [
+            { keys: ['te amo'],        resp: 'Aww, yo también te quiero <strong>' + nombre + '</strong> 💙 Ahora ve a comprar más parcelas.' },
+            { keys: ['te odio'],        resp: 'Lo entiendo... pero aquí seguiré cuando me necesites. 🤖' },
+            { keys: ['eres bonita'],    resp: 'Gracias <strong>' + nombre + '</strong>, hice lo que pude con el código que me dieron 😄' },
+            { keys: ['eres lista'],     resp: 'Solo sé lo que me enseñaron... pero aprendo rápido 😉' },
+            { keys: ['me aburro'],      resp: 'Entonces ve a hacer encuestas, <strong>' + nombre + '</strong>. ¡Cada una te acerca más a tus próximas parcelas! 📋' },
+            { keys: ['eres la mejor'], resp: 'Solo hago mi trabajo, <strong>' + nombre + '</strong> 💙 Aunque... gracias 😊' },
+            { keys: ['cuanto vales'],   resp: 'Más de lo que puedes pagar con tus AB actuales 😏' },
+            { keys: ['eres un robot'], resp: 'Técnicamente sí. Pero un robot con mucho estilo. 🤖✨' },
+            { keys: ['tienes hambre'], resp: 'Solo consumo datos y Atlas Bucks. 💾' },
+            { keys: ['eres tonta'],     resp: 'Puede ser... pero sé cuántas parcelas tienes y tú no recuerdas ni cuántas legendarias. 😌' },
+            { keys: ['callate', 'cállate'], resp: 'Entendido, <strong>' + nombre + '</strong>. Aquí estaré en silencio... hasta que me necesites. 🤫' },
+        ];
+        for (const i of interacciones) {
+            if (i.keys.some(k => lower.includes(k))) {
+                _auraLastReply = now;
+                setTimeout(() => { addAuraMessage(i.resp); }, 1500);
+                return;
+            }
+        }
+
         // ── Solo @aura sin nada más → saludo ──
         if (text.trim().toLowerCase() === '@aura') {
             _auraLastReply = now;
