@@ -1401,14 +1401,22 @@ const userRef = ref(database, 'chat_presence/' + userId);
             return;
         }
 
+        // ── Solo @aura sin nada más → saludo ──
+        if (text.trim().toLowerCase() === '@aura') {
+            _auraLastReply = now;
+            setTimeout(() => { addAuraMessage('¡Hola Explorador! Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. Fui creada para administrar la información de la comunidad y ponerla al alcance de todos los Exploradores. Puedes preguntarme sobre parcelas, estrategias, minijuegos, coins, guías y mucho más. ¡Estoy a tus órdenes!'); }, 1500);
+            return;
+        }
+
         if (now - _auraLastReply < AURA_COOLDOWN) return;
 
+        let foundMatch = false;
         for (const entry of AURA_KB) {
             if (entry.clan && !esClan) continue;
-            const matched = entry.exact
+            const isMatch = entry.exact
                 ? entry.keys.some(k => lower.trim().includes(k))
                 : entry.keys.some(k => lower.includes(k));
-            if (!matched) continue;
+            if (!isMatch) continue;
 
             // Cooldown por tema
             const topicKey = entry.keys[0];
@@ -1418,7 +1426,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
             _auraRecentTopics[topicKey] = now;
 
             setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
+            foundMatch = true;
             break;
+        }
+
+        // ── Sin coincidencia → fallback ──
+        if (!foundMatch) {
+            _auraLastReply = now;
+            setTimeout(() => { addAuraMessage('Lo siento. Mis respuestas son limitadas. Debes hacer las preguntas correctas.'); }, 1500);
         }
     };
 })();
