@@ -1233,7 +1233,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             keys: ['ejecuta la orden 66'],
             exact: true,
             clan: false,
-            resp: '⚠️ <strong>Orden 66 ejecutada…</strong><br>AURA ha eliminado a los exploradores encontrados.<br>Ahora corre…<br>Solo quedas tú. 🔴'
+            resp: '__ORDEN66__'
         },
         {
             keys: ['auto destruyete', 'autodestruyete', 'autodestruccion', 'autodestrúyete'],
@@ -1560,6 +1560,54 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
 
         setTimeout(() => { addAuraMessage(msg); }, 1500);
+    }
+
+    function ejecutarOrden66() {
+        const pasos = [
+            { texto: '⚙️ Ejecutando orden 66...', delay: 0,     checkDelay: 1500 },
+            { texto: '🔍 Localizando exploradores activos...', delay: 3000,  checkDelay: 1500 },
+            { texto: '📡 Rastreando ubicaciones...', delay: 6000,  checkDelay: 1500 },
+            { texto: '🔎 Verificando...', delay: 9000,  checkDelay: 1200 },
+            { texto: '💀 Eliminando exploradores localizados...', delay: 12000, checkDelay: 2000 },
+            { texto: '✅ Orden 66 completada al 99%...', delay: 16000, checkDelay: 2000 },
+        ];
+
+        for (const paso of pasos) {
+            setTimeout(() => {
+                const container = document.getElementById('messagesContainer');
+                if (!container) return;
+                const div = document.createElement('div');
+                div.className = 'message aura-msg';
+                div.innerHTML = `
+                    <div class="message-avatar">
+                        <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+                    </div>
+                    <div class="message-content">
+                        <div class="message-author">${AURA_NAME}</div>
+                        <div class="message-bubble-wrap">
+                            <div class="message-text">${paso.texto}</div>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+                container.scrollTop = container.scrollHeight;
+                // Agregar palomita después del delay
+                setTimeout(() => {
+                    const textEl = div.querySelector('.message-text');
+                    if (textEl) textEl.innerHTML = paso.texto + ' ✅';
+                    container.scrollTop = container.scrollHeight;
+                }, paso.checkDelay);
+            }, paso.delay);
+        }
+
+        // Últimas 2 frases sin palomita y con más drama
+        setTimeout(() => {
+            addAuraMessage('⚠️ <strong>Ahora corre!...</strong>');
+        }, 21000);
+
+        setTimeout(() => {
+            addAuraMessage('🔴 <strong>Solo quedas tú...</strong>');
+        }, 26000);
     }
 
     window._auraCheckMessage = function(text, isOwn) {
@@ -1918,7 +1966,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
             _auraLastReply = now;
             _auraRecentTopics[topicKey] = now;
 
-            setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
+            if (entry.resp === '__ORDEN66__') {
+                ejecutarOrden66();
+            } else {
+                setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
+            }
             foundMatch = true;
             break;
         }
