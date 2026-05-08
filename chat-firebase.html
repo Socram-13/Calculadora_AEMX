@@ -552,10 +552,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                     if (chatInitialized && newestKey && newestKey !== window._lastNewestKey && newestTs >= window._lastNewestTs) {
                         if (newest.username !== currentUsername) window.playPopSound();
-                        // ── AURA keyword detector ──
-                        if (newest.username === currentUsername && window._auraCheckMessage) {
-                            window._auraCheckMessage(newest.text, true);
-                        }
                     }
                     window._lastNewestKey = newestKey;
                     window._lastNewestTs  = newestTs;
@@ -585,6 +581,27 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 const input = document.getElementById('messageInput');
                 const message = input.value.trim();
                 if (message && currentUsername) {
+
+                    // ── Mensajes @aura: solo locales, no suben a Firebase ──
+                    if (message.toLowerCase().includes('@aura')) {
+                        const container = document.getElementById('messagesContainer');
+                        addMessageToUI(currentUsername, message, Date.now(), true, '', currentUserIsAdmin, '');
+                        const msgDiv = container.lastElementChild;
+                        input.value = '';
+                        if (window._auraCheckMessage) window._auraCheckMessage(message, true);
+                        // Auto-borrar igual que los mensajes de Aura
+                        if (msgDiv) {
+                            setTimeout(() => {
+                                if (msgDiv.parentNode) {
+                                    msgDiv.style.transition = 'opacity 0.5s ease';
+                                    msgDiv.style.opacity = '0';
+                                    setTimeout(() => { if (msgDiv.parentNode) msgDiv.parentNode.removeChild(msgDiv); }, 500);
+                                }
+                            }, 3 * 60 * 1000);
+                        }
+                        return;
+                    }
+
                     await push(ref(database, 'messages'), {
                         username: currentUsername,
                         text: message,
