@@ -537,8 +537,16 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 let chatInitialized = false;
                 onValue(recentMessagesQuery, (snapshot) => {
                     const container = document.getElementById('messagesContainer');
-                    // Guardar mensajes locales de Aura antes de limpiar
+                    // Guardar mensajes locales de Aura y mensajes @aura del usuario antes de limpiar
                     const auraMsgs = Array.from(container.querySelectorAll('.aura-msg'));
+                    const auraUserMsgs = Array.from(container.querySelectorAll('.message')).filter(m => 
+                        !m.classList.contains('aura-msg') && m.querySelector('.message-text') && 
+                        m.querySelector('.message-text').textContent.toLowerCase().includes('@aura')
+                    );
+                    const localMsgs = [...auraMsgs, ...auraUserMsgs].sort((a, b) => {
+                        const allMsgs = Array.from(container.children);
+                        return allMsgs.indexOf(a) - allMsgs.indexOf(b);
+                    });
                     container.innerHTML = '';
                     const messages = [];
                     snapshot.forEach((childSnapshot) => { messages.push({ key: childSnapshot.key, ...childSnapshot.val() }); });
@@ -565,8 +573,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
                         const isAdminMsg = msg.isAdmin === true || (currentUserIsAdmin && msg.username === currentUsername);
                         addMessageToUI(msg.username, msg.text, msg.timestamp, msg.username === currentUsername, msg.borderColor || '', isAdminMsg, msg.key);
                     });
-                    // Reinsertar mensajes locales de Aura
-                    auraMsgs.forEach(m => container.appendChild(m));
+                    // Reinsertar mensajes locales de Aura y @aura del usuario
+                    localMsgs.forEach(m => container.appendChild(m));
                     container.scrollTop = container.scrollHeight;
                 });
             }
