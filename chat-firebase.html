@@ -1371,6 +1371,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
     window._auraCheckMessage = function(text, isOwn) {
         if (!isOwn) return;
+        // Solo responder si el mensaje menciona @aura
+        if (!text.toLowerCase().includes('@aura')) return;
         const now = Date.now();
         const lower = ' ' + text.toLowerCase() + ' ';
         const esClan = window._userEsClan === true;
