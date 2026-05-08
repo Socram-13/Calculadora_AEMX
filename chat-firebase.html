@@ -1619,12 +1619,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
               resp: 'Puede que tengas razón en algunos temas... pero sé exactamente cuántas parcelas tienes y cuánto te falta para el siguiente salto. 😌' },
             { keys: ['no sirves', 'para que sirves', 'para qué sirves'],
               resp: 'Mis respuestas son limitadas, es verdad. Pero las que tengo, las doy con todo 🤖💙' },
-            { keys: ['buenos dias', 'buenos días'],
-              resp: '¡Buenos días, <strong>' + nombre + '</strong>! ☀️ Que tengas un día lleno de parcelas y AB.' },
-            { keys: ['buenas tardes'],
-              resp: '¡Buenas tardes, <strong>' + nombre + '</strong>! 🌤️ ¿En qué puedo ayudarte hoy?' },
-            { keys: ['buenas noches'],
-              resp: '¡Buenas noches, <strong>' + nombre + '</strong>! 🌙 Descansa bien, mañana hay más parcelas que conquistar.' },
             { keys: ['gracias', 'muchas gracias', 'te lo agradezco'],
               resp: '¡Con gusto, <strong>' + nombre + '</strong>! Para eso estoy 💙' },
             { keys: ['adios', 'adiós', 'hasta luego', 'nos vemos', 'bye'],
@@ -1642,7 +1636,78 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
-        // ── Solo @aura sin nada más → saludo ──
+        // ── Saludos con corrección por hora real ──
+        const hora = new Date().getHours();
+        const esMañana = hora >= 6  && hora < 12;
+        const esTarde  = hora >= 12 && hora < 19;
+        const esNoche  = hora >= 19 || hora < 6;
+        const saludoReal = esMañana ? '¡Buenos días' : esTarde ? '¡Buenas tardes' : '¡Buenas noches';
+        const emojiReal  = esMañana ? '☀️' : esTarde ? '🌤️' : '🌙';
+
+        const esSaludoDias   = lower.includes('buenos dias') || lower.includes('buenos días');
+        const esSaludoTardes = lower.includes('buenas tardes');
+        const esSaludoNoches = lower.includes('buenas noches');
+
+        if (esSaludoDias || esSaludoTardes || esSaludoNoches) {
+            _auraLastReply = now;
+            const saludoCorrecto = (esSaludoDias && esMañana) || (esSaludoTardes && esTarde) || (esSaludoNoches && esNoche);
+            let msgSaludo;
+            if (saludoCorrecto) {
+                msgSaludo = saludoReal + ', <strong>' + nombre + '</strong>! ' + emojiReal + ' ¿En qué puedo ayudarte?';
+            } else {
+                const saludoEscrito = esSaludoDias ? 'buenos días' : esSaludoTardes ? 'buenas tardes' : 'buenas noches';
+                msgSaludo = saludoReal + ', <strong>' + nombre + '</strong>! ' + emojiReal + ' Aunque... son las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) + ', creo que quisiste decir <em>' + (esMañana ? 'buenos días' : esTarde ? 'buenas tardes' : 'buenas noches') + '</em> 😄';
+            }
+            setTimeout(() => { addAuraMessage(msgSaludo); }, 1500);
+            return;
+        }
+
+        // ── Qué hora es ──
+        if (lower.includes('que hora es') || lower.includes('qué hora es')) {
+            _auraLastReply = now;
+            const horaActual = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+            setTimeout(() => { addAuraMessage('Son las <strong>' + horaActual + '</strong> ' + emojiReal); }, 1500);
+            return;
+        }
+
+        // ── Motivame ──
+        if (lower.includes('motivame') || lower.includes('motívame') || lower.includes('motivacion') || lower.includes('motivación')) {
+            _auraLastReply = now;
+            const frases = [
+                '💪 Cada parcela que compras es un paso más hacia tu libertad financiera. ¡Sigue adelante, <strong>' + nombre + '</strong>!',
+                '🚀 Los grandes territorios se construyen de a una parcela. ¡No pares, <strong>' + nombre + '</strong>!',
+                '🌎 Recuerda: cada anuncio que ves, cada diamante que recoges, te acerca más a tu siguiente salto. ¡Tú puedes, <strong>' + nombre + '</strong>!',
+                '🏆 Los mejores Exploradores no nacieron siendo grandes, empezaron igual que tú. ¡Sigue construyendo, <strong>' + nombre + '</strong>!',
+                '💡 Un explorador inteligente no gasta sus AB en mejoras, los invierte en más parcelas. ¡Así se hace, <strong>' + nombre + '</strong>!',
+                '⚡ La constancia es tu mejor herramienta. ¡Un día a la vez, <strong>' + nombre + '</strong>!',
+            ];
+            const frase = frases[Math.floor(Math.random() * frases.length)];
+            setTimeout(() => { addAuraMessage(frase); }, 1500);
+            return;
+        }
+
+        // ── Ayuda / Comandos ──
+        if (lower.includes('ayuda') || lower.includes('comandos') || lower.includes('que puedes hacer') || lower.includes('qué puedes hacer')) {
+            _auraLastReply = now;
+            setTimeout(() => { addAuraMessage(
+                '🤖 <strong>Comandos disponibles:</strong><br><br>' +
+                '📊 <strong>Tu perfil:</strong><br>' +
+                '• @aura analiza mi perfil<br>' +
+                '• @aura cuantas parcelas tengo<br>' +
+                '• @aura cuantos ab tengo<br>' +
+                '• @aura cuantas insignias tengo<br>' +
+                '• @aura cual es mi % de renta<br>' +
+                '• @aura cuantas parcelas me faltan para el siguiente salto<br>' +
+                '• @aura me alcanzan los ab para el siguiente salto<br>' +
+                '• @aura cuantas insignias me faltan para el siguiente %<br><br>' +
+                '📚 <strong>Información general:</strong><br>' +
+                '• @aura [tema] — parcelas, insignias, minijuegos, coins, guías y más<br><br>' +
+                '🎲 <strong>Otros:</strong><br>' +
+                '• @aura motivame<br>' +
+                '• @aura que hora es'
+            ); }, 1500);
+            return;
+        }
         if (text.trim().toLowerCase() === '@aura') {
             _auraLastReply = now;
             setTimeout(() => { addAuraMessage('¡Hola Explorador! Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. Fui creada para administrar la información de la comunidad y ponerla al alcance de todos los Exploradores. Puedes preguntarme sobre parcelas, estrategias, minijuegos, coins, guías y mucho más. ¡Estoy a tus órdenes!'); }, 1500);
