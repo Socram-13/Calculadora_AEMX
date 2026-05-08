@@ -1570,28 +1570,58 @@ const userRef = ref(database, 'chat_presence/' + userId);
         const lower = ' ' + text.toLowerCase() + ' ';
         const esClan = window._userEsClan === true;
 
-        // ── Disparador de análisis de perfil (sin cooldown, es comando explícito) ──
-        if (lower.includes('analiza mi perfil') || lower.includes('mi progreso') || lower.includes('aura perfil') || lower.includes('aura progreso')) {
+        // ── Disparador de análisis de perfil ──
+        if (lower.includes('analiza mi perfil') || lower.includes('mi progreso') || lower.includes('aura perfil') || lower.includes('aura progreso') || lower.includes('analiza mi cuenta') || lower.includes('ver mi perfil')) {
             _auraLastReply = now;
             analizarPerfilAura();
             return;
         }
 
-        // ── Preguntas personalizadas con datos del usuario ──
+        // ── Preguntas personalizadas (ANTES del KB general) ──
         const preguntas = [
-            { keys: ['cuantas parcelas tengo en total', 'cuantas parcelas tengo'],       tipo: 'total' },
-            { keys: ['cuantas comunes tengo'],                                             tipo: 'comunes' },
-            { keys: ['cuantas raras tengo'],                                               tipo: 'raras' },
-            { keys: ['cuantas epicas tengo', 'cuántas épicas tengo'],                     tipo: 'epicas' },
-            { keys: ['cuantas legendarias tengo'],                                         tipo: 'legendarias' },
-            { keys: ['cuantas parcelas me faltan para el siguiente salto', 'faltan para el salto', 'faltan para el siguiente salto'], tipo: 'faltan_salto' },
-            { keys: ['cuantos ab tengo', 'cuántos ab tengo'],                             tipo: 'ab' },
-            { keys: ['cuantas parcelas puedo comprar'],                                   tipo: 'comprar_parcelas' },
-            { keys: ['me alcanzan los ab para el siguiente salto', 'alcanzan los ab'],    tipo: 'alcanzan_ab' },
-            { keys: ['cuantas insignias tengo'],                                           tipo: 'insignias' },
-            { keys: ['cual es mi % de renta', 'cual es mi porcentaje de renta', 'mi % de renta'], tipo: 'pct_renta' },
-            { keys: ['cuantas insignias me faltan para el siguiente %', 'insignias me faltan para el siguiente %', 'insignias me faltan para subir %'], tipo: 'faltan_pct' },
-            { keys: ['cuantos ab necesito para el siguiente %', 'ab necesito para el siguiente %', 'ab necesito para subir %'], tipo: 'ab_pct' },
+            { keys: ['cuantas parcelas tengo en total', 'cuantas parcelas tengo', 'cuantas parcelas llevo', 'mis parcelas'], tipo: 'total' },
+            { keys: ['cuantas comunes tengo', 'mis comunes', 'parcelas comunes tengo'], tipo: 'comunes' },
+            { keys: ['cuantas raras tengo', 'mis raras', 'parcelas raras tengo'], tipo: 'raras' },
+            { keys: ['cuantas epicas tengo', 'cuántas épicas tengo', 'mis epicas', 'mis épicas', 'parcelas epicas tengo'], tipo: 'epicas' },
+            { keys: ['cuantas legendarias tengo', 'mis legendarias', 'parcelas legendarias tengo'], tipo: 'legendarias' },
+            { keys: [
+                'cuantas parcelas me faltan para el siguiente salto',
+                'cuantas parcelas debo comprar para el siguiente salto',
+                'cuantas necesito para el siguiente salto',
+                'cuanto me falta para el siguiente salto',
+                'cuánto me falta para el siguiente salto',
+                'faltan para el salto',
+                'faltan para el siguiente salto',
+                'cuantas faltan para el salto',
+                'me falta para el salto',
+            ], tipo: 'faltan_salto' },
+            { keys: ['cuantos ab tengo', 'cuántos ab tengo', 'mis ab', 'cuanto ab tengo', 'cuánto ab tengo'], tipo: 'ab' },
+            { keys: ['cuantas parcelas puedo comprar', 'cuantas puedo comprar con mis ab', 'parcelas puedo comprar'], tipo: 'comprar_parcelas' },
+            { keys: [
+                'me alcanzan los ab para el siguiente salto',
+                'alcanzan los ab',
+                'me alcanzan para el salto',
+                'tengo suficientes ab para el salto',
+                'me alcanzan mis ab',
+            ], tipo: 'alcanzan_ab' },
+            { keys: ['cuantas insignias tengo', 'mis insignias', 'insignias tengo'], tipo: 'insignias' },
+            { keys: ['cual es mi % de renta', 'cuál es mi % de renta', 'cual es mi porcentaje de renta', 'mi % de renta', 'mi porcentaje de renta', 'mi bono de renta', 'que % tengo'], tipo: 'pct_renta' },
+            { keys: [
+                'cuantas insignias me faltan para el siguiente %',
+                'insignias me faltan para el siguiente %',
+                'insignias me faltan para subir %',
+                'cuantas insignias necesito para el siguiente %',
+                'cuantas insignias faltan para subir',
+                'insignias necesito para subir',
+            ], tipo: 'faltan_pct' },
+            { keys: [
+                'cuantos ab necesito para el siguiente %',
+                'ab necesito para el siguiente %',
+                'ab necesito para subir %',
+                'cuanto cuesta subir de %',
+                'cuanto me cuesta el siguiente %',
+                'cuanto ab necesito para las insignias',
+            ], tipo: 'ab_pct' },
         ];
         for (const p of preguntas) {
             if (p.keys.some(k => lower.includes(k))) {
