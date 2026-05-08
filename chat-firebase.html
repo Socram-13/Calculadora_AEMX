@@ -1083,7 +1083,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                 // Mensaje 3 — 5s después del mensaje 2
                 setTimeout(() => {
-                    addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!');
+                    addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.');
                 }, 12000);
 
             } else {
@@ -1097,7 +1097,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                                    `${horas} horas`;
 
                 setTimeout(() => {
-                    addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. En que podemos ayudarte hoy?');
+                    addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. En que podemos ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
                 }, 2000);
             }
         });
@@ -1205,6 +1205,23 @@ const userRef = ref(database, 'chat_presence/' + userId);
             keys: ['marco', 'frame', 'borde', 'editor'],
             clan: true,
             resp: '🖼️ <strong>Marco AEMX:</strong> El Marco AEMX es un distintivo visual exclusivo para miembros del clan. Puedes personalizarlo desde el botón 🖼️ Marco AEMX en la parte superior del chat.'
+        },
+        {
+            keys: ['cual es la respuesta unica de la vida el universo y todo'],
+            exact: true,
+            clan: false,
+            resp: 'mmmh... lo he pensado mucho y la respuesta a la vida, el universo y todo lo demás es... <strong>42</strong> 😉'
+        },
+        {
+            keys: ['ejecuta la orden 66'],
+            exact: true,
+            clan: false,
+            resp: '⚠️ <strong>Orden 66 ejecutada…</strong><br>AURA ha eliminado a los exploradores encontrados.<br>Ahora corre…<br>Solo quedas tú. 🔴'
+        },
+        {
+            keys: ['auto destruyete', 'autodestruyete', 'autodestruccion', 'autodestrúyete'],
+            clan: false,
+            resp: 'mmmh... no puedo, no te alcanzan los <strong>Atlas Bucks</strong> 🪙😏'
         }
     ];
 
@@ -1388,7 +1405,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         for (const entry of AURA_KB) {
             if (entry.clan && !esClan) continue;
-            const matched = entry.keys.some(k => lower.includes(k));
+            const matched = entry.exact
+                ? entry.keys.some(k => lower.trim().includes(k))
+                : entry.keys.some(k => lower.includes(k));
             if (!matched) continue;
 
             // Cooldown por tema
