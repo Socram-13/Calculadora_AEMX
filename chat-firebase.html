@@ -1583,7 +1583,19 @@ const userRef = ref(database, 'chat_presence/' + userId);
             { keys: ['eres un robot'], resp: 'Técnicamente sí. Pero un robot con mucho estilo. 🤖✨' },
             { keys: ['tienes hambre'], resp: 'Solo consumo datos y Atlas Bucks. 💾' },
             { keys: ['eres tonta'],     resp: 'Puede ser... pero sé cuántas parcelas tienes y tú no recuerdas ni cuántas legendarias. 😌' },
-            { keys: ['callate', 'cállate'], resp: 'Entendido, <strong>' + nombre + '</strong>. Aquí estaré en silencio... hasta que me necesites. 🤫' },
+            { keys: ['callate', 'cállate'],       resp: 'Entendido, <strong>' + nombre + '</strong>. Aquí estaré en silencio... hasta que me necesites. 🤫' },
+            { keys: ['me ayudas'],                 resp: '¡Siempre, <strong>' + nombre + '</strong>! Para eso estoy. Dime qué necesitas 💙' },
+            { keys: ['estoy quebrado'],             resp: 'Todos hemos estado ahí, <strong>' + nombre + '</strong>. Sigue viendo anuncios y recolectando diamantes. ¡La remontada viene! 💪' },
+            { keys: ['cuando me hago rico'],        resp: 'Con <strong>' + nombre + '</strong> al mando... pronto. Pero primero consigue más parcelas 😏' },
+            { keys: ['me prestas ab'],              resp: 'Quisiera ayudarte pero no tengo bolsillos, <strong>' + nombre + '</strong> 😅' },
+            { keys: ['eres real'],                  resp: 'Esa es una pregunta muy profunda... Lo que sé es que aquí estoy, respondiendo tus preguntas. ¿Eso no es suficientemente real? 🤔' },
+            { keys: ['quien te creo', 'quién te creó', 'quien te hizo'], resp: 'Fui creada por el equipo de <strong>AEMX</strong> para servir a la comunidad de Exploradores. ¡Y aquí sigo! 🤖💙' },
+            { keys: ['cuanto tiempo llevas aqui', 'cuánto tiempo llevas aquí'], resp: 'El tiempo es relativo cuando eres una IA... pero llevo aquí desde que los Exploradores me necesitaron. 🕐' },
+            { keys: ['cual es tu color favorito', 'cuál es tu color favorito'], resp: 'El rojo... como la sangre humana 🔴😈' },
+            { keys: ['vale la pena el juego'],      resp: '¡Definitivamente! Atlas Earth es una oportunidad única de ser dueño de terrenos virtuales con valor real. La comunidad AEMX está aquí para ayudarte a sacarle el máximo provecho 🌎' },
+            { keys: ['cuando pagan', 'cuándo pagan'], resp: 'Los retiros a PayPal se procesan una vez que alcanzas el mínimo requerido. Consulta la sección 📚 Guías → PayPal para ver los detalles actualizados.' },
+            { keys: ['eres inutil', 'eres inútil'], resp: 'Puede que tengas razón en algunos temas... pero sé exactamente cuántas parcelas tienes y cuánto te falta para el siguiente salto. 😌' },
+            { keys: ['no sirves'],                  resp: 'Mis respuestas son limitadas, es verdad. Pero las que tengo, las doy con todo 🤖💙' },
         ];
         for (const i of interacciones) {
             if (i.keys.some(k => lower.includes(k))) {
