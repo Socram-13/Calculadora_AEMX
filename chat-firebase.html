@@ -1563,51 +1563,73 @@ const userRef = ref(database, 'chat_presence/' + userId);
     }
 
     function ejecutarOrden66() {
+        const container = document.getElementById('messagesContainer');
+        if (!container) return;
+
+        // Crear un único mensaje de Aura
+        const div = document.createElement('div');
+        div.className = 'message aura-msg';
+        div.innerHTML = `
+            <div class="message-avatar">
+                <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+            </div>
+            <div class="message-content">
+                <div class="message-author">${AURA_NAME}</div>
+                <div class="message-bubble-wrap">
+                    <div class="message-text" id="orden66-text"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+
+        const textEl = div.querySelector('#orden66-text');
+        let contenido = '';
+
         const pasos = [
-            { texto: '⚙️ Ejecutando orden 66...', delay: 0,     checkDelay: 1500 },
-            { texto: '🔍 Localizando exploradores activos...', delay: 3000,  checkDelay: 1500 },
-            { texto: '📡 Rastreando ubicaciones...', delay: 6000,  checkDelay: 1500 },
-            { texto: '🔎 Verificando...', delay: 9000,  checkDelay: 1200 },
-            { texto: '💀 Eliminando exploradores localizados...', delay: 12000, checkDelay: 2000 },
-            { texto: '✅ Orden 66 completada al 99%...', delay: 16000, checkDelay: 2000 },
+            { texto: '⚙️ Ejecutando orden 66...', checkDelay: 1500 },
+            { texto: '🔍 Localizando exploradores activos...', checkDelay: 1500 },
+            { texto: '📡 Rastreando ubicaciones...', checkDelay: 1500 },
+            { texto: '🔎 Verificando...', checkDelay: 1200 },
+            { texto: '💀 Eliminando exploradores localizados...', checkDelay: 2000 },
+            { texto: '✅ Orden 66 completada al 99%...', checkDelay: 2000 },
         ];
 
+        let tiempoAcum = 500;
+
         for (const paso of pasos) {
+            const t = tiempoAcum;
+            // Mostrar línea con ...
             setTimeout(() => {
-                const container = document.getElementById('messagesContainer');
-                if (!container) return;
-                const div = document.createElement('div');
-                div.className = 'message aura-msg';
-                div.innerHTML = `
-                    <div class="message-avatar">
-                        <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
-                    </div>
-                    <div class="message-content">
-                        <div class="message-author">${AURA_NAME}</div>
-                        <div class="message-bubble-wrap">
-                            <div class="message-text">${paso.texto}</div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
+                contenido += (contenido ? '<br>' : '') + paso.texto;
+                textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
-                // Agregar palomita después del delay
-                setTimeout(() => {
-                    const textEl = div.querySelector('.message-text');
-                    if (textEl) textEl.innerHTML = paso.texto + ' ✅';
-                    container.scrollTop = container.scrollHeight;
-                }, paso.checkDelay);
-            }, paso.delay);
+            }, t);
+
+            // Agregar palomita
+            const tCheck = t + paso.checkDelay;
+            setTimeout(() => {
+                contenido = contenido.replace(paso.texto, paso.texto + ' ✅');
+                textEl.innerHTML = contenido;
+                container.scrollTop = container.scrollHeight;
+            }, tCheck);
+
+            tiempoAcum = tCheck + 1000;
         }
 
-        // Últimas 2 frases sin palomita y con más drama
+        // Ahora corre
         setTimeout(() => {
-            addAuraMessage('⚠️ <strong>Ahora corre!...</strong>');
-        }, 21000);
+            contenido += '<br><br>⚠️ <strong>Ahora corre!...</strong>';
+            textEl.innerHTML = contenido;
+            container.scrollTop = container.scrollHeight;
+        }, tiempoAcum + 1500);
 
+        // Solo quedas tú
         setTimeout(() => {
-            addAuraMessage('🔴 <strong>Solo quedas tú...</strong>');
-        }, 26000);
+            contenido += '<br>🔴 <strong>Solo quedas tú... ya te localicé 👁️</strong>';
+            textEl.innerHTML = contenido;
+            container.scrollTop = container.scrollHeight;
+        }, tiempoAcum + 6000);
     }
 
     window._auraCheckMessage = function(text, isOwn) {
