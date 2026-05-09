@@ -1642,6 +1642,15 @@ const userRef = ref(database, 'chat_presence/' + userId);
             textEl.innerHTML = contenido;
             container.scrollTop = container.scrollHeight;
         }, tiempoAcum + 6000);
+
+        // Timer de borrado igual que addAuraMessage
+        setTimeout(() => {
+            if (div.parentNode) {
+                div.style.transition = 'opacity 0.5s ease';
+                div.style.opacity = '0';
+                setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 500);
+            }
+        }, 3 * 60 * 1000);
     }
 
     window._auraCheckMessage = function(text, isOwn) {
