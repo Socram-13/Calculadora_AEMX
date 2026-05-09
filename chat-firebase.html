@@ -1251,6 +1251,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
             keys: ['auto destruyete', 'autodestruyete', 'autodestruccion', 'autodestrúyete'],
             clan: false,
             resp: 'mmmh... no puedo, no te alcanzan los <strong>Atlas Bucks</strong> 🪙😏'
+        },
+        {
+            keys: ['umbral', 'que es el umbral', 'qué es el umbral', 'que significa umbral'],
+            clan: false,
+            resp: '🎯 <strong>Umbral</strong> es el punto en que superas las <strong>455 parcelas</strong>, el último salto en México.<br><br>' +
+                  '• <strong>En umbral</strong> → estás en 455 o acabas de superarlo<br>' +
+                  '• <strong>Sobre umbral</strong> → ya pasaste 455 y estás en <strong>zona libre</strong>, donde cada parcela que compras solo suma sin afectar tu renta<br><br>' +
+                  '¡Llegar al umbral es el objetivo principal de todo Explorador AEMX! 🚀'
         }
     ];
 
@@ -1558,6 +1566,18 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 msg = '🏅 Te faltan <strong>' + faltan + ' insignias</strong> para pasar de <strong>+' + tramoActual.bono + '%</strong> a <strong>+' + tramoSig.bono + '%</strong> de renta.';
             }
 
+        } else if (tipo === 'faltan_umbral') {
+            if (total >= 455) {
+                msg = '🎉 ¡Ya estás <strong>sobre el umbral</strong>, <strong>' + total + ' parcelas</strong>! Estás en zona libre, cada parcela que compres solo suma. ¡Felicidades! 🚀';
+            } else {
+                const faltanUmbral = 455 - total;
+                const abNecesarios = faltanUmbral * 100;
+                const tieneAB = ab >= abNecesarios;
+                msg = '🎯 Te faltan <strong>' + faltanUmbral + ' parcelas</strong> para llegar al umbral (455).<br>' +
+                      'Necesitas <strong>' + abNecesarios.toLocaleString() + ' AB</strong> para comprarlas.' +
+                      (tieneAB ? '<br><br>✅ ¡Ya tienes suficientes AB para lograrlo! Es momento de comprar 🚀' : '<br><br>💰 Actualmente tienes <strong>' + ab.toLocaleString() + ' AB</strong>, te faltan <strong>' + (abNecesarios - ab).toLocaleString() + ' AB</strong> para completarlo.');
+            }
+
         } else if (tipo === 'ab_pct') {
             const tramoActual = BONOS.find(t => badges >= t.min && badges <= t.max) || BONOS[0];
             const idxActual = BONOS.indexOf(tramoActual);
@@ -1675,6 +1695,19 @@ const userRef = ref(database, 'chat_presence/' + userId);
             { keys: ['cuantas raras tengo', 'mis raras', 'parcelas raras tengo'], tipo: 'raras' },
             { keys: ['cuantas epicas tengo', 'cuántas épicas tengo', 'mis epicas', 'mis épicas', 'parcelas epicas tengo'], tipo: 'epicas' },
             { keys: ['cuantas legendarias tengo', 'mis legendarias', 'parcelas legendarias tengo'], tipo: 'legendarias' },
+            { keys: [
+                'cuanto falta para el umbral',
+                'cuánto falta para el umbral',
+                'cuanto me falta para el umbral',
+                'cuánto me falta para el umbral',
+                'cuantas parcelas me faltan para el umbral',
+                'cuántas parcelas me faltan para el umbral',
+                'cuantas necesito para el umbral',
+                'cuando llego al umbral',
+                'como llego al umbral',
+                'cómo llego al umbral',
+                'falta para el umbral',
+            ], tipo: 'faltan_umbral' },
             { keys: [
                 'cuantas parcelas me faltan para el siguiente salto',
                 'cuantas parcelas debo comprar para el siguiente salto',
