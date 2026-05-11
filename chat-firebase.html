@@ -950,25 +950,33 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
     function hablarAura(texto) {
         if (!window.speechSynthesis) return;
-        // Limpiar HTML tags para solo leer el texto
         const div = document.createElement('div');
         div.innerHTML = texto;
         const textoLimpio = div.textContent || div.innerText || '';
         if (!textoLimpio.trim()) return;
 
-        const utterance = new SpeechSynthesisUtterance(textoLimpio);
-        utterance.rate  = 1.2;
-        utterance.pitch = 1.1;
-        utterance.volume = 1.0;
+        function speak(voces) {
+            const utterance = new SpeechSynthesisUtterance(textoLimpio);
+            utterance.rate  = 1.2;
+            utterance.pitch = 1.1;
+            utterance.volume = 1.0;
+            const google2 = voces.find(v => v.name === 'Google español 2 (Natural)');
+            const sabina  = voces.find(v => v.name.includes('Sabina'));
+            const natural = voces.find(v => v.name.includes('Natural') && v.lang.startsWith('es'));
+            utterance.voice = google2 || sabina || natural || voces.find(v => v.lang.startsWith('es')) || null;
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(utterance);
+        }
 
         const voces = window.speechSynthesis.getVoices();
-        const google2  = voces.find(v => v.name === 'Google español 2 (Natural)');
-        const sabina   = voces.find(v => v.name.includes('Sabina'));
-        const natural  = voces.find(v => v.name.includes('Natural') && v.lang.startsWith('es'));
-        utterance.voice = google2 || sabina || natural || voces.find(v => v.lang.startsWith('es')) || null;
-
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(utterance);
+        if (voces.length > 0) {
+            speak(voces);
+        } else {
+            window.speechSynthesis.addEventListener('voiceschanged', function handler() {
+                window.speechSynthesis.removeEventListener('voiceschanged', handler);
+                speak(window.speechSynthesis.getVoices());
+            });
+        }
     }
 
     function addAuraMessage(text) {
