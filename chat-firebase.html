@@ -1730,6 +1730,28 @@ const userRef = ref(database, 'chat_presence/' + userId);
     }
 
     function contarHistoriaAEMX() {
+        const container = document.getElementById('messagesContainer');
+        if (!container) return;
+
+        const div = document.createElement('div');
+        div.className = 'message aura-msg';
+        div.innerHTML = `
+            <div class="message-avatar">
+                <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+            </div>
+            <div class="message-content">
+                <div class="message-author">${AURA_NAME}</div>
+                <div class="message-bubble-wrap">
+                    <div class="message-text" id="historia-aemx-text"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+
+        const textEl = div.querySelector('#historia-aemx-text');
+        let contenido = '';
+
         const parrafos = [
             { texto: '📖 <em>Al principio... no había nada.</em>', delay: 500 },
             { texto: 'Solo un grupo de exploradores en México, cada uno por su cuenta, descubriendo Atlas Earth sin guía, sin estrategia, sin comunidad.', delay: 4000 },
@@ -1742,12 +1764,47 @@ const userRef = ref(database, 'chat_presence/' + userId);
             { texto: '<em>Y eso... no se rompe.</em>', delay: 42000 },
             { texto: 'Hoy AEMX sigue de pie. Con unidad. Con juego limpio. Con las puertas abiertas para todos los que quieran explorar. 💙', delay: 46000 },
         ];
+
         parrafos.forEach(p => {
-            setTimeout(() => { addAuraMessage(p.texto); }, p.delay);
+            setTimeout(() => {
+                contenido += (contenido ? '<br><br>' : '') + p.texto;
+                textEl.innerHTML = contenido;
+                container.scrollTop = container.scrollHeight;
+            }, p.delay);
         });
+
+        setTimeout(() => {
+            if (div.parentNode) {
+                div.style.transition = 'opacity 0.5s ease';
+                div.style.opacity = '0';
+                setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 500);
+            }
+        }, 3 * 60 * 1000);
     }
 
     function contarHistoriaARM() {
+        const container = document.getElementById('messagesContainer');
+        if (!container) return;
+
+        const div = document.createElement('div');
+        div.className = 'message aura-msg';
+        div.innerHTML = `
+            <div class="message-avatar">
+                <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+            </div>
+            <div class="message-content">
+                <div class="message-author">${AURA_NAME}</div>
+                <div class="message-bubble-wrap">
+                    <div class="message-text" id="historia-arm-text"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+
+        const textEl = div.querySelector('#historia-arm-text');
+        let contenido = '';
+
         const parrafos = [
             { texto: '📖 <em>Al principio... se fundó <strong>AEMX</strong>.</em>', delay: 500 },
             { texto: 'Una comunidad construida desde cero, con esfuerzo, estrategia y espíritu de equipo. Un espacio donde cada explorador tenía lugar.', delay: 4000 },
@@ -1758,9 +1815,22 @@ const userRef = ref(database, 'chat_presence/' + userId);
             { texto: '<em>Y AEMX... simplemente siguió su camino.</em>', delay: 30000 },
             { texto: 'Con unidad. Con juego limpio. Con las puertas abiertas para todos. 💙', delay: 34500 },
         ];
+
         parrafos.forEach(p => {
-            setTimeout(() => { addAuraMessage(p.texto); }, p.delay);
+            setTimeout(() => {
+                contenido += (contenido ? '<br><br>' : '') + p.texto;
+                textEl.innerHTML = contenido;
+                container.scrollTop = container.scrollHeight;
+            }, p.delay);
         });
+
+        setTimeout(() => {
+            if (div.parentNode) {
+                div.style.transition = 'opacity 0.5s ease';
+                div.style.opacity = '0';
+                setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 500);
+            }
+        }, 3 * 60 * 1000);
     }
 
     function ejecutarOrden66() {
