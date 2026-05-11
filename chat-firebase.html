@@ -1237,7 +1237,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '🏚️ <strong>Diversificar Parcelas:</strong> No concentres todas tus parcelas en una sola zona. Distribuirlas en distintas áreas te protege contra competidores que quieran quitarte el dominio de una zona, y aumenta tus probabilidades de tener parcelas raras en distintos puntos del mapa. ¡Una cartera diversificada es más resistente y rentable a largo plazo! Consulta la Guía 10 en la sección 📚 Guías.'
         },
         {
-            keys: ['primeros pasos', 'empezar', 'comenzar', 'inicio', 'nuevo', 'instalar', 'gps', 'configurar', 'cuenta'],
+            keys: ['primeros pasos', 'empezar', 'comenzar', 'inicio', 'nuevo', 'instalar', 'gps', 'configurar', ' cuenta '],
             clan: false,
             resp: '🚀 <strong>Primeros Pasos:</strong> Para comenzar en Atlas Earth: activa tu <strong>GPS</strong> para ver el mapa de tu entorno, completa el tutorial básico, <strong>verifica tu cuenta</strong> para no perder tu progreso y asegúrate de tener conexión estable. Para tu primer terreno, selecciona una ubicación cercana y cómprala con los Atlas Bucks iniciales que recibes al registrarte. Consulta la Guía 01 en la sección 📚 Guías para más detalles.'
         },
@@ -1377,9 +1377,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: 'mmmh... no puedo, no te alcanzan los <strong>Atlas Bucks</strong> 🪙😏'
         },
         {
-            keys: ['que es aemx', 'aemx es', 'que es la comunidad', 'sobre aemx', 'info aemx'],
+            keys: ['que es aemx', 'aemx es', 'que es la comunidad', 'sobre aemx', 'info aemx', 'cuentame la historia de aemx', 'historia de aemx'],
             clan: false,
-            resp: '💙 <strong>AEMX</strong> es una comunidad libre de exploradores de Atlas Earth en México. No es un clan cerrado ni una élite — es un espacio abierto para todos los jugadores que quieran crecer, aprender y compartir estrategias juntos. Construida desde cero con valores de unidad, juego limpio y colaboración. Si estás aquí, ya eres parte de ella. 🌎'
+            resp: '__HISTORIA_AEMX__'
         },
         {
             keys: ['cuentame la historia de arm', 'historia de arm', 'que es arm', 'quienes son arm'],
@@ -1727,6 +1727,24 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
 
         setTimeout(() => { addAuraMessage(msg); }, 1500);
+    }
+
+    function contarHistoriaAEMX() {
+        const parrafos = [
+            { texto: '📖 <em>Al principio... no había nada.</em>', delay: 500 },
+            { texto: 'Solo un grupo de exploradores en México, cada uno por su cuenta, descubriendo Atlas Earth sin guía, sin estrategia, sin comunidad.', delay: 4000 },
+            { texto: '<em>Entonces alguien decidió que eso tenía que cambiar.</em>', delay: 9000 },
+            { texto: 'Así nació <strong>AEMX</strong>. No como un clan de élite, no como una organización cerrada — sino como un espacio abierto. Un lugar donde cualquier explorador, sin importar cuántas parcelas tuviera, podía encontrar respuestas, estrategias y compañía.', delay: 13000 },
+            { texto: '<em>Creció sin pedir permiso.</em>', delay: 21000 },
+            { texto: 'Con guías, torneos, herramientas y una comunidad que se ayudaba mutuamente. Cada descubrimiento se compartía. Cada logro se celebraba junto.', delay: 25000 },
+            { texto: '<em>No todo fue fácil.</em>', delay: 31000 },
+            { texto: 'Hubo traiciones, fracturas y quienes intentaron destruir lo que se había construido. Pero AEMX no se construyó sobre el ego de uno solo — se construyó sobre el esfuerzo de todos.', delay: 35000 },
+            { texto: '<em>Y eso... no se rompe.</em>', delay: 42000 },
+            { texto: 'Hoy AEMX sigue de pie. Con unidad. Con juego limpio. Con las puertas abiertas para todos los que quieran explorar. 💙', delay: 46000 },
+        ];
+        parrafos.forEach(p => {
+            setTimeout(() => { addAuraMessage(p.texto); }, p.delay);
+        });
     }
 
     function contarHistoriaARM() {
@@ -2203,6 +2221,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 ejecutarOrden66();
             } else if (entry.resp === '__HISTORIA_ARM__') {
                 contarHistoriaARM();
+            } else if (entry.resp === '__HISTORIA_AEMX__') {
+                contarHistoriaAEMX();
             } else {
                 setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
             }
