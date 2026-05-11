@@ -950,6 +950,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
     function hablarAura(texto) {
         if (!window.speechSynthesis) return;
+        // Respetar el estado de silencio
+        try { if (localStorage.getItem('chat-muted') === 'true') return; } catch(e) {}
         const div = document.createElement('div');
         div.innerHTML = texto;
         const textoLimpio = (div.textContent || div.innerText || '')
