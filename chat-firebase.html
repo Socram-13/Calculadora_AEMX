@@ -955,16 +955,15 @@ const userRef = ref(database, 'chat_presence/' + userId);
         const div = document.createElement('div');
         div.innerHTML = texto;
         const textoLimpio = (div.textContent || div.innerText || '')
-            .replace(/[🟢🔵🟣🟡🏅💰📈💡]/g, ', ')
-            .replace(/[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27FF}|\u{2300}-\u{23FF}|\u{FE00}-\u{FEFF}|\u{1F900}-\u{1F9FF}|\u{1FA00}-\u{1FA9F}]/gu, '')
-            .replace(/[⚠️✅❌📊🗺️🎯🚀🔴👁️⚙️🔍📡🔎💀]/g, ', ')
+            .replace(/[🟢🔵🟣🟡🏅💰📈💡⚠️✅❌📊🗺️🎯🚀🔴👁️⚙️🔍📡🔎💀🤖💙💎📋🏆🎉🕐😄😉😊😏😅😂🌎📅🗓️🎲⚡🌙☀️🌤️🤫🤔💾👁🔔🔕]/gu, ', ')
+            .replace(/\p{Emoji_Presentation}/gu, '')
             .replace(/\+(\d+)%/g, 'más $1 por ciento')
             .replace(/(\d+)\s*%/g, '$1 por ciento')
             .replace(/\+(\d+)/g, 'más $1')
             .replace(/━+/g, ',')
             .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks|AB)/gi, '$1 $2,')
             .replace(/\n/g, ', ')
-            .replace(/,\s*,/g, ',')
+            .replace(/,\s*,+/g, ',')
             .trim();
         if (!textoLimpio.trim()) return;
 
