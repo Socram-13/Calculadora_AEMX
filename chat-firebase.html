@@ -1385,14 +1385,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             keys: ['cuentame la historia de arm', 'historia de arm', 'que es arm', 'quienes son arm'],
             exact: true,
             clan: false,
-            resp: '📖 <em>Al principio... se fundó <strong>AEMX</strong>.</em><br><br>' +
-                  'Una comunidad construida desde cero, con esfuerzo, estrategia y espíritu de equipo. Un espacio donde cada explorador tenía lugar.<br><br>' +
-                  '<em>Pero no todos siguieron el mismo camino.</em><br><br>' +
-                  'Con el tiempo, una parte decidió separarse y forjar su propio destino — así nació <strong>ARM</strong>. Construyeron su reputación aprovechando fallos del juego y repartiéndose victorias entre su círculo interno, presumiendo logros como si fueran fruto de habilidad real.<br><br>' +
-                  '<em>Entonces el juego cambió.</em><br><br>' +
-                  'Los minijuegos evolucionaron y ya no pudieron controlarlo. Su nivel real quedó expuesto ante todos. Sin poder ganar jugando... optaron por presionar. Por amedrentar.<br><br>' +
-                  '<em>Y AEMX... simplemente siguió su camino.</em><br><br>' +
-                  'Con unidad. Con juego limpio. Con las puertas abiertas para todos. 💙'
+            resp: '__HISTORIA_ARM__'
         },
         {
             keys: ['umbral', 'que es el umbral', 'qué es el umbral', 'que significa umbral'],
@@ -1734,6 +1727,22 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
 
         setTimeout(() => { addAuraMessage(msg); }, 1500);
+    }
+
+    function contarHistoriaARM() {
+        const parrafos = [
+            { texto: '📖 <em>Al principio... se fundó <strong>AEMX</strong>.</em>', delay: 500 },
+            { texto: 'Una comunidad construida desde cero, con esfuerzo, estrategia y espíritu de equipo. Un espacio donde cada explorador tenía lugar.', delay: 4000 },
+            { texto: '<em>Pero no todos siguieron el mismo camino.</em>', delay: 8500 },
+            { texto: 'Con el tiempo, una parte decidió separarse y forjar su propio destino — así nació <strong>ARM</strong>. Construyeron su reputación aprovechando fallos del juego y repartiéndose victorias entre su círculo interno, presumiendo logros como si fueran fruto de habilidad real.', delay: 12500 },
+            { texto: '<em>Entonces el juego cambió.</em>', delay: 19000 },
+            { texto: 'Los minijuegos evolucionaron y ya no pudieron controlarlo. Su nivel real quedó expuesto ante todos. Sin poder ganar jugando... optaron por presionar. Por amedrentar.', delay: 23000 },
+            { texto: '<em>Y AEMX... simplemente siguió su camino.</em>', delay: 30000 },
+            { texto: 'Con unidad. Con juego limpio. Con las puertas abiertas para todos. 💙', delay: 34500 },
+        ];
+        parrafos.forEach(p => {
+            setTimeout(() => { addAuraMessage(p.texto); }, p.delay);
+        });
     }
 
     function ejecutarOrden66() {
@@ -2192,6 +2201,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             if (entry.resp === '__ORDEN66__') {
                 ejecutarOrden66();
+            } else if (entry.resp === '__HISTORIA_ARM__') {
+                contarHistoriaARM();
             } else {
                 setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
             }
