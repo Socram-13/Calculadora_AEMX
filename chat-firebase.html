@@ -954,7 +954,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         try { if (localStorage.getItem('chat-muted') === 'true') return; } catch(e) {}
         const div = document.createElement('div');
         div.innerHTML = texto;
-        const nombreUsuario = (window._currentUsername || '').trim();
+        const nombreUsuario = (window._currentUsername || (() => { try { return localStorage.getItem('atlas-username') || ''; } catch(e) { return ''; } })()).trim();
         const placeholder = '___NOMBRE___';
         let textoBase = div.textContent || div.innerText || '';
 
