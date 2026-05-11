@@ -1735,6 +1735,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         const div = document.createElement('div');
         div.className = 'message aura-msg';
+        div.dataset.historiaId = 'aemx-' + Date.now();
         div.innerHTML = `
             <div class="message-avatar">
                 <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
@@ -1742,14 +1743,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
             <div class="message-content">
                 <div class="message-author">${AURA_NAME}</div>
                 <div class="message-bubble-wrap">
-                    <div class="message-text" id="historia-aemx-text"></div>
+                    <div class="message-text"></div>
                 </div>
             </div>
         `;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
 
-        const textEl = div.querySelector('#historia-aemx-text');
+        const textEl = div.querySelector('.message-text');
         let contenido = '';
 
         const parrafos = [
@@ -1767,6 +1768,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         parrafos.forEach(p => {
             setTimeout(() => {
+                if (!div.parentNode) return;
                 contenido += (contenido ? '<br><br>' : '') + p.texto;
                 textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
@@ -1788,6 +1790,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         const div = document.createElement('div');
         div.className = 'message aura-msg';
+        div.dataset.historiaId = 'arm-' + Date.now();
         div.innerHTML = `
             <div class="message-avatar">
                 <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
@@ -1795,14 +1798,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
             <div class="message-content">
                 <div class="message-author">${AURA_NAME}</div>
                 <div class="message-bubble-wrap">
-                    <div class="message-text" id="historia-arm-text"></div>
+                    <div class="message-text"></div>
                 </div>
             </div>
         `;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
 
-        const textEl = div.querySelector('#historia-arm-text');
+        const textEl = div.querySelector('.message-text');
         let contenido = '';
 
         const parrafos = [
@@ -1818,6 +1821,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         parrafos.forEach(p => {
             setTimeout(() => {
+                if (!div.parentNode) return;
                 contenido += (contenido ? '<br><br>' : '') + p.texto;
                 textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
