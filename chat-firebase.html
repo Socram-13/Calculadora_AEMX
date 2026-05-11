@@ -1772,6 +1772,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 contenido += (contenido ? '<br><br>' : '') + p.texto;
                 textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
+                const textoPlano = p.texto.replace(/<[^>]*>/g, '');
+                hablarAura(textoPlano);
             }, p.delay);
         });
 
@@ -1825,6 +1827,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 contenido += (contenido ? '<br><br>' : '') + p.texto;
                 textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
+                const textoPlano = p.texto.replace(/<[^>]*>/g, '');
+                hablarAura(textoPlano);
             }, p.delay);
         });
 
