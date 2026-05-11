@@ -1277,7 +1277,53 @@ const userRef = ref(database, 'chat_presence/' + userId);
         {
             keys: ['ec ', ' ec', 'club explorador', 'explorer club', 'pase', 'season pass', 'sp ', ' sp', 'temporada'],
             clan: false,
-            resp: '🎫 <strong>Suscripciones EC y SP:</strong> El Club de Explorador (EC) y el Pase de Temporada (SP) son suscripciones premium que otorgan beneficios exclusivos como bonos de renta, acceso a eventos especiales y más. Consulta la sección 📚 Guías para ver cuál conviene más según tu estilo de juego.'
+            resp: '🎫 <strong>Explorer Club (EC):</strong> Es una suscripción de Atlas Earth que te da Atlas Bucks diarios al loguearte. El secreto está en mantener la racha diaria — si fallas un día, ¡reinicia al día 1!<br><br>' +
+                  '📅 <strong>Ciclo completo de 90 días:</strong><br>' +
+                  '🆓 Gratis: <strong>369 AB</strong> (≈ 3 parcelas)<br>' +
+                  '⭐ Premium + Gratis: <strong>10,874 AB</strong> (≈ 108 parcelas)<br>' +
+                  '💰 Costo Premium: <strong>$49.99 USD/mes</strong> ($149.97 en 3 meses)<br><br>' +
+                  '🏆 Días clave con mayores recompensas: <strong>7, 14, 30, 60 y 90</strong>. Consulta la sección 📚 Guías para más detalles.'
+        },
+        {
+            keys: ['cuanto genera el ec gratis', 'ec gratis cuanto', 'genera ec gratis', 'ab gratis ec', 'ec sin premium'],
+            clan: false,
+            resp: '🆓 <strong>EC Gratis (90 días):</strong> Si no fallas ningún día de la racha, acumulas <strong>369 AB</strong>, equivalente a aproximadamente <strong>3 parcelas</strong>.<br><br>⚠️ Recuerda: si fallas un solo día, la racha se reinicia al día 1.'
+        },
+        {
+            keys: ['cuanto genera el ec premium', 'ec premium cuanto', 'genera ec premium', 'ab premium ec', 'ec con premium'],
+            clan: false,
+            resp: '⭐ <strong>EC Premium (90 días):</strong> Con la suscripción premium recibes el premio premium <strong>más</strong> el premio gratis cada día.<br><br>' +
+                  '🆓 Gratis: 369 AB<br>' +
+                  '⭐ Premium: 10,505 AB<br>' +
+                  '📊 <strong>Total: 10,874 AB</strong> (≈ <strong>108 parcelas</strong>)<br>' +
+                  '💰 Inversión: <strong>$149.97 USD</strong> en 3 meses<br><br>' +
+                  '⚠️ Si fallas un día, la racha reinicia al día 1 y pierdes los bonos acumulados.'
+        },
+        {
+            keys: ['vale la pena el ec', 'conviene el ec', 'debo comprar el ec', 'compro el ec'],
+            clan: false,
+            resp: '💡 <strong>¿Vale la pena el EC?</strong><br><br>Depende de tu compromiso con la racha diaria. Si puedes loguearte todos los días sin falta, el premium te da <strong>10,874 AB</strong> en 90 días (≈108 parcelas) por $149.97 USD. Si crees que puedes fallar algún día, el gratis sigue siendo útil con 369 AB. ¡La constancia es la clave! 🔑'
+        },
+        {
+            keys: ['cuanto cuesta el ec', 'precio del ec', 'costo del ec', 'cuanto es el ec'],
+            clan: false,
+            resp: '💰 El <strong>Explorer Club (EC)</strong> tiene un costo de <strong>$49.99 USD al mes</strong>. En un ciclo completo de 90 días (3 meses) la inversión total es de <strong>$149.97 USD</strong>.'
+        },
+        {
+            keys: ['dias importantes del ec', 'dias clave ec', 'mejores dias ec', 'cuando son los bonos del ec'],
+            clan: false,
+            resp: '🏆 <strong>Días clave del EC (recompensas premium):</strong><br><br>' +
+                  '📅 Día 7 → <strong>180 AB</strong><br>' +
+                  '📅 Día 14 → <strong>325 AB</strong><br>' +
+                  '📅 Día 30 → <strong>500 AB</strong><br>' +
+                  '📅 Día 60 → <strong>650 AB</strong><br>' +
+                  '📅 Día 90 → <strong>1,200 AB</strong><br><br>' +
+                  '⚠️ Si fallas antes de llegar a estos días, la racha reinicia al día 1 y pierdes el bono.'
+        },
+        {
+            keys: ['que pasa si fallo el ec', 'falle el ec', 'perde la racha ec', 'perdí la racha ec', 'se reinicia el ec', 'rompi la racha'],
+            clan: false,
+            resp: '😬 Si fallas un día en el EC, la racha se <strong>reinicia al día 1</strong>. Pierdes todo el progreso acumulado y debes comenzar el ciclo de 90 días desde cero. ¡La constancia es todo en el EC! 💪'
         },
         {
             keys: ['salto', 'caida', 'caída', 'tope', 'tabla de salto'],
