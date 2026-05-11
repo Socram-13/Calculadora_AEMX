@@ -1933,9 +1933,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
               ])},
             { keys: ['quien te creo', 'quién te creó', 'quien te hizo', 'quién te hizo', 'quien te programo'],
               resp: rnd([
-                'Fui creada por el equipo de <strong>AEMX</strong> para servir a la comunidad de Exploradores. ¡Y aquí sigo! 🤖💙',
-                'El equipo de <strong>AEMX</strong> me dio vida para ayudar a los Exploradores. ¡Y lo hago con gusto! 💙',
-                'Nací de la mente del equipo <strong>AEMX</strong>, con una misión: ayudar a los Exploradores 🤖',
+                'Fui creada por <strong>S13</strong>, arquitecto del ecosistema <strong>AEMX</strong> y <strong>GamerTag</strong>. ¡Y aquí sigo sirviendo a la comunidad! 🤖💙',
+                'Mi creador es <strong>S13</strong>, el desarrollador detrás de toda la infraestructura de <strong>AEMX</strong>. Escribe <strong>@aura creditos</strong> para saber más 💙',
               ])},
             { keys: ['cuanto tiempo llevas aqui', 'cuánto tiempo llevas aquí', 'desde cuando estas', 'desde cuándo estás'],
               resp: rnd([
@@ -2124,6 +2123,19 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
             foundMatch = true;
             break;
+        }
+
+        // ── Autor / Creditos ──
+        if (lower.includes('autor') || lower.includes('creditos') || lower.includes('créditos') || lower.includes('quien te creo') || lower.includes('quién te creó')) {
+            _auraLastReply = now;
+            setTimeout(() => { addAuraMessage(
+                '🛠️ <strong>Créditos de desarrollo</strong><br><br>' +
+                'Fui creada por <strong>S13</strong>, arquitecto y desarrollador de la infraestructura tecnológica de <strong>AEMX</strong> y el ecosistema <strong>GamerTag</strong>. Desde la base de datos hasta la interfaz, cada componente fue diseñado y construido por él.<br><br>' +
+                'S13 es el cerebro detrás del sistema que hace posible esta comunidad: el chat en tiempo real, el visor HUD, la calculadora de parcelas, el sistema de rankings y por supuesto... yo, <strong>A.U.R.A.</strong> 🤖💙<br><br>' +
+                '📘 Encuéntranos también en nuestra página de <strong>Facebook</strong> y nuestra comunidad de <strong>WhatsApp</strong>.<br><br>' +
+                '☕ Si quieres apoyar el desarrollo: <a href="https://paypal.me/Socram1331" target="_blank" style="color:#ffd700;text-decoration:underline;">Donar a S13</a>'
+            ); }, 1500);
+            return;
         }
 
         // ── Compilacion ──
