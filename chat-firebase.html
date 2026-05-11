@@ -954,16 +954,27 @@ const userRef = ref(database, 'chat_presence/' + userId);
         try { if (localStorage.getItem('chat-muted') === 'true') return; } catch(e) {}
         const div = document.createElement('div');
         div.innerHTML = texto;
-        const textoLimpio = (div.textContent || div.innerText || '')
+        const nombreUsuario = (window._currentUsername || '').trim();
+        const placeholder = '___NOMBRE___';
+        let textoBase = div.textContent || div.innerText || '';
+
+        // Proteger el nombre de usuario antes de limpiar
+        if (nombreUsuario) {
+            textoBase = textoBase.replace(new RegExp(nombreUsuario, 'gi'), placeholder);
+        }
+
+        const textoLimpio = textoBase
             .replace(/[🟢🔵🟣🟡🏅💰📈💡⚠️✅❌📊🗺️🎯🚀🔴👁️⚙️🔍📡🔎💀🤖💙💎📋🏆🎉🕐😄😉😊😏😅😂🌎📅🗓️🎲⚡🌙☀️🌤️🤫🤔💾👁🔔🔕]/gu, ', ')
             .replace(/\p{Emoji_Presentation}/gu, '')
             .replace(/\+(\d+)%/g, 'más $1 por ciento')
             .replace(/(\d+)\s*%/g, '$1 por ciento')
             .replace(/\+(\d+)/g, 'más $1')
+            .replace(/\bAB\b/g, 'Atlas Bucks')
             .replace(/━+/g, ',')
-            .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks|AB)/gi, '$1 $2,')
+            .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks)/gi, '$1 $2,')
             .replace(/\n/g, ', ')
             .replace(/,\s*,+/g, ',')
+            .replace(placeholder, nombreUsuario)
             .trim();
         if (!textoLimpio.trim()) return;
 
