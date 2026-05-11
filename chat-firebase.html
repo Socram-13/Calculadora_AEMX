@@ -975,6 +975,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
             .replace(/\n/g, ', ')
             .replace(/,\s*,+/g, ',')
             .replace(placeholder, nombreUsuario)
+            .replace(/([a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+)(\d+)/g, '$1 $2')
+            .replace(/(\d+)([a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]+)/g, '$1 $2')
             .trim();
         if (!textoLimpio.trim()) return;
 
