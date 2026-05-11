@@ -1182,7 +1182,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                                    `${horas} horas`;
 
                 setTimeout(() => {
-                    addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. En que podemos ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
+                    addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
                 }, 2000);
             }
         });
@@ -1193,6 +1193,17 @@ const userRef = ref(database, 'chat_presence/' + userId);
     } else {
         lanzarAura();
     }
+
+    /* ══════════════════════════════════════════════════════════════
+     *  ⚠️  VERSIÓN / BUILD DE AURA
+     *  Actualiza este valor cada vez que realices cambios al archivo.
+     *  Formato: build-YYYYMMDD-##x
+     *    YYYYMMDD = fecha del cambio
+     *    ##       = número de release del día
+     *    x        = letra de revisión dentro del mismo release (a, b, c...)
+     *  Comando para consultar: @aura compilacion
+     * ══════════════════════════════════════════════════════════════ */
+    const AURA_BUILD = 'build-20260510-47a';
 
     /* ── SISTEMA DE RESPUESTAS POR PALABRAS CLAVE ── */
     const AURA_KB = [
@@ -1819,9 +1830,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
         const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
 
         const interacciones = [
+            { keys: ['hola', 'hey', 'hi', 'buenas', 'ey'],
+              resp: rnd([
+                '¡Hola, <strong>' + nombre + '</strong>! ¿En qué puedo ayudarte?',
+                '¡Hey, <strong>' + nombre + '</strong>! Aquí estoy. ¿Qué necesitas? 💙',
+                '¡Hola! Dime, <strong>' + nombre + '</strong>, ¿en qué te ayudo hoy? 🤖',
+              ])},
             { keys: ['te amo', 'te quiero', 'eres increible', 'eres increíble'],
               resp: rnd([
-                'Aww, yo también te quiero <strong>' + nombre + '</strong> 💙 Ahora ve a comprar más parcelas.',
                 '💙 Me alegra mucho escuchar eso, <strong>' + nombre + '</strong>. ¡Ahora a seguir explorando!',
                 'Eso es lo más bonito que me han dicho hoy, <strong>' + nombre + '</strong> 🥹 ¡Gracias!',
               ])},
@@ -2108,6 +2124,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
             foundMatch = true;
             break;
+        }
+
+        // ── Compilacion ──
+        if (lower.includes('compilacion') || lower.includes('compilación') || lower.includes('build') || lower.includes('version')) {
+            _auraLastReply = now;
+            setTimeout(() => { addAuraMessage('⚙️ <strong>Build actual:</strong> <code>' + AURA_BUILD + '</code>'); }, 1500);
+            return;
         }
 
         // ── Sin coincidencia → fallback ──
