@@ -1671,6 +1671,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 contenido += (contenido ? '<br>' : '') + paso.texto;
                 textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
+                hablarAura(paso.texto);
             }, t);
 
             // Agregar palomita
@@ -1689,6 +1690,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             contenido += '<br><br>⚠️ <strong>Ahora corre!...</strong>';
             textEl.innerHTML = contenido;
             container.scrollTop = container.scrollHeight;
+            hablarAura('Ahora corre!');
         }, tiempoAcum + 1500);
 
         // Solo quedas tú
@@ -1696,6 +1698,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             contenido += '<br>🔴 <strong>Solo quedas tú... ya te localicé 👁️</strong>';
             textEl.innerHTML = contenido;
             container.scrollTop = container.scrollHeight;
+            hablarAura('Solo quedas tú... ya te localicé');
         }, tiempoAcum + 6000);
 
         // Timer de borrado igual que addAuraMessage
