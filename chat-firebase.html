@@ -1005,6 +1005,59 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
     }
 
+    // Cola de audio para historias — no cancela el audio en curso
+    const _auraAudioQueue = [];
+    let _auraAudioBusy = false;
+
+    function _auraQueueNext() {
+        if (_auraAudioBusy || !_auraAudioQueue.length) return;
+        _auraAudioBusy = true;
+        const textoLimpio = _auraAudioQueue.shift();
+        if (!window.speechSynthesis) { _auraAudioBusy = false; _auraQueueNext(); return; }
+        try { if (localStorage.getItem('chat-muted') === 'true') { _auraAudioBusy = false; _auraQueueNext(); return; } } catch(e) {}
+
+        function speak(voces) {
+            const utterance = new SpeechSynthesisUtterance(textoLimpio);
+            utterance.rate  = 1.2;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            const sabina  = voces.find(v => v.name.includes('Sabina') && v.lang === 'es-MX');
+            const mxFem   = voces.find(v => v.lang === 'es-MX' && !v.name.toLowerCase().includes('raul'));
+            const google2 = voces.find(v => v.name === 'Google español 2 (Natural)');
+            const natural = voces.find(v => v.name.includes('Natural') && v.lang.startsWith('es'));
+            utterance.voice = sabina || mxFem || google2 || natural || voces.find(v => v.lang.startsWith('es')) || null;
+            utterance.onend = () => { _auraAudioBusy = false; _auraQueueNext(); };
+            utterance.onerror = () => { _auraAudioBusy = false; _auraQueueNext(); };
+            window.speechSynthesis.speak(utterance);
+        }
+
+        const voces = window.speechSynthesis.getVoices();
+        if (voces.length > 0) {
+            speak(voces);
+        } else {
+            window.speechSynthesis.addEventListener('voiceschanged', function handler() {
+                window.speechSynthesis.removeEventListener('voiceschanged', handler);
+                speak(window.speechSynthesis.getVoices());
+            });
+        }
+    }
+
+    function hablarAuraQueue(texto) {
+        if (!window.speechSynthesis) return;
+        const div = document.createElement('div');
+        div.innerHTML = texto;
+        let textoBase = (div.textContent || div.innerText || '').trim();
+        const textoLimpio = textoBase
+            .replace(/[🟢🔵🟣🟡🏅💰📈💡⚠️✅❌📊🗺️🎯🚀🔴👁️⚙️🔍📡🔎💀🤖💙💎📋🏆🎉🕐😄😉😊😏😅😂🌎📅🗓️🎲⚡🌙☀️🌤️🤫🤔💾👁🔔🔕]/gu, ', ')
+            .replace(/\p{Emoji_Presentation}/gu, '')
+            .replace(/\n/g, ', ')
+            .replace(/,\s*,+/g, ',')
+            .trim();
+        if (!textoLimpio) return;
+        _auraAudioQueue.push(textoLimpio);
+        _auraQueueNext();
+    }
+
     function addAuraMessage(text) {
         const container = document.getElementById('messagesContainer');
         if (!container) return;
@@ -1773,7 +1826,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
                 const textoPlano = p.texto.replace(/<[^>]*>/g, '');
-                hablarAura(textoPlano);
+                hablarAuraQueue(textoPlano);
             }, p.delay);
         });
 
@@ -1828,7 +1881,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 textEl.innerHTML = contenido;
                 container.scrollTop = container.scrollHeight;
                 const textoPlano = p.texto.replace(/<[^>]*>/g, '');
-                hablarAura(textoPlano);
+                hablarAuraQueue(textoPlano);
             }, p.delay);
         });
 
