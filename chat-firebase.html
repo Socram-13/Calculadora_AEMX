@@ -960,7 +960,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
             .replace(/\+(\d+)%/g, 'más $1 por ciento')
             .replace(/(\d+)\s*%/g, '$1 por ciento')
             .replace(/\+(\d+)/g, 'más $1')
-            .replace(/━+/g, '')
+            .replace(/━+/g, ',')
+            .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks|AB)/gi, '$1 $2,')
+            .replace(/\n/g, ', ')
             .trim();
         if (!textoLimpio.trim()) return;
 
