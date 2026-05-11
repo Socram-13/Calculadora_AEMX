@@ -961,12 +961,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
         function speak(voces) {
             const utterance = new SpeechSynthesisUtterance(textoLimpio);
             utterance.rate  = 1.2;
-            utterance.pitch = 1.1;
+            utterance.pitch = 1.0;
             utterance.volume = 1.0;
-            const google2 = voces.find(v => v.name === 'Google español 2 (Natural)');
-            const sabina  = voces.find(v => v.name.includes('Sabina'));
-            const natural = voces.find(v => v.name.includes('Natural') && v.lang.startsWith('es'));
-            utterance.voice = google2 || sabina || natural || voces.find(v => v.lang.startsWith('es')) || null;
+            const sabina   = voces.find(v => v.name.includes('Sabina') && v.lang === 'es-MX');
+            const mxFem    = voces.find(v => v.lang === 'es-MX' && !v.name.toLowerCase().includes('raul'));
+            const google2  = voces.find(v => v.name === 'Google español 2 (Natural)');
+            const natural  = voces.find(v => v.name.includes('Natural') && v.lang.startsWith('es'));
+            utterance.voice = sabina || mxFem || google2 || natural || voces.find(v => v.lang.startsWith('es')) || null;
             window.speechSynthesis.cancel();
             window.speechSynthesis.speak(utterance);
         }
