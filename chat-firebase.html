@@ -948,6 +948,29 @@ const userRef = ref(database, 'chat_presence/' + userId);
         '✕ Cerrar'
     ];
 
+    function hablarAura(texto) {
+        if (!window.speechSynthesis) return;
+        // Limpiar HTML tags para solo leer el texto
+        const div = document.createElement('div');
+        div.innerHTML = texto;
+        const textoLimpio = div.textContent || div.innerText || '';
+        if (!textoLimpio.trim()) return;
+
+        const utterance = new SpeechSynthesisUtterance(textoLimpio);
+        utterance.rate  = 1.0;
+        utterance.pitch = 1.1;
+        utterance.volume = 1.0;
+
+        const voces = window.speechSynthesis.getVoices();
+        const sabina  = voces.find(v => v.name.includes('Sabina'));
+        const natural = voces.find(v => v.name.includes('Natural') && v.lang.startsWith('es'));
+        const google  = voces.find(v => v.name.includes('Google español') && v.lang.startsWith('es'));
+        utterance.voice = sabina || natural || google || voces.find(v => v.lang.startsWith('es')) || null;
+
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
+    }
+
     function addAuraMessage(text) {
         const container = document.getElementById('messagesContainer');
         if (!container) return;
@@ -968,7 +991,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
 
-        // ── Barra de tiempo regresiva ──
+        // ── Sintetizar voz ──
+        hablarAura(text);
         const timerBar = document.createElement('div');
         timerBar.className = 'aura-timer-bar';
         const timerFill = document.createElement('div');
