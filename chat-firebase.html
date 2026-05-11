@@ -1207,6 +1207,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
      * ══════════════════════════════════════════════════════════════ */
     const AURA_BUILD = 'build-20260510-47a';
 
+    const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
+
     /* ── SISTEMA DE RESPUESTAS POR PALABRAS CLAVE ── */
     const AURA_KB = [
         {
@@ -1302,7 +1304,10 @@ const userRef = ref(database, 'chat_presence/' + userId);
         {
             keys: ['vale la pena el ec', 'conviene el ec', 'debo comprar el ec', 'compro el ec'],
             clan: false,
-            resp: '💡 <strong>¿Vale la pena el EC?</strong><br><br>Depende de tu compromiso con la racha diaria. Si puedes loguearte todos los días sin falta, el premium te da <strong>10,874 AB</strong> en 90 días (≈108 parcelas) por $149.97 USD. Si crees que puedes fallar algún día, el gratis sigue siendo útil con 369 AB. ¡La constancia es la clave! 🔑'
+            resp: rnd([
+                '💡 <strong>¿Vale la pena el EC?</strong><br><br>Depende de tu compromiso con la racha diaria. Si puedes loguearte todos los días sin falta, el premium te da <strong>10,874 AB</strong> en 90 días (≈108 parcelas) por $149.97 USD. Si crees que puedes fallar algún día, el gratis sigue siendo útil con 369 AB. ¡La constancia es la clave! 🔑',
+                '⭐ Si te disciplinas a loguearte diario, el EC premium es una excelente inversión: <strong>108 parcelas en 90 días</strong>. Pero recuerda — un día sin logueo y vuelves al día 1. ¿Puedes con esa responsabilidad? 😏',
+            ])
         },
         {
             keys: ['cuanto cuesta el ec', 'precio del ec', 'costo del ec', 'cuanto es el ec'],
@@ -1323,7 +1328,10 @@ const userRef = ref(database, 'chat_presence/' + userId);
         {
             keys: ['que pasa si fallo el ec', 'falle el ec', 'perde la racha ec', 'perdí la racha ec', 'se reinicia el ec', 'rompi la racha'],
             clan: false,
-            resp: '😬 Si fallas un día en el EC, la racha se <strong>reinicia al día 1</strong>. Pierdes todo el progreso acumulado y debes comenzar el ciclo de 90 días desde cero. ¡La constancia es todo en el EC! 💪'
+            resp: rnd([
+                '😬 Si fallas un día en el EC, la racha se <strong>reinicia al día 1</strong>. Pierdes todo el progreso acumulado y debes comenzar el ciclo de 90 días desde cero. ¡La constancia es todo en el EC! 💪',
+                '⚠️ ¡Cuidado! Un día sin loguearte y el EC reinicia al <strong>día 1</strong>. Los bonos de los días 7, 14, 30, 60 y 90 solo se consiguen con racha ininterrumpida. 💪',
+            ])
         },
         {
             keys: ['salto', 'caida', 'caída', 'tope', 'tabla de salto'],
@@ -1875,7 +1883,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         // ── Interacciones personales y humor ──
         const nombre = (window._currentUsername || 'Explorador');
-        const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
 
         const interacciones = [
             { keys: ['hola', 'hey', 'hi', 'buenas', 'ey'],
