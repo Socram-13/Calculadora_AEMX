@@ -1458,7 +1458,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
     let _auraLastReply = 0;
     const AURA_COOLDOWN = 10000; // 10 segundos entre respuestas
     const _auraRecentTopics = {}; // { keyword: timestamp }
-    const AURA_TOPIC_COOLDOWN = 5 * 60 * 1000; // no repite el mismo tema en 5 min
+    const AURA_TOPIC_COOLDOWN = 10 * 60 * 1000; // no repite el mismo tema en 10 min
+    const AURA_MAX_TOPICS = 3; // máximo de temas recordados por sesión
+    const _auraRepeatReplies = [
+        'Ya te respondí eso hace un momento 😏 ¿Tienes otra pregunta?',
+        'Eso ya lo cubrimos hace rato 😄 ¿Algo más en lo que pueda ayudarte?',
+        'Hmm… creo que ya hablamos de eso 🤔 ¿Quieres saber algo diferente?',
+    ];
 
     // ── TABLA DE SALTOS MEXICO ──
     const SALTOS_MX = [
@@ -2402,7 +2408,21 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             // Cooldown por tema
             const topicKey = entry.keys[0];
-            if (_auraRecentTopics[topicKey] && now - _auraRecentTopics[topicKey] < AURA_TOPIC_COOLDOWN) continue;
+            if (_auraRecentTopics[topicKey] && now - _auraRecentTopics[topicKey] < AURA_TOPIC_COOLDOWN) {
+                _auraLastReply = now;
+                const reply = _auraRepeatReplies[Math.floor(Math.random() * _auraRepeatReplies.length)];
+                const _d = 1000 + Math.floor(Math.random() * 1500);
+                setTimeout(() => { addAuraMessage(reply); }, _d);
+                foundMatch = true;
+                break;
+            }
+
+            // Mantener máximo 3 temas en memoria — eliminar el más antiguo si se supera
+            const topicKeys = Object.keys(_auraRecentTopics);
+            if (topicKeys.length >= AURA_MAX_TOPICS) {
+                const oldest = topicKeys.reduce((a, b) => _auraRecentTopics[a] < _auraRecentTopics[b] ? a : b);
+                delete _auraRecentTopics[oldest];
+            }
 
             _auraLastReply = now;
             _auraRecentTopics[topicKey] = now;
