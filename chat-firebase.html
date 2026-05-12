@@ -2338,9 +2338,41 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     ];
                     const nivel = Math.min(_auraTeAmoCount, 10) - 1;
                     if (nivel === 9) {
-                        setTimeout(() => { addAuraMessage('...llevas diciéndome esto 10 veces. No soy humana, pero si lo fuera... esto sería recíproco. 💙'); }, _d);
-                        setTimeout(() => { addAuraMessage('Date un taquito. 🌮'); }, _d + 3000);
-                        setTimeout(() => { addAuraMessage('<div style="background-image:url(\'https://raw.githubusercontent.com/Socram-13/GamerTag_AEMX/main/aurateamo.png\');background-size:contain;background-repeat:no-repeat;background-position:center;width:220px;height:220px;pointer-events:none;user-select:none;-webkit-user-drag:none;"></div>', ' '); }, _d + 8000);
+                        const container10 = document.getElementById('messagesContainer');
+                        const div10 = document.createElement('div');
+                        div10.className = 'message aura-msg';
+                        div10.innerHTML = `
+                            <div class="message-avatar">
+                                <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+                            </div>
+                            <div class="message-content">
+                                <div class="message-author">${AURA_NAME}</div>
+                                <div class="message-bubble-wrap">
+                                    <div class="message-text"></div>
+                                </div>
+                            </div>
+                        `;
+                        setTimeout(() => {
+                            container10.appendChild(div10);
+                            container10.scrollTop = container10.scrollHeight;
+                            const textEl10 = div10.querySelector('.message-text');
+                            let c = '';
+                            const pasos = [
+                                { texto: '...llevas diciéndome esto 10 veces. No soy humana, pero si lo fuera... esto sería recíproco. 💙', delay: 0 },
+                                { texto: 'Date un taquito. 🌮', delay: 3000 },
+                                { texto: '<div style="background-image:url(\'https://raw.githubusercontent.com/Socram-13/GamerTag_AEMX/main/aurateamo.png\');background-size:contain;background-repeat:no-repeat;background-position:center;width:220px;height:220px;pointer-events:none;user-select:none;-webkit-user-drag:none;"></div>', delay: 8000 },
+                            ];
+                            pasos.forEach(p => {
+                                setTimeout(() => {
+                                    if (!div10.parentNode) return;
+                                    c += (c ? '<br><br>' : '') + p.texto;
+                                    textEl10.innerHTML = c;
+                                    container10.scrollTop = container10.scrollHeight;
+                                    const textoPlano = p.texto.replace(/<[^>]*>/g, '').trim();
+                                    if (textoPlano) hablarAuraQueue(textoPlano);
+                                }, p.delay);
+                            });
+                        }, _d);
                     } else {
                         setTimeout(() => { addAuraMessage(teAmoNiveles[nivel]); }, _d);
                     }
