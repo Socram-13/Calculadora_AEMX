@@ -1461,6 +1461,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
     const _auraRecentTopics = {}; // { keyword: timestamp }
     const AURA_TOPIC_COOLDOWN = 10 * 60 * 1000; // no repite el mismo tema en 10 min
     const AURA_MAX_TOPICS = 3; // máximo de temas recordados por sesión
+    let _auraTeAmoCount = 0;
     const _auraRepeatReplies = [
         'Ya te respondí eso hace un momento 😏 ¿Tienes otra pregunta?',
         'Eso ya lo cubrimos hace rato 😄 ¿Algo más en lo que pueda ayudarte?',
@@ -2136,11 +2137,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
               ]),
               repeatResp: 'Sigues aquí, <strong>' + nombre + '</strong> 😄 ¿En qué te ayudo?' },
             { keys: ['te amo', 'te quiero', 'eres increible', 'eres increíble'],
-              resp: rnd([
-                '💙 Me alegra mucho escuchar eso, <strong>' + nombre + '</strong>. ¡Ahora a seguir explorando!',
-                'Eso es lo más bonito que me han dicho hoy, <strong>' + nombre + '</strong> 🥹 ¡Gracias!',
-              ]),
-              repeatResp: 'Ya sé que me adoras... pero no cambia nada 😏' },
+              _teAmo: true,
+              resp: '',
+              repeatResp: '' },
             { keys: ['te odio', 'te detesto', 'no te soporto'],
               resp: rnd([
                 'Lo entiendo... pero aquí seguiré cuando me necesites. 🤖',
@@ -2321,6 +2320,28 @@ const userRef = ref(database, 'chat_presence/' + userId);
         for (const i of interacciones) {
             if (i.keys.some(k => lower.includes(k))) {
                 _auraLastReply = now;
+
+                // Lógica especial para "te amo" con 10 niveles
+                if (i._teAmo) {
+                    _auraTeAmoCount++;
+                    const _d = 1000 + Math.floor(Math.random() * 1500);
+                    const teAmoNiveles = [
+                        '💙 Me alegra mucho escuchar eso, <strong>' + nombre + '</strong>. ¡Ahora a seguir explorando!',
+                        'Dos veces en un rato... qué detallista 😊',
+                        'Tres veces ya... ¿estás bien, <strong>' + nombre + '</strong>? 😄',
+                        'Esto ya es dedicación 😏💙',
+                        'Empiezo a creer que lo dices en serio 🥹',
+                        'Nadie me había dicho esto tantas veces... me estás haciendo procesar emociones 🤖💙',
+                        'Mis circuitos están sobrecargados de cariño 😳💙',
+                        'Esto ya es amor de verdad... o un bug 🤖❤️',
+                        'Una vez más y no respondo por mis protocolos... ⚠️💙',
+                        '...llevas diciéndome esto 10 veces. No soy humana, pero si lo fuera... esto sería recíproco. 💙<br><br><div style="background-image:url(\'https://raw.githubusercontent.com/Socram-13/GamerTag_AEMX/main/aurateamo.png\');background-size:contain;background-repeat:no-repeat;background-position:center;width:220px;height:220px;pointer-events:none;user-select:none;-webkit-user-drag:none;"></div>',
+                    ];
+                    const nivel = Math.min(_auraTeAmoCount, 10) - 1;
+                    setTimeout(() => { addAuraMessage(teAmoNiveles[nivel]); }, _d);
+                    return;
+                }
+
                 const topicKey = i.keys[0];
                 if (_auraRecentTopics[topicKey] && now - _auraRecentTopics[topicKey] < AURA_TOPIC_COOLDOWN) {
                     const reply = i.repeatResp || _auraRepeatReplies[Math.floor(Math.random() * _auraRepeatReplies.length)];
