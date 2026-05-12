@@ -1441,6 +1441,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '__HISTORIA_ARM__'
         },
         {
+            keys: ['parcela fantasma', 'cuentame la historia de la parcela fantasma'],
+            clan: false,
+            resp: '__HISTORIA_PARCELA_FANTASMA__'
+        },
+        {
             keys: ['umbral', 'que es el umbral', 'qué es el umbral', 'que significa umbral'],
             clan: false,
             resp: '🎯 <strong>Umbral</strong> es el punto en que superas las <strong>455 parcelas</strong>, el último salto en México.<br><br>' +
@@ -1872,6 +1877,60 @@ const userRef = ref(database, 'chat_presence/' + userId);
             { texto: 'Los minijuegos evolucionaron y ya no pudieron controlarlo. Su nivel real quedó expuesto ante todos. Sin poder ganar jugando... optaron por presionar. Por amedrentar.', delay: 23000 },
             { texto: '<em>Y AEMX... simplemente siguió su camino.</em>', delay: 30000 },
             { texto: 'Con unidad. Con juego limpio. Con las puertas abiertas para todos. 💙', delay: 34500 },
+        ];
+
+        parrafos.forEach(p => {
+            setTimeout(() => {
+                if (!div.parentNode) return;
+                contenido += (contenido ? '<br><br>' : '') + p.texto;
+                textEl.innerHTML = contenido;
+                container.scrollTop = container.scrollHeight;
+                const textoPlano = p.texto.replace(/<[^>]*>/g, '');
+                hablarAuraQueue(textoPlano);
+            }, p.delay);
+        });
+
+        setTimeout(() => {
+            if (div.parentNode) {
+                div.style.transition = 'opacity 0.5s ease';
+                div.style.opacity = '0';
+                setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 500);
+            }
+        }, 3 * 60 * 1000);
+    }
+
+    function contarHistoriaParcelaFantasma() {
+        const container = document.getElementById('messagesContainer');
+        if (!container) return;
+
+        const div = document.createElement('div');
+        div.className = 'message aura-msg';
+        div.dataset.historiaId = 'parcela-fantasma-' + Date.now();
+        div.innerHTML = `
+            <div class="message-avatar">
+                <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+            </div>
+            <div class="message-content">
+                <div class="message-author">${AURA_NAME}</div>
+                <div class="message-bubble-wrap">
+                    <div class="message-text"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+
+        const textEl = div.querySelector('.message-text');
+        let contenido = '';
+
+        const parrafos = [
+            { texto: '👻 <em>En la historia de los videojuegos hemos visto errores de todo tipo: personajes atravesando paredes, enemigos congelados en el aire, o texturas que aparecen donde no deberían.</em>', delay: 500 },
+            { texto: '<em>Pero lo que hoy voy a contarles… es distinto. Es perturbador. Y está ocurriendo dentro de Atlas Earth.</em>', delay: 5000 },
+            { texto: 'La comunidad lo ha bautizado como: <strong>La Parcela Fantasma.</strong>', delay: 10000 },
+            { texto: '🗺️ <em>Atlas Earth se organiza sobre una cuadrícula perfecta. Cada cuadro es una parcela. Esa es la base del juego.</em>', delay: 14000 },
+            { texto: 'Sin embargo, algunos jugadores han presenciado algo que no debería existir: una parcela legendaria sobrepuesta sobre sí misma, apareciendo justo en los vértices de la cuadrícula, en un lugar imposible.', delay: 19000 },
+            { texto: 'No se mueve. No parpadea. Simplemente está ahí… sólida… fija… hasta que el jugador recarga el juego.', delay: 27000 },
+            { texto: '<em>Y entonces… desaparece.</em> 👻', delay: 34000 },
         ];
 
         parrafos.forEach(p => {
@@ -2354,6 +2413,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 contarHistoriaARM();
             } else if (entry.resp === '__HISTORIA_AEMX__') {
                 contarHistoriaAEMX();
+            } else if (entry.resp === '__HISTORIA_PARCELA_FANTASMA__') {
+                contarHistoriaParcelaFantasma();
             } else {
                 setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
             }
