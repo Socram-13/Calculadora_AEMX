@@ -1275,6 +1275,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '🌿 <strong>Estrategia de Vegetación:</strong> La distribución de parcelas sigue un patrón predecible. Las Legendarias suelen estar rodeadas de Épicas y Raras, y la vegetación del mapa sigue la misma dirección que las parcelas de mayor rareza. ¡Úsala como brújula para encontrar los mejores terrenos! Consulta la sección 📚 Guías para ver la guía completa.'
         },
         {
+            keys: ['parcela fantasma', 'cuentame la historia de la parcela fantasma'],
+            clan: false,
+            resp: '__HISTORIA_PARCELA_FANTASMA__'
+        },
+        {
             keys: ['parcel', 'terreno', 'comprar', 'rareza', 'rara', 'epic', 'legendar', 'comun', 'común'],
             clan: false,
             resp: '🗺️ <strong>Tipos de Parcelas:</strong> Existen 4 rarezas: 🟢 Comunes, 🔵 Raras, 🟣 Épicas y 🟡 Legendarias. Para comprar tu primer terreno necesitas Atlas Bucks (AB). Te recomendamos comprar en zonas turísticas o de alto tráfico para maximizar tus insignias y revalorización futura.'
@@ -1439,11 +1444,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
             exact: true,
             clan: false,
             resp: '__HISTORIA_ARM__'
-        },
-        {
-            keys: ['parcela fantasma', 'cuentame la historia de la parcela fantasma'],
-            clan: false,
-            resp: '__HISTORIA_PARCELA_FANTASMA__'
         },
         {
             keys: ['umbral', 'que es el umbral', 'qué es el umbral', 'que significa umbral'],
