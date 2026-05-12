@@ -2372,6 +2372,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
                                     if (textoPlano) hablarAuraQueue(textoPlano);
                                 }, p.delay);
                             });
+                            setTimeout(() => {
+                                if (div10.parentNode) {
+                                    div10.style.transition = 'opacity 0.5s ease';
+                                    div10.style.opacity = '0';
+                                    setTimeout(() => { if (div10.parentNode) div10.parentNode.removeChild(div10); }, 500);
+                                }
+                            }, 3 * 60 * 1000);
                         }, _d);
                     } else {
                         setTimeout(() => { addAuraMessage(teAmoNiveles[nivel]); }, _d);
