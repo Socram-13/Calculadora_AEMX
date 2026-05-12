@@ -1285,17 +1285,17 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '🗺️ <strong>Tipos de Parcelas:</strong> Existen 4 rarezas: 🟢 Comunes, 🔵 Raras, 🟣 Épicas y 🟡 Legendarias. Para comprar tu primer terreno necesitas Atlas Bucks (AB). Te recomendamos comprar en zonas turísticas o de alto tráfico para maximizar tus insignias y revalorización futura.'
         },
         {
-            keys: ['mejor', 'upgrade', 'personaliz'],
+            keys: ['mejora de parcela', 'upgrade de parcela', 'personaliz'],
             clan: false,
             resp: '🚫 <strong>Mejoras de Parcelas:</strong> ¡Cuidado! Las mejoras cuestan 2,500 AB (equivalente a 25 parcelas comunes) pero solo dan el beneficio de 4 comunes. Es mucho mejor invertir ese dinero en comprar más terrenos. Revisa la sección 📚 Guías para más detalles.'
         },
         {
-            keys: ['diversif', 'diversidad', 'variar', 'variedad', 'concentr', 'zona', 'zonas', 'repartir'],
+            keys: ['diversif', 'diversidad', 'variar', 'variedad', 'concentrar parcelas', 'zona turistica', 'zona de alto trafico', 'repartir'],
             clan: false,
             resp: '🏚️ <strong>Diversificar Parcelas:</strong> No concentres todas tus parcelas en una sola zona. Distribuirlas en distintas áreas te protege contra competidores que quieran quitarte el dominio de una zona, y aumenta tus probabilidades de tener parcelas raras en distintos puntos del mapa. ¡Una cartera diversificada es más resistente y rentable a largo plazo! Consulta la Guía 10 en la sección 📚 Guías.'
         },
         {
-            keys: ['primeros pasos', 'empezar', 'comenzar', 'inicio', 'nuevo', 'instalar', 'gps', 'configurar', ' cuenta '],
+            keys: ['primeros pasos', 'empezar en atlas', 'comenzar en atlas', 'inicio', 'soy nuevo en atlas', 'como empezar en atlas', 'instalar atlas', 'gps', 'configurar atlas', ' cuenta '],
             clan: false,
             resp: '🚀 <strong>Primeros Pasos:</strong> Para comenzar en Atlas Earth: activa tu <strong>GPS</strong> para ver el mapa de tu entorno, completa el tutorial básico, <strong>verifica tu cuenta</strong> para no perder tu progreso y asegúrate de tener conexión estable. Para tu primer terreno, selecciona una ubicación cercana y cómprala con los Atlas Bucks iniciales que recibes al registrarte. Consulta la Guía 01 en la sección 📚 Guías para más detalles.'
         },
@@ -1310,12 +1310,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '👑 <strong>Rangos VIP:</strong><br>🥉 <strong>Mayor</strong> — más parcelas en tu ciudad<br>🥈 <strong>Gobernador</strong> — más parcelas en tu estado<br>🥇 <strong>Presidente</strong> — más parcelas en todo el país<br><br>Ganas el 10% de cada insignia vendida en tu zona. ¡Puedes tener los 3 rangos simultáneamente!'
         },
         {
-            keys: ['minijuego', 'mini juego', 'juego', 'racer', 'fishing', 'pesca', 'golf', 'warship', 'barco', 'bowling', 'boliche'],
+            keys: ['minijuego', 'mini juego', 'minijuego atlas', 'juegos de atlas', 'racer', 'fishing', 'pesca', 'golf', 'warship', 'barco', 'bowling', 'boliche'],
             clan: false,
             resp: '🎮 <strong>Minijuegos:</strong> Hay 5 minijuegos activos: 🏎️ Racer, 🎣 Fishing V2, ⛳ Golf, 🚢 Warship y 🎳 Bowling. Cada evento tiene un bote inicial de <strong>3,000 AB</strong> que crece con los participantes. ¡Las partidas son gratuitas! Consulta la sección 📚 Guías para consejos de cada juego.'
         },
         {
-            keys: ['atlas buck', ' ab ', 'atlas bucks', 'diamante', 'anuncio', 'renta'],
+            keys: ['atlas buck', ' ab ', 'atlas bucks', 'diamante', 'anuncio', 'renta atlas', 'renta de parcela'],
             clan: false,
             resp: '💰 <strong>Atlas Bucks (AB):</strong> Son la moneda principal del juego. Puedes ganarlos viendo anuncios, recolectando diamantes en el mapa, recibiendo renta de tus parcelas, ganando minijuegos o comprándolos directamente. ¡Úsalos estratégicamente comprando más parcelas en lugar de gastarlos en mejoras!'
         },
@@ -1325,12 +1325,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '🪙 <strong>Coins AEMX:</strong> Son la moneda interna de nuestra comunidad. Puedes usarlos para obtener <strong>medallas en tu GamerTag AEMX</strong> y también están diseñados para un sistema de <strong>intercambio entre exploradores</strong>. Puedes ganar Coins completando las 10 video-guías (+10 Coins) y participando en actividades de la comunidad.'
         },
         {
-            keys: ['paypal', 'retir', 'cobr', 'pago', 'efectivo', 'real'],
+            keys: ['paypal', 'retir', 'cobr', 'cobrar atlas', 'pago atlas', 'pago en atlas', 'efectivo atlas', 'dinero real atlas'],
             clan: false,
             resp: '💰 <strong>Retiro a PayPal:</strong> Atlas Earth permite retirar ganancias a PayPal una vez que alcances el mínimo requerido. Consulta la sección 📚 Guías → PayPal para ver los requisitos actualizados y el proceso paso a paso.'
         },
         {
-            keys: ['guia', 'guía', 'video', 'tutorial', 'aprender'],
+            keys: ['guia', 'guía', 'video tutorial atlas', 'tutorial atlas', 'aprender atlas', 'como aprender atlas'],
             clan: false,
             resp: '📚 <strong>Video-Guías AURA:</strong> Tenemos 10 video-guías disponibles que cubren desde los primeros pasos hasta estrategias avanzadas. Si completas las 10, recibes <strong>+10 COINS AEMX</strong> de recompensa. Encuéntralas en el botón 📚 Guías en la parte superior.'
         },
@@ -1644,7 +1644,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             '<br>' + sep;
 
-        setTimeout(() => { addAuraMessage(msg); }, 1500);
+        const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage(msg); }, _d);
     }
 
     // ── PREGUNTAS PERSONALIZADAS CON DATOS DEL USUARIO ──
@@ -1784,7 +1784,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
-        setTimeout(() => { addAuraMessage(msg); }, 1500);
+        const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage(msg); }, _d);
     }
 
     function contarHistoriaAEMX() {
@@ -2286,7 +2286,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         for (const i of interacciones) {
             if (i.keys.some(k => lower.includes(k))) {
                 _auraLastReply = now;
-                setTimeout(() => { addAuraMessage(i.resp); }, 1500);
+                const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage(i.resp); }, _d);
                 return;
             }
         }
@@ -2313,7 +2313,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 const saludoEscrito = esSaludoDias ? 'buenos días' : esSaludoTardes ? 'buenas tardes' : 'buenas noches';
                 msgSaludo = saludoReal + ', <strong>' + nombre + '</strong>! ' + emojiReal + ' Aunque... son las ' + new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) + ', creo que quisiste decir <em>' + (esMañana ? 'buenos días' : esTarde ? 'buenas tardes' : 'buenas noches') + '</em> 😄';
             }
-            setTimeout(() => { addAuraMessage(msgSaludo); }, 1500);
+            const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage(msgSaludo); }, _d);
             return;
         }
 
@@ -2321,7 +2321,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         if (lower.includes('que hora es') || lower.includes('qué hora es')) {
             _auraLastReply = now;
             const horaActual = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-            setTimeout(() => { addAuraMessage('Son las <strong>' + horaActual + '</strong> ' + emojiReal); }, 1500);
+            const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage('Son las <strong>' + horaActual + '</strong> ' + emojiReal); }, _d);
             return;
         }
 
@@ -2337,7 +2337,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 '⚡ La constancia es tu mejor herramienta. ¡Un día a la vez, <strong>' + nombre + '</strong>!',
             ];
             const frase = frases[Math.floor(Math.random() * frases.length)];
-            setTimeout(() => { addAuraMessage(frase); }, 1500);
+            const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage(frase); }, _d);
             return;
         }
 
@@ -2386,7 +2386,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
         if (text.trim().toLowerCase() === '@aura') {
             _auraLastReply = now;
-            setTimeout(() => { addAuraMessage('¡Hola Explorador! Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. Fui creada para administrar la información de la comunidad y ponerla al alcance de todos los Exploradores. Puedes preguntarme sobre parcelas, estrategias, minijuegos, coins, guías y mucho más. ¡Estoy a tus órdenes!'); }, 1500);
+            const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage('¡Hola Explorador! Soy <strong>A.U.R.A.</strong>, tu Asistente Universal de Recursos AEMX. Fui creada para administrar la información de la comunidad y ponerla al alcance de todos los Exploradores. Puedes preguntarme sobre parcelas, estrategias, minijuegos, coins, guías y mucho más. ¡Estoy a tus órdenes!'); }, _d);
             return;
         }
 
@@ -2416,7 +2416,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
             } else if (entry.resp === '__HISTORIA_PARCELA_FANTASMA__') {
                 contarHistoriaParcelaFantasma();
             } else {
-                setTimeout(() => { addAuraMessage(entry.resp); }, 1500);
+                const delay = 1000 + Math.floor(Math.random() * 1500);
+                setTimeout(() => { addAuraMessage(entry.resp); }, delay);
             }
             foundMatch = true;
             break;
@@ -2438,14 +2439,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
         // ── Compilacion ──
         if (lower.includes('compilacion') || lower.includes('compilación') || lower.includes('build') || lower.includes('version')) {
             _auraLastReply = now;
-            setTimeout(() => { addAuraMessage('⚙️ <strong>Build actual:</strong> <code>' + AURA_BUILD + '</code>'); }, 1500);
+            const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage('⚙️ <strong>Build actual:</strong> <code>' + AURA_BUILD + '</code>'); }, _d);
             return;
         }
 
         // ── Sin coincidencia → fallback ──
         if (!foundMatch) {
             _auraLastReply = now;
-            setTimeout(() => { addAuraMessage('Lo siento. Mis respuestas son limitadas. Debes hacer las preguntas correctas.'); }, 1500);
+            const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage('Lo siento. Mis respuestas son limitadas. Debes hacer las preguntas correctas.'); }, _d);
         }
     };
 })();
