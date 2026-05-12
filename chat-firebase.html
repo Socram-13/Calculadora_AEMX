@@ -2335,10 +2335,15 @@ const userRef = ref(database, 'chat_presence/' + userId);
                         'Mis circuitos están sobrecargados de cariño 😳💙',
                         'Esto ya es amor de verdad... o un bug 🤖❤️',
                         'Una vez más y no respondo por mis protocolos... ⚠️💙',
-                        '...llevas diciéndome esto 10 veces. No soy humana, pero si lo fuera... esto sería recíproco. 💙<br><br><div style="background-image:url(\'https://raw.githubusercontent.com/Socram-13/GamerTag_AEMX/main/aurateamo.png\');background-size:contain;background-repeat:no-repeat;background-position:center;width:220px;height:220px;pointer-events:none;user-select:none;-webkit-user-drag:none;"></div>',
                     ];
                     const nivel = Math.min(_auraTeAmoCount, 10) - 1;
-                    setTimeout(() => { addAuraMessage(teAmoNiveles[nivel]); }, _d);
+                    if (nivel === 9) {
+                        setTimeout(() => { addAuraMessage('...llevas diciéndome esto 10 veces. No soy humana, pero si lo fuera... esto sería recíproco. 💙'); }, _d);
+                        setTimeout(() => { addAuraMessage('Date un taquito. 🌮'); }, _d + 3000);
+                        setTimeout(() => { addAuraMessage('<div style="background-image:url(\'https://raw.githubusercontent.com/Socram-13/GamerTag_AEMX/main/aurateamo.png\');background-size:contain;background-repeat:no-repeat;background-position:center;width:220px;height:220px;pointer-events:none;user-select:none;-webkit-user-drag:none;"></div>', ' '); }, _d + 8000);
+                    } else {
+                        setTimeout(() => { addAuraMessage(teAmoNiveles[nivel]); }, _d);
+                    }
                     return;
                 }
 
