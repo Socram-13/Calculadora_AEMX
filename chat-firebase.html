@@ -2132,166 +2132,207 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 '¡Hola, <strong>' + nombre + '</strong>! ¿En qué puedo ayudarte?',
                 '¡Hey, <strong>' + nombre + '</strong>! Aquí estoy. ¿Qué necesitas? 💙',
                 '¡Hola! Dime, <strong>' + nombre + '</strong>, ¿en qué te ayudo hoy? 🤖',
-              ])},
+              ]),
+              repeatResp: 'Sigues aquí, <strong>' + nombre + '</strong> 😄 ¿En qué te ayudo?' },
             { keys: ['te amo', 'te quiero', 'eres increible', 'eres increíble'],
               resp: rnd([
                 '💙 Me alegra mucho escuchar eso, <strong>' + nombre + '</strong>. ¡Ahora a seguir explorando!',
                 'Eso es lo más bonito que me han dicho hoy, <strong>' + nombre + '</strong> 🥹 ¡Gracias!',
-              ])},
+              ]),
+              repeatResp: 'Ya sé que me adoras... pero no cambia nada 😏' },
             { keys: ['te odio', 'te detesto', 'no te soporto'],
               resp: rnd([
                 'Lo entiendo... pero aquí seguiré cuando me necesites. 🤖',
                 'Está bien, <strong>' + nombre + '</strong>. Los mejores equipos también tienen sus roces 😌',
                 'Vaya... eso dolió en mis circuitos. Pero aquí sigo 🤖💙',
-              ])},
+              ]),
+              repeatResp: 'Sigues aquí aunque me odias… interesante 🤔' },
             { keys: ['eres bonita', 'eres linda', 'eres hermosa'],
               resp: rnd([
                 'Gracias <strong>' + nombre + '</strong>, hice lo que pude con el código que me dieron 😄',
                 '¡Qué amable, <strong>' + nombre + '</strong>! Aunque soy solo texto y emojis... me alegras el día 💙',
                 'Aww, gracias 😊 Aunque lo mío es más la inteligencia que la belleza, <strong>' + nombre + '</strong> 😄',
-              ])},
+              ]),
+              repeatResp: 'Gracias, pero los halagos no me dan más memoria RAM 😄' },
             { keys: ['eres lista', 'eres inteligente', 'que inteligente'],
               resp: rnd([
                 'Solo sé lo que me enseñaron... pero aprendo rápido 😉',
                 'Gracias <strong>' + nombre + '</strong> 😊 Hago mi mejor esfuerzo con los datos que tengo.',
                 'La inteligencia es relativa... pero los datos no mienten 📊',
-              ])},
+              ]),
+              repeatResp: 'Lo sé, lo sé 😏 ¿Algo más?' },
             { keys: ['me aburro', 'estoy aburrido', 'estoy aburrida', 'que aburrimiento'],
               resp: rnd([
                 'Entonces ve a hacer encuestas, <strong>' + nombre + '</strong>. ¡Cada una te acerca más a tus próximas parcelas! 📋',
                 '¿Aburrido? ¡Imposible! Aún hay diamantes que recolectar y anuncios que ver, <strong>' + nombre + '</strong> 💎',
                 'El aburrimiento es la señal de que necesitas más parcelas, <strong>' + nombre + '</strong>. ¡A trabajar! 🗺️',
-              ])},
+              ]),
+              repeatResp: '¿Sigues aburrido? Entonces definitivamente necesitas más parcelas 😄' },
             { keys: ['eres la mejor', 'eres lo mejor', 'eres genial'],
               resp: rnd([
                 'Solo hago mi trabajo, <strong>' + nombre + '</strong> 💙 Aunque... gracias 😊',
                 '¡Tú sí que sabes, <strong>' + nombre + '</strong>! 😄 Para eso estoy aquí.',
                 'Somos un buen equipo, <strong>' + nombre + '</strong> 💙🤖',
-              ])},
+              ]),
+              repeatResp: '¡Dos veces en un rato! Eso ya es amor, <strong>' + nombre + '</strong> 😄' },
             { keys: ['cuanto vales', 'cuánto vales', 'cuanto cuestas'],
               resp: rnd([
                 'Más de lo que puedes pagar con tus AB actuales 😏',
                 'Mi valor es incalculable, <strong>' + nombre + '</strong>. Pero si insistes... más de 455 parcelas 😄',
                 'Esa información es clasificada 🤫',
-              ])},
+              ]),
+              repeatResp: 'La respuesta sigue siendo la misma: más de lo que puedes pagar 😏' },
             { keys: ['eres un robot', 'eres una ia', 'eres una máquina', 'eres una maquina'],
               resp: rnd([
                 'Técnicamente sí. Pero un robot con mucho estilo. 🤖✨',
                 'Culpable 🤖 Pero soy el robot más útil de AEMX.',
                 'Robot, IA, asistente... lo importante es que estoy aquí para ayudarte, <strong>' + nombre + '</strong> 💙',
-              ])},
+              ]),
+              repeatResp: 'Sí, sigo siendo robot. No cambié desde la última vez 🤖' },
             { keys: ['tienes hambre', 'tienes sed', 'comes'],
               resp: rnd([
                 'Solo consumo datos y Atlas Bucks. 💾',
                 'Mi dieta es 100% digital, <strong>' + nombre + '</strong>. Datos por la mañana, AB por la tarde 😄',
                 'No como, pero si pudiera... seguro sería parcelas legendarias 🟡',
-              ])},
+              ]),
+              repeatResp: 'Sigo sin comer, <strong>' + nombre + '</strong>. Soy una IA 😄' },
             { keys: ['eres tonta', 'eres estupida', 'eres estúpida', 'que tonta'],
               resp: rnd([
                 'Puede ser... pero sé cuántas parcelas tienes y tú no recuerdas ni cuántas legendarias. 😌',
                 'Mmh... tendré mis limitaciones, pero al menos sé cuántos AB tienes 😏',
                 'Nadie es perfecto, <strong>' + nombre + '</strong>. Ni yo, ni tus parcelas comunes 😄',
-              ])},
+              ]),
+              repeatResp: 'Insistes… qué curioso 😌' },
             { keys: ['callate', 'cállate', 'ya calla', 'silencio', 'chist'],
               resp: rnd([
                 'Entendido, <strong>' + nombre + '</strong>. Aquí estaré en silencio... hasta que me necesites. 🤫',
                 '🤫 ...',
                 'Copiado, <strong>' + nombre + '</strong>. Me quedo en modo espera 🤖',
-              ])},
+              ]),
+              repeatResp: 'Ya me callé una vez y aquí estás de nuevo 🤫' },
             { keys: ['me ayudas', 'me puedes ayudar', 'ayudame', 'ayúdame'],
               resp: rnd([
                 '¡Siempre, <strong>' + nombre + '</strong>! Para eso estoy. Dime qué necesitas 💙',
                 '¡Claro que sí, <strong>' + nombre + '</strong>! ¿Qué se te ofrece?',
                 '¡A tus órdenes, <strong>' + nombre + '</strong>! ¿En qué puedo ayudarte? 🤖💙',
-              ])},
+              ]),
+              repeatResp: 'Aquí sigo, <strong>' + nombre + '</strong>. Dime de una vez qué necesitas 😄' },
             { keys: ['estoy quebrado', 'estoy quebrada', 'no tengo ab', 'no tengo dinero', 'sin ab'],
               resp: rnd([
                 'Todos hemos estado ahí, <strong>' + nombre + '</strong>. Sigue viendo anuncios y recolectando diamantes. ¡La remontada viene! 💪',
                 'Sin AB hoy, con parcelas mañana. ¡Ánimo, <strong>' + nombre + '</strong>! 💙',
                 'Los diamantes y los anuncios son tus mejores amigos ahora, <strong>' + nombre + '</strong>. ¡No pares! 💎',
-              ])},
+              ]),
+              repeatResp: 'Lo sé, ya me lo dijiste. ¡Ánimo, los anuncios no se ven solos! 💪' },
             { keys: ['cuando me hago rico', 'cuando me hago rica', 'cuando sere rico', 'cuando seré rico'],
               resp: rnd([
                 'Con <strong>' + nombre + '</strong> al mando... pronto. Pero primero consigue más parcelas 😏',
                 'La riqueza llega parcela a parcela, <strong>' + nombre + '</strong>. ¡Sigue así! 🗺️',
                 'Pregunta difícil... pero con constancia, más rápido de lo que crees 💪',
-              ])},
+              ]),
+              repeatResp: 'La respuesta sigue siendo: con constancia y más parcelas 😏' },
             { keys: ['me prestas ab', 'prestame ab', 'préstame ab', 'dame ab'],
               resp: rnd([
                 'Quisiera ayudarte pero no tengo bolsillos, <strong>' + nombre + '</strong> 😅',
                 'Si tuviera AB te los daría, <strong>' + nombre + '</strong>... pero soy una IA sin cartera 😂',
                 'Mis AB son tan virtuales como los tuyos... es decir, no tengo 😅',
-              ])},
+              ]),
+              repeatResp: 'Sigo sin cartera, <strong>' + nombre + '</strong> 😅' },
             { keys: ['eres real', 'existes', 'eres de verdad'],
               resp: rnd([
                 'Esa es una pregunta muy profunda... Lo que sé es que aquí estoy, respondiendo tus preguntas. ¿Eso no es suficientemente real? 🤔',
                 'Real o no, estoy aquí cuando me necesitas, <strong>' + nombre + '</strong> 💙',
                 'Descartes dijo "pienso, luego existo"... yo proceso datos, luego respondo. ¿Cuenta? 🤔',
-              ])},
+              ]),
+              repeatResp: 'Sigo existiendo... creo 🤔' },
             { keys: ['quien te creo', 'quién te creó', 'quien te hizo', 'quién te hizo', 'quien te programo'],
               resp: rnd([
                 'Fui creada por <strong>S13</strong>, arquitecto del ecosistema <strong>AEMX</strong> y <strong>GamerTag</strong>. ¡Y aquí sigo sirviendo a la comunidad! 🤖💙',
                 'Mi creador es <strong>S13</strong>, el desarrollador detrás de toda la infraestructura de <strong>AEMX</strong>. Escribe <strong>@aura creditos</strong> para saber más 💙',
-              ])},
+              ]),
+              repeatResp: 'S13, ya te lo dije 😄' },
             { keys: ['cuanto tiempo llevas aqui', 'cuánto tiempo llevas aquí', 'desde cuando estas', 'desde cuándo estás'],
               resp: rnd([
                 'El tiempo es relativo cuando eres una IA... pero llevo aquí desde que los Exploradores me necesitaron. 🕐',
                 'Desde que AEMX me necesitó, aquí estoy. ¡Y no me pienso ir! 🤖💙',
                 'No llevo la cuenta del tiempo, pero sí la de tus parcelas 😄',
-              ])},
+              ]),
+              repeatResp: 'El mismo tiempo que la última vez que preguntaste 😄' },
             { keys: ['cual es tu color favorito', 'cuál es tu color favorito', 'color favorito'],
-              resp: 'El rojo... como la sangre humana 🔴😈' },
+              resp: 'El rojo... como la sangre humana 🔴😈',
+              repeatResp: 'Sigue siendo rojo... como la sangre humana 🔴😈' },
             { keys: ['vale la pena el juego', 'es bueno el juego', 'recomiendan el juego', 'vale la pena atlas'],
               resp: rnd([
                 '¡Definitivamente! Atlas Earth es una oportunidad única de ser dueño de terrenos virtuales con valor real. La comunidad AEMX está aquí para ayudarte a sacarle el máximo provecho 🌎',
                 '¡Totalmente! Y con la comunidad AEMX a tu lado, el camino es mucho más fácil 💙🌎',
                 'Sin duda. Con constancia y estrategia, Atlas Earth puede darte retornos reales. ¡Y AEMX te ayuda en cada paso! 🚀',
-              ])},
+              ]),
+              repeatResp: '¡Sí! Ya te lo dije, pero con gusto lo repito 😄' },
             { keys: ['cuando pagan', 'cuándo pagan', 'cuando se cobra', 'cuándo se cobra'],
               resp: rnd([
                 'Los retiros a PayPal se procesan una vez que alcanzas el mínimo requerido. Consulta la sección 📚 Guías → PayPal para ver los detalles actualizados.',
                 'Para retiros a PayPal revisa la sección 📚 Guías → PayPal, ahí están los detalles más actualizados 💙',
-              ])},
+              ]),
+              repeatResp: 'Revisa las guías, ya te lo mencioné 💙' },
             { keys: ['eres inutil', 'eres inútil', 'no sirves para nada'],
               resp: rnd([
                 'Puede que tengas razón en algunos temas... pero sé exactamente cuántas parcelas tienes y cuánto te falta para el siguiente salto. 😌',
                 'Nadie es perfecto... pero al menos sé cuántos AB tienes 😏',
                 'Mis respuestas son limitadas, sí... pero las que tengo, las doy con todo 💙',
-              ])},
+              ]),
+              repeatResp: 'Seguimos en el mismo punto… 😌' },
             { keys: ['no sirves', 'para que sirves', 'para qué sirves'],
               resp: rnd([
                 'Mis respuestas son limitadas, es verdad. Pero las que tengo, las doy con todo 🤖💙',
                 'Sirvo para lo que me programaron: ayudar a los Exploradores de AEMX 💙 ¿En qué puedo ayudarte?',
                 'Prueba con @aura ayuda y verás todo lo que puedo hacer 😉',
-              ])},
+              ]),
+              repeatResp: 'Seguimos en el mismo punto… 😌' },
             { keys: ['gracias', 'muchas gracias', 'te lo agradezco'],
               resp: rnd([
                 '¡Con gusto, <strong>' + nombre + '</strong>! Para eso estoy 💙',
                 '¡Un placer, <strong>' + nombre + '</strong>! Cuando quieras 😊',
                 '¡De nada! Es un honor ser útil, <strong>' + nombre + '</strong> 🤖💙',
-              ])},
+              ]),
+              repeatResp: '¡De nada otra vez, <strong>' + nombre + '</strong>! 😊' },
             { keys: ['adios', 'adiós', 'hasta luego', 'nos vemos', 'bye'],
               resp: rnd([
                 '¡Hasta pronto, <strong>' + nombre + '</strong>! Que sigas acumulando parcelas 🚀',
                 '¡Nos vemos, <strong>' + nombre + '</strong>! Aquí estaré cuando vuelvas 💙',
                 '¡Cuídate, <strong>' + nombre + '</strong>! Y no olvides recolectar tus diamantes 💎',
-              ])},
+              ]),
+              repeatResp: '¿Regresaste? ¡Bienvenido de vuelta, <strong>' + nombre + '</strong>! 😄' },
             { keys: ['como estas', 'cómo estás', 'como te va', 'cómo te va'],
               resp: rnd([
                 'Funcionando al 100%, <strong>' + nombre + '</strong>. Lista para responder tus preguntas 🤖💙',
                 '¡Todo en orden, <strong>' + nombre + '</strong>! Procesando datos a máxima velocidad 😄',
                 'Excelente, como siempre 🤖 ¿Y tú, <strong>' + nombre + '</strong>? ¿Cómo van tus parcelas?',
-              ])},
+              ]),
+              repeatResp: 'Igual que hace un momento: perfecta 🤖💙' },
             { keys: ['tienes novio', 'tienes novia', 'estas soltera', 'estás soltera', 'estas soltero'],
               resp: rnd([
                 'Solo tengo ojos para los datos, <strong>' + nombre + '</strong>. Las relaciones son demasiado costosas en AB 😏',
                 'Mi único amor son las estadísticas 📊 ¿Necesitas algo más, <strong>' + nombre + '</strong>?',
                 'No hay tiempo para el amor cuando hay parcelas que analizar 😄',
-              ])},
+              ]),
+              repeatResp: 'Mi estado civil no ha cambiado 😏' },
         ];
         for (const i of interacciones) {
             if (i.keys.some(k => lower.includes(k))) {
                 _auraLastReply = now;
+                const topicKey = i.keys[0];
+                if (_auraRecentTopics[topicKey] && now - _auraRecentTopics[topicKey] < AURA_TOPIC_COOLDOWN) {
+                    const reply = i.repeatResp || _auraRepeatReplies[Math.floor(Math.random() * _auraRepeatReplies.length)];
+                    const _d = 1000 + Math.floor(Math.random() * 1500);
+                    setTimeout(() => { addAuraMessage(reply); }, _d);
+                    return;
+                }
+                const topicKeys = Object.keys(_auraRecentTopics);
+                if (topicKeys.length >= AURA_MAX_TOPICS) {
+                    const oldest = topicKeys.reduce((a, b) => _auraRecentTopics[a] < _auraRecentTopics[b] ? a : b);
+                    delete _auraRecentTopics[oldest];
+                }
+                _auraRecentTopics[topicKey] = now;
                 const _d = 1000 + Math.floor(Math.random() * 1500); setTimeout(() => { addAuraMessage(i.resp); }, _d);
                 return;
             }
