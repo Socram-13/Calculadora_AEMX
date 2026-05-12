@@ -1079,7 +1079,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
         container.scrollTop = container.scrollHeight;
 
         // ── Sintetizar voz ──
-        hablarAura(text);
+        const textoVoz = text.replace(/@aura/gi, '').replace(/\s{2,}/g, ' ').trim();
+        hablarAura(textoVoz);
         const timerBar = document.createElement('div');
         timerBar.className = 'aura-timer-bar';
         const timerFill = document.createElement('div');
