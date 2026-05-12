@@ -1058,7 +1058,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         _auraQueueNext();
     }
 
-    function addAuraMessage(text) {
+    function addAuraMessage(text, ttsText) {
         const container = document.getElementById('messagesContainer');
         if (!container) return;
 
@@ -1079,8 +1079,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         container.scrollTop = container.scrollHeight;
 
         // ── Sintetizar voz ──
-        const textoVoz = text.replace(/@aura/gi, '').replace(/\s{2,}/g, ' ').trim();
-        hablarAura(textoVoz);
+        hablarAura(ttsText !== undefined ? ttsText : text);
         const timerBar = document.createElement('div');
         timerBar.className = 'aura-timer-bar';
         const timerFill = document.createElement('div');
@@ -2455,7 +2454,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 '• @aura te amo/te odio/callate<br><br>' +
                 '🥚 <strong>Easter eggs:</strong><br>' +
                 '• @aura ejecuta la orden 66<br>' +
-                '• (y alguno más que tendrás que descubrir... 😏)'
+                '• (y alguno más que tendrás que descubrir... 😏)',
+                'Aquí están los comandos disponibles. Consulta el chat para ver la lista completa.'
             ); }, 1500);
             return;
         }
