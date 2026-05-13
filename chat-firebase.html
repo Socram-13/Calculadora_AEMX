@@ -1335,7 +1335,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '📚 <strong>Video-Guías AURA:</strong> Tenemos 10 video-guías disponibles que cubren desde los primeros pasos hasta estrategias avanzadas. Si completas las 10, recibes <strong>+10 COINS AEMX</strong> de recompensa. Encuéntralas en el botón 📚 Guías en la parte superior.'
         },
         {
-            keys: ['ec ', ' ec', 'el ec', 'aura ec', 'explorer club', 'explorador club', 'club explorador', 'pase', 'season pass', 'sp ', ' sp', 'temporada'],
+            keys: ['ec ', ' ec', 'el ec', 'aura ec', 'explorer club', 'explorador club', 'club explorador', 'club de explorador'],
             clan: false,
             resp: '🎫 <strong>Explorer Club (EC):</strong> Es una suscripción de Atlas Earth que te da Atlas Bucks diarios al loguearte. El secreto está en mantener la racha diaria — si fallas un día, ¡reinicia al día 1!<br><br>' +
                   '📅 <strong>Ciclo completo de 90 días:</strong><br>' +
@@ -1344,6 +1344,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
                   '📊 Total (gratis + premium): <strong>10,952 AB</strong> (≈ 109 parcelas)<br>' +
                   '💰 Costo Premium: <strong>$49.99 USD/mes</strong> ($149.97 en 3 meses)<br><br>' +
                   '🏆 Días clave con mayores recompensas: <strong>7, 14, 30, 60 y 90</strong>. Consulta la sección 📚 Guías para más detalles.'
+        },
+        {
+            keys: ['pase de temporada', 'season pass', 'sp ', ' sp', 'el sp', 'aura sp', 'que es el sp', 'qué es el sp'],
+            clan: false,
+            resp: '🎫 <strong>Pase de Temporada (SP):</strong> Es una suscripción premium de Atlas Earth que te da recompensas exclusivas durante una temporada. A diferencia del EC, el SP tiene misiones y objetivos que completar para desbloquear sus recompensas.<br><br>' +
+                  '💡 Consulta la sección 📚 <a href="https://socram-13.github.io/GamerTag_AEMX/guias.html#pase-temporada" target="_blank" style="color:#ffd700;text-decoration:underline;">Guías → Pase de Temporada</a> para ver todos los detalles y estrategias.'
         },
         {
             keys: ['cuanto genera el ec gratis', 'ec gratis cuanto', 'genera ec gratis', 'ab gratis ec', 'ec sin premium'],
@@ -2525,7 +2531,30 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 _auraLastReply = now;
                 const reply = _auraRepeatReplies[Math.floor(Math.random() * _auraRepeatReplies.length)];
                 const _d = 1000 + Math.floor(Math.random() * 1500);
-                setTimeout(() => { addAuraMessage(reply); }, _d);
+
+                // Buscar en guías si hay más info
+                if (!window._auraGuiasCache) {
+                    window._auraGuiasCache = fetch('https://socram-13.github.io/GamerTag_AEMX/guias.html')
+                        .then(r => r.text()).catch(() => null);
+                }
+                window._auraGuiasCache.then(html => {
+                    let extra = '';
+                    if (html) {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const palabras = lower.replace(/@aura/g, '').trim().split(/\s+/).filter(p => p.length > 3);
+                        let mejorSec = null, mejorPts = 0, mejorAncla = '';
+                        doc.querySelectorAll('h2, h3, h4').forEach(sec => {
+                            const pts = palabras.filter(p => sec.textContent.toLowerCase().includes(p)).length;
+                            if (pts > mejorPts) { mejorPts = pts; mejorSec = sec; mejorAncla = sec.id || ''; }
+                        });
+                        if (mejorSec && mejorPts > 0) {
+                            const url = 'https://socram-13.github.io/GamerTag_AEMX/guias.html' + (mejorAncla ? '#' + mejorAncla : '');
+                            extra = '<br><br>📘 Si quieres más detalle: <a href="' + url + '" target="_blank" style="color:#ffd700;text-decoration:underline;">Ver en Guías AEMX</a>';
+                        }
+                    }
+                    setTimeout(() => { addAuraMessage(reply + extra, reply); }, _d);
+                });
                 foundMatch = true;
                 break;
             }
