@@ -1310,9 +1310,21 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '👑 <strong>Rangos VIP:</strong><br>🥉 <strong>Mayor</strong> — más parcelas en tu ciudad<br>🥈 <strong>Gobernador</strong> — más parcelas en tu estado<br>🥇 <strong>Presidente</strong> — más parcelas en todo el país<br><br>Ganas el 10% de cada insignia vendida en tu zona. ¡Puedes tener los 3 rangos simultáneamente!'
         },
         {
-            keys: ['minijuego', 'mini juego', 'minijuego atlas', 'juegos de atlas', 'racer', 'fishing', 'pesca', 'golf', 'warship', 'barco', 'bowling', 'boliche'],
+            keys: ['minijuego', 'juegos de atlas'],
+            exact: false,
             clan: false,
-            resp: '🎮 <strong>Minijuegos:</strong> Hay 5 minijuegos activos: 🏎️ Racer, 🎣 Fishing V2, ⛳ Golf, 🚢 Warship y 🎳 Bowling. Cada evento tiene un bote inicial de <strong>3,000 AB</strong> que crece con los participantes. ¡Las partidas son gratuitas! Consulta la sección 📚 Guías para consejos de cada juego.'
+            resp: '🎮 <strong>Minijuegos:</strong> Hay 5 minijuegos activos: 🏎️ Racer, 🎣 Fishing V2, ⛳ Golf, 🚢 Warship y 🎳 Bowling. Cada evento tiene un bote inicial de <strong>3,000 AB</strong> que crece con los participantes. ¡Las partidas son gratuitas! Consulta la sección 📚 Guías para consejos de cada juego.',
+            matchFn: (msg) => {
+                const m = msg.replace(/@aura/g,'').trim();
+                const especificos = ['racer','fishing','pesca','golf','warship','barco','bowling','boliche'];
+                return (m === 'minijuego' || m === 'juegos de atlas' || m === 'minijuegos') && !especificos.some(e => m.includes(e));
+            }
+        },
+        {
+            keys: ['racer', 'fishing', 'pesca', 'golf', 'warship', 'barco', 'bowling', 'boliche'],
+            clan: false,
+            _guiasSearch: true,
+            resp: ''
         },
         {
             keys: ['atlas buck', ' ab ', 'atlas bucks', 'diamante', 'anuncio', 'renta atlas', 'renta de parcela'],
@@ -2520,9 +2532,10 @@ const userRef = ref(database, 'chat_presence/' + userId);
         let foundMatch = false;
         for (const entry of AURA_KB) {
             if (entry.clan && !esClan) continue;
-            const isMatch = entry.exact
+            let isMatch = entry.exact
                 ? entry.keys.some(k => lower.trim().includes(k))
                 : entry.keys.some(k => lower.includes(k));
+            if (isMatch && entry.matchFn) isMatch = entry.matchFn(lower);
             if (!isMatch) continue;
 
             // Cooldown por tema
@@ -2577,6 +2590,37 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 contarHistoriaAEMX();
             } else if (entry.resp === '__HISTORIA_PARCELA_FANTASMA__') {
                 contarHistoriaParcelaFantasma();
+            } else if (entry._guiasSearch) {
+                // Buscar directamente en guías
+                const _d = 1000 + Math.floor(Math.random() * 1500);
+                if (!window._auraGuiasCache) {
+                    window._auraGuiasCache = fetch('https://socram-13.github.io/GamerTag_AEMX/guias.html').then(r => r.text()).catch(() => null);
+                }
+                window._auraGuiasCache.then(html => {
+                    if (!html) { setTimeout(() => { addAuraMessage('No pude cargar las guías en este momento. Intenta más tarde 😔'); }, _d); return; }
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const palabras = lower.replace(/@aura/g, '').trim().split(/\s+/).filter(p => p.length > 2);
+                    let mejorScore = 0, mejorFragmento = '', mejorAncla = '', mejorTitulo = '';
+                    doc.querySelectorAll('h2, h3, h4').forEach(h => {
+                        let textoSec = h.textContent.toLowerCase();
+                        let frag = '';
+                        let el = h.nextElementSibling;
+                        while (el && !['H2','H3','H4'].includes(el.tagName)) {
+                            textoSec += ' ' + el.textContent.toLowerCase();
+                            if (frag.length < 250) frag += el.textContent.trim() + ' ';
+                            el = el.nextElementSibling;
+                        }
+                        const score = palabras.filter(p => h.textContent.toLowerCase().includes(p)).length * 2
+                                    + palabras.filter(p => textoSec.includes(p)).length;
+                        if (score > mejorScore) { mejorScore = score; mejorFragmento = frag.trim().slice(0, 220); mejorAncla = h.id || ''; mejorTitulo = h.textContent.trim(); }
+                    });
+                    if (!mejorFragmento || mejorScore === 0) { setTimeout(() => { addAuraMessage('No encontré información específica sobre eso en las guías. Intenta con otro término 🔍'); }, _d); return; }
+                    const url = 'https://socram-13.github.io/GamerTag_AEMX/guias.html' + (mejorAncla ? '#' + mejorAncla : '');
+                    const respHTML = '📘 Encontré en guías sobre <strong>' + mejorTitulo + '</strong>:<br><br><em>' + mejorFragmento + '...</em><br><br>👉 <a href="' + url + '" target="_blank" style="color:#ffd700;text-decoration:underline;">Ver en Guías AEMX</a>';
+                    const respVoz = 'Encontré en guías sobre ' + mejorTitulo + '. ' + mejorFragmento + '. Te recomiendo abrir el enlace para ver más detalles.';
+                    setTimeout(() => { addAuraMessage(respHTML, respVoz); }, _d);
+                });
             } else {
                 const delay = 1000 + Math.floor(Math.random() * 1500);
                 setTimeout(() => { addAuraMessage(entry.resp); }, delay);
