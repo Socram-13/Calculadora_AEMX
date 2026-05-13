@@ -2591,7 +2591,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             } else if (entry.resp === '__HISTORIA_PARCELA_FANTASMA__') {
                 contarHistoriaParcelaFantasma();
             } else if (entry._guiasSearch) {
-                // Buscar directamente en guías
+                // Buscar directamente en guías por div id + headings
                 const _d = 1000 + Math.floor(Math.random() * 1500);
                 if (!window._auraGuiasCache) {
                     window._auraGuiasCache = fetch('https://socram-13.github.io/GamerTag_AEMX/guias.html').then(r => r.text()).catch(() => null);
@@ -2601,22 +2601,29 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(html, 'text/html');
                     const palabras = lower.replace(/@aura/g, '').trim().split(/\s+/).filter(p => p.length > 2);
+
                     let mejorScore = 0, mejorFragmento = '', mejorAncla = '', mejorTitulo = '';
-                    doc.querySelectorAll('h2, h3, h4').forEach(h => {
-                        let textoSec = h.textContent.toLowerCase();
+
+                    // Buscar en divs con id (secciones de minijuegos)
+                    doc.querySelectorAll('div[id], section[id]').forEach(div => {
+                        const id = div.id.toLowerCase();
+                        const h = div.querySelector('h2, h3, h4');
+                        const titulo = h ? h.textContent.trim() : div.id;
+                        let textoSec = id + ' ' + titulo.toLowerCase();
                         let frag = '';
-                        let el = h.nextElementSibling;
-                        while (el && !['H2','H3','H4'].includes(el.tagName)) {
+                        div.querySelectorAll('p, li').forEach(el => {
                             textoSec += ' ' + el.textContent.toLowerCase();
                             if (frag.length < 250) frag += el.textContent.trim() + ' ';
-                            el = el.nextElementSibling;
-                        }
-                        const score = palabras.filter(p => h.textContent.toLowerCase().includes(p)).length * 2
-                                    + palabras.filter(p => textoSec.includes(p)).length;
-                        if (score > mejorScore) { mejorScore = score; mejorFragmento = frag.trim().slice(0, 220); mejorAncla = h.id || ''; mejorTitulo = h.textContent.trim(); }
+                        });
+                        const scoreId = palabras.filter(p => id.includes(p)).length * 3;
+                        const scoreTit = palabras.filter(p => titulo.toLowerCase().includes(p)).length * 2;
+                        const scoreContenido = palabras.filter(p => textoSec.includes(p)).length;
+                        const score = scoreId + scoreTit + scoreContenido;
+                        if (score > mejorScore) { mejorScore = score; mejorFragmento = frag.trim().slice(0, 220); mejorAncla = div.id; mejorTitulo = titulo; }
                     });
+
                     if (!mejorFragmento || mejorScore === 0) { setTimeout(() => { addAuraMessage('No encontré información específica sobre eso en las guías. Intenta con otro término 🔍'); }, _d); return; }
-                    const url = 'https://socram-13.github.io/GamerTag_AEMX/guias.html' + (mejorAncla ? '#' + mejorAncla : '');
+                    const url = 'https://socram-13.github.io/GamerTag_AEMX/guias.html#' + mejorAncla;
                     const respHTML = '📘 Encontré en guías sobre <strong>' + mejorTitulo + '</strong>:<br><br><em>' + mejorFragmento + '...</em><br><br>👉 <a href="' + url + '" target="_blank" style="color:#ffd700;text-decoration:underline;">Ver en Guías AEMX</a>';
                     const respVoz = 'Encontré en guías sobre ' + mejorTitulo + '. ' + mejorFragmento + '. Te recomiendo abrir el enlace para ver más detalles.';
                     setTimeout(() => { addAuraMessage(respHTML, respVoz); }, _d);
@@ -2676,35 +2683,23 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     return;
                 }
 
-                // Construir mapa de secciones: cada h2/h3/h4 y su contenido hasta el siguiente heading
-                const headings = Array.from(doc.querySelectorAll('h2, h3, h4'));
-                let mejorScore = 0;
-                let mejorFragmento = '';
-                let mejorAncla = '';
-                let mejorTitulo = '';
+                let mejorScore = 0, mejorFragmento = '', mejorAncla = '', mejorTitulo = '';
 
-                headings.forEach(h => {
-                    let textoSeccion = h.textContent.toLowerCase();
-                    let fragmentoTexto = '';
-                    let el = h.nextElementSibling;
-                    while (el && !['H2','H3','H4'].includes(el.tagName)) {
-                        const t = el.textContent.trim();
-                        textoSeccion += ' ' + t.toLowerCase();
-                        if (fragmentoTexto.length < 250) fragmentoTexto += t + ' ';
-                        el = el.nextElementSibling;
-                    }
-
-                    // Score: coincidencias en título valen doble
-                    const scoreTitulo = palabras.filter(p => h.textContent.toLowerCase().includes(p)).length * 2;
-                    const scoreContenido = palabras.filter(p => textoSeccion.includes(p)).length;
-                    const score = scoreTitulo + scoreContenido;
-
-                    if (score > mejorScore) {
-                        mejorScore = score;
-                        mejorFragmento = fragmentoTexto.trim().slice(0, 220);
-                        mejorAncla = h.id || '';
-                        mejorTitulo = h.textContent.trim().replace(/[^\w\s]/g, '').trim();
-                    }
+                doc.querySelectorAll('div[id], section[id]').forEach(div => {
+                    const id = div.id.toLowerCase();
+                    const h = div.querySelector('h2, h3, h4');
+                    const titulo = h ? h.textContent.trim() : div.id;
+                    let textoSec = id + ' ' + titulo.toLowerCase();
+                    let frag = '';
+                    div.querySelectorAll('p, li').forEach(el => {
+                        textoSec += ' ' + el.textContent.toLowerCase();
+                        if (frag.length < 250) frag += el.textContent.trim() + ' ';
+                    });
+                    const scoreId = palabras.filter(p => id.includes(p)).length * 3;
+                    const scoreTit = palabras.filter(p => titulo.toLowerCase().includes(p)).length * 2;
+                    const scoreContenido = palabras.filter(p => textoSec.includes(p)).length;
+                    const score = scoreId + scoreTit + scoreContenido;
+                    if (score > mejorScore) { mejorScore = score; mejorFragmento = frag.trim().slice(0, 220); mejorAncla = div.id; mejorTitulo = titulo; }
                 });
 
                 if (mejorScore === 0 || !mejorFragmento) {
@@ -2712,7 +2707,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     return;
                 }
 
-                const url = 'https://socram-13.github.io/GamerTag_AEMX/guias.html' + (mejorAncla ? '#' + mejorAncla : '');
+                const url = 'https://socram-13.github.io/GamerTag_AEMX/guias.html#' + mejorAncla;
                 const respHTML = '📘 Encontré algo en las guías sobre <strong>' + mejorTitulo + '</strong>:<br><br><em>' + mejorFragmento + '...</em><br><br>👉 <a href="' + url + '" target="_blank" style="color:#ffd700;text-decoration:underline;">Ver en Guías AEMX</a>';
                 const respVoz = 'Encontré algo en las guías sobre ' + mejorTitulo + '. ' + mejorFragmento + '. Te recomiendo abrir el enlace para ver más detalles.';
                 setTimeout(() => { addAuraMessage(respHTML, respVoz); }, _d);
