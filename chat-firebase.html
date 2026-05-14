@@ -1288,7 +1288,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
      *    x        = letra de revisión dentro del mismo release (a, b, c...)
      *  Comando para consultar: @aura compilacion
      * ══════════════════════════════════════════════════════════════ */
-    const AURA_BUILD = 'build-20260514-52n';
+    const AURA_BUILD = 'build-20260514-52o';
 
     const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
 
@@ -1503,7 +1503,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             keys: ['cual es la respuesta unica de la vida el universo y todo'],
             exact: true,
             clan: false,
-            resp: 'mmmh... lo he pensado mucho y la respuesta a la vida, el universo y todo lo demás es... <strong>42</strong> 😉'
+            resp: '__RESPUESTA42__'
         },
         {
             keys: ['ejecuta la orden 66'],
@@ -2043,7 +2043,49 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }, 3 * 60 * 1000);
     }
 
-    function ejecutarOrden66() {
+    function ejecutarRespuesta42() {
+        const container = document.getElementById('messagesContainer');
+        if (!container) return;
+
+        const div = document.createElement('div');
+        div.className = 'message aura-msg';
+        div.innerHTML = `
+            <div class="message-avatar">
+                <img src="${AURA_AVATAR}" alt="AURA" onerror="this.parentElement.textContent='🤖'">
+            </div>
+            <div class="message-content">
+                <div class="message-author">${AURA_NAME}</div>
+                <div class="message-bubble-wrap">
+                    <div class="message-text" id="respuesta42-text"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+
+        const textEl = div.querySelector('#respuesta42-text');
+        let contenido = '';
+
+        const pasos = [
+            { texto: 'Hmm....', delay: 800 },
+            { texto: 'Déjame ver....', delay: 2500 },
+            { texto: '...lo he pensado mucho...', delay: 5000 },
+            { texto: '...y la respuesta a la vida, el universo y todo lo demás es...', delay: 7800 },
+            { texto: '<strong>42</strong> 😉', delay: 11500 },
+        ];
+
+        pasos.forEach(p => {
+            setTimeout(() => {
+                contenido += (contenido ? ' ' : '') + p.texto;
+                textEl.innerHTML = contenido;
+                container.scrollTop = container.scrollHeight;
+                const textoPlano = p.texto.replace(/<[^>]*>/g, '');
+                hablarAura(textoPlano);
+            }, p.delay);
+        });
+    }
+
+
         const container = document.getElementById('messagesContainer');
         if (!container) return;
 
@@ -2648,6 +2690,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             if (entry.resp === '__ORDEN66__') {
                 ejecutarOrden66();
+            } else if (entry.resp === '__RESPUESTA42__') {
+                ejecutarRespuesta42();
             } else if (entry.resp === '__HISTORIA_ARM__') {
                 contarHistoriaARM();
             } else if (entry.resp === '__HISTORIA_AEMX__') {
