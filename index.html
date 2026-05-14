@@ -3931,6 +3931,12 @@
     const incomeAllEvts    = eventPerHour  * TOTAL_EVT_H;
     const totalWithEvents  = incomeNormal  + incomeAllEvts;
 
+    // Guardar datos SRB para AURA
+    try {
+        localStorage.setItem('aura_srb_hour', eventPerHour.toFixed(8));
+        localStorage.setItem('aura_srb_event', incomeSingleEvt.toFixed(6));
+    } catch(e) {}
+
     document.getElementById('r-srb-hour-base').textContent     = '$' + (basePerSec * 3600).toFixed(8);
     document.getElementById('r-srb-hour').textContent          = '$' + (eventPerHour).toFixed(8);
 

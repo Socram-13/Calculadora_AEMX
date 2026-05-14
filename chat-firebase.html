@@ -1275,9 +1275,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
             resp: '🌿 <strong>Estrategia de Vegetación:</strong> La distribución de parcelas sigue un patrón predecible. Las Legendarias suelen estar rodeadas de Épicas y Raras, y la vegetación del mapa sigue la misma dirección que las parcelas de mayor rareza. ¡Úsala como brújula para encontrar los mejores terrenos! Consulta la sección 📚 Guías para ver la guía completa.'
         },
         {
-            keys: ['parcela fantasma', 'cuentame la historia de la parcela fantasma'],
+            keys: ['cuanto genero en el srb', 'cuánto genero en el srb', 'cuanto gano en el srb', 'cuánto gano en el srb', 'srb', 'que genero en el srb', 'mi srb', 'cuanto es mi srb'],
             clan: false,
-            resp: '__HISTORIA_PARCELA_FANTASMA__'
+            resp: '__SRB__'
         },
         {
             keys: ['parcel', 'terreno', 'comprar', 'rareza', 'rara', 'epic', 'legendar', 'comun', 'común'],
@@ -2619,6 +2619,19 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 contarHistoriaAEMX();
             } else if (entry.resp === '__HISTORIA_PARCELA_FANTASMA__') {
                 contarHistoriaParcelaFantasma();
+            } else if (entry.resp === '__SRB__') {
+                const _d = 1000 + Math.floor(Math.random() * 1500);
+                const srbHour  = parseFloat(localStorage.getItem('aura_srb_hour'));
+                const srbEvent = parseFloat(localStorage.getItem('aura_srb_event'));
+                if (!srbHour || !srbEvent || isNaN(srbHour) || isNaN(srbEvent)) {
+                    setTimeout(() => { addAuraMessage('No tengo tus datos de renta aún, <strong>' + nombre + '</strong>. Abre el <a href="https://socram-13.github.io/GamerTag_AEMX/" target="_blank" style="color:#ffd700;text-decoration:underline;">GamerTag</a> primero para que pueda calcular tu SRB. 💙'); }, _d);
+                } else {
+                    const msgHTML = '🚀 <strong>Tu SRB (50× boost · 32h):</strong><br><br>' +
+                        '⚡ Por hora: <strong>$' + srbHour + ' USD</strong><br>' +
+                        '🏆 En 32 horas: <strong>$' + srbEvent + ' USD</strong>';
+                    const msgVoz = 'Tu SRB. Por hora generas ' + srbHour + ' dólares. En el evento completo de 32 horas generas ' + srbEvent + ' dólares.';
+                    setTimeout(() => { addAuraMessage(msgHTML, msgVoz); }, _d);
+                }
             } else if (entry._guiasSearch) {
                 const _d = 1000 + Math.floor(Math.random() * 1500);
                 if (!window._auraGuiasCache) {
