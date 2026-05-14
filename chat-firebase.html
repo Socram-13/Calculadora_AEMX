@@ -1288,7 +1288,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
      *    x        = letra de revisión dentro del mismo release (a, b, c...)
      *  Comando para consultar: @aura compilacion
      * ══════════════════════════════════════════════════════════════ */
-    const AURA_BUILD = 'build-20260514-52o';
+    const AURA_BUILD = 'build-20260514-52p';
 
     const rnd = arr => arr[Math.floor(Math.random() * arr.length)];
 
@@ -2083,6 +2083,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 hablarAura(textoPlano);
             }, p.delay);
         });
+
+        setTimeout(() => {
+            if (div.parentNode) {
+                div.style.transition = 'opacity 0.5s ease';
+                div.style.opacity = '0';
+                setTimeout(() => { if (div.parentNode) div.parentNode.removeChild(div); }, 500);
+            }
+        }, 3 * 60 * 1000);
     }
 
     function ejecutarOrden66() {
