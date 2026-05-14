@@ -1226,7 +1226,20 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                 // Mensaje 3 — 5s después del mensaje 2
                 setTimeout(() => {
-                    addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.');
+                    if (!window._fbGet || !window._fbRef || !window._fbDatabase) {
+                        addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.');
+                        return;
+                    }
+                    window._fbGet(window._fbRef(window._fbDatabase, 'config/aviso')).then(snap => {
+                        const aviso = snap.exists() ? snap.val() : '';
+                        let msg = 'En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.';
+                        if (aviso && aviso.trim()) {
+                            msg += '<br><br>📢 <strong>Aviso activo:</strong><br>' + aviso.trim();
+                        }
+                        addAuraMessage(msg);
+                    }).catch(() => {
+                        addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.');
+                    });
                 }, 12000);
 
                 // Aviso activo — 4s después del último saludo
@@ -1251,7 +1264,20 @@ const userRef = ref(database, 'chat_presence/' + userId);
                                    `${horas} horas`;
 
                 setTimeout(() => {
-                    addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
+                    if (!window._fbGet || !window._fbRef || !window._fbDatabase) {
+                        addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
+                        return;
+                    }
+                    window._fbGet(window._fbRef(window._fbDatabase, 'config/aviso')).then(snap => {
+                        const aviso = snap.exists() ? snap.val() : '';
+                        let msg = 'Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.';
+                        if (aviso && aviso.trim()) {
+                            msg += '<br><br>📢 <strong>Aviso activo:</strong><br>' + aviso.trim();
+                        }
+                        addAuraMessage(msg);
+                    }).catch(() => {
+                        addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
+                    });
                 }, 2000);
 
                 // Aviso activo — después del saludo
