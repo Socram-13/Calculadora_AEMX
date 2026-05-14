@@ -3933,8 +3933,8 @@
 
     // Guardar datos SRB para AURA
     try {
-        localStorage.setItem('aura_srb_hour', eventPerHour.toFixed(8));
-        localStorage.setItem('aura_srb_event', incomeSingleEvt.toFixed(6));
+        localStorage.setItem('aura_srb_hour', eventPerHour.toFixed(2));
+        localStorage.setItem('aura_srb_event', incomeSingleEvt.toFixed(2));
     } catch(e) {}
 
     document.getElementById('r-srb-hour-base').textContent     = '$' + (basePerSec * 3600).toFixed(8);
