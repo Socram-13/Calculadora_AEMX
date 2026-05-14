@@ -1242,17 +1242,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     });
                 }, 12000);
 
-                // Aviso activo — 4s después del último saludo
-                setTimeout(() => {
-                    if (!window._fbGet || !window._fbRef || !window._fbDatabase) return;
-                    window._fbGet(window._fbRef(window._fbDatabase, 'config/aviso')).then(snap => {
-                        const aviso = snap.exists() ? snap.val() : '';
-                        if (aviso && aviso.trim()) {
-                            addAuraMessage('📢 <strong>Aviso activo:</strong><br><br>' + aviso.trim());
-                        }
-                    }).catch(() => {});
-                }, 16000);
-
             } else {
                 // Visitas posteriores — guardar nuevo timestamp y mostrar saludo con horas
                 const horas = horasDesdeUltimaVisita();
@@ -1279,17 +1268,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
                         addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
                     });
                 }, 2000);
-
-                // Aviso activo — después del saludo
-                setTimeout(() => {
-                    if (!window._fbGet || !window._fbRef || !window._fbDatabase) return;
-                    window._fbGet(window._fbRef(window._fbDatabase, 'config/aviso')).then(snap => {
-                        const aviso = snap.exists() ? snap.val() : '';
-                        if (aviso && aviso.trim()) {
-                            addAuraMessage('📢 <strong>Aviso activo:</strong><br><br>' + aviso.trim());
-                        }
-                    }).catch(() => {});
-                }, 5000);
             }
         });
     }
