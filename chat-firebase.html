@@ -973,7 +973,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             const entero = parseInt(partes[0], 10);
             const decimales = partes[1];
             if (entero > 0) {
-                return entero + ' punto ' + parseInt(decimales, 10) + ' dólares';
+                return entero + ' punto ' + decimales + ' dólares';
             }
             const ceros = decimales.match(/^(0+)/);
             const cerosTexto = ceros ? Array.from(ceros[1]).map(() => 'cero').join(' ') : '';
@@ -1075,7 +1075,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             const entero = parseInt(partes[0], 10);
             const decimales = partes[1];
             if (entero > 0) {
-                return entero + ' punto ' + parseInt(decimales, 10) + ' dólares';
+                return entero + ' punto ' + decimales + ' dólares';
             }
             const ceros = decimales.match(/^(0+)/);
             const cerosTexto = ceros ? Array.from(ceros[1]).map(() => 'cero').join(' ') : '';
