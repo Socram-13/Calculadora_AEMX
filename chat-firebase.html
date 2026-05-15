@@ -987,7 +987,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             .replace(/\+(\d+)/g, 'más $1')
             .replace(/\bAB\b/g, 'Atlas Bucks')
             .replace(/━+/g, ',')
-            .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks)/gi, '$1 $2,')
+            .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks|USD|centavos|hrs|min|seg|días)/gi, '$1 $2,')
             .replace(/\n/g, ', ')
             .replace(/,\s*,+/g, ', ')
             .replace(placeholder, nombreUsuario)
