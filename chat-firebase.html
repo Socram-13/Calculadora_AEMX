@@ -1791,7 +1791,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             if (totalMes >= 60) {
                 const ganancia = (totalMes - 60).toFixed(2);
-                totalMesEstado = '🎉 Ambos planes se pagan solos. Ganancia pura: <strong>$' + ganancia + ' USD</strong>.';
+                totalMesEstado = '🎉 Tanto el Explorer Club como el pase de temporada ya se pagan solos y dejan una ganancia pura de: <strong>$' + ganancia + ' USD</strong>.';
             } else if (totalMes >= 50) {
                 totalMesEstado = '🏆 El Explorer Club ya se paga solo con tu renta mensual.';
             } else if (totalMes >= 10) {
