@@ -1708,6 +1708,42 @@ const userRef = ref(database, 'chat_presence/' + userId);
         ];
         const tramoRenta = BONOS_LABEL.find(t => badges >= t.min && badges <= t.max) || BONOS_LABEL[0];
 
+        // Leer datos de renta calculados por el GamerTag
+        const rentHour  = parseFloat(localStorage.getItem('aura_rent_hour'))  || 0;
+        const rentDay   = parseFloat(localStorage.getItem('aura_rent_day'))   || 0;
+        const rentMonth = parseFloat(localStorage.getItem('aura_rent_month')) || 0;
+        const adBoost   = parseFloat(localStorage.getItem('aura_ad_boost'))   || 0;
+        const srbHour   = parseFloat(localStorage.getItem('aura_srb_hour'))   || 0;
+        const srbEvent  = parseFloat(localStorage.getItem('aura_srb_event'))  || 0;
+        const secsPerUsd = parseFloat(localStorage.getItem('aura_secs_per_usd')) || 0;
+
+        // Formatear tiempo para generar $1 USD
+        let tiempoUsd = '';
+        if (secsPerUsd > 0) {
+            if (secsPerUsd < 60) {
+                tiempoUsd = secsPerUsd.toFixed(1) + ' seg';
+            } else if (secsPerUsd < 3600) {
+                tiempoUsd = (secsPerUsd / 60).toFixed(1) + ' min';
+            } else if (secsPerUsd < 86400) {
+                tiempoUsd = (secsPerUsd / 3600).toFixed(2) + ' hrs';
+            } else {
+                tiempoUsd = (secsPerUsd / 86400).toFixed(2) + ' días';
+            }
+        }
+
+        const rentaBlock = (rentDay > 0) ?
+            '⚡ <strong>RENTA NORMAL</strong> (boost ' + adBoost + '×)<br>' +
+            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + rentHour.toFixed(6) + ' USD</strong><br>' +
+            '&nbsp;&nbsp;Por día:&nbsp;&nbsp;&nbsp;<strong>$' + rentDay.toFixed(4) + ' USD</strong><br>' +
+            '&nbsp;&nbsp;Por mes:&nbsp;&nbsp;&nbsp;<strong>$' + rentMonth.toFixed(4) + ' USD</strong><br>' +
+            (tiempoUsd ? '&nbsp;&nbsp;Genera $1 en: <strong>' + tiempoUsd + '</strong><br>' : '') +
+            '<br>' : '';
+
+        const srbBlock = (srbHour > 0) ?
+            '🚀 <strong>SRB</strong> (50× · 32h)<br>' +
+            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + srbHour + ' USD</strong><br>' +
+            '&nbsp;&nbsp;Evento completo: <strong>$' + srbEvent + ' USD</strong><br><br>' : '';
+
         const sep = '━━━━━━━━━━━━━━━━━━━';
 
         const msg =
@@ -1726,6 +1762,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             '💰 <strong>ATLAS BUCKS</strong><br>' +
             '&nbsp;&nbsp;<strong>' + ab.toLocaleString() + ' AB</strong> disponibles (' + abParcelas + ' parcelas)<br><br>' +
+
+            rentaBlock +
+            srbBlock +
 
             '📈 <strong>ESTADO</strong><br>' +
             '&nbsp;&nbsp;' + accion + (abMsg ? '<br><br>&nbsp;&nbsp;' + abMsg : '') + '<br>' +

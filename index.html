@@ -3931,10 +3931,15 @@
     const incomeAllEvts    = eventPerHour  * TOTAL_EVT_H;
     const totalWithEvents  = incomeNormal  + incomeAllEvts;
 
-    // Guardar datos SRB para AURA
+    // Guardar datos para AURA
     try {
         localStorage.setItem('aura_srb_hour', eventPerHour.toFixed(2));
         localStorage.setItem('aura_srb_event', incomeSingleEvt.toFixed(2));
+        localStorage.setItem('aura_rent_hour', perHour.toFixed(6));
+        localStorage.setItem('aura_rent_day', perDay.toFixed(4));
+        localStorage.setItem('aura_rent_month', perMonth.toFixed(4));
+        localStorage.setItem('aura_ad_boost', adBoost);
+        localStorage.setItem('aura_secs_per_usd', boostedPerSec > 0 ? (1 / boostedPerSec).toFixed(2) : '0');
     } catch(e) {}
 
     document.getElementById('r-srb-hour-base').textContent     = '$' + (basePerSec * 3600).toFixed(8);
