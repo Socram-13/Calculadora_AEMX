@@ -1758,17 +1758,17 @@ const userRef = ref(database, 'chat_presence/' + userId);
         }
 
         const rentaBlock = (rentDay > 0) ?
-            '⚡ <strong>RENTA NORMAL</strong> (boost ' + adBoost + '×)<br>' +
-            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + rentHour.toFixed(6) + ' USD</strong><br>' +
-            '&nbsp;&nbsp;Por día:&nbsp;&nbsp;&nbsp;<strong>$' + rentDay.toFixed(4) + ' USD</strong><br>' +
-            '&nbsp;&nbsp;Por mes:&nbsp;&nbsp;&nbsp;<strong>$' + rentMonth.toFixed(4) + ' USD</strong><br>' +
-            (tiempoUsd ? '&nbsp;&nbsp;Genera $1 en: <strong>' + tiempoUsd + '</strong><br>' : '') +
+            '⚡ <strong>RENTA NORMAL</strong> (boost ' + adBoost + '×). <br>' +
+            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + rentHour.toFixed(6) + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Por día:&nbsp;&nbsp;&nbsp;<strong>$' + rentDay.toFixed(4) + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Por mes:&nbsp;&nbsp;&nbsp;<strong>$' + rentMonth.toFixed(4) + ' USD</strong>. <br>' +
+            (tiempoUsd ? '&nbsp;&nbsp;Genera $1 en: <strong>' + tiempoUsd + '</strong>. <br>' : '') +
             '<br>' : '';
 
         const srbBlock = (srbHour > 0) ?
-            '🚀 <strong>SRB</strong> (50× · 32h)<br>' +
-            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + srbHour + ' USD</strong><br>' +
-            '&nbsp;&nbsp;Evento completo: <strong>$' + srbEvent + ' USD</strong><br><br>' : '';
+            '🚀 <strong>SRB</strong> (50× · 32h). <br>' +
+            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + srbHour + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Evento completo: <strong>$' + srbEvent + ' USD</strong>. <br><br>' : '';
 
         const sep = '━━━━━━━━━━━━━━━━━━━';
 
