@@ -1780,6 +1780,25 @@ const userRef = ref(database, 'chat_presence/' + userId);
             '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + srbHour + ' USD</strong>. <br>' +
             '&nbsp;&nbsp;Evento completo: <strong>$' + srbEvent + ' USD</strong>. <br><br>' : '';
 
+        // ── Renta total mensual ──
+        const totalMes = (rentMonth || 0) + (srbEvent > 0 ? srbEvent * 2 : 0);
+        let totalMesBlock = '';
+        let totalMesEstado = '';
+        if (totalMes > 0) {
+            totalMesBlock =
+                '💵 <strong>RENTA TOTAL AL MES</strong>. <br>' +
+                '&nbsp;&nbsp;Normal + SRB (×2): <strong>$' + totalMes.toFixed(4) + ' USD</strong>. <br><br>';
+
+            if (totalMes >= 60) {
+                const ganancia = (totalMes - 60).toFixed(2);
+                totalMesEstado = '🎉 Ambos planes se pagan solos. Ganancia pura: <strong>$' + ganancia + ' USD</strong>.';
+            } else if (totalMes >= 50) {
+                totalMesEstado = '🏆 El Explorer Club ya se paga solo con tu renta mensual.';
+            } else if (totalMes >= 10) {
+                totalMesEstado = '✅ El pase de temporada ya se paga solo con tu renta mensual.';
+            }
+        }
+
         const sep = '━━━━━━━━━━━━━━━━━━━';
 
         const msg =
@@ -1801,9 +1820,10 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
             rentaBlock +
             srbBlock +
+            totalMesBlock +
 
             '📈 <strong>ESTADO</strong><br>' +
-            '&nbsp;&nbsp;' + accion + (abMsg ? '<br><br>&nbsp;&nbsp;' + abMsg : '') + '<br>' +
+            '&nbsp;&nbsp;' + accion + (abMsg ? '<br><br>&nbsp;&nbsp;' + abMsg : '') + (totalMesEstado ? '<br><br>&nbsp;&nbsp;' + totalMesEstado : '') + '<br>' +
 
             (insigniasMsg ? '<br>💡 <strong>RECOMENDACIÓN</strong><br>&nbsp;&nbsp;' + insigniasMsg.replace('<br><br>🏅 <strong>Recomendación de insignias:</strong> ', '').replace('<br><br>🏅 <strong>Opción alternativa — insignias:</strong> ', '') + '<br>' : '') +
 
