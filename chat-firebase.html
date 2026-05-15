@@ -970,24 +970,29 @@ const userRef = ref(database, 'chat_presence/' + userId);
             const num = str.replace('$', '');
             const partes = num.split('.');
             if (partes.length < 2) return str;
+            const entero = parseInt(partes[0], 10);
             const decimales = partes[1];
+            if (entero > 0) {
+                return entero + ' punto ' + parseInt(decimales, 10) + ' dólares';
+            }
             const ceros = decimales.match(/^(0+)/);
             const cerosTexto = ceros ? Array.from(ceros[1]).map(() => 'cero').join(' ') : '';
             const resto = parseInt(decimales.replace(/^0+/, ''), 10);
             const restoTexto = isNaN(resto) || resto === 0 ? '' : resto.toString();
-            return 'cero punto ' + (cerosTexto ? cerosTexto + ' ' : '') + restoTexto + ' centavos';
+            return 'cero punto ' + (cerosTexto ? cerosTexto + ' ' : '') + restoTexto + ' centavos de dólar';
         }
 
         const textoLimpio = textoBase
             .replace(/[🟢🔵🟣🟡🏅💰📈💡⚠️✅❌📊🗺️🎯🚀🔴👁️⚙️🔍📡🔎💀🤖💙💎📋🏆🎉🕐😄😉😊😏😅😂🌎📅🗓️🎲⚡🌙☀️🌤️🤫🤔💾👁🔔🔕]/gu, ', ')
             .replace(/\p{Emoji_Presentation}/gu, '')
-            .replace(/\$0\.\d{4,}/g, m => leerDecimal(m) + ', ')
+            .replace(/\$\d+\.\d+/g, m => leerDecimal(m) + ', ')
+            .replace(/\bUSD\b/g, '')
             .replace(/\+(\d+)%/g, 'más $1 por ciento')
             .replace(/(\d+)\s*%/g, '$1 por ciento')
             .replace(/\+(\d+)/g, 'más $1')
             .replace(/\bAB\b/g, 'Atlas Bucks')
             .replace(/━+/g, ',')
-            .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks|USD|centavos|hrs|min|seg|días)/gi, '$1 $2,')
+            .replace(/(\d+)\s+(comunes|raras|épicas|epicas|legendarias|parcelas|insignias|Atlas Bucks|hrs|min|seg|días)/gi, '$1 $2,')
             .replace(/\n/g, ', ')
             .replace(/,\s*,+/g, ', ')
             .replace(placeholder, nombreUsuario)
@@ -1067,18 +1072,23 @@ const userRef = ref(database, 'chat_presence/' + userId);
             const num = str.replace('$', '');
             const partes = num.split('.');
             if (partes.length < 2) return str;
+            const entero = parseInt(partes[0], 10);
             const decimales = partes[1];
+            if (entero > 0) {
+                return entero + ' punto ' + parseInt(decimales, 10) + ' dólares';
+            }
             const ceros = decimales.match(/^(0+)/);
             const cerosTexto = ceros ? Array.from(ceros[1]).map(() => 'cero').join(' ') : '';
             const resto = parseInt(decimales.replace(/^0+/, ''), 10);
             const restoTexto = isNaN(resto) || resto === 0 ? '' : resto.toString();
-            return 'cero punto ' + (cerosTexto ? cerosTexto + ' ' : '') + restoTexto + ' centavos';
+            return 'cero punto ' + (cerosTexto ? cerosTexto + ' ' : '') + restoTexto + ' centavos de dólar';
         }
 
         const textoLimpio = textoBase
             .replace(/[🟢🔵🟣🟡🏅💰📈💡⚠️✅❌📊🗺️🎯🚀🔴👁️⚙️🔍📡🔎💀🤖💙💎📋🏆🎉🕐😄😉😊😏😅😂🌎📅🗓️🎲⚡🌙☀️🌤️🤫🤔💾👁🔔🔕]/gu, ', ')
             .replace(/\p{Emoji_Presentation}/gu, '')
-            .replace(/\$0\.\d{4,}/g, m => leerDecimal2(m) + ', ')
+            .replace(/\$\d+\.\d+/g, m => leerDecimal2(m) + ', ')
+            .replace(/\bUSD\b/g, '')
             .replace(/\n/g, ', ')
             .replace(/,\s*,+/g, ', ')
             .trim();
