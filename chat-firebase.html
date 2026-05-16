@@ -966,6 +966,22 @@ const userRef = ref(database, 'chat_presence/' + userId);
             textoBase = textoBase.replace(new RegExp(nombreUsuario, 'gi'), placeholder);
         }
 
+        function numApalabras(n) {
+            const unidades = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve',
+                'diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve'];
+            const decenas = ['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+            const centenas = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos',
+                'seiscientos','setecientos','ochocientos','novecientos'];
+            if (n === 0) return 'cero';
+            if (n === 100) return 'cien';
+            let res = '';
+            if (n >= 1000) { res += numApalabras(Math.floor(n/1000)) + ' mil '; n %= 1000; }
+            if (n >= 100) { res += centenas[Math.floor(n/100)] + ' '; n %= 100; }
+            if (n >= 20) { res += decenas[Math.floor(n/10)]; if (n%10) res += ' y ' + unidades[n%10]; }
+            else if (n > 0) res += unidades[n];
+            return res.trim();
+        }
+
         function leerDecimal(str) {
             const num = str.replace('$', '');
             const partes = num.split('.');
@@ -973,12 +989,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
             const entero = parseInt(partes[0], 10);
             const decimales = partes[1];
             if (entero > 0) {
-                return entero + ' punto ' + decimales + ' dólares';
+                return numApalabras(entero) + ' punto ' + decimales + ' dólares';
             }
             const ceros = decimales.match(/^(0+)/);
             const cerosTexto = ceros ? Array.from(ceros[1]).map(() => 'cero').join(' ') : '';
             const resto = parseInt(decimales.replace(/^0+/, ''), 10);
-            const restoTexto = isNaN(resto) || resto === 0 ? '' : resto.toString();
+            const restoTexto = isNaN(resto) || resto === 0 ? '' : numApalabras(resto);
             return 'cero punto ' + (cerosTexto ? cerosTexto + ' ' : '') + restoTexto + ' centavos de dólar';
         }
 
@@ -1076,12 +1092,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
             const entero = parseInt(partes[0], 10);
             const decimales = partes[1];
             if (entero > 0) {
-                return entero + ' punto ' + decimales + ' dólares';
+                return numApalabras(entero) + ' punto ' + decimales + ' dólares';
             }
             const ceros = decimales.match(/^(0+)/);
             const cerosTexto = ceros ? Array.from(ceros[1]).map(() => 'cero').join(' ') : '';
             const resto = parseInt(decimales.replace(/^0+/, ''), 10);
-            const restoTexto = isNaN(resto) || resto === 0 ? '' : resto.toString();
+            const restoTexto = isNaN(resto) || resto === 0 ? '' : numApalabras(resto);
             return 'cero punto ' + (cerosTexto ? cerosTexto + ' ' : '') + restoTexto + ' centavos de dólar';
         }
 
@@ -1769,11 +1785,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
+        // Renta normal descontando 64h de eventos SRB al mes
+        const rentNormalMes = rentMonth - (rentHour * 64);
+
         const rentaBlock = (rentDay > 0) ?
             '⚡ <strong>RENTA NORMAL</strong> (boost ' + adBoost + '×). <br>' +
             '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + rentHour.toFixed(6) + ' USD</strong>. <br>' +
             '&nbsp;&nbsp;Por día:&nbsp;&nbsp;&nbsp;<strong>$' + rentDay.toFixed(4) + ' USD</strong>. <br>' +
-            '&nbsp;&nbsp;Por mes:&nbsp;&nbsp;&nbsp;<strong>$' + rentMonth.toFixed(4) + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Por mes (−64h SRB): <strong>$' + rentNormalMes.toFixed(4) + ' USD</strong>. <br>' +
             (tiempoUsd ? '&nbsp;&nbsp;Genera $1 en: <strong>' + tiempoUsd + '</strong>. <br>' : '') +
             '<br>' : '';
 
@@ -1783,7 +1802,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             '&nbsp;&nbsp;Evento completo: <strong>$' + srbEvent + ' USD</strong>. <br><br>' : '';
 
         // ── Renta total mensual ──
-        const totalMes = (rentMonth || 0) + (srbEvent > 0 ? srbEvent * 2 : 0);
+        const totalMes = (rentNormalMes || 0) + (srbEvent > 0 ? srbEvent * 2 : 0);
         let totalMesBlock = '';
         let totalMesEstado = '';
         if (totalMes > 0) {
