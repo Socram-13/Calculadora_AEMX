@@ -4,214 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SilhouetteVision</title>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500&display=swap');
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: #030712;
-    color: #e2e8f0;
-    font-family: 'Inter', sans-serif;
-    overflow: hidden;
-    height: 100dvh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  #header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 16px;
-    background: rgba(3,7,18,0.9);
-    border-bottom: 1px solid rgba(99,202,183,0.2);
-    z-index: 10;
-    flex-shrink: 0;
-  }
-
-  #header h1 {
-    font-family: 'Orbitron', monospace;
-    font-size: 15px;
-    font-weight: 700;
-    color: #63cab7;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-  }
-
-  #status-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #ef4444;
-    box-shadow: 0 0 6px #ef4444;
-    transition: all 0.3s;
-  }
-  #status-dot.active { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
-
-  #canvas-container {
-    position: relative;
-    flex: 1;
-    overflow: hidden;
-  }
-
-  #videoEl {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transform: scaleX(-1);
-  }
-
-  #outputCanvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-
-  #overlay-canvas {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-  }
-
-  #controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 12px 16px;
-    background: rgba(3,7,18,0.95);
-    border-top: 1px solid rgba(99,202,183,0.2);
-    flex-shrink: 0;
-    flex-wrap: wrap;
-  }
-
-  .ctrl-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(99,202,183,0.3);
-    border-radius: 12px;
-    padding: 8px 14px;
-    color: #94a3b8;
-    font-size: 10px;
-    font-family: 'Inter', sans-serif;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    transition: all 0.2s;
-    min-width: 64px;
-    text-transform: uppercase;
-  }
-
-  .ctrl-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
-  .ctrl-btn:active { transform: scale(0.93); }
-  .ctrl-btn.active { background: rgba(99,202,183,0.15); border-color: #63cab7; color: #63cab7; }
-  .ctrl-btn.danger { border-color: rgba(239,68,68,0.5); }
-  .ctrl-btn.danger.active { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #ef4444; }
-  .ctrl-btn.capture-btn { border-color: rgba(251,191,36,0.4); color: #fbbf24; }
-  .ctrl-btn.capture-btn:active { background: rgba(251,191,36,0.15); }
-
-  #rec-indicator {
-    position: absolute;
-    top: 14px; right: 14px;
-    display: none;
-    align-items: center;
-    gap: 6px;
-    background: rgba(239,68,68,0.15);
-    border: 1px solid rgba(239,68,68,0.4);
-    border-radius: 20px;
-    padding: 4px 10px;
-    font-size: 11px;
-    font-family: 'Orbitron', monospace;
-    color: #ef4444;
-    z-index: 20;
-  }
-
-  #rec-indicator.show { display: flex; }
-  .rec-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: blink 1s infinite; }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-
-  #loading-overlay {
-    position: absolute;
-    inset: 0;
-    background: #030712;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    z-index: 100;
-  }
-
-  .loader-ring {
-    width: 48px; height: 48px;
-    border: 2px solid rgba(99,202,183,0.2);
-    border-top-color: #63cab7;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  #loading-text {
-    font-family: 'Orbitron', monospace;
-    font-size: 11px;
-    color: #63cab7;
-    letter-spacing: 2px;
-    text-align: center;
-  }
-
-  #toast {
-    position: absolute;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: rgba(99,202,183,0.15);
-    border: 1px solid rgba(99,202,183,0.4);
-    border-radius: 20px;
-    padding: 8px 20px;
-    font-size: 12px;
-    color: #63cab7;
-    font-family: 'Orbitron', monospace;
-    letter-spacing: 1px;
-    opacity: 0;
-    transition: all 0.3s;
-    z-index: 50;
-    pointer-events: none;
-    white-space: nowrap;
-  }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  #toggle-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .toggle-pill {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(99,202,183,0.2);
-    border-radius: 20px;
-    padding: 4px 10px;
-    font-size: 10px;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-    user-select: none;
-  }
-
-  .toggle-pill input { display: none; }
-  .toggle-pill.on { background: rgba(99,202,183,0.1); border-color: #63cab7; color: #63cab7; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#030712;color:#e2e8f0;font-family:'Inter',sans-serif;overflow:hidden;height:100dvh;display:flex;flex-direction:column;}
+  #header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:rgba(3,7,18,0.9);border-bottom:1px solid rgba(99,202,183,0.2);flex-shrink:0;}
+  #header h1{font-family:'Orbitron',monospace;font-size:15px;font-weight:700;color:#63cab7;letter-spacing:2px;}
+  #status-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 6px #ef4444;transition:all 0.3s;}
+  #status-dot.active{background:#22c55e;box-shadow:0 0 8px #22c55e;}
+  #fps{font-size:10px;color:#64748b;font-family:'Orbitron',monospace;letter-spacing:1px;}
+  #canvas-container{position:relative;flex:1;overflow:hidden;background:#000;}
+  #videoEl{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;}
+  #outputCanvas,#overlayCanvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+  #overlayCanvas{pointer-events:none;}
+  #toggle-bar{padding:6px 16px;background:rgba(3,7,18,0.95);border-top:1px solid rgba(99,202,183,0.1);display:flex;justify-content:center;gap:8px;flex-shrink:0;}
+  .pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(99,202,183,0.2);border-radius:20px;padding:4px 12px;font-size:10px;color:#64748b;cursor:pointer;transition:all 0.2s;user-select:none;}
+  .pill.on{background:rgba(99,202,183,0.1);border-color:#63cab7;color:#63cab7;}
+  #controls{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;background:rgba(3,7,18,0.95);border-top:1px solid rgba(99,202,183,0.2);flex-shrink:0;}
+  .btn{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,255,255,0.05);border:1px solid rgba(99,202,183,0.3);border-radius:12px;padding:8px 14px;color:#94a3b8;font-size:10px;font-family:'Inter',sans-serif;cursor:pointer;transition:all 0.2s;min-width:64px;text-transform:uppercase;}
+  .btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .btn:active{transform:scale(0.93);}
+  .btn.on{background:rgba(99,202,183,0.15);border-color:#63cab7;color:#63cab7;}
+  .btn.rec-on{background:rgba(239,68,68,0.2);border-color:#ef4444;color:#ef4444;}
+  .btn.yellow{border-color:rgba(251,191,36,0.4);color:#fbbf24;}
+  #rec-badge{position:absolute;top:14px;right:14px;display:none;align-items:center;gap:6px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);border-radius:20px;padding:4px 10px;font-size:11px;font-family:'Orbitron',monospace;color:#ef4444;z-index:20;}
+  #rec-badge.show{display:flex;}
+  .recdot{width:7px;height:7px;border-radius:50%;background:#ef4444;animation:blink 1s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+  #start-screen{position:absolute;inset:0;background:#030712;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:200;}
+  #start-screen h2{font-family:'Orbitron',monospace;font-size:18px;color:#63cab7;letter-spacing:3px;}
+  #start-screen p{font-size:12px;color:#64748b;text-align:center;max-width:260px;line-height:1.6;}
+  #start-btn{background:rgba(99,202,183,0.15);border:1px solid #63cab7;border-radius:30px;padding:14px 32px;color:#63cab7;font-family:'Orbitron',monospace;font-size:13px;letter-spacing:2px;cursor:pointer;transition:all 0.2s;}
+  #start-btn:active{transform:scale(0.95);background:rgba(99,202,183,0.25);}
+  #loading-overlay{position:absolute;inset:0;background:#030712;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100;}
+  #loading-overlay.show{display:flex;}
+  .ring{width:48px;height:48px;border:2px solid rgba(99,202,183,0.2);border-top-color:#63cab7;border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  #load-text{font-family:'Orbitron',monospace;font-size:11px;color:#63cab7;letter-spacing:2px;text-align:center;}
+  #toast{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(99,202,183,0.15);border:1px solid rgba(99,202,183,0.4);border-radius:20px;padding:8px 20px;font-size:12px;color:#63cab7;font-family:'Orbitron',monospace;letter-spacing:1px;opacity:0;transition:all 0.3s;z-index:50;pointer-events:none;white-space:nowrap;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -219,7 +51,7 @@
 <div id="header">
   <h1>SilhouetteVision</h1>
   <div style="display:flex;align-items:center;gap:8px">
-    <span style="font-size:10px;color:#64748b;font-family:'Orbitron',monospace;letter-spacing:1px" id="fps-counter">-- FPS</span>
+    <span id="fps">-- FPS</span>
     <div id="status-dot"></div>
   </div>
 </div>
@@ -227,430 +59,352 @@
 <div id="canvas-container">
   <video id="videoEl" playsinline muted autoplay></video>
   <canvas id="outputCanvas"></canvas>
-  <canvas id="overlay-canvas"></canvas>
-  <div id="rec-indicator"><div class="rec-dot"></div> REC</div>
+  <canvas id="overlayCanvas"></canvas>
+  <div id="rec-badge"><div class="recdot"></div> REC</div>
+
+  <!-- pantalla inicial con botón explícito -->
+  <div id="start-screen">
+    <h2>SILHOUETTE VISION</h2>
+    <p>Detección de siluetas, edad y emociones en tiempo real.<br>Se requiere acceso a la cámara.</p>
+    <button id="start-btn" onclick="boot()">INICIAR CÁMARA</button>
+  </div>
+
   <div id="loading-overlay">
-    <div class="loader-ring"></div>
-    <div id="loading-text">CARGANDO MODELOS</div>
+    <div class="ring"></div>
+    <div id="load-text">CARGANDO...</div>
   </div>
 </div>
 
-<div style="padding:6px 16px 2px; background:rgba(3,7,18,0.95); border-top:1px solid rgba(99,202,183,0.1);">
-  <div id="toggle-row" style="justify-content:center">
-    <label class="toggle-pill on" id="pill-silueta">
-      <input type="checkbox" checked id="tog-silueta"> Silueta
-    </label>
-    <label class="toggle-pill on" id="pill-edad">
-      <input type="checkbox" checked id="tog-edad"> Edad
-    </label>
-    <label class="toggle-pill on" id="pill-emocion">
-      <input type="checkbox" checked id="tog-emocion"> Emoción
-    </label>
-  </div>
+<div id="toggle-bar">
+  <div class="pill on" id="pill-silueta" onclick="tog('silueta')">Silueta</div>
+  <div class="pill on" id="pill-edad"    onclick="tog('edad')">Edad</div>
+  <div class="pill on" id="pill-emocion" onclick="tog('emocion')">Emoción</div>
 </div>
 
 <div id="controls">
-  <button class="ctrl-btn" id="btn-cam" onclick="toggleCamera()">
-    <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
-    Cámara
+  <button class="btn on" id="btn-cam" onclick="toggleCam()">
+    <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>Cámara
   </button>
-  <button class="ctrl-btn capture-btn" id="btn-capture" onclick="capturePhoto()">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M20.94 13A8.994 8.994 0 1 1 11 3.06V1h2v2.06A9 9 0 0 1 20.94 13z"/><path d="M9 2h6"/></svg>
-    Captura
+  <button class="btn yellow" onclick="capture()">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M20.94 13A8.994 8.994 0 1 1 11 3.06V1h2v2.06A9 9 0 0 1 20.94 13z"/></svg>Captura
   </button>
-  <button class="ctrl-btn danger" id="btn-rec" onclick="toggleRecording()">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-    Grabar
+  <button class="btn" id="btn-rec" onclick="toggleRec()">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>Grabar
   </button>
-  <button class="ctrl-btn" id="btn-flip" onclick="flipCamera()">
-    <svg viewBox="0 0 24 24"><path d="M4 12h16M4 12l4-4M4 12l4 4M20 12l-4-4M20 12l-4 4"/></svg>
-    Voltear
+  <button class="btn" onclick="flipCam()">
+    <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Voltear
   </button>
 </div>
 
 <div id="toast"></div>
 
 <script>
-const video = document.getElementById('videoEl');
-const outputCanvas = document.getElementById('outputCanvas');
-const overlayCanvas = document.getElementById('overlay-canvas');
-const ctx = outputCanvas.getContext('2d');
-const octx = overlayCanvas.getContext('2d');
-const loadingOverlay = document.getElementById('loading-overlay');
-const loadingText = document.getElementById('loading-text');
-const statusDot = document.getElementById('status-dot');
-const fpsCounter = document.getElementById('fps-counter');
-const recIndicator = document.getElementById('rec-indicator');
+// ── refs ─────────────────────────────────────────────────────────────
+const videoEl       = document.getElementById('videoEl');
+const outCvs        = document.getElementById('outputCanvas');
+const ovrCvs        = document.getElementById('overlayCanvas');
+const ctx           = outCvs.getContext('2d');
+const octx          = ovrCvs.getContext('2d');
+const startScreen   = document.getElementById('start-screen');
+const loadingOvl    = document.getElementById('loading-overlay');
+const loadText      = document.getElementById('load-text');
+const statusDot     = document.getElementById('status-dot');
+const fpsEl         = document.getElementById('fps');
+const recBadge      = document.getElementById('rec-badge');
 
-let cameraActive = false;
-let recording = false;
-let mediaRecorder = null;
-let recordedChunks = [];
-let currentFacingMode = 'user';
-let faceApiReady = false;
-let segmentationReady = false;
-let segmentation = null;
-let cameraUtil = null;
-let lastFaceTime = 0;
-let lastFaceResults = [];
-let frameCount = 0;
-let lastFpsTime = performance.now();
-let compositeStream = null;
+// ── state ─────────────────────────────────────────────────────────────
+let camOn      = false;
+let facing     = 'user';
+let stream     = null;
+let rafId      = null;
+let recOn      = false;
+let recorder   = null;
+let chunks     = [];
+let segReady   = false;
+let faceReady  = false;
+let seg        = null;
+let segMask    = null;
+let segBusy    = false;
+let lastFaceT  = 0;
+let lastFaces  = [];
+let fc = 0, lastFpsT = performance.now();
 
-const COLORS = [
-  { r:99,  g:202, b:183 },
-  { r:167, g:139, b:250 },
-  { r:251, g:191, b:36  },
-  { r:248, g:113, b:113 },
-  { r:96,  g:165, b:250 },
-];
+const feat = { silueta: true, edad: true, emocion: true };
+const COLORS = [{r:99,g:202,b:183},{r:167,g:139,b:250},{r:251,g:191,b:36},{r:248,g:113,b:113},{r:96,g:165,b:250}];
+const EMO = {happy:'😊 Feliz',sad:'😢 Triste',angry:'😠 Enojado',fearful:'😨 Asustado',disgusted:'🤢 Disgustado',surprised:'😮 Sorprendido',neutral:'😐 Neutral'};
 
-const EMOTION_LABELS = {
-  happy:    '😊 Feliz',
-  sad:      '😢 Triste',
-  angry:    '😠 Enojado',
-  fearful:  '😨 Asustado',
-  disgusted:'🤢 Disgustado',
-  surprised:'😮 Sorprendido',
-  neutral:  '😐 Neutral'
-};
-
-const toggles = {
-  silueta: document.getElementById('tog-silueta'),
-  edad:    document.getElementById('tog-edad'),
-  emocion: document.getElementById('tog-emocion')
-};
-
-['silueta','edad','emocion'].forEach(id => {
-  const label = document.getElementById('pill-'+id);
-  toggles[id].addEventListener('change', () => {
-    label.classList.toggle('on', toggles[id].checked);
-  });
-});
-
-function showToast(msg, duration=2200) {
+// ── utils ─────────────────────────────────────────────────────────────
+function toast(msg, ms=2200) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), duration);
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), ms);
 }
 
-async function initModels() {
-  loadingText.textContent = 'CARGANDO MEDIAPIPE...';
-  segmentation = new SelfieSegmentation({locateFile: f =>
-    `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`
+function resize() {
+  const c = document.getElementById('canvas-container');
+  outCvs.width = ovrCvs.width = c.offsetWidth;
+  outCvs.height = ovrCvs.height = c.offsetHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+function tog(f) {
+  feat[f] = !feat[f];
+  document.getElementById('pill-'+f).classList.toggle('on', feat[f]);
+}
+
+// ── boot (triggered by button) ────────────────────────────────────────
+async function boot() {
+  startScreen.style.display = 'none';
+  loadingOvl.classList.add('show');
+
+  // 1. Load mediapipe
+  loadText.textContent = 'CARGANDO MEDIAPIPE...';
+  await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js');
+  await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js');
+
+  seg = new SelfieSegmentation({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`
   });
-  segmentation.setOptions({ modelSelection: 1, selfieMode: true });
-  segmentation.onResults(onSegmentationResults);
+  seg.setOptions({ modelSelection: 1, selfieMode: false });
+  seg.onResults(r => { segMask = r.segmentationMask; });
+  await seg.initialize();
+  segReady = true;
 
-  loadingText.textContent = 'CARGANDO FACE-API...';
-  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+  // 2. Load face-api models (already have the lib from <script> tag)
+  loadText.textContent = 'CARGANDO FACE-API...';
   try {
+    const MODEL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/';
     await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
-      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL),
+      faceapi.nets.ageGenderNet.loadFromUri(MODEL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL),
     ]);
-    faceApiReady = true;
-  } catch(e) {
-    console.warn('face-api fallback:', e);
-  }
+    faceReady = true;
+  } catch(e) { console.warn('face-api:', e); }
 
-  segmentationReady = true;
-  loadingOverlay.style.display = 'none';
-  showToast('MODELOS LISTOS');
+  // 3. Start camera
+  loadText.textContent = 'ABRIENDO CÁMARA...';
+  await startCam('user');
+  loadingOvl.classList.remove('show');
 }
 
-function resizeCanvases() {
-  const { offsetWidth: w, offsetHeight: h } = document.getElementById('canvas-container');
-  outputCanvas.width = w;
-  outputCanvas.height = h;
-  overlayCanvas.width = w;
-  overlayCanvas.height = h;
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = rej;
+    document.head.appendChild(s);
+  });
 }
 
-window.addEventListener('resize', resizeCanvases);
-resizeCanvases();
+// ── camera ────────────────────────────────────────────────────────────
+async function startCam(mode) {
+  // stop previous
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  videoEl.srcObject = null;
+  segMask = null;
 
-let segResults = null;
-
-function onSegmentationResults(results) {
-  segResults = results;
-}
-
-async function startCamera(facingMode = 'user') {
-  if (cameraUtil) { cameraUtil.stop(); cameraUtil = null; }
-  if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
+  facing = mode;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: mode }, width:{ideal:1280}, height:{ideal:720} },
       audio: false
     });
-    video.srcObject = stream;
-    await video.play();
-
-    cameraUtil = new Camera(video, {
-      onFrame: async () => {
-        if (segmentationReady && toggles.silueta.checked) {
-          await segmentation.send({ image: video });
-        }
-      },
-      width: 1280, height: 720
-    });
-    cameraUtil.start();
-    cameraActive = true;
+    videoEl.srcObject = stream;
+    await videoEl.play();
+    camOn = true;
     statusDot.classList.add('active');
-    document.getElementById('btn-cam').classList.add('active');
-
-    compositeStream = outputCanvas.captureStream(30);
-    requestAnimationFrame(renderLoop);
+    document.getElementById('btn-cam').classList.add('on');
+    rafId = requestAnimationFrame(loop);
+    toast(mode === 'user' ? 'CÁMARA FRONTAL' : 'CÁMARA TRASERA');
   } catch(e) {
-    showToast('ERROR DE CÁMARA');
+    toast('ERROR: ' + e.name);
     console.error(e);
   }
 }
 
-async function stopCamera() {
-  if (cameraUtil) { cameraUtil.stop(); cameraUtil = null; }
-  if (video.srcObject) {
-    video.srcObject.getTracks().forEach(t => t.stop());
-    video.srcObject = null;
-  }
-  cameraActive = false;
+async function stopCam() {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  videoEl.srcObject = null;
+  camOn = false; segMask = null;
   statusDot.classList.remove('active');
-  document.getElementById('btn-cam').classList.remove('active');
-  ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
-  octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+  document.getElementById('btn-cam').classList.remove('on');
+  ctx.clearRect(0, 0, outCvs.width, outCvs.height);
+  octx.clearRect(0, 0, ovrCvs.width, ovrCvs.height);
 }
 
-function toggleCamera() {
-  if (cameraActive) stopCamera(); else startCamera(currentFacingMode);
+function toggleCam() { if (camOn) stopCam(); else startCam(facing); }
+
+async function flipCam() {
+  const next = facing === 'user' ? 'environment' : 'user';
+  await startCam(next);
 }
 
-async function flipCamera() {
-  currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-  showToast(currentFacingMode === 'user' ? 'CÁMARA FRONTAL' : 'CÁMARA TRASERA');
-  await startCamera(currentFacingMode);
+// ── segmentation ──────────────────────────────────────────────────────
+async function sendSeg() {
+  if (segBusy || !segReady || !camOn || videoEl.readyState < 2) return;
+  segBusy = true;
+  try { await seg.send({ image: videoEl }); } catch(e) {}
+  segBusy = false;
 }
 
-let personColorMap = new Map();
-let personIdCounter = 0;
-
-function getPersonColor(idx) {
-  return COLORS[idx % COLORS.length];
-}
-
-async function runFaceDetection() {
-  if (!faceApiReady || !cameraActive || video.readyState < 2) return [];
-  const now = performance.now();
-  if (now - lastFaceTime < 250) return lastFaceResults;
-  lastFaceTime = now;
-  try {
-    const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
-    const detections = await faceapi.detectAllFaces(video, opts)
-      .withAgeAndGender()
-      .withFaceExpressions();
-    lastFaceResults = detections || [];
-  } catch(e) { lastFaceResults = []; }
-  return lastFaceResults;
-}
-
-function drawSilhouette(segMask, colorIdx) {
-  const c = getPersonColor(colorIdx);
-  const W = outputCanvas.width, H = outputCanvas.height;
-
-  const offscreen = new OffscreenCanvas(W, H);
-  const offCtx = offscreen.getContext('2d');
-  offCtx.drawImage(segMask, 0, 0, W, H);
-  const imgData = offCtx.getImageData(0, 0, W, H);
-  const data = imgData.data;
-
-  for (let i = 0; i < data.length; i += 4) {
-    const alpha = data[i] / 255;
-    if (alpha > 0.2) {
-      data[i]   = c.r;
-      data[i+1] = c.g;
-      data[i+2] = c.b;
-      data[i+3] = Math.floor(alpha * 140);
-    } else {
-      data[i+3] = 0;
-    }
+function drawSilhouette(mask) {
+  const W = outCvs.width, H = outCvs.height;
+  const c = COLORS[0];
+  const off = new OffscreenCanvas(W, H);
+  const ox  = off.getContext('2d');
+  ox.drawImage(mask, 0, 0, W, H);
+  const id = ox.getImageData(0, 0, W, H);
+  const d  = id.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i] / 255;
+    if (a > 0.25) {
+      d[i]=c.r; d[i+1]=c.g; d[i+2]=c.b; d[i+3]=Math.floor(a*155);
+    } else { d[i+3]=0; }
   }
-  offCtx.putImageData(imgData, 0, 0);
-
+  ox.putImageData(id, 0, 0);
   ctx.save();
-  ctx.drawImage(offscreen, 0, 0);
-
-  ctx.shadowColor = `rgba(${c.r},${c.g},${c.b},0.9)`;
-  ctx.shadowBlur = 18;
-  ctx.globalCompositeOperation = 'screen';
-  ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.9)`;
-  ctx.lineWidth = 2;
-  ctx.drawImage(offscreen, 0, 0);
+  ctx.drawImage(off, 0, 0);
+  ctx.shadowColor=`rgba(${c.r},${c.g},${c.b},0.85)`;
+  ctx.shadowBlur=22;
+  ctx.globalCompositeOperation='screen';
+  ctx.drawImage(off, 0, 0);
   ctx.restore();
 }
 
-function drawFaceLabels(faces, W, H) {
+// ── face detection ────────────────────────────────────────────────────
+async function detectFaces() {
+  if (!faceReady || videoEl.readyState < 2) return lastFaces;
+  const now = performance.now();
+  if (now - lastFaceT < 350) return lastFaces;
+  lastFaceT = now;
+  try {
+    const opts = new faceapi.TinyFaceDetectorOptions({ inputSize:224, scoreThreshold:0.4 });
+    lastFaces = await faceapi.detectAllFaces(videoEl, opts).withAgeAndGender().withFaceExpressions() || [];
+  } catch(e) { lastFaces = []; }
+  return lastFaces;
+}
+
+function drawLabels(faces) {
+  const W = outCvs.width, H = outCvs.height;
   octx.clearRect(0, 0, W, H);
+  const vw = videoEl.videoWidth  || W;
+  const vh = videoEl.videoHeight || H;
+  const sx = W / vw, sy = H / vh;
+
   faces.forEach((det, i) => {
     const box = det.detection.box;
-    const scaleX = W / video.videoWidth;
-    const scaleY = H / video.videoHeight;
-    const bx = box.x * scaleX;
-    const by = box.y * scaleY;
-    const bw = box.width * scaleX;
-    const bh = box.height * scaleY;
-    const c = getPersonColor(i);
-    const color = `rgb(${c.r},${c.g},${c.b})`;
+    const bx = box.x*sx, by = box.y*sy, bw = box.width*sx, bh = box.height*sy;
+    const c = COLORS[i % COLORS.length];
+    const col = `rgb(${c.r},${c.g},${c.b})`;
 
-    octx.strokeStyle = color;
-    octx.lineWidth = 1.5;
-    octx.shadowColor = color;
-    octx.shadowBlur = 8;
+    octx.strokeStyle = col; octx.lineWidth = 1.5;
+    octx.shadowColor = col; octx.shadowBlur = 8;
     octx.strokeRect(bx, by, bw, bh);
     octx.shadowBlur = 0;
 
     const lines = [];
-    if (toggles.edad.checked && det.age !== undefined) {
-      const age = Math.round(det.age);
-      const gender = det.gender === 'male' ? '♂' : '♀';
-      lines.push(`${gender} ~${age} años`);
+    if (feat.edad && det.age != null)
+      lines.push(`${det.gender==='male'?'♂':'♀'} ~${Math.round(det.age)} años`);
+    if (feat.emocion && det.expressions) {
+      const top = Object.entries(det.expressions).reduce((a,b)=>a[1]>b[1]?a:b);
+      lines.push(EMO[top[0]] || top[0]);
     }
-    if (toggles.emocion.checked && det.expressions) {
-      const expEntries = Object.entries(det.expressions);
-      const top = expEntries.reduce((a,b) => a[1]>b[1]?a:b);
-      lines.push(EMOTION_LABELS[top[0]] || top[0]);
-    }
+    if (!lines.length) return;
 
-    if (lines.length > 0) {
-      const fontSize = Math.max(12, Math.min(16, bw * 0.12));
-      octx.font = `500 ${fontSize}px 'Orbitron', monospace`;
-      const maxW = lines.reduce((m,l) => Math.max(m, octx.measureText(l).width), 0);
-      const padX = 10, padY = 6, lineH = fontSize + 6;
-      const boxH = lines.length * lineH + padY * 2;
-      const labelY = by - boxH - 6;
-      const labelX = bx;
+    const fs = Math.max(11, Math.min(15, bw*0.12));
+    octx.font = `500 ${fs}px 'Orbitron',monospace`;
+    const maxW = lines.reduce((m,l)=>Math.max(m,octx.measureText(l).width),0);
+    const px=10, py=6, lh=fs+7;
+    const lbH = lines.length*lh+py*2;
+    const lbY = Math.max(0, by-lbH-6);
 
-      octx.fillStyle = 'rgba(3,7,18,0.82)';
-      octx.beginPath();
-      octx.roundRect(labelX, labelY, maxW + padX*2, boxH, 6);
-      octx.fill();
-
-      octx.strokeStyle = color;
-      octx.lineWidth = 1;
-      octx.shadowColor = color;
-      octx.shadowBlur = 6;
-      octx.beginPath();
-      octx.roundRect(labelX, labelY, maxW + padX*2, boxH, 6);
-      octx.stroke();
-      octx.shadowBlur = 0;
-
-      octx.fillStyle = color;
-      lines.forEach((l, li) => {
-        octx.fillText(l, labelX + padX, labelY + padY + (li+1)*lineH - 4);
-      });
-    }
+    octx.fillStyle='rgba(3,7,18,0.85)';
+    octx.beginPath(); octx.roundRect(bx,lbY,maxW+px*2,lbH,6); octx.fill();
+    octx.strokeStyle=col; octx.lineWidth=1;
+    octx.shadowColor=col; octx.shadowBlur=5;
+    octx.beginPath(); octx.roundRect(bx,lbY,maxW+px*2,lbH,6); octx.stroke();
+    octx.shadowBlur=0;
+    octx.fillStyle=col;
+    lines.forEach((l,li)=>octx.fillText(l, bx+px, lbY+py+(li+1)*lh-4));
   });
 }
 
-async function renderLoop() {
-  if (!cameraActive) return;
+// ── render loop ───────────────────────────────────────────────────────
+async function loop() {
+  if (!camOn) return;
+  const W = outCvs.width, H = outCvs.height;
 
-  const W = outputCanvas.width, H = outputCanvas.height;
-  frameCount++;
-  const now = performance.now();
-  if (now - lastFpsTime >= 1000) {
-    fpsCounter.textContent = frameCount + ' FPS';
-    frameCount = 0;
-    lastFpsTime = now;
+  fc++; const now = performance.now();
+  if (now - lastFpsT >= 1000) {
+    fpsEl.textContent = fc + ' FPS'; fc = 0; lastFpsT = now;
   }
 
   ctx.clearRect(0, 0, W, H);
-  if (video.readyState >= 2) {
-    ctx.drawImage(video, 0, 0, W, H);
+  if (videoEl.readyState >= 2) ctx.drawImage(videoEl, 0, 0, W, H);
 
-    if (segResults && toggles.silueta.checked) {
-      drawSilhouette(segResults.segmentationMask, 0);
-    }
+  if (feat.silueta) {
+    sendSeg();
+    if (segMask) drawSilhouette(segMask);
   }
 
-  if (faceApiReady && (toggles.edad.checked || toggles.emocion.checked)) {
-    const faces = await runFaceDetection();
-    drawFaceLabels(faces, W, H);
+  if (faceReady && (feat.edad || feat.emocion)) {
+    const faces = await detectFaces();
+    drawLabels(faces);
   } else {
-    octx.clearRect(0, 0, W, H);
+    octx.clearRect(0, 0, ovrCvs.width, ovrCvs.height);
   }
 
-  requestAnimationFrame(renderLoop);
+  rafId = requestAnimationFrame(loop);
 }
 
-function toggleRecording() {
-  if (!cameraActive) { showToast('ACTIVA LA CÁMARA'); return; }
-  if (recording) {
-    mediaRecorder.stop();
-    recording = false;
-    document.getElementById('btn-rec').classList.remove('active');
-    recIndicator.classList.remove('show');
+// ── recording ─────────────────────────────────────────────────────────
+function toggleRec() {
+  if (!camOn) { toast('ACTIVA LA CÁMARA'); return; }
+  if (recOn) {
+    recorder.stop(); recOn = false;
+    document.getElementById('btn-rec').classList.remove('rec-on');
+    recBadge.classList.remove('show');
   } else {
-    recordedChunks = [];
-    const stream = outputCanvas.captureStream(30);
-    const audioTracks = video.srcObject ? video.srcObject.getAudioTracks() : [];
-    audioTracks.forEach(t => stream.addTrack(t));
-
-    const mimeTypes = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
-    const mime = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || '';
-    mediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
-    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-    mediaRecorder.onstop = saveVideo;
-    mediaRecorder.start(100);
-    recording = true;
-    document.getElementById('btn-rec').classList.add('active');
-    recIndicator.classList.add('show');
-    showToast('● GRABANDO');
+    chunks = [];
+    const s = outCvs.captureStream(30);
+    const mime = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4']
+      .find(m => MediaRecorder.isTypeSupported(m)) || '';
+    recorder = new MediaRecorder(s, mime ? {mimeType:mime} : {});
+    recorder.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+    recorder.onstop = () => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob(chunks,{type:'video/webm'}));
+      a.download = 'silueta_'+Date.now()+'.webm'; a.click();
+      toast('VIDEO GUARDADO');
+    };
+    recorder.start(100); recOn = true;
+    document.getElementById('btn-rec').classList.add('rec-on');
+    recBadge.classList.add('show');
+    toast('● GRABANDO');
   }
 }
 
-function saveVideo() {
-  const blob = new Blob(recordedChunks, { type: 'video/webm' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'silueta_' + Date.now() + '.webm';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('VIDEO GUARDADO');
-}
-
-function capturePhoto() {
-  if (!cameraActive) { showToast('ACTIVA LA CÁMARA'); return; }
-  const snap = document.createElement('canvas');
-  snap.width = outputCanvas.width;
-  snap.height = outputCanvas.height;
-  const sctx = snap.getContext('2d');
-  sctx.drawImage(outputCanvas, 0, 0);
-  sctx.drawImage(overlayCanvas, 0, 0);
-
-  snap.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
+// ── capture ───────────────────────────────────────────────────────────
+function capture() {
+  if (!camOn) { toast('ACTIVA LA CÁMARA'); return; }
+  const s = document.createElement('canvas');
+  s.width = outCvs.width; s.height = outCvs.height;
+  const sc = s.getContext('2d');
+  sc.drawImage(outCvs, 0, 0); sc.drawImage(ovrCvs, 0, 0);
+  s.toBlob(b => {
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'captura_' + Date.now() + '.png';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('CAPTURA GUARDADA');
+    a.href = URL.createObjectURL(b);
+    a.download = 'captura_'+Date.now()+'.png'; a.click();
+    toast('CAPTURA GUARDADA');
   }, 'image/png');
-
-  const flash = document.createElement('div');
-  flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.7;pointer-events:none;z-index:200;transition:opacity 0.4s';
-  document.getElementById('canvas-container').appendChild(flash);
-  setTimeout(() => flash.style.opacity = '0', 50);
-  setTimeout(() => flash.remove(), 500);
+  const f = document.createElement('div');
+  f.style.cssText='position:absolute;inset:0;background:white;opacity:0.7;pointer-events:none;z-index:200;transition:opacity 0.4s';
+  document.getElementById('canvas-container').appendChild(f);
+  setTimeout(()=>f.style.opacity='0',50); setTimeout(()=>f.remove(),500);
 }
-
-window.addEventListener('load', async () => {
-  await initModels();
-  startCamera('user');
-});
 </script>
 </body>
 </html>
