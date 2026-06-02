@@ -1618,6 +1618,13 @@ const userRef = ref(database, 'chat_presence/' + userId);
         { tope: 400, salto: 455, siguiente: 455 },
     ];
 
+    function fmtUSD(n) {
+        if (!n || n <= 0) return '0.00';
+        if (n >= 0.01) return n.toFixed(2);
+        const dec = Math.ceil(-Math.log10(n)) + 1;
+        return n.toFixed(dec);
+    }
+
     function analizarPerfilAura() {
         // Leer datos del localStorage del index
         let data = null;
@@ -1792,16 +1799,16 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
         const rentaBlock = (rentDay > 0) ?
             '⚡ <strong>RENTA NORMAL</strong> (boost ' + adBoost + '×). <br>' +
-            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + rentHour.toFixed(6) + ' USD</strong>. <br>' +
-            '&nbsp;&nbsp;Por día:&nbsp;&nbsp;&nbsp;<strong>$' + rentDay.toFixed(4) + ' USD</strong>. <br>' +
-            '&nbsp;&nbsp;Por mes (−64h SRB): <strong>$' + rentNormalMes.toFixed(4) + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + fmtUSD(rentHour) + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Por día:&nbsp;&nbsp;&nbsp;<strong>$' + fmtUSD(rentDay) + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Por mes (−64h SRB): <strong>$' + fmtUSD(rentNormalMes) + ' USD</strong>. <br>' +
             (tiempoUsd ? '&nbsp;&nbsp;Genera $1 en: <strong>' + tiempoUsd + '</strong>. <br>' : '') +
             '<br>' : '';
 
         const srbBlock = (srbHour > 0) ?
             '🚀 <strong>SRB</strong> (50× · 32h). <br>' +
-            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + srbHour + ' USD</strong>. <br>' +
-            '&nbsp;&nbsp;Evento completo: <strong>$' + srbEvent + ' USD</strong>. <br><br>' : '';
+            '&nbsp;&nbsp;Por hora:&nbsp;&nbsp;<strong>$' + fmtUSD(srbHour) + ' USD</strong>. <br>' +
+            '&nbsp;&nbsp;Evento completo: <strong>$' + fmtUSD(srbEvent) + ' USD</strong>. <br><br>' : '';
 
         // ── Renta total mensual ──
         const totalMes = (rentNormalMes || 0) + (srbEvent > 0 ? srbEvent * 2 : 0);
@@ -1810,7 +1817,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         if (totalMes > 0) {
             totalMesBlock =
                 '💵 <strong>RENTA TOTAL AL MES</strong>. <br>' +
-                '&nbsp;&nbsp;Normal + SRB (×2): <strong>$' + totalMes.toFixed(4) + ' USD</strong>. <br><br>';
+                '&nbsp;&nbsp;Normal + SRB (×2): <strong>$' + fmtUSD(totalMes) + ' USD</strong>. <br><br>';
 
             if (totalMes >= 60) {
                 const ganancia = (totalMes - 60).toFixed(2);
