@@ -380,9 +380,10 @@ function onSegmentationResults(results) {
 
 async function startCamera(facingMode = 'user') {
   if (cameraUtil) { cameraUtil.stop(); cameraUtil = null; }
+  if (video.srcObject) { video.srcObject.getTracks().forEach(t => t.stop()); video.srcObject = null; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+      video: { facingMode: { ideal: facingMode }, width: { ideal: 1280 }, height: { ideal: 720 } },
       audio: false
     });
     video.srcObject = stream;
@@ -426,9 +427,10 @@ function toggleCamera() {
   if (cameraActive) stopCamera(); else startCamera(currentFacingMode);
 }
 
-function flipCamera() {
+async function flipCamera() {
   currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
-  if (cameraActive) startCamera(currentFacingMode);
+  showToast(currentFacingMode === 'user' ? 'CÁMARA FRONTAL' : 'CÁMARA TRASERA');
+  await startCamera(currentFacingMode);
 }
 
 let personColorMap = new Map();
@@ -494,8 +496,7 @@ function drawFaceLabels(faces, W, H) {
     const box = det.detection.box;
     const scaleX = W / video.videoWidth;
     const scaleY = H / video.videoHeight;
-    const mirrorX = W - (box.x * scaleX) - (box.width * scaleX);
-    const bx = mirrorX;
+    const bx = box.x * scaleX;
     const by = box.y * scaleY;
     const bw = box.width * scaleX;
     const bh = box.height * scaleY;
@@ -566,10 +567,7 @@ async function renderLoop() {
 
   ctx.clearRect(0, 0, W, H);
   if (video.readyState >= 2) {
-    ctx.save();
-    ctx.scale(-1, 1);
-    ctx.drawImage(video, -W, 0, W, H);
-    ctx.restore();
+    ctx.drawImage(video, 0, 0, W, H);
 
     if (segResults && toggles.silueta.checked) {
       drawSilhouette(segResults.segmentationMask, 0);
