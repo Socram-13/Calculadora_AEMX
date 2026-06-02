@@ -171,17 +171,27 @@ async function boot() {
   await seg.initialize();
   segReady = true;
 
-  // 2. Load face-api models (already have the lib from <script> tag)
+  // 2. Load face-api models
   loadText.textContent = 'CARGANDO FACE-API...';
   try {
-    const MODEL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/';
-    await Promise.all([
-      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL),
-      faceapi.nets.ageGenderNet.loadFromUri(MODEL),
-      faceapi.nets.faceExpressionNet.loadFromUri(MODEL),
-    ]);
+    if (typeof faceapi === 'undefined') throw new Error('faceapi lib no cargó');
+    const MODEL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights/';
+    loadText.textContent = 'PESOS TINY DETECTOR...';
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL);
+    loadText.textContent = 'PESOS EDAD/GÉNERO...';
+    await faceapi.nets.ageGenderNet.loadFromUri(MODEL);
+    loadText.textContent = 'PESOS EMOCIONES...';
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL);
     faceReady = true;
-  } catch(e) { console.warn('face-api:', e); }
+  } catch(e) {
+    console.error('face-api error:', e);
+    // show error in UI
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'position:absolute;bottom:10px;left:10px;right:10px;background:rgba(239,68,68,0.2);border:1px solid #ef4444;border-radius:8px;padding:8px;font-size:10px;color:#ef4444;font-family:monospace;z-index:300;word-break:break-all;';
+    errDiv.textContent = 'FACE-API ERR: ' + e.message;
+    document.getElementById('canvas-container').appendChild(errDiv);
+    setTimeout(() => errDiv.remove(), 8000);
+  }
 
   // 3. Start camera
   loadText.textContent = 'ABRIENDO CÁMARA...';
