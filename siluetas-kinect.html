@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SilhouetteVision</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #030712;
+    color: #e2e8f0;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: rgba(3,7,18,0.9);
+    border-bottom: 1px solid rgba(99,202,183,0.2);
+    z-index: 10;
+    flex-shrink: 0;
+  }
+
+  #header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: #63cab7;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  #status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ef4444;
+    box-shadow: 0 0 6px #ef4444;
+    transition: all 0.3s;
+  }
+  #status-dot.active { background: #22c55e; box-shadow: 0 0 8px #22c55e; }
+
+  #canvas-container {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #videoEl {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+
+  #outputCanvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+
+  #overlay-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  #controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(3,7,18,0.95);
+    border-top: 1px solid rgba(99,202,183,0.2);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .ctrl-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(99,202,183,0.3);
+    border-radius: 12px;
+    padding: 8px 14px;
+    color: #94a3b8;
+    font-size: 10px;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 64px;
+    text-transform: uppercase;
+  }
+
+  .ctrl-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .ctrl-btn:active { transform: scale(0.93); }
+  .ctrl-btn.active { background: rgba(99,202,183,0.15); border-color: #63cab7; color: #63cab7; }
+  .ctrl-btn.danger { border-color: rgba(239,68,68,0.5); }
+  .ctrl-btn.danger.active { background: rgba(239,68,68,0.2); border-color: #ef4444; color: #ef4444; }
+  .ctrl-btn.capture-btn { border-color: rgba(251,191,36,0.4); color: #fbbf24; }
+  .ctrl-btn.capture-btn:active { background: rgba(251,191,36,0.15); }
+
+  #rec-indicator {
+    position: absolute;
+    top: 14px; right: 14px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: rgba(239,68,68,0.15);
+    border: 1px solid rgba(239,68,68,0.4);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-family: 'Orbitron', monospace;
+    color: #ef4444;
+    z-index: 20;
+  }
+
+  #rec-indicator.show { display: flex; }
+  .rec-dot { width: 7px; height: 7px; border-radius: 50%; background: #ef4444; animation: blink 1s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  #loading-overlay {
+    position: absolute;
+    inset: 0;
+    background: #030712;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 100;
+  }
+
+  .loader-ring {
+    width: 48px; height: 48px;
+    border: 2px solid rgba(99,202,183,0.2);
+    border-top-color: #63cab7;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #loading-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
+    color: #63cab7;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  #toast {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(99,202,183,0.15);
+    border: 1px solid rgba(99,202,183,0.4);
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 12px;
+    color: #63cab7;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 1px;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 50;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  #toggle-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .toggle-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(99,202,183,0.2);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 10px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .toggle-pill input { display: none; }
+  .toggle-pill.on { background: rgba(99,202,183,0.1); border-color: #63cab7; color: #63cab7; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>SilhouetteVision</h1>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:10px;color:#64748b;font-family:'Orbitron',monospace;letter-spacing:1px" id="fps-counter">-- FPS</span>
+    <div id="status-dot"></div>
+  </div>
+</div>
+
+<div id="canvas-container">
+  <video id="videoEl" playsinline muted autoplay></video>
+  <canvas id="outputCanvas"></canvas>
+  <canvas id="overlay-canvas"></canvas>
+  <div id="rec-indicator"><div class="rec-dot"></div> REC</div>
+  <div id="loading-overlay">
+    <div class="loader-ring"></div>
+    <div id="loading-text">CARGANDO MODELOS</div>
+  </div>
+</div>
+
+<div style="padding:6px 16px 2px; background:rgba(3,7,18,0.95); border-top:1px solid rgba(99,202,183,0.1);">
+  <div id="toggle-row" style="justify-content:center">
+    <label class="toggle-pill on" id="pill-silueta">
+      <input type="checkbox" checked id="tog-silueta"> Silueta
+    </label>
+    <label class="toggle-pill on" id="pill-edad">
+      <input type="checkbox" checked id="tog-edad"> Edad
+    </label>
+    <label class="toggle-pill on" id="pill-emocion">
+      <input type="checkbox" checked id="tog-emocion"> Emoción
+    </label>
+  </div>
+</div>
+
+<div id="controls">
+  <button class="ctrl-btn" id="btn-cam" onclick="toggleCamera()">
+    <svg viewBox="0 0 24 24"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+    Cámara
+  </button>
+  <button class="ctrl-btn capture-btn" id="btn-capture" onclick="capturePhoto()">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M20.94 13A8.994 8.994 0 1 1 11 3.06V1h2v2.06A9 9 0 0 1 20.94 13z"/><path d="M9 2h6"/></svg>
+    Captura
+  </button>
+  <button class="ctrl-btn danger" id="btn-rec" onclick="toggleRecording()">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+    Grabar
+  </button>
+  <button class="ctrl-btn" id="btn-flip" onclick="flipCamera()">
+    <svg viewBox="0 0 24 24"><path d="M4 12h16M4 12l4-4M4 12l4 4M20 12l-4-4M20 12l-4 4"/></svg>
+    Voltear
+  </button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const video = document.getElementById('videoEl');
+const outputCanvas = document.getElementById('outputCanvas');
+const overlayCanvas = document.getElementById('overlay-canvas');
+const ctx = outputCanvas.getContext('2d');
+const octx = overlayCanvas.getContext('2d');
+const loadingOverlay = document.getElementById('loading-overlay');
+const loadingText = document.getElementById('loading-text');
+const statusDot = document.getElementById('status-dot');
+const fpsCounter = document.getElementById('fps-counter');
+const recIndicator = document.getElementById('rec-indicator');
+
+let cameraActive = false;
+let recording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let currentFacingMode = 'user';
+let faceApiReady = false;
+let segmentationReady = false;
+let segmentation = null;
+let cameraUtil = null;
+let lastFaceTime = 0;
+let lastFaceResults = [];
+let frameCount = 0;
+let lastFpsTime = performance.now();
+let compositeStream = null;
+
+const COLORS = [
+  { r:99,  g:202, b:183 },
+  { r:167, g:139, b:250 },
+  { r:251, g:191, b:36  },
+  { r:248, g:113, b:113 },
+  { r:96,  g:165, b:250 },
+];
+
+const EMOTION_LABELS = {
+  happy:    '😊 Feliz',
+  sad:      '😢 Triste',
+  angry:    '😠 Enojado',
+  fearful:  '😨 Asustado',
+  disgusted:'🤢 Disgustado',
+  surprised:'😮 Sorprendido',
+  neutral:  '😐 Neutral'
+};
+
+const toggles = {
+  silueta: document.getElementById('tog-silueta'),
+  edad:    document.getElementById('tog-edad'),
+  emocion: document.getElementById('tog-emocion')
+};
+
+['silueta','edad','emocion'].forEach(id => {
+  const label = document.getElementById('pill-'+id);
+  toggles[id].addEventListener('change', () => {
+    label.classList.toggle('on', toggles[id].checked);
+  });
+});
+
+function showToast(msg, duration=2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+async function initModels() {
+  loadingText.textContent = 'CARGANDO MEDIAPIPE...';
+  segmentation = new SelfieSegmentation({locateFile: f =>
+    `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${f}`
+  });
+  segmentation.setOptions({ modelSelection: 1, selfieMode: true });
+  segmentation.onResults(onSegmentationResults);
+
+  loadingText.textContent = 'CARGANDO FACE-API...';
+  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
+  try {
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.ageGenderNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL),
+    ]);
+    faceApiReady = true;
+  } catch(e) {
+    console.warn('face-api fallback:', e);
+  }
+
+  segmentationReady = true;
+  loadingOverlay.style.display = 'none';
+  showToast('MODELOS LISTOS');
+}
+
+function resizeCanvases() {
+  const { offsetWidth: w, offsetHeight: h } = document.getElementById('canvas-container');
+  outputCanvas.width = w;
+  outputCanvas.height = h;
+  overlayCanvas.width = w;
+  overlayCanvas.height = h;
+}
+
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+
+let segResults = null;
+
+function onSegmentationResults(results) {
+  segResults = results;
+}
+
+async function startCamera(facingMode = 'user') {
+  if (cameraUtil) { cameraUtil.stop(); cameraUtil = null; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    });
+    video.srcObject = stream;
+    await video.play();
+
+    cameraUtil = new Camera(video, {
+      onFrame: async () => {
+        if (segmentationReady && toggles.silueta.checked) {
+          await segmentation.send({ image: video });
+        }
+      },
+      width: 1280, height: 720
+    });
+    cameraUtil.start();
+    cameraActive = true;
+    statusDot.classList.add('active');
+    document.getElementById('btn-cam').classList.add('active');
+
+    compositeStream = outputCanvas.captureStream(30);
+    requestAnimationFrame(renderLoop);
+  } catch(e) {
+    showToast('ERROR DE CÁMARA');
+    console.error(e);
+  }
+}
+
+async function stopCamera() {
+  if (cameraUtil) { cameraUtil.stop(); cameraUtil = null; }
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(t => t.stop());
+    video.srcObject = null;
+  }
+  cameraActive = false;
+  statusDot.classList.remove('active');
+  document.getElementById('btn-cam').classList.remove('active');
+  ctx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+  octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+}
+
+function toggleCamera() {
+  if (cameraActive) stopCamera(); else startCamera(currentFacingMode);
+}
+
+function flipCamera() {
+  currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+  if (cameraActive) startCamera(currentFacingMode);
+}
+
+let personColorMap = new Map();
+let personIdCounter = 0;
+
+function getPersonColor(idx) {
+  return COLORS[idx % COLORS.length];
+}
+
+async function runFaceDetection() {
+  if (!faceApiReady || !cameraActive || video.readyState < 2) return [];
+  const now = performance.now();
+  if (now - lastFaceTime < 250) return lastFaceResults;
+  lastFaceTime = now;
+  try {
+    const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 });
+    const detections = await faceapi.detectAllFaces(video, opts)
+      .withAgeAndGender()
+      .withFaceExpressions();
+    lastFaceResults = detections || [];
+  } catch(e) { lastFaceResults = []; }
+  return lastFaceResults;
+}
+
+function drawSilhouette(segMask, colorIdx) {
+  const c = getPersonColor(colorIdx);
+  const W = outputCanvas.width, H = outputCanvas.height;
+
+  const offscreen = new OffscreenCanvas(W, H);
+  const offCtx = offscreen.getContext('2d');
+  offCtx.drawImage(segMask, 0, 0, W, H);
+  const imgData = offCtx.getImageData(0, 0, W, H);
+  const data = imgData.data;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i] / 255;
+    if (alpha > 0.2) {
+      data[i]   = c.r;
+      data[i+1] = c.g;
+      data[i+2] = c.b;
+      data[i+3] = Math.floor(alpha * 140);
+    } else {
+      data[i+3] = 0;
+    }
+  }
+  offCtx.putImageData(imgData, 0, 0);
+
+  ctx.save();
+  ctx.drawImage(offscreen, 0, 0);
+
+  ctx.shadowColor = `rgba(${c.r},${c.g},${c.b},0.9)`;
+  ctx.shadowBlur = 18;
+  ctx.globalCompositeOperation = 'screen';
+  ctx.strokeStyle = `rgba(${c.r},${c.g},${c.b},0.9)`;
+  ctx.lineWidth = 2;
+  ctx.drawImage(offscreen, 0, 0);
+  ctx.restore();
+}
+
+function drawFaceLabels(faces, W, H) {
+  octx.clearRect(0, 0, W, H);
+  faces.forEach((det, i) => {
+    const box = det.detection.box;
+    const scaleX = W / video.videoWidth;
+    const scaleY = H / video.videoHeight;
+    const mirrorX = W - (box.x * scaleX) - (box.width * scaleX);
+    const bx = mirrorX;
+    const by = box.y * scaleY;
+    const bw = box.width * scaleX;
+    const bh = box.height * scaleY;
+    const c = getPersonColor(i);
+    const color = `rgb(${c.r},${c.g},${c.b})`;
+
+    octx.strokeStyle = color;
+    octx.lineWidth = 1.5;
+    octx.shadowColor = color;
+    octx.shadowBlur = 8;
+    octx.strokeRect(bx, by, bw, bh);
+    octx.shadowBlur = 0;
+
+    const lines = [];
+    if (toggles.edad.checked && det.age !== undefined) {
+      const age = Math.round(det.age);
+      const gender = det.gender === 'male' ? '♂' : '♀';
+      lines.push(`${gender} ~${age} años`);
+    }
+    if (toggles.emocion.checked && det.expressions) {
+      const expEntries = Object.entries(det.expressions);
+      const top = expEntries.reduce((a,b) => a[1]>b[1]?a:b);
+      lines.push(EMOTION_LABELS[top[0]] || top[0]);
+    }
+
+    if (lines.length > 0) {
+      const fontSize = Math.max(12, Math.min(16, bw * 0.12));
+      octx.font = `500 ${fontSize}px 'Orbitron', monospace`;
+      const maxW = lines.reduce((m,l) => Math.max(m, octx.measureText(l).width), 0);
+      const padX = 10, padY = 6, lineH = fontSize + 6;
+      const boxH = lines.length * lineH + padY * 2;
+      const labelY = by - boxH - 6;
+      const labelX = bx;
+
+      octx.fillStyle = 'rgba(3,7,18,0.82)';
+      octx.beginPath();
+      octx.roundRect(labelX, labelY, maxW + padX*2, boxH, 6);
+      octx.fill();
+
+      octx.strokeStyle = color;
+      octx.lineWidth = 1;
+      octx.shadowColor = color;
+      octx.shadowBlur = 6;
+      octx.beginPath();
+      octx.roundRect(labelX, labelY, maxW + padX*2, boxH, 6);
+      octx.stroke();
+      octx.shadowBlur = 0;
+
+      octx.fillStyle = color;
+      lines.forEach((l, li) => {
+        octx.fillText(l, labelX + padX, labelY + padY + (li+1)*lineH - 4);
+      });
+    }
+  });
+}
+
+async function renderLoop() {
+  if (!cameraActive) return;
+
+  const W = outputCanvas.width, H = outputCanvas.height;
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime >= 1000) {
+    fpsCounter.textContent = frameCount + ' FPS';
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+
+  ctx.clearRect(0, 0, W, H);
+  if (video.readyState >= 2) {
+    ctx.save();
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -W, 0, W, H);
+    ctx.restore();
+
+    if (segResults && toggles.silueta.checked) {
+      drawSilhouette(segResults.segmentationMask, 0);
+    }
+  }
+
+  if (faceApiReady && (toggles.edad.checked || toggles.emocion.checked)) {
+    const faces = await runFaceDetection();
+    drawFaceLabels(faces, W, H);
+  } else {
+    octx.clearRect(0, 0, W, H);
+  }
+
+  requestAnimationFrame(renderLoop);
+}
+
+function toggleRecording() {
+  if (!cameraActive) { showToast('ACTIVA LA CÁMARA'); return; }
+  if (recording) {
+    mediaRecorder.stop();
+    recording = false;
+    document.getElementById('btn-rec').classList.remove('active');
+    recIndicator.classList.remove('show');
+  } else {
+    recordedChunks = [];
+    const stream = outputCanvas.captureStream(30);
+    const audioTracks = video.srcObject ? video.srcObject.getAudioTracks() : [];
+    audioTracks.forEach(t => stream.addTrack(t));
+
+    const mimeTypes = ['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'];
+    const mime = mimeTypes.find(m => MediaRecorder.isTypeSupported(m)) || '';
+    mediaRecorder = new MediaRecorder(stream, mime ? { mimeType: mime } : {});
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = saveVideo;
+    mediaRecorder.start(100);
+    recording = true;
+    document.getElementById('btn-rec').classList.add('active');
+    recIndicator.classList.add('show');
+    showToast('● GRABANDO');
+  }
+}
+
+function saveVideo() {
+  const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'silueta_' + Date.now() + '.webm';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('VIDEO GUARDADO');
+}
+
+function capturePhoto() {
+  if (!cameraActive) { showToast('ACTIVA LA CÁMARA'); return; }
+  const snap = document.createElement('canvas');
+  snap.width = outputCanvas.width;
+  snap.height = outputCanvas.height;
+  const sctx = snap.getContext('2d');
+  sctx.drawImage(outputCanvas, 0, 0);
+  sctx.drawImage(overlayCanvas, 0, 0);
+
+  snap.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'captura_' + Date.now() + '.png';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CAPTURA GUARDADA');
+  }, 'image/png');
+
+  const flash = document.createElement('div');
+  flash.style.cssText = 'position:absolute;inset:0;background:white;opacity:0.7;pointer-events:none;z-index:200;transition:opacity 0.4s';
+  document.getElementById('canvas-container').appendChild(flash);
+  setTimeout(() => flash.style.opacity = '0', 50);
+  setTimeout(() => flash.remove(), 500);
+}
+
+window.addEventListener('load', async () => {
+  await initModels();
+  startCamera('user');
+});
+</script>
+</body>
+</html>
