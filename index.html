@@ -2453,6 +2453,7 @@
         legendary:    document.getElementById('legendary')?.value   || 0,
         badges:       document.getElementById('badges')?.value      || 0,
         diamonds:     document.getElementById('diamonds')?.value    || 0,
+        fichasPuja:   document.getElementById('fichas-puja')?.value || 0,
         atlasbucks:   document.getElementById('atlasbucks')?.value  || 0,
         horasCalculo: document.getElementById('horas-calculo')?.value || 24,
         titulo_juego: document.getElementById('titulo-juego')?.textContent?.trim() || '',
@@ -3188,7 +3189,21 @@
       <div class="divider"></div>
 
       <div class="booster-row">
-        <div class="booster-icon">💵</div>
+        <div class="booster-icon"><img src="ficha.png" style="width:28px;height:28px;object-fit:contain;"></div>
+        <div class="booster-info">
+          <div class="booster-name" style="color:#7c3aed">Fichas de Puja</div>
+        </div>
+        <div class="counter">
+          <button class="counter-btn" onclick="change('fichas-puja',-1)">−</button>
+          <input type="number" id="fichas-puja" value="0" min="0" oninput="calc()">
+          <button class="counter-btn" onclick="change('fichas-puja',1)">+</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="booster-row">
+        <div class="booster-icon"><img src="atlasbuck.png" style="width:28px;height:28px;object-fit:contain;"></div>
         <div class="booster-info">
           <div class="booster-name" style="color:#16a34a">Atlas Bucks (AB)</div>
         </div>
@@ -4171,6 +4186,7 @@
       legendary:  document.getElementById('legendary').value,
       badges:     document.getElementById('badges').value,
       diamonds:   document.getElementById('diamonds').value,
+      fichasPuja: document.getElementById('fichas-puja').value,
       atlasbucks: document.getElementById('atlasbucks').value,
       horasCalculo: document.getElementById('horas-calculo').value,
       explorer:   explorerActive,
@@ -4196,6 +4212,7 @@
         legendary:  document.getElementById('legendary').value,
         badges:     document.getElementById('badges').value,
         diamonds:   document.getElementById('diamonds').value,
+        fichasPuja: document.getElementById('fichas-puja').value,
         atlasbucks: document.getElementById('atlasbucks').value,
         horasCalculo: document.getElementById('horas-calculo').value,
         explorer:   explorerActive,
@@ -4222,9 +4239,10 @@
       if (local) { try { data = JSON.parse(local); } catch(e) {} }
     }
     if (!data) return;
-    ['common','rare','epic','legendary','badges','diamonds','atlasbucks','horasCalculo'].forEach(k => {
+    ['common','rare','epic','legendary','badges','diamonds','fichasPuja','atlasbucks','horasCalculo'].forEach(k => {
       if (data[k] !== undefined) {
-        const el = document.getElementById(k === 'horasCalculo' ? 'horas-calculo' : k);
+        let elId = k === 'horasCalculo' ? 'horas-calculo' : k === 'fichasPuja' ? 'fichas-puja' : k;
+        const el = document.getElementById(elId);
         if (el) el.value = data[k];
       }
     });
