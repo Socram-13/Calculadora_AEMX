@@ -5533,8 +5533,9 @@
 
       const nombresM = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
       const labels = meses.map(m => {
-        const [y, mo] = m.split('-');
-        return `${nombresM[parseInt(mo) - 1]} ${y}`;
+        const [fecha] = m.split('_');
+        const [y, mo, dd] = fecha.split('-');
+        return `${dd} ${nombresM[parseInt(mo) - 1]} ${y.slice(2)}`;
       });
       const valores = meses.map(m => mesesData[m]);
       const accentColor = '#F5A623';
