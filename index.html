@@ -5636,16 +5636,66 @@
         _diffAnim = { raf: requestAnimationFrame(drawFrame) };
       }
 
-      // Plugin para mostrar diferencia entre puntos consecutivos + flecha en punto actual
+      // Partículas de humo del cohete
+      const smokeParticles = [];
+      let smokeRaf = null;
+      function animateSmoke(chart) {
+        const meta = chart.getDatasetMeta(0);
+        const lastMeta = meta.data[idxActual];
+        if (!lastMeta) return;
+        const rx = lastMeta.x;
+        const ry = lastMeta.y - 4;
+
+        // Emitir nueva partícula cada ~400ms
+        if (!chart._lastSmoke || performance.now() - chart._lastSmoke > 400) {
+          smokeParticles.push({
+            x: rx + (Math.random() - 0.5) * 8,
+            y: ry + 14,
+            r: 4 + Math.random() * 4,
+            alpha: 0.5 + Math.random() * 0.3,
+            vx: (Math.random() - 0.5) * 0.6,
+            vy: 1.2 + Math.random() * 0.8,
+            life: 0,
+          });
+          chart._lastSmoke = performance.now();
+        }
+
+        // Actualizar partículas
+        for (let i = smokeParticles.length - 1; i >= 0; i--) {
+          const p = smokeParticles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.r += 0.3;
+          p.alpha -= 0.018;
+          p.life++;
+          if (p.alpha <= 0) smokeParticles.splice(i, 1);
+        }
+
+        chart.update('none');
+        smokeRaf = requestAnimationFrame(() => animateSmoke(chart));
+      }
+
+      // Plugin para mostrar diferencia entre puntos consecutivos + cohete + humo
       const diffPlugin = {
         id: 'diffLabels',
         afterDatasetsDraw(chart) {
           const ctx2 = chart.ctx;
           const meta = chart.getDatasetMeta(0);
 
-          // Cohete en el último punto (dato actual)
+          // Dibujar humo debajo del cohete
           const lastMeta = meta.data[idxActual];
           if (lastMeta) {
+            for (const p of smokeParticles) {
+              ctx2.save();
+              ctx2.globalAlpha = Math.max(0, p.alpha);
+              ctx2.beginPath();
+              ctx2.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+              ctx2.fillStyle = 'rgba(180,180,180,0.7)';
+              ctx2.fill();
+              ctx2.restore();
+            }
+
+            // Cohete encima del humo
             ctx2.save();
             ctx2.font = '18px serif';
             ctx2.textAlign = 'center';
@@ -5751,6 +5801,9 @@
         },
         plugins: [diffPlugin]
       });
+
+      // Arrancar humo
+      animateSmoke(_historialChart);
 
       // Animación: recorre los pares de puntos, 3s cada uno, en bucle
       if (valores.length >= 2) {
