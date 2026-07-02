@@ -5541,6 +5541,18 @@
         return `${dd} ${nombresM[parseInt(mo) - 1]} ${y.slice(2)}`;
       });
       const valores = meses.map(m => mesesData[m]);
+
+      // Agregar dato actual del usuario
+      const totalActual = (parseInt(document.getElementById('common')?.value) || 0)
+                        + (parseInt(document.getElementById('rare')?.value)   || 0)
+                        + (parseInt(document.getElementById('epic')?.value)   || 0)
+                        + (parseInt(document.getElementById('legendary')?.value) || 0);
+      const hoy = new Date();
+      const labelActual = `${String(hoy.getDate()).padStart(2,'0')} ${nombresM[hoy.getMonth()]} ${String(hoy.getFullYear()).slice(2)} ▲`;
+      labels.push(labelActual);
+      valores.push(totalActual);
+      const idxActual = valores.length - 1;
+
       const accentColor = '#F5A623';
 
       if (_historialChart) { _historialChart.destroy(); _historialChart = null; }
@@ -5596,13 +5608,41 @@
         _diffAnim = { raf: requestAnimationFrame(drawFrame) };
       }
 
-      // Plugin para mostrar diferencia entre puntos consecutivos
+      // Plugin para mostrar diferencia entre puntos consecutivos + flecha en punto actual
       const diffPlugin = {
         id: 'diffLabels',
         afterDatasetsDraw(chart) {
+          const ctx2 = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+
+          // Flecha en el último punto (dato actual)
+          const lastMeta = meta.data[idxActual];
+          if (lastMeta) {
+            const ax = lastMeta.x;
+            const ay = lastMeta.y;
+            const sz = 10;
+            ctx2.save();
+            ctx2.fillStyle = '#2d7a25';
+            ctx2.beginPath();
+            // Flecha apuntando esquina superior derecha (↗)
+            ctx2.translate(ax, ay);
+            ctx2.rotate(-Math.PI / 4);
+            ctx2.moveTo(0, sz);
+            ctx2.lineTo(0, 0);
+            ctx2.lineTo(sz, 0);
+            ctx2.lineTo(sz * 0.6, -sz * 0.2);
+            ctx2.moveTo(sz, 0);
+            ctx2.lineTo(sz * 1.2, sz * 0.6);
+            ctx2.strokeStyle = '#2d7a25';
+            ctx2.lineWidth = 2.5;
+            ctx2.lineCap = 'round';
+            ctx2.stroke();
+            ctx2.restore();
+          }
+
+          // Burbuja animada entre puntos
           if (!chart._diffOverlay) return;
           const { midX, midY, text, baseColor, alpha } = chart._diffOverlay;
-          const ctx2 = chart.ctx;
           ctx2.save();
           ctx2.globalAlpha = alpha;
           const padding = 6;
@@ -5645,9 +5685,10 @@
             data: valores,
             borderColor: accentColor,
             backgroundColor: accentColor + '22',
-            pointBackgroundColor: accentColor,
-            pointRadius: 5,
-            pointHoverRadius: 8,
+            pointBackgroundColor: valores.map((_, i) => i === idxActual ? 'transparent' : accentColor),
+            pointBorderColor:    valores.map((_, i) => i === idxActual ? 'transparent' : accentColor),
+            pointRadius:         valores.map((_, i) => i === idxActual ? 0 : 5),
+            pointHoverRadius:    valores.map((_, i) => i === idxActual ? 0 : 8),
             tension: 0.3,
             fill: true,
             spanGaps: true,
