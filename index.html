@@ -5692,6 +5692,23 @@
         }
       }
 
+      const rocketPlugin = {
+        id: 'rocketDraw',
+        afterDatasetsDraw(chart) {
+          const ctx2 = chart.ctx;
+          const meta = chart.getDatasetMeta(0);
+          const lastMeta = meta.data[idxActual];
+          if (!lastMeta) return;
+          const jitter = (Math.random() - 0.5) * 1.2;
+          ctx2.save();
+          ctx2.font = '18px serif';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'bottom';
+          ctx2.fillText('🚀', lastMeta.x + jitter, lastMeta.y - 4);
+          ctx2.restore();
+        }
+      };
+
       // Plugin para mostrar diferencia entre puntos consecutivos + cohete + humo
       const diffPlugin = {
         id: 'diffLabels',
@@ -5706,15 +5723,6 @@
             for (const p of smokeParticles) {
               drawPuff(ctx2, p.x, p.y, p.r, p.alpha);
             }
-            ctx2.restore();
-
-            // Vibración suave del cohete
-            const jitter = (Math.random() - 0.5) * 1.2;
-            ctx2.save();
-            ctx2.font = '18px serif';
-            ctx2.textAlign = 'center';
-            ctx2.textBaseline = 'bottom';
-            ctx2.fillText('🚀', lastMeta.x + jitter, lastMeta.y - 4);
             ctx2.restore();
           }
 
@@ -5813,7 +5821,7 @@
             }
           }
         },
-        plugins: [diffPlugin]
+        plugins: [rocketPlugin, diffPlugin]
       });
 
       // Arrancar humo
