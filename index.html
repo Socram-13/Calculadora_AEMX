@@ -5615,28 +5615,14 @@
           const ctx2 = chart.ctx;
           const meta = chart.getDatasetMeta(0);
 
-          // Flecha en el último punto (dato actual)
+          // Cohete en el último punto (dato actual)
           const lastMeta = meta.data[idxActual];
           if (lastMeta) {
-            const ax = lastMeta.x;
-            const ay = lastMeta.y;
-            const sz = 10;
             ctx2.save();
-            ctx2.fillStyle = '#2d7a25';
-            ctx2.beginPath();
-            // Flecha apuntando esquina superior derecha (↗)
-            ctx2.translate(ax, ay);
-            ctx2.rotate(-Math.PI / 4);
-            ctx2.moveTo(0, sz);
-            ctx2.lineTo(0, 0);
-            ctx2.lineTo(sz, 0);
-            ctx2.lineTo(sz * 0.6, -sz * 0.2);
-            ctx2.moveTo(sz, 0);
-            ctx2.lineTo(sz * 1.2, sz * 0.6);
-            ctx2.strokeStyle = '#2d7a25';
-            ctx2.lineWidth = 2.5;
-            ctx2.lineCap = 'round';
-            ctx2.stroke();
+            ctx2.font = '18px serif';
+            ctx2.textAlign = 'center';
+            ctx2.textBaseline = 'bottom';
+            ctx2.fillText('🚀', lastMeta.x, lastMeta.y - 4);
             ctx2.restore();
           }
 
