@@ -5537,7 +5537,8 @@
         return `${nombresM[parseInt(mo) - 1]} ${y}`;
       });
       const valores = meses.map(m => mesesData[m]);
-      const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--glow').trim() || '#F5A623';
+      const isAtlas = document.body.classList.contains('theme-original');
+      const accentColor = isAtlas ? '#F5A623' : (getComputedStyle(document.documentElement).getPropertyValue('--glow').trim() || '#F5A623');
 
       if (_historialChart) { _historialChart.destroy(); _historialChart = null; }
 
