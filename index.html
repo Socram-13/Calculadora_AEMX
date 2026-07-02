@@ -5710,12 +5710,14 @@
                 callback: v => v.toLocaleString(),
               },
               grid: { color: 'rgba(200,169,110,0.3)' },
-              suggestedMax: (() => {
-                const max = Math.max(...valores.filter(v => v != null));
-                const magnitude = Math.pow(10, Math.floor(Math.log10(max)));
-                const step = Math.round(magnitude / 5);
-                return max + step;
-              })(),
+              afterBuildTicks(axis) {
+                if (axis.ticks.length >= 2) {
+                  const step = axis.ticks[1].value - axis.ticks[0].value;
+                  const last = axis.ticks[axis.ticks.length - 1].value;
+                  axis.ticks.push({ value: last + step });
+                  axis.max = last + step;
+                }
+              }
             }
           }
         },
