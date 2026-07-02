@@ -5499,25 +5499,53 @@
   async function cargarHistorialUsuario(uid) {
     if (!uid || !window._fbDb || !window._fbRef || !window._fbGet) return;
     try {
-      const snap = await window._fbGet(window._fbRef(window._fbDb, 'historial'));
+      const CACHE_KEY = `atlas-historial-${uid}`;
       const snapCount = document.getElementById('historialSnapCount');
       const emptyMsg  = document.getElementById('historialEmptyMsg');
       const canvas    = document.getElementById('historialUserChart');
 
-      if (!snap.exists()) {
+      // Leer solo las claves de meses (shallow) para comparar con caché
+      const { getDatabase, ref, get, query, orderByKey } = window._fbModules || {};
+      const snapKeys = await window._fbGet(window._fbRef(window._fbDb, 'historial'));
+      if (!snapKeys.exists()) {
         if (snapCount) snapCount.textContent = 'Sin datos';
         if (emptyMsg)  emptyMsg.textContent  = 'Aún no hay snapshots guardados.';
         return;
       }
 
-      const mesesData = {};
-      snap.forEach(mesSnap => {
-        const mesKey = mesSnap.key;
-        const mesVal = mesSnap.val();
-        if (mesVal && mesVal[uid] !== undefined) {
-          mesesData[mesKey] = mesVal[uid].parcelas ?? null;
+      // Obtener último mes disponible
+      const todasLasClaves = Object.keys(snapKeys.val() || {}).sort();
+      const ultimaMes = todasLasClaves[todasLasClaves.length - 1];
+
+      // Revisar caché local
+      let mesesData = null;
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.ultimaMes === ultimaMes) {
+            // Caché vigente, usar datos locales
+            mesesData = parsed.mesesData;
+          }
         }
-      });
+      } catch(e) {}
+
+      // Si no hay caché o está desactualizado, leer Firebase completo
+      if (!mesesData) {
+        const snap = await window._fbGet(window._fbRef(window._fbDb, 'historial'));
+        mesesData = {};
+        snap.forEach(mesSnap => {
+          const mesKey = mesSnap.key;
+          const mesVal = mesSnap.val();
+          if (mesVal && mesVal[uid] !== undefined) {
+            mesesData[mesKey] = mesVal[uid].parcelas ?? null;
+          }
+        });
+        // Guardar en caché
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify({ ultimaMes, mesesData }));
+        } catch(e) {}
+      }
 
       const meses = Object.keys(mesesData).sort();
 
