@@ -5647,7 +5647,7 @@
         const ry = lastMeta.y - 4;
 
         // Emitir nueva partícula cada ~400ms
-        if (!chart._lastSmoke || performance.now() - chart._lastSmoke > 400) {
+        if (!chart._lastSmoke || performance.now() - chart._lastSmoke > 150) {
           smokeParticles.push({
             x: rx - 6,
             y: ry - 8,
