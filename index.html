@@ -1458,6 +1458,105 @@
   }
 
   /* ════════════════════════════════
+     CARD DE HISTORIAL
+  ════════════════════════════════ */
+  .historial-card {
+    background: var(--panel);
+    border: 3px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    transition: border-color 0.3s, transform 0.2s;
+    position: relative;
+    box-shadow: 0 5px 0 var(--sand-dark), 0 8px 16px rgba(0,0,0,0.1);
+  }
+  .historial-card:hover { border-color: var(--gold); }
+  .historial-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .historial-card:hover::before { opacity: 1; }
+
+  .historial-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 48px;
+  }
+  .historial-toggle:hover { background: rgba(245,166,35,0.06); }
+  .historial-toggle-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .historial-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: var(--text);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .historial-title-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+  .historial-snap-count {
+    font-family: 'Fredoka One', cursive;
+    font-size: 11px;
+    color: #c8851a;
+    letter-spacing: 1px;
+    background: rgba(245,166,35,0.15);
+    border: 2px solid rgba(245,166,35,0.4);
+    border-radius: 8px;
+    padding: 1px 8px;
+  }
+  .historial-arrow {
+    font-size: 10px;
+    color: var(--text2);
+    transition: transform 0.3s ease;
+  }
+  .historial-toggle.open .historial-arrow { transform: rotate(180deg); }
+
+  .historial-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.35s ease;
+  }
+  .historial-body.open { max-height: 600px; }
+
+  .historial-inner {
+    padding: 4px 18px 20px;
+  }
+  .historial-empty {
+    text-align: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    color: var(--text2);
+    letter-spacing: 1px;
+    padding: 20px 0;
+  }
+  #historialUserChart {
+    width: 100%;
+    max-height: 220px;
+  }
+
+  /* ════════════════════════════════
      CARD DE MEDALLAS
   ════════════════════════════════ */
   .medals-card {
@@ -2222,6 +2321,7 @@
         window._fbUser = user;
         renderAuthUI(user);
         setTimeout(() => syncFromFirebase(user.uid), 300);
+        setTimeout(() => cargarHistorialUsuario(user.uid), 800);
       } else {
         window._fbUser = null;
         renderAuthUI(null);
@@ -2724,6 +2824,27 @@
       </div>
     </div>
   </div>
+
+  <!-- ════════ CARD DE HISTORIAL ════════ -->
+  <div class="historial-card">
+    <button class="historial-toggle" id="historialToggle" onclick="toggleHistorial()">
+      <div class="historial-toggle-left">
+        <span class="historial-title">
+          <span class="historial-title-dot"></span>
+          📈 Historial de Parcelas
+        </span>
+        <span class="historial-snap-count" id="historialSnapCount">—</span>
+      </div>
+      <span class="historial-arrow">▼</span>
+    </button>
+    <div class="historial-body" id="historialBody">
+      <div class="historial-inner">
+        <div class="historial-empty" id="historialEmptyMsg">Cargando...</div>
+        <canvas id="historialUserChart" style="display:none;"></canvas>
+      </div>
+    </div>
+  </div>
+  <!-- ════════ FIN CARD HISTORIAL ════════ -->
 
   <!-- ════════ CARD DE MEDALLAS ════════ -->
   <div class="medals-card">
@@ -5356,6 +5477,138 @@
 
     window.addEventListener('popstate', () => { if (chatOpen) closeChatWidget(); });
   </script>
+<!-- ════════ JS HISTORIAL DE PARCELAS ════════ -->
+<script>
+  (function() {
+    if (window.Chart) return;
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+    document.head.appendChild(s);
+  })();
+
+  let _historialChart = null;
+
+  function toggleHistorial() {
+    const btn  = document.getElementById('historialToggle');
+    const body = document.getElementById('historialBody');
+    if (!btn || !body) return;
+    btn.classList.toggle('open');
+    body.classList.toggle('open');
+  }
+
+  async function cargarHistorialUsuario(uid) {
+    if (!uid || !window._fbDb || !window._fbRef || !window._fbGet) return;
+    try {
+      const snap = await window._fbGet(window._fbRef(window._fbDb, 'historial'));
+      const snapCount = document.getElementById('historialSnapCount');
+      const emptyMsg  = document.getElementById('historialEmptyMsg');
+      const canvas    = document.getElementById('historialUserChart');
+
+      if (!snap.exists()) {
+        if (snapCount) snapCount.textContent = 'Sin datos';
+        if (emptyMsg)  emptyMsg.textContent  = 'Aún no hay snapshots guardados.';
+        return;
+      }
+
+      const mesesData = {};
+      snap.forEach(mesSnap => {
+        const mesKey = mesSnap.key;
+        const mesVal = mesSnap.val();
+        if (mesVal && mesVal[uid] !== undefined) {
+          mesesData[mesKey] = mesVal[uid].parcelas ?? null;
+        }
+      });
+
+      const meses = Object.keys(mesesData).sort();
+
+      if (meses.length === 0) {
+        if (snapCount) snapCount.textContent = 'Sin datos';
+        if (emptyMsg)  emptyMsg.textContent  = 'No tienes snapshots registrados aún.';
+        return;
+      }
+
+      if (snapCount) snapCount.textContent = `${meses.length} snapshot${meses.length > 1 ? 's' : ''}`;
+      if (emptyMsg)  emptyMsg.style.display = 'none';
+      if (canvas)    canvas.style.display   = 'block';
+
+      const nombresM = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      const labels = meses.map(m => {
+        const [y, mo] = m.split('-');
+        return `${nombresM[parseInt(mo) - 1]} ${y}`;
+      });
+      const valores = meses.map(m => mesesData[m]);
+      const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--glow').trim() || '#F5A623';
+
+      if (_historialChart) { _historialChart.destroy(); _historialChart = null; }
+
+      await new Promise(resolve => {
+        if (window.Chart) return resolve();
+        let tries = 0;
+        const wait = setInterval(() => {
+          tries++;
+          if (window.Chart || tries > 30) { clearInterval(wait); resolve(); }
+        }, 200);
+      });
+
+      if (!window.Chart || !canvas) return;
+
+      _historialChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Parcelas',
+            data: valores,
+            borderColor: accentColor,
+            backgroundColor: accentColor + '22',
+            pointBackgroundColor: accentColor,
+            pointRadius: 5,
+            pointHoverRadius: 8,
+            tension: 0.3,
+            fill: true,
+            spanGaps: true,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#fffbf0',
+              borderColor: '#c8a96e',
+              borderWidth: 2,
+              titleColor: '#7a4a0a',
+              bodyColor: '#3E2A10',
+              titleFont: { family: 'Fredoka One', size: 12 },
+              bodyFont:  { family: 'Nunito', size: 13, weight: '700' },
+              callbacks: {
+                label: ctx => ` ${ctx.parsed.y?.toLocaleString() ?? '—'} parcelas`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#7a5c30', font: { family: 'Nunito', size: 11, weight: '700' } },
+              grid:  { color: 'rgba(200,169,110,0.3)' },
+            },
+            y: {
+              ticks: {
+                color: '#7a5c30',
+                font:  { family: 'Nunito', size: 11, weight: '700' },
+                callback: v => v.toLocaleString(),
+              },
+              grid: { color: 'rgba(200,169,110,0.3)' },
+            }
+          }
+        }
+      });
+    } catch(e) {
+      console.warn('Error cargando historial del usuario:', e);
+    }
+  }
+</script>
+<!-- ════════ FIN JS HISTORIAL ════════ -->
+
 <script>
   /* ── Scanner bridge: lee datos del scanner al volver ── */
   (function() {
