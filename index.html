@@ -5544,6 +5544,7 @@
       const accentColor = '#F5A623';
 
       if (_historialChart) { _historialChart.destroy(); _historialChart = null; }
+      if (window._historialDiffInterval) { clearInterval(window._historialDiffInterval); window._historialDiffInterval = null; }
 
       await new Promise(resolve => {
         if (window.Chart) return resolve();
@@ -5555,6 +5556,61 @@
       });
 
       if (!window.Chart || !canvas) return;
+
+      // Plugin para mostrar diferencia entre puntos consecutivos
+      const diffPlugin = {
+        id: 'diffLabels',
+        afterDatasetsDraw(chart) {
+          if (chart._diffIndex === undefined || chart._diffIndex < 1) return;
+          const i = chart._diffIndex;
+          const meta = chart.getDatasetMeta(0);
+          if (!meta.data[i] || !meta.data[i-1]) return;
+
+          const x1 = meta.data[i-1].x;
+          const x2 = meta.data[i].x;
+          const y1 = meta.data[i-1].y;
+          const y2 = meta.data[i].y;
+          const midX = (x1 + x2) / 2;
+          const midY = (y1 + y2) / 2 - 18;
+
+          const diff = (chart.data.datasets[0].data[i] ?? 0) - (chart.data.datasets[0].data[i-1] ?? 0);
+          const sign = diff >= 0 ? '+' : '';
+          const text = `${sign}${diff.toLocaleString()}`;
+
+          const ctx2 = chart.ctx;
+          ctx2.save();
+          const padding = 6;
+          ctx2.font = 'bold 12px Nunito, sans-serif';
+          const tw = ctx2.measureText(text).width;
+          const bx = midX - tw/2 - padding;
+          const by = midY - 10;
+          const bw = tw + padding*2;
+          const bh = 22;
+          const r  = 6;
+
+          // Burbuja
+          ctx2.beginPath();
+          ctx2.moveTo(bx + r, by);
+          ctx2.lineTo(bx + bw - r, by);
+          ctx2.quadraticCurveTo(bx + bw, by, bx + bw, by + r);
+          ctx2.lineTo(bx + bw, by + bh - r);
+          ctx2.quadraticCurveTo(bx + bw, by + bh, bx + bw - r, by + bh);
+          ctx2.lineTo(bx + r, by + bh);
+          ctx2.quadraticCurveTo(bx, by + bh, bx, by + bh - r);
+          ctx2.lineTo(bx, by + r);
+          ctx2.quadraticCurveTo(bx, by, bx + r, by);
+          ctx2.closePath();
+          ctx2.fillStyle = diff >= 0 ? 'rgba(45,122,37,0.92)' : 'rgba(192,57,43,0.92)';
+          ctx2.fill();
+
+          // Texto
+          ctx2.fillStyle = '#fff';
+          ctx2.textAlign = 'center';
+          ctx2.textBaseline = 'middle';
+          ctx2.fillText(text, midX, midY + 1);
+          ctx2.restore();
+        }
+      };
 
       _historialChart = new Chart(canvas, {
         type: 'line',
@@ -5575,6 +5631,7 @@
         },
         options: {
           responsive: true,
+          animation: false,
           plugins: {
             legend: { display: false },
             tooltip: {
@@ -5604,8 +5661,24 @@
               grid: { color: 'rgba(200,169,110,0.3)' },
             }
           }
-        }
+        },
+        plugins: [diffPlugin]
       });
+
+      // Animación: recorre los pares de puntos, 3s cada uno, en bucle
+      if (valores.length >= 2) {
+        _historialChart._diffIndex = 1;
+        _historialChart.update('none');
+        window._historialDiffInterval = setInterval(() => {
+          if (!_historialChart) return;
+          _historialChart._diffIndex++;
+          if (_historialChart._diffIndex >= valores.length) {
+            _historialChart._diffIndex = 1;
+          }
+          _historialChart.update('none');
+        }, 3000);
+      }
+
     } catch(e) {
       console.warn('Error cargando historial del usuario:', e);
     }
