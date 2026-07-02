@@ -5675,6 +5675,23 @@
         smokeRaf = requestAnimationFrame(() => animateSmoke(chart));
       }
 
+      function drawPuff(ctx2, x, y, s, alpha) {
+        const blobs = [
+          [0, 0, 1.0], [-s*0.5, s*0.3, 0.75], [s*0.5, s*0.4, 0.7],
+          [-s*0.2, s*0.7, 0.65], [s*0.3, s*0.8, 0.6], [0, s*0.4, 0.55],
+        ];
+        for (const [bx, by, br] of blobs) {
+          const g = ctx2.createRadialGradient(x+bx, y+by, 0, x+bx, y+by, s*br);
+          g.addColorStop(0,   `rgba(200,200,205,${alpha*0.9})`);
+          g.addColorStop(0.5, `rgba(185,185,190,${alpha*0.5})`);
+          g.addColorStop(1,   `rgba(170,170,175,0)`);
+          ctx2.beginPath();
+          ctx2.arc(x+bx, y+by, s*br, 0, Math.PI*2);
+          ctx2.fillStyle = g;
+          ctx2.fill();
+        }
+      }
+
       // Plugin para mostrar diferencia entre puntos consecutivos + cohete + humo
       const diffPlugin = {
         id: 'diffLabels',
@@ -5682,25 +5699,22 @@
           const ctx2 = chart.ctx;
           const meta = chart.getDatasetMeta(0);
 
-          // Dibujar humo debajo del cohete
+          // Dibujar humo y cohete
           const lastMeta = meta.data[idxActual];
           if (lastMeta) {
+            ctx2.save();
             for (const p of smokeParticles) {
-              ctx2.save();
-              ctx2.globalAlpha = Math.max(0, p.alpha);
-              ctx2.beginPath();
-              ctx2.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-              ctx2.fillStyle = 'rgba(180,180,180,0.7)';
-              ctx2.fill();
-              ctx2.restore();
+              drawPuff(ctx2, p.x, p.y, p.r, p.alpha);
             }
+            ctx2.restore();
 
-            // Cohete encima del humo
+            // Vibración suave del cohete
+            const jitter = (Math.random() - 0.5) * 1.2;
             ctx2.save();
             ctx2.font = '18px serif';
             ctx2.textAlign = 'center';
             ctx2.textBaseline = 'bottom';
-            ctx2.fillText('🚀', lastMeta.x, lastMeta.y - 4);
+            ctx2.fillText('🚀', lastMeta.x + jitter, lastMeta.y - 4);
             ctx2.restore();
           }
 
