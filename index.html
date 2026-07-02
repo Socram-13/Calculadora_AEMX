@@ -5534,7 +5534,10 @@
       const nombresM = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
       const labels = meses.map(m => {
         const [fecha] = m.split('_');
-        const [y, mo, dd] = fecha.split('-');
+        const partes = fecha.split('-');
+        const y  = partes[0];
+        const mo = partes[1];
+        const dd = partes[2] || '01';
         return `${dd} ${nombresM[parseInt(mo) - 1]} ${y.slice(2)}`;
       });
       const valores = meses.map(m => mesesData[m]);
