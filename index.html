@@ -5710,6 +5710,12 @@
                 callback: v => v.toLocaleString(),
               },
               grid: { color: 'rgba(200,169,110,0.3)' },
+              suggestedMax: (() => {
+                const max = Math.max(...valores.filter(v => v != null));
+                const magnitude = Math.pow(10, Math.floor(Math.log10(max)));
+                const step = Math.ceil(max / magnitude / 5) * magnitude;
+                return max + step;
+              })(),
             }
           }
         },
