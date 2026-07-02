@@ -5649,12 +5649,12 @@
         // Emitir nueva partícula cada ~400ms
         if (!chart._lastSmoke || performance.now() - chart._lastSmoke > 400) {
           smokeParticles.push({
-            x: rx + (Math.random() - 0.5) * 8,
-            y: ry + 14,
+            x: rx - 6,
+            y: ry + 10,
             r: 4 + Math.random() * 4,
             alpha: 0.5 + Math.random() * 0.3,
-            vx: (Math.random() - 0.5) * 0.6,
-            vy: 1.2 + Math.random() * 0.8,
+            vx: -(0.6 + Math.random() * 0.5),
+            vy: 0.6 + Math.random() * 0.5,
             life: 0,
           });
           chart._lastSmoke = performance.now();
