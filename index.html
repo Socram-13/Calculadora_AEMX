@@ -5697,30 +5697,30 @@
         afterDatasetsDraw(chart) {
           const ctx2 = chart.ctx;
           const meta = chart.getDatasetMeta(0);
-          const lastMeta  = meta.data[idxActual];
-          const prevMeta  = meta.data[idxActual - 1];
+          const lastMeta = meta.data[idxActual];
+          const prevMeta = meta.data[idxActual - 1];
           if (!lastMeta || !prevMeta) return;
 
-          // Estela: último 30% del segmento gira 45° hacia arriba y desaparece
+          // Origen: penúltimo punto. Destino: base del cohete (donde sale el humo)
           const x0 = prevMeta.x, y0 = prevMeta.y;
-          const x1 = lastMeta.x, y1 = lastMeta.y - 4;
-          const splitT = 0.7;
-          const mx = x0 + (x1 - x0) * splitT;
-          const my = y0 + (y1 - y0) * splitT;
-          const segLen = Math.sqrt((x1-mx)**2 + (y1-my)**2);
-          // Punto final desviado 45° hacia arriba
-          const angle45 = -Math.PI / 4;
-          const ex = mx + Math.cos(angle45) * segLen;
-          const ey = my + Math.sin(angle45) * segLen;
+          const ex = lastMeta.x - 6;   // mismo x que el humo
+          const ey = lastMeta.y - 8;   // mismo y que el humo
 
-          const grad = ctx2.createLinearGradient(mx, my, ex, ey);
-          grad.addColorStop(0, 'rgba(245,166,35,0.85)');
-          grad.addColorStop(1, 'rgba(245,166,35,0)');
+          // Punto de inflexión: 70% del camino, desde ahí empieza a girar hacia arriba
+          const splitT = 0.7;
+          const mx = x0 + (ex - x0) * splitT;
+          const my = y0 + (ey - y0) * splitT;
+
+          const grad = ctx2.createLinearGradient(x0, y0, ex, ey);
+          grad.addColorStop(0,   `rgba(245,166,35,0)`);
+          grad.addColorStop(0.5, `rgba(245,166,35,0.6)`);
+          grad.addColorStop(1,   `rgba(245,166,35,0.9)`);
 
           ctx2.save();
           ctx2.beginPath();
-          ctx2.moveTo(mx, my);
-          ctx2.quadraticCurveTo(mx + (ex-mx)*0.3, my, ex, ey);
+          ctx2.moveTo(x0, y0);
+          // Curva que empieza horizontal y gira hacia arriba al final
+          ctx2.bezierCurveTo(mx, y0, mx, ey, ex, ey);
           ctx2.strokeStyle = grad;
           ctx2.lineWidth = 2.5;
           ctx2.lineCap = 'round';
