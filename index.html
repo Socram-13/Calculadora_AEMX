@@ -5701,26 +5701,25 @@
           const prevMeta = meta.data[idxActual - 1];
           if (!lastMeta || !prevMeta) return;
 
-          // Origen: penúltimo punto. Destino: base del cohete (donde sale el humo)
+          // Origen: penúltimo punto. Destino: exactamente donde está el cohete
           const x0 = prevMeta.x, y0 = prevMeta.y;
-          const ex = lastMeta.x - 6;   // mismo x que el humo
-          const ey = lastMeta.y - 8;   // mismo y que el humo
-
-          // Punto de inflexión: 70% del camino, desde ahí empieza a girar hacia arriba
-          const splitT = 0.7;
-          const mx = x0 + (ex - x0) * splitT;
-          const my = y0 + (ey - y0) * splitT;
+          const ex = lastMeta.x;
+          const ey = lastMeta.y - 22; // justo debajo del cohete
 
           const grad = ctx2.createLinearGradient(x0, y0, ex, ey);
           grad.addColorStop(0,   `rgba(245,166,35,0)`);
-          grad.addColorStop(0.5, `rgba(245,166,35,0.6)`);
-          grad.addColorStop(1,   `rgba(245,166,35,0.9)`);
+          grad.addColorStop(0.6, `rgba(245,166,35,0.7)`);
+          grad.addColorStop(1,   `rgba(245,166,35,0.95)`);
 
           ctx2.save();
           ctx2.beginPath();
           ctx2.moveTo(x0, y0);
-          // Curva que empieza horizontal y gira hacia arriba al final
-          ctx2.bezierCurveTo(mx, y0, mx, ey, ex, ey);
+          // Control point: horizontal al inicio, sube al final
+          ctx2.bezierCurveTo(
+            x0 + (ex - x0) * 0.6, y0,
+            ex, y0 + (ey - y0) * 0.3,
+            ex, ey
+          );
           ctx2.strokeStyle = grad;
           ctx2.lineWidth = 2.5;
           ctx2.lineCap = 'round';
