@@ -5807,6 +5807,9 @@
             tension: 0.3,
             fill: true,
             spanGaps: true,
+            segment: {
+              borderColor: ctx => ctx.p1DataIndex === idxActual ? 'transparent' : accentColor,
+            }
           }]
         },
         options: {
