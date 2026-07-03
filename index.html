@@ -5705,17 +5705,30 @@
       }
 
       // Plugin líneas de advertencia de caída de boost
+      const MEXICO_ZONES = [
+        { caida: 51,  salto: 63,  de: 20, a: 15 },
+        { caida: 86,  salto: 100, de: 15, a: 12 },
+        { caida: 132, salto: 140, de: 12, a: 8  },
+        { caida: 152, salto: 175, de: 8,  a: 7  },
+        { caida: 176, salto: 225, de: 7,  a: 5  },
+        { caida: 226, salto: 300, de: 5,  a: 4  },
+        { caida: 252, salto: 300, de: 4,  a: 4  },
+        { caida: 301, salto: 400, de: 4,  a: 3  },
+        { caida: 339, salto: 400, de: 3,  a: 3  },
+        { caida: 401, salto: 459, de: 3,  a: 2  },
+      ];
+
       const boostThresholds = {
-        'Europa':         [70, 100, 135, 170, 200, 250, 300, 350, 400],
-        'Brazil':         [60, 75, 100, 120, 150, 200, 250, 300, 400],
-        'United States':  [150, 220, 290, 365, 435, 545, 625, 730, 875, 1100, 1500, 3000],
-        'default':        [50, 85, 100, 140, 175, 225, 300, 400],
+        'Europa':        [70, 100, 135, 170, 200, 250, 300, 350, 400],
+        'Brazil':        [60, 75, 100, 120, 150, 200, 250, 300, 400],
+        'United States': [150, 220, 290, 365, 435, 545, 625, 730, 875, 1100, 1500, 3000],
       };
       const EUROPA_SET = new Set(["Spain","France","Germany","Italy","Russia"]);
       const _country = window.userCountry || 'México';
+      const isMexico = !EUROPA_SET.has(_country) && _country !== 'Brazil' && _country !== 'United States';
       const _thresholds = EUROPA_SET.has(_country)
         ? boostThresholds['Europa']
-        : boostThresholds[_country] || boostThresholds['default'];
+        : boostThresholds[_country] || [];
 
       const warningPlugin = {
         id: 'boostWarnings',
@@ -5724,24 +5737,83 @@
           const yAxis = chart.scales.y;
           const xLeft  = chart.chartArea.left;
           const xRight = chart.chartArea.right;
-          for (const threshold of _thresholds) {
-            if (threshold < yAxis.min || threshold > yAxis.max) continue;
-            const yPos = yAxis.getPixelForValue(threshold);
-            ctx2.save();
-            ctx2.setLineDash([6, 4]);
-            ctx2.strokeStyle = 'rgba(192,57,43,0.6)';
-            ctx2.lineWidth = 1.5;
-            ctx2.beginPath();
-            ctx2.moveTo(xLeft, yPos);
-            ctx2.lineTo(xRight, yPos);
-            ctx2.stroke();
-            ctx2.setLineDash([]);
-            ctx2.font = 'bold 10px Nunito, sans-serif';
-            ctx2.fillStyle = 'rgba(192,57,43,0.85)';
-            ctx2.textAlign = 'left';
-            ctx2.textBaseline = 'bottom';
-            ctx2.fillText(`⚠ ${threshold}`, xLeft + 4, yPos - 2);
-            ctx2.restore();
+
+          if (isMexico) {
+            for (const z of MEXICO_ZONES) {
+              const yCaida = yAxis.getPixelForValue(z.caida);
+              const ySalto = yAxis.getPixelForValue(z.salto);
+              const inView = z.caida <= yAxis.max && z.salto >= yAxis.min;
+              if (!inView) continue;
+
+              // Relleno rojo semitransparente (zona de pérdida)
+              const yTop  = Math.max(yCaida, chart.chartArea.top);
+              const yBot  = Math.min(ySalto, chart.chartArea.bottom);
+              ctx2.save();
+              ctx2.fillStyle = 'rgba(192,57,43,0.08)';
+              ctx2.fillRect(xLeft, yTop, xRight - xLeft, yBot - yTop);
+              ctx2.restore();
+
+              // Línea roja = CAIDA
+              if (z.caida >= yAxis.min && z.caida <= yAxis.max) {
+                const yPos = yAxis.getPixelForValue(z.caida);
+                ctx2.save();
+                ctx2.setLineDash([6, 4]);
+                ctx2.strokeStyle = 'rgba(192,57,43,0.7)';
+                ctx2.lineWidth = 1.5;
+                ctx2.beginPath();
+                ctx2.moveTo(xLeft, yPos);
+                ctx2.lineTo(xRight, yPos);
+                ctx2.stroke();
+                ctx2.setLineDash([]);
+                ctx2.font = 'bold 10px Nunito, sans-serif';
+                ctx2.fillStyle = 'rgba(192,57,43,0.9)';
+                ctx2.textAlign = 'left';
+                ctx2.textBaseline = 'bottom';
+                ctx2.fillText(`⚠ ${z.caida} · ${z.de}x→${z.a}x`, xLeft + 4, yPos - 2);
+                ctx2.restore();
+              }
+
+              // Línea verde = SALTO
+              if (z.salto >= yAxis.min && z.salto <= yAxis.max) {
+                const yPos = yAxis.getPixelForValue(z.salto);
+                ctx2.save();
+                ctx2.setLineDash([6, 4]);
+                ctx2.strokeStyle = 'rgba(22,163,74,0.7)';
+                ctx2.lineWidth = 1.5;
+                ctx2.beginPath();
+                ctx2.moveTo(xLeft, yPos);
+                ctx2.lineTo(xRight, yPos);
+                ctx2.stroke();
+                ctx2.setLineDash([]);
+                ctx2.font = 'bold 10px Nunito, sans-serif';
+                ctx2.fillStyle = 'rgba(22,163,74,0.9)';
+                ctx2.textAlign = 'left';
+                ctx2.textBaseline = 'top';
+                ctx2.fillText(`✓ ${z.salto} · recuperado`, xLeft + 4, yPos + 2);
+                ctx2.restore();
+              }
+            }
+          } else {
+            // Otros países: solo línea roja simple
+            for (const threshold of _thresholds) {
+              if (threshold < yAxis.min || threshold > yAxis.max) continue;
+              const yPos = yAxis.getPixelForValue(threshold);
+              ctx2.save();
+              ctx2.setLineDash([6, 4]);
+              ctx2.strokeStyle = 'rgba(192,57,43,0.6)';
+              ctx2.lineWidth = 1.5;
+              ctx2.beginPath();
+              ctx2.moveTo(xLeft, yPos);
+              ctx2.lineTo(xRight, yPos);
+              ctx2.stroke();
+              ctx2.setLineDash([]);
+              ctx2.font = 'bold 10px Nunito, sans-serif';
+              ctx2.fillStyle = 'rgba(192,57,43,0.85)';
+              ctx2.textAlign = 'left';
+              ctx2.textBaseline = 'bottom';
+              ctx2.fillText(`⚠ ${threshold}`, xLeft + 4, yPos - 2);
+              ctx2.restore();
+            }
           }
         }
       };
