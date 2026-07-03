@@ -2401,7 +2401,7 @@
   if (snapshot.exists()) {
     snapshot.forEach((child) => {
       const d = child.val() || {};
-      if (!d.username) return;
+      if (!d.username && !d.common && !d.rare && !d.epic && !d.legendary) return;
 
       const common    = parseInt(d.common)    || 0;
       const rare      = parseInt(d.rare)      || 0;
