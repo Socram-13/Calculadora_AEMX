@@ -2535,9 +2535,11 @@
       // ── Validar que tenga nombre ──
       const usernameVal = document.getElementById('username')?.value?.trim();
       if (!usernameVal) {
-        const s = document.getElementById('save-status');
-        if (s) { s.textContent = '⚠️ Ingresa tu nombre antes de guardar'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 3500); }
-        document.getElementById('username')?.focus();
+        if (includeAvatar) {
+          const s = document.getElementById('save-status');
+          if (s) { s.textContent = '⚠️ Ingresa tu nombre antes de guardar'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 3500); }
+          document.getElementById('username')?.focus();
+        }
         return;
       }
 
