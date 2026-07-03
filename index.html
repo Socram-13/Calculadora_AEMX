@@ -5697,8 +5697,37 @@
         afterDatasetsDraw(chart) {
           const ctx2 = chart.ctx;
           const meta = chart.getDatasetMeta(0);
-          const lastMeta = meta.data[idxActual];
-          if (!lastMeta) return;
+          const lastMeta  = meta.data[idxActual];
+          const prevMeta  = meta.data[idxActual - 1];
+          if (!lastMeta || !prevMeta) return;
+
+          // Estela: último 30% del segmento gira 45° hacia arriba y desaparece
+          const x0 = prevMeta.x, y0 = prevMeta.y;
+          const x1 = lastMeta.x, y1 = lastMeta.y - 4;
+          const splitT = 0.7;
+          const mx = x0 + (x1 - x0) * splitT;
+          const my = y0 + (y1 - y0) * splitT;
+          const segLen = Math.sqrt((x1-mx)**2 + (y1-my)**2);
+          // Punto final desviado 45° hacia arriba
+          const angle45 = -Math.PI / 4;
+          const ex = mx + Math.cos(angle45) * segLen;
+          const ey = my + Math.sin(angle45) * segLen;
+
+          const grad = ctx2.createLinearGradient(mx, my, ex, ey);
+          grad.addColorStop(0, 'rgba(245,166,35,0.85)');
+          grad.addColorStop(1, 'rgba(245,166,35,0)');
+
+          ctx2.save();
+          ctx2.beginPath();
+          ctx2.moveTo(mx, my);
+          ctx2.quadraticCurveTo(mx + (ex-mx)*0.3, my, ex, ey);
+          ctx2.strokeStyle = grad;
+          ctx2.lineWidth = 2.5;
+          ctx2.lineCap = 'round';
+          ctx2.stroke();
+          ctx2.restore();
+
+          // Cohete con vibración
           const jitter = (Math.random() - 0.5) * 1.2;
           ctx2.save();
           ctx2.font = '18px serif';
