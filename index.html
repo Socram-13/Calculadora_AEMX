@@ -2532,6 +2532,22 @@
       const user = window._fbUser;
       if (!user) return;
 
+      // ── Validar que tenga nombre ──
+      const usernameVal = document.getElementById('username')?.value?.trim();
+      if (!usernameVal) {
+        const s = document.getElementById('save-status');
+        if (s) { s.textContent = '⚠️ Ingresa tu nombre antes de guardar'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 3500); }
+        document.getElementById('username')?.focus();
+        return;
+      }
+
+      // ── Validar verificación de Google ──
+      if (!user.emailVerified) {
+        const s = document.getElementById('save-status');
+        if (s) { s.textContent = '⚠️ Verifica tu cuenta de Google para guardar'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 3500); }
+        return;
+      }
+
       // ── Verificar si el admin bloqueó la escritura ──
       try {
         const writeSnap = await get(ref(db, `users/${user.uid}/bannedWrite`));
