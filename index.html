@@ -2536,8 +2536,8 @@
       const usernameVal = document.getElementById('username')?.value?.trim();
       if (!usernameVal) {
         if (includeAvatar) {
-          const s = document.getElementById('save-status');
-          if (s) { s.textContent = '⚠️ Ingresa tu nombre antes de guardar'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 3500); }
+          const errDiv = document.getElementById('username-error');
+          if (errDiv) { errDiv.style.display = 'block'; setTimeout(() => errDiv.style.display = 'none', 3000); }
           document.getElementById('username')?.focus();
         }
         return;
@@ -2756,7 +2756,7 @@
     </div>
     <div class="profile-info">
       <div class="profile-name-label">Nombre de usuario</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:0;flex-wrap:nowrap;">
+      <div style="position:relative;display:flex;align-items:center;justify-content:flex-start;gap:0;flex-wrap:nowrap;">
         <input
           type="text"
           id="username"
@@ -2766,6 +2766,7 @@
           oninput="this.value=this.value.toUpperCase(); saveUsername(); adjustBadge();"
           style="width:auto;min-width:60px;flex:0 1 auto;text-transform:uppercase;"
         >
+        <div id="username-error" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#c0392b;color:#fff;font-family:'Nunito',sans-serif;font-size:11px;font-weight:800;padding:4px 10px;border-radius:8px;white-space:nowrap;z-index:99;letter-spacing:1px;">⚠️ Ingresa tu nombre</div>
         <div class="explorer-badge-inline" id="explorer-badge" style="display:none;margin-left:8px;flex-shrink:0;">🧭</div>
       </div>
       <div class="profile-hint" style="font-size:9px;">Toca el avatar para cambiar foto</div>
