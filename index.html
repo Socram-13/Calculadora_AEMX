@@ -5704,6 +5704,48 @@
         }
       }
 
+      // Plugin líneas de advertencia de caída de boost
+      const boostThresholds = {
+        'Europa':         [70, 100, 135, 170, 200, 250, 300, 350, 400],
+        'Brazil':         [60, 75, 100, 120, 150, 200, 250, 300, 400],
+        'United States':  [150, 220, 290, 365, 435, 545, 625, 730, 875, 1100, 1500, 3000],
+        'default':        [50, 85, 100, 140, 175, 225, 300, 400],
+      };
+      const EUROPA_SET = new Set(["Spain","France","Germany","Italy","Russia"]);
+      const _country = window.userCountry || 'México';
+      const _thresholds = EUROPA_SET.has(_country)
+        ? boostThresholds['Europa']
+        : boostThresholds[_country] || boostThresholds['default'];
+
+      const warningPlugin = {
+        id: 'boostWarnings',
+        afterDatasetsDraw(chart) {
+          const ctx2 = chart.ctx;
+          const yAxis = chart.scales.y;
+          const xLeft  = chart.chartArea.left;
+          const xRight = chart.chartArea.right;
+          for (const threshold of _thresholds) {
+            if (threshold < yAxis.min || threshold > yAxis.max) continue;
+            const yPos = yAxis.getPixelForValue(threshold);
+            ctx2.save();
+            ctx2.setLineDash([6, 4]);
+            ctx2.strokeStyle = 'rgba(192,57,43,0.6)';
+            ctx2.lineWidth = 1.5;
+            ctx2.beginPath();
+            ctx2.moveTo(xLeft, yPos);
+            ctx2.lineTo(xRight, yPos);
+            ctx2.stroke();
+            ctx2.setLineDash([]);
+            ctx2.font = 'bold 10px Nunito, sans-serif';
+            ctx2.fillStyle = 'rgba(192,57,43,0.85)';
+            ctx2.textAlign = 'left';
+            ctx2.textBaseline = 'bottom';
+            ctx2.fillText(`⚠ ${threshold}`, xLeft + 4, yPos - 2);
+            ctx2.restore();
+          }
+        }
+      };
+
       const rocketPlugin = {
         id: 'rocketDraw',
         afterDatasetsDraw(chart) {
@@ -5864,7 +5906,7 @@
             }
           }
         },
-        plugins: [rocketPlugin, diffPlugin]
+        plugins: [warningPlugin, rocketPlugin, diffPlugin]
       });
 
       // Arrancar humo
