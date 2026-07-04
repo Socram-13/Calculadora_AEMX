@@ -5562,6 +5562,12 @@
 
       const meses = Object.keys(mesesData).sort();
 
+      // Si no hay snapshots agregar punto origen en 0
+      if (meses.length === 0) {
+        labels.push('Inicio');
+        valores.push(0);
+      }
+
       if (meses.length === 0) {
         if (snapCount) snapCount.textContent = '0 snapshots';
         if (emptyMsg)  emptyMsg.style.display = 'none';
