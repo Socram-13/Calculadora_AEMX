@@ -5738,8 +5738,7 @@
           const xLeft  = chart.chartArea.left;
           const xRight = chart.chartArea.right;
 
-          if (isMexico) {
-            for (const z of MEXICO_ZONES) {
+          for (const z of MEXICO_ZONES) {
               const yCaida = yAxis.getPixelForValue(z.caida);
               const ySalto = yAxis.getPixelForValue(z.salto);
               const inView = z.caida <= yAxis.max && z.salto >= yAxis.min;
@@ -5793,28 +5792,6 @@
                 ctx2.restore();
               }
             }
-          } else {
-            // Otros países: solo línea roja simple
-            for (const threshold of _thresholds) {
-              if (threshold < yAxis.min || threshold > yAxis.max) continue;
-              const yPos = yAxis.getPixelForValue(threshold);
-              ctx2.save();
-              ctx2.setLineDash([6, 4]);
-              ctx2.strokeStyle = 'rgba(192,57,43,0.6)';
-              ctx2.lineWidth = 1.5;
-              ctx2.beginPath();
-              ctx2.moveTo(xLeft, yPos);
-              ctx2.lineTo(xRight, yPos);
-              ctx2.stroke();
-              ctx2.setLineDash([]);
-              ctx2.font = 'bold 10px Nunito, sans-serif';
-              ctx2.fillStyle = 'rgba(192,57,43,0.85)';
-              ctx2.textAlign = 'left';
-              ctx2.textBaseline = 'bottom';
-              ctx2.fillText(`⚠ ${threshold}`, xLeft + 4, yPos - 2);
-              ctx2.restore();
-            }
-          }
         }
       };
 
