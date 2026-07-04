@@ -2509,6 +2509,7 @@ function updateStats() {
 
         const actionBtns = [];
         actionBtns.push(`<button class="btn-action btn-edit-country" onclick="editCountry('${u.uid}','${u.username}','${u.country}')">✎ PAÍS</button>`);
+        actionBtns.push(`<button class="btn-action" style="background:rgba(245,166,35,0.15);border-color:rgba(245,166,35,0.5);color:#c8851a;" onclick="confirmAction('clearTitle','${u.uid}','${u.username}')">🏷️ LIMPIAR TÍTULO</button>`);
         actionBtns.push(`<button class="btn-action btn-delete" onclick="confirmAction('deleteUser','${u.uid}','${u.username}')">🗑️ ELIMINAR</button>`);
         if (isBannedChat) {
           actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanChat','${u.uid}','${u.username}')">✓ CHAT</button>`);
@@ -2622,6 +2623,7 @@ function updateStats() {
         banWrite:   `⚠️ ¿Bloquear escritura a Firebase de <strong>${username}</strong>? Ya no podrá guardar ningún dato.`,
         unbanWrite: `¿Permitir escritura a Firebase de <strong>${username}</strong>?`,
         deleteUser: `⚠️ ¿Eliminar permanentemente a <strong>${username}</strong> de la base de datos? Esta acción <strong>no se puede deshacer</strong>.`,
+        clearTitle: `¿Limpiar el título de juego de <strong>${username}</strong>?`,
       };
       const titles = {
         banChat:    'BLOQUEAR CHAT',
@@ -2631,6 +2633,7 @@ function updateStats() {
         banWrite:   '🚫 BLOQUEAR ESCRITURA',
         unbanWrite: '✓ PERMITIR ESCRITURA',
         deleteUser: '🗑️ ELIMINAR USUARIO',
+        clearTitle: '🏷️ LIMPIAR TÍTULO',
       };
       document.getElementById('modalTitle').textContent = titles[action];
       document.getElementById('modalBody').innerHTML    = messages[action];
@@ -2660,6 +2663,16 @@ function updateStats() {
         } catch(e) {
           console.error('Error al eliminar usuario:', e.code, e.message, e);
           showToast('Error al eliminar usuario', true);
+        }
+        return;
+      }
+
+      if (action === 'clearTitle') {
+        try {
+          await update(ref(db, `users/${uid}`), { titulo_juego: null });
+          showToast(`🏷️ Título de ${username} limpiado`);
+        } catch(e) {
+          showToast('Error al limpiar título', true);
         }
         return;
       }
