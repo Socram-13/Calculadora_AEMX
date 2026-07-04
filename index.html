@@ -5739,10 +5739,11 @@
           const xRight = chart.chartArea.right;
 
           for (const z of MEXICO_ZONES) {
-              const yCaida = yAxis.getPixelForValue(z.caida);
-              const ySalto = yAxis.getPixelForValue(z.salto);
               const inView = z.caida <= yAxis.max && z.salto >= yAxis.min;
               if (!inView) continue;
+              if (totalActual > z.salto) continue;
+              const yCaida = yAxis.getPixelForValue(z.caida);
+              const ySalto = yAxis.getPixelForValue(z.salto);
 
               // Relleno rojo semitransparente (zona de pérdida)
               const yTop  = Math.max(yCaida, chart.chartArea.top);
@@ -5944,6 +5945,12 @@
                 callback: v => v.toLocaleString(),
               },
               grid: { color: 'rgba(200,169,110,0.3)' },
+              suggestedMin: (() => {
+                const minVal = Math.min(...valores.filter(v => v != null));
+                const zonaActual = MEXICO_ZONES.find(z => totalActual <= z.salto);
+                const refMin = zonaActual ? Math.min(minVal, zonaActual.caida - 10) : minVal;
+                return refMin * 0.97;
+              })(),
               afterBuildTicks(axis) {
                 if (axis.ticks.length >= 2) {
                   const step = axis.ticks[1].value - axis.ticks[0].value;
