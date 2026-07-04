@@ -5562,14 +5562,14 @@
       const meses = Object.keys(mesesData).sort();
 
       if (meses.length === 0) {
-        if (snapCount) snapCount.textContent = 'Sin datos';
-        if (emptyMsg)  emptyMsg.textContent  = 'No tienes snapshots registrados aún.';
-        return;
+        if (snapCount) snapCount.textContent = '0 snapshots';
+        if (emptyMsg)  emptyMsg.style.display = 'none';
+        if (canvas)    canvas.style.display   = 'block';
+      } else {
+        if (snapCount) snapCount.textContent = `${meses.length} snapshot${meses.length > 1 ? 's' : ''}`;
+        if (emptyMsg)  emptyMsg.style.display = 'none';
+        if (canvas)    canvas.style.display   = 'block';
       }
-
-      if (snapCount) snapCount.textContent = `${meses.length} snapshot${meses.length > 1 ? 's' : ''}`;
-      if (emptyMsg)  emptyMsg.style.display = 'none';
-      if (canvas)    canvas.style.display   = 'block';
 
       const nombresM = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
       const labels = meses.map(m => {
