@@ -5520,9 +5520,10 @@
       const { getDatabase, ref, get, query, orderByKey } = window._fbModules || {};
       const snapKeys = await window._fbGet(window._fbRef(window._fbDb, 'historial'));
       if (!snapKeys.exists()) {
-        if (snapCount) snapCount.textContent = 'Sin datos';
-        if (emptyMsg)  emptyMsg.textContent  = 'Aún no hay snapshots guardados.';
-        return;
+        if (snapCount) snapCount.textContent = '0 snapshots';
+        if (emptyMsg)  emptyMsg.style.display = 'none';
+        if (canvas)    canvas.style.display   = 'block';
+        // Continuar para mostrar al menos el dato actual
       }
 
       // Obtener último mes disponible
