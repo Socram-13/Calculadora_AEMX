@@ -5705,17 +5705,15 @@
       }
 
       // Plugin líneas de advertencia de caída de boost
-      const MEXICO_ZONES = [
-        { caida: 51,  salto: 63,  de: 20, a: 15 },
-        { caida: 86,  salto: 100, de: 15, a: 12 },
-        { caida: 132, salto: 140, de: 12, a: 8  },
-        { caida: 152, salto: 175, de: 8,  a: 7  },
-        { caida: 176, salto: 225, de: 7,  a: 5  },
-        { caida: 226, salto: 300, de: 5,  a: 4  },
-        { caida: 252, salto: 300, de: 4,  a: 4  },
-        { caida: 301, salto: 400, de: 4,  a: 3  },
-        { caida: 339, salto: 400, de: 3,  a: 3  },
-        { caida: 401, salto: 459, de: 3,  a: 2  },
+      const BOOST_MARKS = [
+        { caida: 51,  salto: 63  },
+        { caida: 86,  salto: 100 },
+        { caida: 101, salto: 132 },
+        { caida: 141, salto: 152 },
+        { caida: 176, salto: 211 },
+        { caida: 226, salto: 252 },
+        { caida: 301, salto: 339 },
+        { caida: 401, salto: 459 },
       ];
 
       const boostThresholds = {
@@ -5738,7 +5736,7 @@
           const xLeft  = chart.chartArea.left;
           const xRight = chart.chartArea.right;
 
-          for (const z of MEXICO_ZONES) {
+          for (const z of BOOST_MARKS) {
               const inView = z.caida <= yAxis.max && z.salto >= yAxis.min;
               if (!inView) continue;
               if (totalActual > z.salto) continue;
@@ -5947,7 +5945,7 @@
               grid: { color: 'rgba(200,169,110,0.3)' },
               suggestedMin: (() => {
                 const minVal = Math.min(...valores.filter(v => v != null));
-                const zonaActual = MEXICO_ZONES.find(z => totalActual <= z.salto);
+                const zonaActual = BOOST_MARKS.find(z => totalActual <= z.salto);
                 const refMin = zonaActual ? Math.min(minVal, zonaActual.caida - 10) : minVal;
                 return refMin * 0.97;
               })(),
