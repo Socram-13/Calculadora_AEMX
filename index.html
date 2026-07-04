@@ -5732,7 +5732,7 @@
 
       const warningPlugin = {
         id: 'boostWarnings',
-        afterDatasetsDraw(chart) {
+        afterDraw(chart) {
           const ctx2 = chart.ctx;
           const yAxis = chart.scales.y;
           const xLeft  = chart.chartArea.left;
