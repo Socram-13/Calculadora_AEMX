@@ -2509,7 +2509,6 @@ function updateStats() {
 
         const actionBtns = [];
         actionBtns.push(`<button class="btn-action btn-edit-country" onclick="editCountry('${u.uid}','${u.username}','${u.country}')">✎ PAÍS</button>`);
-        actionBtns.push(`<button class="btn-action" style="background:rgba(245,166,35,0.15);border-color:rgba(245,166,35,0.5);color:#c8851a;" onclick="confirmAction('clearTitle','${u.uid}','${u.username}')">🏷️ TÍTULO</button>`);
         actionBtns.push(`<button class="btn-action btn-delete" onclick="confirmAction('deleteUser','${u.uid}','${u.username}')">🗑️ ELIMINAR</button>`);
         if (isBannedChat) {
           actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanChat','${u.uid}','${u.username}')">✓ CHAT</button>`);
@@ -2526,6 +2525,7 @@ function updateStats() {
         } else {
           actionBtns.push(`<button class="btn-action btn-ban" style="background:rgba(255,68,102,0.18);border-color:rgba(255,68,102,0.5);" onclick="confirmAction('banWrite','${u.uid}','${u.username}')">🚫 ESCRITURA</button>`);
         }
+        actionBtns.push(`<button class="btn-action" style="background:rgba(245,166,35,0.15);border-color:rgba(245,166,35,0.5);color:#c8851a;" onclick="confirmAction('clearTitle','${u.uid}','${u.username}')">🏷️ TÍTULO</button>`);
 
         return `
           <tr class="${rowClass}" style="animation-delay:${delay}s">
