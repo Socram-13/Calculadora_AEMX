@@ -5694,6 +5694,40 @@
         }
       }
 
+      // Satélite animado cada 4 minutos
+      const _satImg = new Image();
+      _satImg.src = 'satelite.png';
+      let _satX = null;
+      let _satY = 0;
+      let _satRaf = null;
+
+      function launchSatellite(chart) {
+        const area = chart.chartArea;
+        if (!area) return;
+        _satX = area.left - 60;
+        _satY = area.top + Math.random() * (area.bottom - area.top);
+        const vx = (area.right - area.left + 120) / (4 * 60);
+        const vy = (Math.random() - 0.5) * 0.3;
+        function moveSat() {
+          if (_satX === null) return;
+          _satX += vx;
+          _satY += vy;
+          chart.update('none');
+          if (_satX > area.right + 60) {
+            _satX = null;
+            cancelAnimationFrame(_satRaf);
+            _satRaf = null;
+            setTimeout(() => launchSatellite(chart), 4 * 60 * 1000);
+          } else {
+            _satRaf = requestAnimationFrame(moveSat);
+          }
+        }
+        _satRaf = requestAnimationFrame(moveSat);
+      }
+
+      // Lanzar primer satélite después de 4 minutos
+      setTimeout(() => launchSatellite(_historialChart), 4 * 60 * 1000);
+
       // Plugin líneas de advertencia de caída de boost
       const BOOST_MARKS = [
         { caida: 51,  salto: 63  },
@@ -5843,6 +5877,14 @@
             for (const p of smokeParticles) {
               drawPuff(ctx2, p.x, p.y, p.r, p.alpha);
             }
+            ctx2.restore();
+          }
+
+          // Dibujar satélite si está activo
+          if (_satX !== null && _satImg.complete) {
+            const satSize = 48;
+            ctx2.save();
+            ctx2.drawImage(_satImg, _satX - satSize/2, _satY - satSize/2, satSize, satSize);
             ctx2.restore();
           }
 
