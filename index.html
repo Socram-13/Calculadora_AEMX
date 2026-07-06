@@ -5703,22 +5703,25 @@
       const _satImg = new Image();
       _satImg.src = 'satelite.png';
       let _satX = null;
-      let _satY = 0;
+      let _satStartY = 0;
+      let _satProgress = 0;
       let _satRaf = null;
 
       function launchSatellite(chart) {
         const area = chart.chartArea;
         if (!area) return;
-        _satX = area.left - 60;
-        _satY = area.top + Math.random() * (area.bottom - area.top);
-        const vx = (area.right - area.left + 120) / (4 * 60);
-        const vy = (Math.random() - 0.5) * 0.3;
+        const rangeY = area.bottom - area.top;
+        _satStartY = area.top + rangeY * 0.2 + Math.random() * rangeY * 0.6;
+        _satX = area.left;
+        _satProgress = 0;
+        const totalWidth = area.right - area.left;
+        const speed = totalWidth / (8 * 60);
         function moveSat() {
           if (_satX === null) return;
-          _satX += vx;
-          _satY += vy;
+          _satX += speed;
+          _satProgress = (_satX - area.left) / totalWidth;
           chart.update('none');
-          if (_satX > area.right + 60) {
+          if (_satX > area.right) {
             _satX = null;
             cancelAnimationFrame(_satRaf);
             _satRaf = null;
@@ -5888,9 +5891,15 @@
 
           // Dibujar satélite si está activo
           if (_satX !== null && _satImg.complete) {
+            const area = chart.chartArea;
             const satSize = 24;
+            const amplitude = (area.bottom - area.top) * 0.15;
+            const satY = _satStartY + Math.sin(_satProgress * Math.PI * 2) * amplitude;
             ctx2.save();
-            ctx2.drawImage(_satImg, _satX - satSize/2, _satY - satSize/2, satSize, satSize);
+            ctx2.beginPath();
+            ctx2.rect(area.left, area.top, area.right - area.left, area.bottom - area.top);
+            ctx2.clip();
+            ctx2.drawImage(_satImg, _satX - satSize/2, satY - satSize/2, satSize, satSize);
             ctx2.restore();
           }
 
