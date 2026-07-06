@@ -5505,8 +5505,13 @@
     const btn  = document.getElementById('historialToggle');
     const body = document.getElementById('historialBody');
     if (!btn || !body) return;
+    const opening = !btn.classList.contains('open');
     btn.classList.toggle('open');
     body.classList.toggle('open');
+    if (opening && window._launchSatellite && !window._satLaunched) {
+      window._satLaunched = true;
+      setTimeout(window._launchSatellite, 10 * 1000);
+    }
   }
 
   async function cargarHistorialUsuario(uid) {
@@ -5726,7 +5731,8 @@
       }
 
       // Lanzar primer satélite después de 4 minutos
-      setTimeout(() => launchSatellite(_historialChart), 4 * 60 * 1000);
+      // El satélite se lanza desde toggleHistorial al abrir la sección
+      window._launchSatellite = () => launchSatellite(_historialChart);
 
       // Plugin líneas de advertencia de caída de boost
       const BOOST_MARKS = [
