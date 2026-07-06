@@ -5893,13 +5893,45 @@
           if (_satX !== null && _satImg.complete) {
             const area = chart.chartArea;
             const satSize = 24;
-            const amplitude = (area.bottom - area.top) * 0.15;
-            const satY = _satStartY + Math.sin(_satProgress * Math.PI * 2) * amplitude;
+            const amplitude = (area.bottom - area.top) * 0.2;
+            const satY = _satStartY + Math.sin(_satProgress * Math.PI) * -amplitude;
             ctx2.save();
             ctx2.beginPath();
             ctx2.rect(area.left, area.top, area.right - area.left, area.bottom - area.top);
             ctx2.clip();
             ctx2.drawImage(_satImg, _satX - satSize/2, satY - satSize/2, satSize, satSize);
+
+            // Globo de texto
+            const msg = '¡Cada parcela suma, Explorador!';
+            ctx2.font = 'bold 10px Nunito, sans-serif';
+            const tw = ctx2.measureText(msg).width;
+            const bx = _satX - tw/2 - 6;
+            const by = satY - satSize/2 - 26;
+            const bw = tw + 12;
+            const bh = 18;
+            const fadeIn  = Math.min(_satProgress / 0.1, 1);
+            const fadeOut = _satProgress > 0.85 ? 1 - (_satProgress - 0.85) / 0.15 : 1;
+            const alpha   = fadeIn * fadeOut;
+            ctx2.globalAlpha = alpha;
+            ctx2.fillStyle = 'rgba(255,251,240,0.95)';
+            ctx2.strokeStyle = '#c8a96e';
+            ctx2.lineWidth = 1;
+            ctx2.beginPath();
+            ctx2.roundRect(bx, by, bw, bh, 4);
+            ctx2.fill(); ctx2.stroke();
+            // Puntita del globo
+            ctx2.beginPath();
+            ctx2.moveTo(_satX - 4, by + bh);
+            ctx2.lineTo(_satX, by + bh + 5);
+            ctx2.lineTo(_satX + 4, by + bh);
+            ctx2.fillStyle = 'rgba(255,251,240,0.95)';
+            ctx2.fill();
+            ctx2.strokeStyle = '#c8a96e';
+            ctx2.stroke();
+            ctx2.fillStyle = '#7a4a0a';
+            ctx2.textAlign = 'center';
+            ctx2.textBaseline = 'middle';
+            ctx2.fillText(msg, _satX, by + bh/2);
             ctx2.restore();
           }
 
