@@ -5749,18 +5749,6 @@
         { caida: 401, salto: 459 },
       ];
 
-      const boostThresholds = {
-        'Europa':        [70, 100, 135, 170, 200, 250, 300, 350, 400],
-        'Brazil':        [60, 75, 100, 120, 150, 200, 250, 300, 400],
-        'United States': [150, 220, 290, 365, 435, 545, 625, 730, 875, 1100, 1500, 3000],
-      };
-      const EUROPA_SET = new Set(["Spain","France","Germany","Italy","Russia"]);
-      const _country = window.userCountry || 'México';
-      const isMexico = !EUROPA_SET.has(_country) && _country !== 'Brazil' && _country !== 'United States';
-      const _thresholds = EUROPA_SET.has(_country)
-        ? boostThresholds['Europa']
-        : boostThresholds[_country] || [];
-
       const warningPlugin = {
         id: 'boostWarnings',
         afterDraw(chart) {
