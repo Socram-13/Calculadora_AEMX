@@ -5574,16 +5574,25 @@
     }
 
     window._startHistorialBg = function(totalActual) {
-      const canvas = document.getElementById('historialBgCanvas');
-      if (!canvas) return;
-      const inner = canvas.parentElement;
+      const bgCanvas = document.getElementById('historialBgCanvas');
+      const chartCanvas = document.getElementById('historialUserChart');
+      if (!bgCanvas || !chartCanvas) return;
       if (bgRaf) cancelAnimationFrame(bgRaf);
       function loop() {
-        canvas.width  = inner.offsetWidth  || 600;
-        canvas.height = inner.offsetHeight || 220;
         const chart = window._historialChart;
         const area = chart && chart.chartArea;
-        drawBg(canvas, totalActual, area);
+        if (area) {
+          // Posicionar bgCanvas exactamente sobre el área del gráfico
+          const rect = chartCanvas.getBoundingClientRect();
+          const parentRect = bgCanvas.parentElement.getBoundingClientRect();
+          bgCanvas.style.left   = (area.left + (rect.left - parentRect.left)) + 'px';
+          bgCanvas.style.top    = (area.top  + (rect.top  - parentRect.top))  + 'px';
+          bgCanvas.style.width  = (area.right - area.left) + 'px';
+          bgCanvas.style.height = (area.bottom - area.top) + 'px';
+          bgCanvas.width  = area.right - area.left;
+          bgCanvas.height = area.bottom - area.top;
+          drawBg(bgCanvas, totalActual, null);
+        }
         bgRaf = requestAnimationFrame(loop);
       }
       loop();
