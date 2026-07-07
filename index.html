@@ -5578,21 +5578,17 @@
       const chartCanvas = document.getElementById('historialUserChart');
       if (!bgCanvas || !chartCanvas) return;
       if (bgRaf) cancelAnimationFrame(bgRaf);
+      // Resetear posición al tamaño completo del canvas del chart
+      bgCanvas.style.left = '0';
+      bgCanvas.style.top  = '0';
+      bgCanvas.style.width  = '100%';
+      bgCanvas.style.height = '100%';
       function loop() {
         const chart = window._historialChart;
-        const area = chart && chart.chartArea;
-        if (area) {
-          // Posicionar bgCanvas exactamente sobre el área del gráfico
-          const rect = chartCanvas.getBoundingClientRect();
-          const parentRect = bgCanvas.parentElement.getBoundingClientRect();
-          bgCanvas.style.left   = (area.left + (rect.left - parentRect.left)) + 'px';
-          bgCanvas.style.top    = (area.top  + (rect.top  - parentRect.top))  + 'px';
-          bgCanvas.style.width  = (area.right - area.left) + 'px';
-          bgCanvas.style.height = (area.bottom - area.top) + 'px';
-          bgCanvas.width  = area.right - area.left;
-          bgCanvas.height = area.bottom - area.top;
-          drawBg(bgCanvas, totalActual, null);
-        }
+        const area  = chart && chart.chartArea;
+        bgCanvas.width  = chartCanvas.offsetWidth  || 600;
+        bgCanvas.height = chartCanvas.offsetHeight || 220;
+        if (area) drawBg(bgCanvas, totalActual, area);
         bgRaf = requestAnimationFrame(loop);
       }
       loop();
