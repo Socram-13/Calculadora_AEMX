@@ -5574,10 +5574,6 @@
     }
 
     window._startHistorialBg = function(totalActual) {
-      const bgCanvas = document.getElementById('historialBgCanvas');
-      const chartCanvas = document.getElementById('historialUserChart');
-      if (!bgCanvas || !chartCanvas) return;
-    window._startHistorialBg = function(totalActual) {
       const canvas = document.getElementById('historialBgCanvas');
       if (!canvas) return;
       const inner = canvas.parentElement;
@@ -5593,7 +5589,6 @@
         bgRaf = requestAnimationFrame(loop);
       }
       loop();
-    };
     };
   })();
 </script>
