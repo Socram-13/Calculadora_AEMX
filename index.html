@@ -5577,21 +5577,23 @@
       const bgCanvas = document.getElementById('historialBgCanvas');
       const chartCanvas = document.getElementById('historialUserChart');
       if (!bgCanvas || !chartCanvas) return;
+    window._startHistorialBg = function(totalActual) {
+      const canvas = document.getElementById('historialBgCanvas');
+      if (!canvas) return;
+      const inner = canvas.parentElement;
       if (bgRaf) cancelAnimationFrame(bgRaf);
-      bgCanvas.style.left = '0';
-      bgCanvas.style.top  = '0';
-      bgCanvas.style.width  = '100%';
-      bgCanvas.style.height = '100%';
-      const inner = bgCanvas.parentElement;
+      canvas.style.left = '0'; canvas.style.top = '0';
+      canvas.style.width = '100%'; canvas.style.height = '100%';
       function loop() {
+        canvas.width  = inner.offsetWidth  || 600;
+        canvas.height = inner.offsetHeight || 220;
         const chart = window._historialChart;
         const area  = chart && chart.chartArea;
-        bgCanvas.width  = inner.offsetWidth  || 600;
-        bgCanvas.height = inner.offsetHeight || 220;
-        if (area) drawBg(bgCanvas, totalActual, area);
+        drawBg(canvas, totalActual, area);
         bgRaf = requestAnimationFrame(loop);
       }
       loop();
+    };
     };
   })();
 </script>
