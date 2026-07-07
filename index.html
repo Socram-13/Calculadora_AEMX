@@ -5527,9 +5527,8 @@
       bgFrame++;
 
       ctx.clearRect(0,0,W,H);
-
-      // Clip al área del gráfico si está disponible
       ctx.save();
+      ctx.globalAlpha = 0.5;
       if (area) {
         ctx.beginPath();
         ctx.rect(area.left, area.top, area.right - area.left, area.bottom - area.top);
