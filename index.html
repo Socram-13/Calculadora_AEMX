@@ -5520,11 +5520,21 @@
       r: Math.random()*1.2+0.3, a: Math.random(),
     }));
 
-    function drawBg(canvas, totalActual) {
+    function drawBg(canvas, totalActual, area) {
       const W = canvas.width, H = canvas.height;
       const ctx = canvas.getContext('2d');
       const t = Math.min(Math.max((totalActual - LAST_SALTO) / 200, 0), 1);
       bgFrame++;
+
+      ctx.clearRect(0,0,W,H);
+
+      // Clip al área del gráfico si está disponible
+      ctx.save();
+      if (area) {
+        ctx.beginPath();
+        ctx.rect(area.left, area.top, area.right - area.left, area.bottom - area.top);
+        ctx.clip();
+      }
 
       const g = ctx.createLinearGradient(0,0,0,H);
       if (t < 1) {
@@ -5535,7 +5545,6 @@
         g.addColorStop(0, `rgba(5,5,20,${t})`);
         g.addColorStop(1, `rgba(10,5,30,${t})`);
       }
-      ctx.clearRect(0,0,W,H);
       ctx.fillStyle = g;
       ctx.fillRect(0,0,W,H);
 
@@ -5560,6 +5569,8 @@
           ctx.fillStyle = `rgba(200,210,255,${t*s.a*tw})`; ctx.fill();
         }
       }
+
+      ctx.restore();
     }
 
     window._startHistorialBg = function(totalActual) {
@@ -5570,7 +5581,9 @@
       function loop() {
         canvas.width  = inner.offsetWidth  || 600;
         canvas.height = inner.offsetHeight || 220;
-        drawBg(canvas, totalActual);
+        const chart = window._historialChart;
+        const area = chart && chart.chartArea;
+        drawBg(canvas, totalActual, area);
         bgRaf = requestAnimationFrame(loop);
       }
       loop();
