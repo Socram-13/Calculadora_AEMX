@@ -2266,6 +2266,15 @@
     const auth = getAuth(app);
     const db   = getDatabase(app);
 
+    // Exponer a window: estos scripts clásicos (no-module) necesitan estas
+    // referencias, y un <script type="module"> no filtra sus bindings al
+    // objeto global automáticamente.
+    window._db = db;
+    window._dbRef = ref;
+    window._dbPush = push;
+    window._dbUpdate = update;
+    window._dbServerTimestamp = serverTimestamp;
+
     // ── Auth ──
     window.authWithGoogle = async function() {
       document.getElementById('authError').textContent = '';
@@ -2306,6 +2315,7 @@
         document.getElementById('accessDenied').classList.remove('visible');
         document.getElementById('headerRight').style.display = 'flex';
         document.getElementById('adminEmail').textContent = user.displayName || user.email;
+        window._fbUser = user;
 
         const roleBadge = document.getElementById('roleBadge');
         if (isModeratorUser) {
@@ -3381,22 +3391,22 @@ function updateStats() {
         if (selectedNotificationTargetName === 'TODOS LOS USUARIOS') {
           // Enviar a todos
           for (const user of (window.allUsersCache || [])) {
-            await push(ref(db, `notifications/${user.uid}`), {
+            await window._dbPush(window._dbRef(window._db, `notifications/${user.uid}`), {
               message: msg,
-              timestamp: serverTimestamp(),
+              timestamp: window._dbServerTimestamp(),
               sender: window._fbUser?.displayName || 'Admin'
             });
-            await update(ref(db, `users/${user.uid}`), { hasNewNotifications: true });
+            await window._dbUpdate(window._dbRef(window._db, `users/${user.uid}`), { hasNewNotifications: true });
           }
           showToastAdmin(`✅ Notificación enviada a ${(window.allUsersCache || []).length} usuarios`);
         } else {
           // Enviar a un usuario
-          await push(ref(db, `notifications/${selectedNotificationTargetUid}`), {
+          await window._dbPush(window._dbRef(window._db, `notifications/${selectedNotificationTargetUid}`), {
             message: msg,
-            timestamp: serverTimestamp(),
+            timestamp: window._dbServerTimestamp(),
             sender: window._fbUser?.displayName || 'Admin'
           });
-          await update(ref(db, `users/${selectedNotificationTargetUid}`), { hasNewNotifications: true });
+          await window._dbUpdate(window._dbRef(window._db, `users/${selectedNotificationTargetUid}`), { hasNewNotifications: true });
           showToastAdmin(`✅ Notificación enviada a ${selectedNotificationTargetName}`);
         }
 
