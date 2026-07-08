@@ -374,10 +374,9 @@
     .aviso-btn.clear { border-color: var(--text2); color: var(--text2); background: none; }
     .aviso-btn.clear:hover { background: var(--text2); color: #060b14; }
     .admin-body {
-      display: grid;
-      grid-template-columns: 280px 1fr;
+      display: flex;
       gap: 12px;
-      align-items: start;
+      align-items: flex-start;
     }
 
     /* ── Left column: mapa compacto ── */
@@ -387,6 +386,8 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      width: 280px;
+      flex-shrink: 0;
     }
 
     .map-card {
@@ -483,11 +484,11 @@
     }
 
     /* ── Right column ── */
-    .table-col { min-width: 0; }
+    .table-col { flex: 1 1 0%; min-width: 0; width: 100%; }
 
     @media (max-width: 900px) {
-      .admin-body { grid-template-columns: 1fr; }
-      .map-col { position: static; }
+      .admin-body { flex-direction: column; }
+      .map-col { position: static; width: 100%; }
       #mini-map { height: 260px; }
     }
 
@@ -554,7 +555,7 @@
       display: none !important;
     }
     body.moderator-mode .admin-body {
-      grid-template-columns: 1fr;
+      flex-direction: column;
     }
     body.moderator-mode .country-cell,
     body.moderator-mode table thead tr th:nth-child(2) {
@@ -1967,36 +1968,37 @@
 
       <!-- Sección de Notificaciones -->
       <div class="table-col" id="notificationsSection" style="display:none;">
-        <div class="table-wrap" style="background:rgba(0,255,136,0.03);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:16px;">
-          <div class="table-header">
-            <span class="table-title">📬 ENVIAR NOTIFICACIONES</span>
-          </div>
-          
-          <div style="display:flex;flex-direction:column;gap:12px;">
-            <!-- Búsqueda de usuario -->
-            <div>
-              <label style="display:block;font-size:11px;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Destinatario:</label>
-              <input type="text" id="notificationUserSearch" placeholder="Buscar usuario por nombre..." style="width:100%;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:6px;color:var(--text-primary);font-family:'Rajdhani',sans-serif;" oninput="filterNotificationUsers(this.value)">
-              <div id="notificationUsersList" style="margin-top:8px;max-height:150px;overflow-y:auto;"></div>
+        <div style="display:flex;justify-content:center;">
+          <div style="width:100%;max-width:560px;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;overflow:hidden;">
+            <div style="padding:2px;background:linear-gradient(90deg,#00ff88,#00ffff);"></div>
+            <div style="padding:16px 20px;border-bottom:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);">
+              <span class="table-title" style="color:#00ff88;">📬 ENVIAR NOTIFICACIÓN</span>
             </div>
 
-            <!-- Botones de envío rápido -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
-              <button id="btnSendToSelected" class="btn-action" style="background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:#00ff88;" onclick="selectNotificationUser()">✓ SELECCIONAR</button>
-              <button id="btnSendToAll" class="btn-action" style="background:rgba(100,200,255,0.15);border:1px solid rgba(100,200,255,0.4);color:#64c8ff;" onclick="selectNotificationTarget('all')">📡 ENVIAR A TODOS</button>
-            </div>
+            <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
 
-            <!-- Área de mensaje -->
-            <div>
-              <label style="display:block;font-size:11px;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Mensaje:</label>
-              <textarea id="notificationMessage" placeholder="Escribe tu notificación..." style="width:100%;min-height:80px;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:6px;color:var(--text-primary);font-family:'Rajdhani',sans-serif;resize:vertical;"></textarea>
-              <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;" id="charCount">0 caracteres</div>
-            </div>
+              <!-- Destinatario -->
+              <div>
+                <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Para:</label>
+                <select id="notificationRecipientSelect" onchange="onNotificationRecipientChange(this.value)"
+                  style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;">
+                  <option value="">Cargando usuarios...</option>
+                </select>
+              </div>
 
-            <!-- Botón enviar -->
-            <button id="btnSendNotification" class="btn-action" style="background:rgba(0,255,136,0.2);border:2px solid rgba(0,255,136,0.6);color:#00ff88;padding:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;" onclick="sendNotification()">
-              📤 ENVIAR NOTIFICACIÓN
-            </button>
+              <!-- Mensaje -->
+              <div>
+                <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Mensaje:</label>
+                <textarea id="notificationMessage" placeholder="Escribe tu notificación..." rows="7"
+                  style="width:100%;min-height:160px;padding:12px 14px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.5;resize:vertical;outline:none;"></textarea>
+                <div style="font-size:10px;color:var(--text2);margin-top:4px;text-align:right;" id="charCount">0 caracteres</div>
+              </div>
+
+              <!-- Botón enviar -->
+              <button id="btnSendNotification" class="btn-action" style="background:rgba(0,255,136,0.2);border:2px solid rgba(0,255,136,0.6);color:#00ff88;padding:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;font-size:12px;" onclick="sendNotification()">
+                📤 ENVIAR
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -3321,44 +3323,23 @@ function updateStats() {
       }
     };
 
-    window.filterNotificationUsers = function(search) {
-      const lower = search.toLowerCase();
-      const filtered = allUsersCache.filter(u => u.username.toLowerCase().includes(lower));
-      const list = document.getElementById('notificationUsersList');
-      
-      if (filtered.length === 0) {
-        list.innerHTML = '<div style="color:var(--text-secondary);font-size:11px;padding:8px;">Sin resultados</div>';
-        return;
-      }
-      
-      list.innerHTML = filtered.map(u => `
-        <button onclick="selectNotificationUserDirect('${u.uid}','${u.username}')" 
-                style="display:block;width:100%;padding:8px 10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:4px;color:var(--text-primary);text-align:left;cursor:pointer;margin-bottom:4px;font-family:'Rajdhani',sans-serif;font-size:12px;transition:all 0.2s;">
-          ${u.username}
-        </button>
-      `).join('');
+    window.populateNotificationRecipientSelect = function() {
+      const select = document.getElementById('notificationRecipientSelect');
+      if (!select) return;
+      const sorted = [...allUsersCache].sort((a, b) => a.username.localeCompare(b.username));
+      select.innerHTML = '<option value="all">📡 Todos los usuarios</option>' +
+        sorted.map(u => `<option value="${u.uid}">${u.username}</option>`).join('');
+      onNotificationRecipientChange(select.value);
     };
 
-    window.selectNotificationUserDirect = function(uid, username) {
-      selectedNotificationTargetUid = uid;
-      selectedNotificationTargetName = username;
-      document.getElementById('notificationUserSearch').value = username;
-      document.getElementById('notificationUsersList').innerHTML = `<div style="color:#00ff88;font-size:11px;padding:8px;">✓ ${username} seleccionado</div>`;
-    };
-
-    window.selectNotificationUser = function() {
-      if (!selectedNotificationTargetUid) {
-        showToastAdmin('Selecciona un usuario primero', true);
-        return;
-      }
-      showToastAdmin(`✓ Destinatario: ${selectedNotificationTargetName}`);
-    };
-
-    window.selectNotificationTarget = function(target) {
-      if (target === 'all') {
+    window.onNotificationRecipientChange = function(value) {
+      if (value === 'all') {
         selectedNotificationTargetUid = null;
         selectedNotificationTargetName = 'TODOS LOS USUARIOS';
-        showToastAdmin('📡 Modo: Enviar a todos');
+      } else {
+        const user = allUsersCache.find(u => u.uid === value);
+        selectedNotificationTargetUid = value || null;
+        selectedNotificationTargetName = user ? user.username : null;
       }
     };
 
@@ -3371,7 +3352,7 @@ function updateStats() {
       }
 
       if (!selectedNotificationTargetUid && selectedNotificationTargetName !== 'TODOS LOS USUARIOS') {
-        showToastAdmin('Selecciona destinatario', true);
+        showToastAdmin('Selecciona un destinatario', true);
         return;
       }
 
@@ -3404,10 +3385,6 @@ function updateStats() {
 
         document.getElementById('notificationMessage').value = '';
         document.getElementById('charCount').textContent = '0 caracteres';
-        selectedNotificationTargetUid = null;
-        selectedNotificationTargetName = null;
-        document.getElementById('notificationUserSearch').value = '';
-        document.getElementById('notificationUsersList').innerHTML = '';
 
       } catch(e) {
         console.error('Error enviando notificación:', e);
@@ -3437,6 +3414,7 @@ function updateStats() {
       } catch(e) {
         console.warn('Error cacheando usuarios:', e);
       }
+      window.populateNotificationRecipientSelect();
       return result;
     };
 
