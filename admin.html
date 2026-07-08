@@ -540,6 +540,23 @@
       letter-spacing: 2px;
     }
 
+    .admin-badge.mod-badge {
+      background: rgba(168,85,247,0.15);
+      border: 1px solid #a855f7;
+      color: #a855f7;
+    }
+
+    /* ── Modo moderador: solo gestión de usuarios ── */
+    body.moderator-mode #avisoControlsSection,
+    body.moderator-mode .active-codes-section,
+    body.moderator-mode .historial-section,
+    body.moderator-mode .map-col {
+      display: none !important;
+    }
+    body.moderator-mode .admin-body {
+      grid-template-columns: 1fr;
+    }
+
     .btn-signout {
       background: none;
       border: 1px solid var(--border);
@@ -1655,7 +1672,7 @@
         <div class="subtitle">ATLAS EARTH AEMX · GESTIÓN DE USUARIOS</div>
       </div>
       <div class="header-right" id="headerRight" style="display:none">
-        <span class="admin-badge">ADMIN</span>
+        <span class="admin-badge" id="roleBadge">ADMIN</span>
         <span id="adminEmail"></span>
         <!-- Network bars -->
         <div id="netWidget" style="display:flex;align-items:center;gap:5px;padding:0 6px;">
@@ -1675,7 +1692,7 @@
   </div>
 
   <!-- Controles: Aviso + TTL + Coins -->
-  <div style="position:relative;z-index:1;padding:0 16px 12px;display:flex;flex-direction:column;gap:10px;">
+  <div id="avisoControlsSection" style="position:relative;z-index:1;padding:0 16px 12px;display:flex;flex-direction:column;gap:10px;">
 
     <!-- Aviso del chat con 5 mensajes programables -->
     <div class="aviso-card">
@@ -2209,36 +2226,68 @@
 
     window.signOutUser = async function() { await signOut(auth); };
 
-    onAuthStateChanged(auth, (user) => {
+    window.isModeratorSession = false;
+
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
         document.getElementById('authOverlay').classList.add('hidden');
-        if (user.email !== ADMIN_EMAIL) {
+        const isAdminUser = user.email === ADMIN_EMAIL;
+        let isModeratorUser = false;
+
+        if (!isAdminUser) {
+          // ¿Es moderador? Se verifica el rol guardado en users/{uid}
+          try {
+            const snap = await get(ref(db, `users/${user.uid}`));
+            isModeratorUser = snap.exists() && snap.val().role === 'moderator';
+          } catch(e) {
+            console.warn('Error verificando rol de moderador:', e);
+          }
+        }
+
+        if (!isAdminUser && !isModeratorUser) {
           document.getElementById('accessDenied').classList.add('visible');
           return;
         }
-        // Admin autorizado
+
+        // Acceso autorizado (admin o moderador)
+        window.isModeratorSession = isModeratorUser;
         document.getElementById('accessDenied').classList.remove('visible');
         document.getElementById('headerRight').style.display = 'flex';
         document.getElementById('adminEmail').textContent = user.displayName || user.email;
+
+        const roleBadge = document.getElementById('roleBadge');
+        if (isModeratorUser) {
+          roleBadge.textContent = 'MODERADOR';
+          roleBadge.classList.add('mod-badge');
+          document.body.classList.add('moderator-mode');
+        } else {
+          roleBadge.textContent = 'ADMIN';
+          roleBadge.classList.remove('mod-badge');
+          document.body.classList.remove('moderator-mode');
+        }
+
         loadUsers();
-        loadAvisoSlots(); // Cargar los 5 slots de avisos programables
-        loadHistorialData(); // Cargar snapshots del historial
-        // Cargar toda la config de una sola vez — sin sockets permanentes
-        get(ref(db, 'config')).then((snap) => {
-          const cfg = snap.exists() ? snap.val() : {};
-          const coinsActivo = cfg.coinsActivo !== false;
-          const coinsChk = document.getElementById('coinsToggle'); const coinsSt = document.getElementById('coinsToggleStatus');
-          if (coinsChk) coinsChk.checked = coinsActivo;
-          if (coinsSt) { coinsSt.textContent = coinsActivo ? 'ENCENDIDO' : 'APAGADO'; coinsSt.className = `coins-toggle-status ${coinsActivo ? 'on' : 'off'}`; }
-          const transActivo = cfg.transaccionesActivo !== false;
-          const transChk = document.getElementById('transToggle'); const transSt = document.getElementById('transToggleStatus');
-          if (transChk) transChk.checked = transActivo;
-          if (transSt) { transSt.textContent = transActivo ? 'ENCENDIDO' : 'APAGADO'; transSt.className = `coins-toggle-status ${transActivo ? 'trans-status-on' : 'trans-status-off'}`; }
-          const btnTransActivo = !!cfg.btnTransaccionesActivo;
-          const btnTransChk = document.getElementById('btnTransToggle'); const btnTransSt = document.getElementById('btnTransToggleStatus');
-          if (btnTransChk) btnTransChk.checked = btnTransActivo;
-          if (btnTransSt) { btnTransSt.textContent = btnTransActivo ? 'VISIBLE' : 'OCULTO'; btnTransSt.className = `coins-toggle-status ${btnTransActivo ? 'on' : 'off'}`; }
-        }).catch(e => console.warn('Config load error:', e));
+
+        if (isAdminUser) {
+          loadAvisoSlots(); // Cargar los 5 slots de avisos programables
+          loadHistorialData(); // Cargar snapshots del historial
+          // Cargar toda la config de una sola vez — sin sockets permanentes
+          get(ref(db, 'config')).then((snap) => {
+            const cfg = snap.exists() ? snap.val() : {};
+            const coinsActivo = cfg.coinsActivo !== false;
+            const coinsChk = document.getElementById('coinsToggle'); const coinsSt = document.getElementById('coinsToggleStatus');
+            if (coinsChk) coinsChk.checked = coinsActivo;
+            if (coinsSt) { coinsSt.textContent = coinsActivo ? 'ENCENDIDO' : 'APAGADO'; coinsSt.className = `coins-toggle-status ${coinsActivo ? 'on' : 'off'}`; }
+            const transActivo = cfg.transaccionesActivo !== false;
+            const transChk = document.getElementById('transToggle'); const transSt = document.getElementById('transToggleStatus');
+            if (transChk) transChk.checked = transActivo;
+            if (transSt) { transSt.textContent = transActivo ? 'ENCENDIDO' : 'APAGADO'; transSt.className = `coins-toggle-status ${transActivo ? 'trans-status-on' : 'trans-status-off'}`; }
+            const btnTransActivo = !!cfg.btnTransaccionesActivo;
+            const btnTransChk = document.getElementById('btnTransToggle'); const btnTransSt = document.getElementById('btnTransToggleStatus');
+            if (btnTransChk) btnTransChk.checked = btnTransActivo;
+            if (btnTransSt) { btnTransSt.textContent = btnTransActivo ? 'VISIBLE' : 'OCULTO'; btnTransSt.className = `coins-toggle-status ${btnTransActivo ? 'on' : 'off'}`; }
+          }).catch(e => console.warn('Config load error:', e));
+        }
       } else {
       }
     });
@@ -2421,6 +2470,7 @@
         bannedLeaderboard: !!d.bannedLeaderboard,
         bannedWrite:       !!d.bannedWrite,
         clanMember:        !!d.clanMember,
+        role:              d.role || '',
         countryHistory:    Array.isArray(d.countryHistory) ? d.countryHistory : []
       });
     });
@@ -2508,8 +2558,16 @@ function updateStats() {
         if (!anyBanned)    statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
 
         const actionBtns = [];
+        const isModRole = u.role === 'moderator';
         actionBtns.push(`<button class="btn-action btn-edit-country" onclick="editCountry('${u.uid}','${u.username}','${u.country}')">✎ PAÍS</button>`);
-        actionBtns.push(`<button class="btn-action btn-delete" onclick="confirmAction('deleteUser','${u.uid}','${u.username}')">🗑️ ELIMINAR</button>`);
+        if (!window.isModeratorSession) {
+          actionBtns.push(`<button class="btn-action btn-delete" onclick="confirmAction('deleteUser','${u.uid}','${u.username}')">🗑️ ELIMINAR</button>`);
+          if (isModRole) {
+            actionBtns.push(`<button class="btn-action" style="background:rgba(168,85,247,0.18);border-color:rgba(168,85,247,0.5);color:#a855f7;" onclick="confirmAction('unmod','${u.uid}','${u.username}')">✕ MOD</button>`);
+          } else {
+            actionBtns.push(`<button class="btn-action" style="background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.4);color:#a855f7;" onclick="confirmAction('makeMod','${u.uid}','${u.username}')">🛡️ MOD</button>`);
+          }
+        }
         if (isBannedChat) {
           actionBtns.push(`<button class="btn-action btn-unban" onclick="confirmAction('unbanChat','${u.uid}','${u.username}')">✓ CHAT</button>`);
         } else {
@@ -2624,6 +2682,8 @@ function updateStats() {
         unbanWrite: `¿Permitir escritura a Firebase de <strong>${username}</strong>?`,
         deleteUser: `⚠️ ¿Eliminar permanentemente a <strong>${username}</strong> de la base de datos? Esta acción <strong>no se puede deshacer</strong>.`,
         clearTitle: `¿Limpiar el título de juego de <strong>${username}</strong>?`,
+        makeMod:    `¿Asignar rol de <strong>MODERADOR</strong> a <strong>${username}</strong>?`,
+        unmod:      `¿Quitar el rol de moderador a <strong>${username}</strong>?`,
       };
       const titles = {
         banChat:    'BLOQUEAR CHAT',
@@ -2634,6 +2694,8 @@ function updateStats() {
         unbanWrite: '✓ PERMITIR ESCRITURA',
         deleteUser: '🗑️ ELIMINAR USUARIO',
         clearTitle: '🏷️ LIMPIAR TÍTULO',
+        makeMod:    '🛡️ ASIGNAR MODERADOR',
+        unmod:      '✕ QUITAR MODERADOR',
       };
       document.getElementById('modalTitle').textContent = titles[action];
       document.getElementById('modalBody').innerHTML    = messages[action];
@@ -2655,7 +2717,19 @@ function updateStats() {
       if (action === 'banWrite')   updates.bannedWrite = true;
       if (action === 'unbanWrite') updates.bannedWrite = false;
 
+      if (action === 'makeMod' || action === 'unmod') {
+        if (window.isModeratorSession) { showToast('Solo el admin puede asignar moderadores', true); return; }
+        try {
+          await update(ref(db, `users/${uid}`), { role: action === 'makeMod' ? 'moderator' : null });
+          showToast(action === 'makeMod' ? `🛡️ ${username} ahora es moderador` : `${username} ya no es moderador`);
+        } catch(e) {
+          showToast('Error al actualizar el rol', true);
+        }
+        return;
+      }
+
       if (action === 'deleteUser') {
+        if (window.isModeratorSession) { showToast('Los moderadores no pueden eliminar usuarios', true); return; }
         try {
           console.log('Intentando eliminar usuario:', uid, username);
           await remove(ref(db, `users/${uid}`));
