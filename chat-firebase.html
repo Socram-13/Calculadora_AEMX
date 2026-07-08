@@ -655,6 +655,8 @@
             const currentUserIsModerator = !currentUserIsAdmin && isModerator === true;
             console.log('[ADMIN CHECK] email:', firebaseUser.email, '| isAdmin:', currentUserIsAdmin, '| isModerator:', currentUserIsModerator);
 
+            loadNotificationsFromFirebase(firebaseUser.uid);
+
             window.setUsername = setUsername;
             window.sendMessage = sendMessage;
             window.handleKeyPress = handleKeyPress;
@@ -1041,12 +1043,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
             window.openNotificationsModal(); // Recargar lista
         };
 
-        // En initChat, cargar notificaciones al conectar
-        const originalInitChat = window.initChat;
-        window.initChat = function(firebaseUser, isModerator = false) {
-            loadNotificationsFromFirebase(firebaseUser.uid);
-            if (originalInitChat) originalInitChat(firebaseUser, isModerator);
-        };
+        // Nota: loadNotificationsFromFirebase(uid) ahora se llama directamente
+        // dentro de initChat() (ver arriba), ya que sobreescribir
+        // window.initChat aquí no interceptaba las llamadas a initChat(...)
+        // hechas dentro del mismo módulo (esas usan el enlace léxico local,
+        // no la propiedad de window).
     </script>
 
     <script>
