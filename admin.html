@@ -2274,6 +2274,7 @@
     window._dbPush = push;
     window._dbUpdate = update;
     window._dbServerTimestamp = serverTimestamp;
+    window._auth = auth;
 
     // ── Auth ──
     window.authWithGoogle = async function() {
@@ -3386,6 +3387,22 @@ function updateStats() {
       const btn = document.getElementById('btnSendNotification');
       btn.disabled = true;
       btn.style.opacity = '0.5';
+
+      // ── Diagnóstico: forzar refresco del ID token y loguear claims reales ──
+      try {
+        const currentUser = window._auth?.currentUser;
+        if (currentUser) {
+          await currentUser.getIdToken(true); // fuerza refresco
+          const tokenResult = await currentUser.getIdTokenResult();
+          console.log('[NOTIF DEBUG] auth.currentUser.email:', currentUser.email);
+          console.log('[NOTIF DEBUG] token claims:', tokenResult.claims);
+          console.log('[NOTIF DEBUG] token.email (claim):', tokenResult.claims.email);
+        } else {
+          console.warn('[NOTIF DEBUG] No hay currentUser al momento de enviar');
+        }
+      } catch (tokenErr) {
+        console.error('[NOTIF DEBUG] Error refrescando token:', tokenErr);
+      }
 
       try {
         if (selectedNotificationTargetName === 'TODOS LOS USUARIOS') {
