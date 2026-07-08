@@ -99,6 +99,127 @@
         .message.mod-msg.own .message-text { background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.4);color:#f0e0ff; }
         .message.mod-msg .message-avatar { border-color:#a855f7;box-shadow:0 0 10px rgba(168,85,247,.5); }
         .mod-badge { font-size:9px;font-family:'Orbitron',sans-serif;letter-spacing:1px;color:#a855f7;border:1px solid #a855f7;border-radius:3px;padding:1px 4px;vertical-align:middle;margin-left:4px; }
+
+        /* ── BOTÓN NOTIFICACIONES ── */
+        .btn-notifications {
+          position: relative;
+          background: rgba(0,255,136,.12);
+          border: 1px solid rgba(0,255,136,.4);
+          border-radius: 6px;
+          padding: 8px 12px;
+          font-size: 16px;
+          cursor: pointer;
+          transition: all .2s;
+          color: var(--primary-color);
+        }
+        .btn-notifications:hover { background: rgba(0,255,136,.2); box-shadow: 0 0 10px rgba(0,255,136,.3); }
+        .notifications-badge {
+          position: absolute;
+          top: -8px;
+          right: -8px;
+          background: #ff4466;
+          color: white;
+          border-radius: 50%;
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 11px;
+          font-weight: bold;
+          font-family: 'Rajdhani', sans-serif;
+          box-shadow: 0 0 8px rgba(255,68,102,.6);
+        }
+        .notifications-badge.hidden { display: none; }
+
+        /* ── MODAL NOTIFICACIONES ── */
+        .notifications-modal {
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.7);
+          display: none;
+          align-items: center;
+          justify-content: center;
+          z-index: 200;
+        }
+        .notifications-modal.visible { display: flex; }
+        .notifications-modal-content {
+          background: var(--bg-panel);
+          border: 2px solid var(--primary-color);
+          border-radius: 10px;
+          padding: 20px;
+          width: 90%;
+          max-width: 500px;
+          max-height: 70vh;
+          overflow-y: auto;
+          box-shadow: 0 0 30px rgba(0,255,136,.3);
+        }
+        .notifications-modal-header {
+          font-family: 'Orbitron', sans-serif;
+          font-size: 18px;
+          color: var(--primary-color);
+          margin-bottom: 16px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          border-bottom: 1px solid rgba(0,255,136,.3);
+          padding-bottom: 10px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .notifications-list { display: flex; flex-direction: column; gap: 10px; }
+        .notification-item {
+          background: rgba(0,255,136,.05);
+          border: 1px solid rgba(0,255,136,.2);
+          border-radius: 6px;
+          padding: 12px;
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 10px;
+        }
+        .notification-content {
+          flex: 1;
+          color: var(--text-primary);
+          font-family: 'Rajdhani', sans-serif;
+          font-size: 13px;
+          line-height: 1.5;
+          word-break: break-word;
+        }
+        .notification-date {
+          font-size: 10px;
+          color: var(--text-secondary);
+          font-family: 'Share Tech Mono', monospace;
+          white-space: nowrap;
+        }
+        .notification-delete {
+          background: none;
+          border: none;
+          color: #ff4466;
+          cursor: pointer;
+          font-size: 14px;
+          padding: 0;
+          flex-shrink: 0;
+          transition: all .2s;
+        }
+        .notification-delete:hover { color: #ff6688; }
+        .notifications-empty {
+          text-align: center;
+          color: var(--text-secondary);
+          padding: 20px;
+          font-family: 'Rajdhani', sans-serif;
+        }
+        .btn-close-notifications {
+          background: none;
+          border: 1px solid var(--border-color);
+          color: var(--text-primary);
+          cursor: pointer;
+          padding: 6px 12px;
+          border-radius: 4px;
+          font-family: 'Rajdhani', sans-serif;
+          transition: all .2s;
+        }
+        .btn-close-notifications:hover { border-color: var(--primary-color); color: var(--primary-color); }
         .message-text { font-size:14px;line-height:1.5;color:var(--text-primary);background:var(--bg-dark);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:8px 14px;word-break:break-word;white-space:pre-wrap; }
         .message:not(.own) .message-text { border-bottom-left-radius:4px;background:rgba(255,255,255,.05); }
         .message.own .message-text { border-bottom-right-radius:4px;background:rgba(0,255,136,.12);border-color:rgba(0,255,136,.25);color:#e0ffe8; }
@@ -373,6 +494,10 @@
                     <a class="btn-transacciones hidden" id="btnTransacciones" href="transactions.html" target="_top">🪙</a>
                     
                     <button class="btn-marco" id="btnMarco" onclick="abrirMarco()">🖼️</button>
+                    <button class="btn-notifications" id="btnNotifications" onclick="openNotificationsModal()" title="Notificaciones">
+                        📬
+                        <span class="notifications-badge hidden" id="notificationsBadge">0</span>
+                    </button>
                     <button class="btn-mute" id="btnMute" onclick="toggleMute()" title="Silenciar notificaciones">🔔</button>
                     <!-- spacer empuja cerrar al extremo derecho -->
                     <div class="header-spacer"></div>
@@ -382,6 +507,19 @@
             </div>
 
             <div class="messages-container" id="messagesContainer"></div>
+
+            <!-- Modal de notificaciones -->
+            <div class="notifications-modal" id="notificationsModal">
+                <div class="notifications-modal-content">
+                    <div class="notifications-modal-header">
+                        <span>📬 MIS NOTIFICACIONES</span>
+                        <button class="btn-close-notifications" onclick="closeNotificationsModal()">✕</button>
+                    </div>
+                    <div class="notifications-list" id="notificationsList">
+                        <div class="notifications-empty">Sin notificaciones</div>
+                    </div>
+                </div>
+            </div>
 
             <div class="chat-input-container">
                 <div class="input-wrapper">
@@ -821,7 +959,88 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 ventana.location.href = window.location.href;
             }
         };
-    </script>
+
+        // ═══════════════════════════════════════════════════════════
+        // ━━━ SISTEMA DE NOTIFICACIONES ━━━
+        // ═══════════════════════════════════════════════════════════
+
+        function updateNotificationsBadge() {
+            const notifs = JSON.parse(localStorage.getItem('notificaciones') || '[]');
+            const badge = document.getElementById('notificationsBadge');
+            if (notifs.length > 0) {
+                badge.textContent = notifs.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        async function loadNotificationsFromFirebase(uid) {
+            try {
+                const snap = await get(ref(database, `notifications/${uid}`));
+                if (snap.exists()) {
+                    const notifs = [];
+                    snap.forEach(childSnap => {
+                        notifs.push({
+                            id: childSnap.key,
+                            ...childSnap.val()
+                        });
+                    });
+                    // Guardar en localStorage
+                    localStorage.setItem('notificaciones', JSON.stringify(notifs));
+                    // Marcar como leído en Firebase (borrar notificaciones descargadas)
+                    await remove(ref(database, `notifications/${uid}`));
+                    // Actualizar el flag en el usuario
+                    await update(ref(database, `users/${uid}`), { hasNewNotifications: false });
+                } else {
+                    localStorage.setItem('notificaciones', JSON.stringify([]));
+                    await update(ref(database, `users/${uid}`), { hasNewNotifications: false });
+                }
+                updateNotificationsBadge();
+            } catch(e) {
+                console.warn('Error cargando notificaciones:', e);
+            }
+        }
+
+        window.openNotificationsModal = function() {
+            const notifs = JSON.parse(localStorage.getItem('notificaciones') || '[]');
+            const list = document.getElementById('notificationsList');
+            
+            if (notifs.length === 0) {
+                list.innerHTML = '<div class="notifications-empty">Sin notificaciones</div>';
+            } else {
+                list.innerHTML = notifs.map((n, idx) => `
+                    <div class="notification-item">
+                        <div>
+                            <div class="notification-content">${escapeHtml(n.message || '')}</div>
+                            <div class="notification-date">${new Date(n.timestamp || Date.now()).toLocaleDateString()} ${new Date(n.timestamp || Date.now()).toLocaleTimeString()}</div>
+                        </div>
+                        <button class="notification-delete" onclick="deleteNotification(${idx})" title="Eliminar">🗑️</button>
+                    </div>
+                `).join('');
+            }
+            
+            document.getElementById('notificationsModal').classList.add('visible');
+        };
+
+        window.closeNotificationsModal = function() {
+            document.getElementById('notificationsModal').classList.remove('visible');
+        };
+
+        window.deleteNotification = function(index) {
+            let notifs = JSON.parse(localStorage.getItem('notificaciones') || '[]');
+            notifs.splice(index, 1);
+            localStorage.setItem('notificaciones', JSON.stringify(notifs));
+            updateNotificationsBadge();
+            window.openNotificationsModal(); // Recargar lista
+        };
+
+        // En initChat, cargar notificaciones al conectar
+        const originalInitChat = window.initChat;
+        window.initChat = function(firebaseUser, isModerator = false) {
+            loadNotificationsFromFirebase(firebaseUser.uid);
+            if (originalInitChat) originalInitChat(firebaseUser, isModerator);
+        };
 
     <script>
         var audioCtx = null;

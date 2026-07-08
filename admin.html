@@ -1957,7 +1957,48 @@
       </div>
 
       <!-- RIGHT: Tabla usuarios -->
-      <div class="table-col">
+      <!-- Sección de Notificaciones -->
+      <div class="table-col" id="notificationsSection" style="display:none;">
+        <div class="filters" style="margin-bottom:16px;">
+          <button class="filter-btn active" onclick="switchAdminSection('users')">👥 USUARIOS</button>
+          <button class="filter-btn" onclick="switchAdminSection('notifications')">📬 NOTIFICACIONES</button>
+        </div>
+
+        <div class="table-wrap" style="background:rgba(0,255,136,0.03);border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:16px;">
+          <div class="table-header">
+            <span class="table-title">📬 ENVIAR NOTIFICACIONES</span>
+          </div>
+          
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <!-- Búsqueda de usuario -->
+            <div>
+              <label style="display:block;font-size:11px;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Destinatario:</label>
+              <input type="text" id="notificationUserSearch" placeholder="Buscar usuario por nombre..." style="width:100%;padding:8px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:6px;color:var(--text-primary);font-family:'Rajdhani',sans-serif;" oninput="filterNotificationUsers(this.value)">
+              <div id="notificationUsersList" style="margin-top:8px;max-height:150px;overflow-y:auto;"></div>
+            </div>
+
+            <!-- Botones de envío rápido -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+              <button id="btnSendToSelected" class="btn-action" style="background:rgba(0,255,136,0.15);border:1px solid rgba(0,255,136,0.4);color:#00ff88;" onclick="selectNotificationUser()">✓ SELECCIONAR</button>
+              <button id="btnSendToAll" class="btn-action" style="background:rgba(100,200,255,0.15);border:1px solid rgba(100,200,255,0.4);color:#64c8ff;" onclick="selectNotificationTarget('all')">📡 ENVIAR A TODOS</button>
+            </div>
+
+            <!-- Área de mensaje -->
+            <div>
+              <label style="display:block;font-size:11px;color:var(--text-secondary);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Mensaje:</label>
+              <textarea id="notificationMessage" placeholder="Escribe tu notificación..." style="width:100%;min-height:80px;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:6px;color:var(--text-primary);font-family:'Rajdhani',sans-serif;resize:vertical;"></textarea>
+              <div style="font-size:10px;color:var(--text-secondary);margin-top:4px;" id="charCount">0 caracteres</div>
+            </div>
+
+            <!-- Botón enviar -->
+            <button id="btnSendNotification" class="btn-action" style="background:rgba(0,255,136,0.2);border:2px solid rgba(0,255,136,0.6);color:#00ff88;padding:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;" onclick="sendNotification()">
+              📤 ENVIAR NOTIFICACIÓN
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-col" id="usersSection">
 
         <!-- Filters + search -->
         <div class="filters">
@@ -2204,7 +2245,7 @@
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut }
                                from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, onValue, update, set, get, query, limitToLast, remove }
+    import { getDatabase, ref, onValue, update, set, get, query, limitToLast, remove, push, serverTimestamp }
                                from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
@@ -3249,6 +3290,172 @@ function updateStats() {
       }
     });
     headerObs.observe(document.getElementById('headerRight'), { attributes: true, attributeFilter: ['style'] });
+
+    // ═══════════════════════════════════════════════════════════
+    // ━━━ SISTEMA DE NOTIFICACIONES ━━━
+    // ═══════════════════════════════════════════════════════════
+    
+    let allUsersCache = [];
+    let selectedNotificationTargetUid = null;
+    let selectedNotificationTargetName = null;
+
+    window.switchAdminSection = function(section) {
+      const usersSection = document.getElementById('usersSection');
+      const notifSection = document.getElementById('notificationsSection');
+      
+      if (section === 'users') {
+        usersSection.style.display = 'block';
+        notifSection.style.display = 'none';
+      } else if (section === 'notifications') {
+        usersSection.style.display = 'none';
+        notifSection.style.display = 'block';
+      }
+    };
+
+    window.filterNotificationUsers = function(search) {
+      const lower = search.toLowerCase();
+      const filtered = allUsersCache.filter(u => u.username.toLowerCase().includes(lower));
+      const list = document.getElementById('notificationUsersList');
+      
+      if (filtered.length === 0) {
+        list.innerHTML = '<div style="color:var(--text-secondary);font-size:11px;padding:8px;">Sin resultados</div>';
+        return;
+      }
+      
+      list.innerHTML = filtered.map(u => `
+        <button onclick="selectNotificationUserDirect('${u.uid}','${u.username}')" 
+                style="display:block;width:100%;padding:8px 10px;background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.2);border-radius:4px;color:var(--text-primary);text-align:left;cursor:pointer;margin-bottom:4px;font-family:'Rajdhani',sans-serif;font-size:12px;transition:all 0.2s;">
+          ${u.username}
+        </button>
+      `).join('');
+    };
+
+    window.selectNotificationUserDirect = function(uid, username) {
+      selectedNotificationTargetUid = uid;
+      selectedNotificationTargetName = username;
+      document.getElementById('notificationUserSearch').value = username;
+      document.getElementById('notificationUsersList').innerHTML = `<div style="color:#00ff88;font-size:11px;padding:8px;">✓ ${username} seleccionado</div>`;
+    };
+
+    window.selectNotificationUser = function() {
+      if (!selectedNotificationTargetUid) {
+        showToastAdmin('Selecciona un usuario primero', true);
+        return;
+      }
+      showToastAdmin(`✓ Destinatario: ${selectedNotificationTargetName}`);
+    };
+
+    window.selectNotificationTarget = function(target) {
+      if (target === 'all') {
+        selectedNotificationTargetUid = null;
+        selectedNotificationTargetName = 'TODOS LOS USUARIOS';
+        showToastAdmin('📡 Modo: Enviar a todos');
+      }
+    };
+
+    window.sendNotification = async function() {
+      const msg = document.getElementById('notificationMessage').value.trim();
+      
+      if (!msg) {
+        showToastAdmin('Escribe un mensaje', true);
+        return;
+      }
+
+      if (!selectedNotificationTargetUid && selectedNotificationTargetName !== 'TODOS LOS USUARIOS') {
+        showToastAdmin('Selecciona destinatario', true);
+        return;
+      }
+
+      const btn = document.getElementById('btnSendNotification');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+
+      try {
+        if (selectedNotificationTargetName === 'TODOS LOS USUARIOS') {
+          // Enviar a todos
+          for (const user of allUsersCache) {
+            await push(ref(db, `notifications/${user.uid}`), {
+              message: msg,
+              timestamp: serverTimestamp(),
+              sender: window._fbUser?.displayName || 'Admin'
+            });
+            await update(ref(db, `users/${user.uid}`), { hasNewNotifications: true });
+          }
+          showToastAdmin(`✅ Notificación enviada a ${allUsersCache.length} usuarios`);
+        } else {
+          // Enviar a un usuario
+          await push(ref(db, `notifications/${selectedNotificationTargetUid}`), {
+            message: msg,
+            timestamp: serverTimestamp(),
+            sender: window._fbUser?.displayName || 'Admin'
+          });
+          await update(ref(db, `users/${selectedNotificationTargetUid}`), { hasNewNotifications: true });
+          showToastAdmin(`✅ Notificación enviada a ${selectedNotificationTargetName}`);
+        }
+
+        document.getElementById('notificationMessage').value = '';
+        document.getElementById('charCount').textContent = '0 caracteres';
+        selectedNotificationTargetUid = null;
+        selectedNotificationTargetName = null;
+        document.getElementById('notificationUserSearch').value = '';
+        document.getElementById('notificationUsersList').innerHTML = '';
+
+      } catch(e) {
+        console.error('Error enviando notificación:', e);
+        showToastAdmin('Error enviando notificación', true);
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    };
+
+    // Guardar lista de usuarios para búsqueda rápida
+    const originalLoadUsers = window.loadUsers;
+    window.loadUsers = async function() {
+      const result = await originalLoadUsers?.call(this) ?? null;
+      try {
+        const snap = await get(ref(db, 'users'));
+        allUsersCache = [];
+        if (snap.exists()) {
+          snap.forEach(child => {
+            const d = child.val();
+            allUsersCache.push({
+              uid: child.key,
+              username: d.username || 'Anónimo'
+            });
+          });
+        }
+      } catch(e) {
+        console.warn('Error cacheando usuarios:', e);
+      }
+      return result;
+    };
+
+    // Contador de caracteres
+    document.getElementById('notificationMessage').addEventListener('input', function() {
+      document.getElementById('charCount').textContent = this.value.length + ' caracteres';
+    });
+
+    function showToastAdmin(msg, isError = false) {
+      const toast = document.createElement('div');
+      toast.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: ${isError ? '#ff4466' : '#00ff88'};
+        color: ${isError ? 'white' : '#000'};
+        padding: 12px 16px;
+        border-radius: 6px;
+        font-family: 'Rajdhani', sans-serif;
+        font-size: 12px;
+        z-index: 10000;
+        box-shadow: 0 0 15px rgba(${isError ? '255,68,102' : '0,255,136'},0.6);
+        animation: slideInUp 0.3s ease;
+      `;
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
   </script>
 
 </body>
