@@ -2562,7 +2562,17 @@ function updateStats() {
         if (isBannedChat)  statusBadges.push(`<span class="status-badge banned">💬 CHAT</span>`);
         if (isBannedLb)    statusBadges.push(`<span class="status-badge banned">🏆 RANKING</span>`);
         if (isBannedWrite) statusBadges.push(`<span class="status-badge banned">🚫 ESCRITURA</span>`);
-        if (!anyBanned)    statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
+        
+        // Verificar inactividad por 60+ días
+        const ahora = Date.now();
+        const diasSinActualizar = (ahora - (u.updatedAt || 0)) / (1000 * 60 * 60 * 24);
+        const estaInactivo = diasSinActualizar > 60 || anyBanned;
+        
+        if (estaInactivo) {
+          if (!anyBanned) statusBadges.push(`<span class="status-badge banned">⏱️ INACTIVO</span>`);
+        } else {
+          statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
+        }
 
         const actionBtns = [];
         const isModRole = u.role === 'moderator';
