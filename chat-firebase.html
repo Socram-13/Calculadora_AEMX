@@ -546,7 +546,7 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, remove, get, query, limitToLast, orderByChild, endAt } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+        import { getDatabase, ref, push, onValue, serverTimestamp, onDisconnect, set, update, remove, get, query, limitToLast, orderByChild, endAt } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
         import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 
         const firebaseConfig = {
@@ -655,6 +655,7 @@
             const currentUserIsModerator = !currentUserIsAdmin && isModerator === true;
             console.log('[ADMIN CHECK] email:', firebaseUser.email, '| isAdmin:', currentUserIsAdmin, '| isModerator:', currentUserIsModerator);
 
+            window._notifUid = firebaseUser.uid;
             loadNotificationsFromFirebase(firebaseUser.uid);
 
             window.setUsername = setUsername;
@@ -668,7 +669,7 @@
                 if (username && username.length >= 3) {
                     currentUsername = username;
                     window._currentUsername = username;
-                    userId = 'user_' + Date.now();
+                    userId = firebaseUser.uid;
                     document.getElementById('usernameModal').classList.remove('visible');
                     document.getElementById('messageInput').disabled = false;
                     document.getElementById('sendBtn').disabled = false;
@@ -983,30 +984,39 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
-        async function loadNotificationsFromFirebase(uid) {
+        // Escucha en tiempo real: si llega una notificación nueva mientras el
+        // chat ya está abierto, se refleja al instante (antes solo se leía
+        // una vez con get(), al conectar, así que las notificaciones enviadas
+        // después nunca se veían hasta recargar la página).
+        function loadNotificationsFromFirebase(uid) {
             try {
-                const snap = await get(ref(database, `notifications/${uid}`));
-                if (snap.exists()) {
+                onValue(ref(database, `notifications/${uid}`), (snap) => {
                     const notifs = [];
-                    snap.forEach(childSnap => {
-                        notifs.push({
-                            id: childSnap.key,
-                            ...childSnap.val()
+                    if (snap.exists()) {
+                        snap.forEach(childSnap => {
+                            notifs.push({
+                                id: childSnap.key,
+                                ...childSnap.val()
+                            });
                         });
-                    });
-                    // Guardar en localStorage
+                    }
                     localStorage.setItem('notificaciones', JSON.stringify(notifs));
-                    // Marcar como leído en Firebase (borrar notificaciones descargadas)
-                    await remove(ref(database, `notifications/${uid}`));
-                    // Actualizar el flag en el usuario
-                    await update(ref(database, `users/${uid}`), { hasNewNotifications: false });
-                } else {
-                    localStorage.setItem('notificaciones', JSON.stringify([]));
-                    await update(ref(database, `users/${uid}`), { hasNewNotifications: false });
-                }
-                updateNotificationsBadge();
+                    updateNotificationsBadge();
+                });
             } catch(e) {
-                console.warn('Error cargando notificaciones:', e);
+                console.warn('Error escuchando notificaciones:', e);
+            }
+        }
+
+        // Marca como leídas en Firebase: se llama al abrir el modal, no al
+        // recibir, para no borrar del servidor antes de que el usuario
+        // llegue a verlas.
+        async function markNotificationsAsRead(uid) {
+            try {
+                await remove(ref(database, `notifications/${uid}`));
+                await update(ref(database, `users/${uid}`), { hasNewNotifications: false });
+            } catch(e) {
+                console.warn('Error marcando notificaciones como leídas:', e);
             }
         }
 
@@ -1027,7 +1037,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     </div>
                 `).join('');
             }
-            
+
+            if (notifs.length > 0 && window._notifUid) {
+                markNotificationsAsRead(window._notifUid);
+            }
+
             document.getElementById('notificationsModal').classList.add('visible');
         };
 
