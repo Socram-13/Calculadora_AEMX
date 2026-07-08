@@ -1968,37 +1968,35 @@
 
       <!-- Sección de Notificaciones -->
       <div class="table-col" id="notificationsSection" style="display:none;">
-        <div style="display:flex;justify-content:center;">
-          <div style="width:100%;max-width:560px;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;overflow:hidden;">
-            <div style="padding:2px;background:linear-gradient(90deg,#00ff88,#00ffff);"></div>
-            <div style="padding:16px 20px;border-bottom:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);">
-              <span class="table-title" style="color:#00ff88;">📬 ENVIAR NOTIFICACIÓN</span>
+        <div style="width:100%;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;min-height:520px;">
+          <div style="padding:2px;background:linear-gradient(90deg,#00ff88,#00ffff);"></div>
+          <div style="padding:16px 20px;border-bottom:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);">
+            <span class="table-title" style="color:#00ff88;">📬 ENVIAR NOTIFICACIÓN</span>
+          </div>
+
+          <div style="padding:20px;display:flex;flex-direction:column;gap:16px;flex:1;">
+
+            <!-- Destinatario -->
+            <div>
+              <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Para:</label>
+              <select id="notificationRecipientSelect" onchange="onNotificationRecipientChange(this.value)"
+                style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;">
+                <option value="">Cargando usuarios...</option>
+              </select>
             </div>
 
-            <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
-
-              <!-- Destinatario -->
-              <div>
-                <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Para:</label>
-                <select id="notificationRecipientSelect" onchange="onNotificationRecipientChange(this.value)"
-                  style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;">
-                  <option value="">Cargando usuarios...</option>
-                </select>
-              </div>
-
-              <!-- Mensaje -->
-              <div>
-                <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Mensaje:</label>
-                <textarea id="notificationMessage" placeholder="Escribe tu notificación..." rows="7"
-                  style="width:100%;min-height:160px;padding:12px 14px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.5;resize:vertical;outline:none;"></textarea>
-                <div style="font-size:10px;color:var(--text2);margin-top:4px;text-align:right;" id="charCount">0 caracteres</div>
-              </div>
-
-              <!-- Botón enviar -->
-              <button id="btnSendNotification" class="btn-action" style="background:rgba(0,255,136,0.2);border:2px solid rgba(0,255,136,0.6);color:#00ff88;padding:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;font-size:12px;" onclick="sendNotification()">
-                📤 ENVIAR
-              </button>
+            <!-- Mensaje -->
+            <div style="flex:1;display:flex;flex-direction:column;">
+              <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Mensaje:</label>
+              <textarea id="notificationMessage" placeholder="Escribe tu notificación..."
+                style="width:100%;flex:1;min-height:260px;padding:12px 14px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.5;resize:vertical;outline:none;"></textarea>
+              <div style="font-size:10px;color:var(--text2);margin-top:4px;text-align:right;" id="charCount">0 caracteres</div>
             </div>
+
+            <!-- Botón enviar -->
+            <button id="btnSendNotification" class="btn-action" style="background:rgba(0,255,136,0.2);border:2px solid rgba(0,255,136,0.6);color:#00ff88;padding:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;font-size:12px;" onclick="sendNotification()">
+              📤 ENVIAR
+            </button>
           </div>
         </div>
       </div>
@@ -2542,6 +2540,14 @@
   const usersMap = {};
   allUsers.forEach(u => { usersMap[u.uid] = u; });
   loadActiveCodes(usersMap);
+
+  // Cache para el selector de notificaciones (el fix vive aquí porque
+  // esta función corre dentro de un <script type="module">, cuyo scope
+  // no comparte identificadores globales con los <script> clásicos)
+  window.allUsersCache = allUsers.map(u => ({ uid: u.uid, username: u.username }));
+  if (typeof window.populateNotificationRecipientSelect === 'function') {
+    window.populateNotificationRecipientSelect();
+  }
   // Actualizar selector del historial con usuarios en vivo
   if (typeof poblarSelectorUsuarios === 'function') poblarSelectorUsuarios();
 }
@@ -3300,7 +3306,7 @@ function updateStats() {
     // ━━━ SISTEMA DE NOTIFICACIONES ━━━
     // ═══════════════════════════════════════════════════════════
     
-    let allUsersCache = [];
+    // allUsersCache vive en window.allUsersCache (ver loadUsers() en el script module)
     let selectedNotificationTargetUid = null;
     let selectedNotificationTargetName = null;
 
@@ -3326,7 +3332,7 @@ function updateStats() {
     window.populateNotificationRecipientSelect = function() {
       const select = document.getElementById('notificationRecipientSelect');
       if (!select) return;
-      const sorted = [...allUsersCache].sort((a, b) => a.username.localeCompare(b.username));
+      const sorted = [...(window.allUsersCache || [])].sort((a, b) => a.username.localeCompare(b.username));
       select.innerHTML = '<option value="all">📡 Todos los usuarios</option>' +
         sorted.map(u => `<option value="${u.uid}">${u.username}</option>`).join('');
       onNotificationRecipientChange(select.value);
@@ -3337,7 +3343,7 @@ function updateStats() {
         selectedNotificationTargetUid = null;
         selectedNotificationTargetName = 'TODOS LOS USUARIOS';
       } else {
-        const user = allUsersCache.find(u => u.uid === value);
+        const user = (window.allUsersCache || []).find(u => u.uid === value);
         selectedNotificationTargetUid = value || null;
         selectedNotificationTargetName = user ? user.username : null;
       }
@@ -3363,7 +3369,7 @@ function updateStats() {
       try {
         if (selectedNotificationTargetName === 'TODOS LOS USUARIOS') {
           // Enviar a todos
-          for (const user of allUsersCache) {
+          for (const user of (window.allUsersCache || [])) {
             await push(ref(db, `notifications/${user.uid}`), {
               message: msg,
               timestamp: serverTimestamp(),
@@ -3371,7 +3377,7 @@ function updateStats() {
             });
             await update(ref(db, `users/${user.uid}`), { hasNewNotifications: true });
           }
-          showToastAdmin(`✅ Notificación enviada a ${allUsersCache.length} usuarios`);
+          showToastAdmin(`✅ Notificación enviada a ${(window.allUsersCache || []).length} usuarios`);
         } else {
           // Enviar a un usuario
           await push(ref(db, `notifications/${selectedNotificationTargetUid}`), {
@@ -3395,28 +3401,9 @@ function updateStats() {
       }
     };
 
-    // Guardar lista de usuarios para búsqueda rápida
-    const originalLoadUsers = window.loadUsers;
-    window.loadUsers = async function() {
-      const result = await originalLoadUsers?.call(this) ?? null;
-      try {
-        const snap = await get(ref(db, 'users'));
-        allUsersCache = [];
-        if (snap.exists()) {
-          snap.forEach(child => {
-            const d = child.val();
-            allUsersCache.push({
-              uid: child.key,
-              username: d.username || 'Anónimo'
-            });
-          });
-        }
-      } catch(e) {
-        console.warn('Error cacheando usuarios:', e);
-      }
-      window.populateNotificationRecipientSelect();
-      return result;
-    };
+    // Nota: allUsersCache y populateNotificationRecipientSelect() ahora se
+    // alimentan directamente desde loadUsers() en el script module (arriba),
+    // ya que este bloque no comparte scope con esa función.
 
     // Contador de caracteres
     document.getElementById('notificationMessage').addEventListener('input', function() {
