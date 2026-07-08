@@ -1041,6 +1041,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
             loadNotificationsFromFirebase(firebaseUser.uid);
             if (originalInitChat) originalInitChat(firebaseUser, isModerator);
         };
+    </script>
 
     <script>
         var audioCtx = null;
