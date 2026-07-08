@@ -1925,6 +1925,14 @@
     </div>
 
     <!-- Two-column body -->
+    <!-- Botones de switch entre secciones -->
+    <div style="margin-bottom:16px;">
+      <div class="filters">
+        <button class="filter-btn active" id="btnSwitchUsers" onclick="switchAdminSection('users')">👥 USUARIOS</button>
+        <button class="filter-btn" id="btnSwitchNotif" onclick="switchAdminSection('notifications')">📬 NOTIF</button>
+      </div>
+    </div>
+
     <div class="admin-body">
 
       <!-- LEFT: Mapa compacto -->
@@ -1958,13 +1966,6 @@
       </div>
 
       <!-- RIGHT: Tabla usuarios -->
-      <!-- Botones de switch entre secciones -->
-      <div style="margin-bottom:16px;">
-        <div class="filters">
-          <button class="filter-btn active" id="btnSwitchUsers" onclick="switchAdminSection('users')">👥 USUARIOS</button>
-          <button class="filter-btn" id="btnSwitchNotif" onclick="switchAdminSection('notifications')">📬 NOTIF</button>
-        </div>
-      </div>
 
       <!-- Sección de Notificaciones -->
       <div class="table-col" id="notificationsSection" style="display:none;">
@@ -1979,10 +1980,10 @@
             <!-- Destinatario -->
             <div>
               <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Para:</label>
-              <select id="notificationRecipientSelect" onchange="onNotificationRecipientChange(this.value)"
+              <input type="text" id="notificationRecipientInput" list="notificationRecipientOptions"
+                placeholder="Cargando usuarios..." autocomplete="off" oninput="onNotificationRecipientInput(this.value)"
                 style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;">
-                <option value="">Cargando usuarios...</option>
-              </select>
+              <datalist id="notificationRecipientOptions"></datalist>
             </div>
 
             <!-- Mensaje -->
@@ -3329,24 +3330,34 @@ function updateStats() {
       }
     };
 
+    const TODOS_LABEL = '📡 Todos los usuarios';
+
     window.populateNotificationRecipientSelect = function() {
-      const select = document.getElementById('notificationRecipientSelect');
-      if (!select) return;
+      const input = document.getElementById('notificationRecipientInput');
+      const list = document.getElementById('notificationRecipientOptions');
+      if (!input || !list) return;
       const sorted = [...(window.allUsersCache || [])].sort((a, b) => a.username.localeCompare(b.username));
-      select.innerHTML = '<option value="all">📡 Todos los usuarios</option>' +
-        sorted.map(u => `<option value="${u.uid}">${u.username}</option>`).join('');
-      onNotificationRecipientChange(select.value);
+      list.innerHTML = `<option value="${TODOS_LABEL}"></option>` +
+        sorted.map(u => `<option value="${u.username}"></option>`).join('');
+      input.placeholder = 'Escribe un nombre o elige "Todos"...';
+      if (!input.value) {
+        input.value = TODOS_LABEL;
+        onNotificationRecipientInput(input.value);
+      }
     };
 
-    window.onNotificationRecipientChange = function(value) {
-      if (value === 'all') {
+    window.onNotificationRecipientInput = function(value) {
+      const trimmed = (value || '').trim();
+      if (trimmed === TODOS_LABEL) {
         selectedNotificationTargetUid = null;
         selectedNotificationTargetName = 'TODOS LOS USUARIOS';
-      } else {
-        const user = (window.allUsersCache || []).find(u => u.uid === value);
-        selectedNotificationTargetUid = value || null;
-        selectedNotificationTargetName = user ? user.username : null;
+        return;
       }
+      const user = (window.allUsersCache || []).find(
+        u => u.username.toLowerCase() === trimmed.toLowerCase()
+      );
+      selectedNotificationTargetUid = user ? user.uid : null;
+      selectedNotificationTargetName = user ? user.username : null;
     };
 
     window.sendNotification = async function() {
