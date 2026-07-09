@@ -3657,7 +3657,7 @@ function updateStats() {
             <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
               <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📋 Datos generales</div>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
-                ${expedienteField('País', escapeHtmlAdmin(d.country || '—'))}
+                ${!window.isModeratorSession ? expedienteField('País', escapeHtmlAdmin(d.country || '—')) : ''}
                 ${expedienteField('Parcelas', parcelasTotal.toLocaleString())}
                 ${expedienteField('Común', d.common || 0)}
                 ${expedienteField('Rara', d.rare || 0)}
@@ -3670,7 +3670,7 @@ function updateStats() {
                 ${expedienteField('Guía completada', d.guiasCompleted ? '✅ Sí' : '—')}
                 ${expedienteField('Recompensa de guía', d.guiasReward ? '✅ Reclamada' : '—')}
               </div>
-              ${historialPais.length ? `
+              ${(!window.isModeratorSession && historialPais.length) ? `
                 <div style="margin-top:14px;">
                   <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Historial de país (${historialPais.length})</div>
                   <div style="font-size:11px;color:var(--text2);font-family:'Share Tech Mono',monospace;line-height:1.8;">
@@ -3720,7 +3720,7 @@ function updateStats() {
             <!-- Datos crudos (por si hay campos no listados arriba) -->
             <details style="padding:20px;border-top:1px solid rgba(255,255,255,0.06);">
               <summary style="cursor:pointer;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;">🔧 Ver datos crudos completos</summary>
-              <pre style="margin-top:10px;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-word;font-family:'Share Tech Mono',monospace;max-height:300px;overflow-y:auto;">${escapeHtmlAdmin(JSON.stringify(d, null, 2))}</pre>
+              <pre style="margin-top:10px;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-word;font-family:'Share Tech Mono',monospace;max-height:300px;overflow-y:auto;">${escapeHtmlAdmin(JSON.stringify(window.isModeratorSession ? (({country, countryHistory, ...resto}) => resto)(d) : d, null, 2))}</pre>
             </details>
           </div>
         `;
