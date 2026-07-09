@@ -3379,7 +3379,7 @@ function updateStats() {
         return;
       }
       const user = (window.allUsersCache || []).find(
-        u => u.username.toLowerCase() === trimmed.toLowerCase()
+        u => u.username.trim().toLowerCase() === trimmed.toLowerCase()
       );
       selectedNotificationTargetUid = user ? user.uid : null;
       selectedNotificationTargetName = user ? user.username : null;
