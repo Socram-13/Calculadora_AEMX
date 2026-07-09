@@ -1115,6 +1115,78 @@
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     .toast.error { border-color: var(--danger); color: var(--danger); }
 
+    /* ── Expediente de usuario (estilo dossier) ── */
+    .exp-card {
+      position: relative;
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid rgba(0,255,157,0.25);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .exp-card::before, .exp-card::after {
+      content: ''; position: absolute; width: 16px; height: 16px; pointer-events: none; z-index: 2;
+      border-color: var(--glow2); opacity: 0.8;
+    }
+    .exp-card::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+    .exp-card::after   { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+    .exp-topbar { height: 3px; background: linear-gradient(90deg, var(--glow2), var(--glow)); }
+    .exp-header {
+      padding: 22px 24px; border-bottom: 1px solid rgba(0,255,157,0.18);
+      background: rgba(0,255,157,0.03);
+      display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px;
+    }
+    .exp-eyebrow {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 2px;
+      color: var(--text2); text-transform: uppercase; margin-bottom: 6px;
+    }
+    .exp-eyebrow b { color: var(--glow2); font-weight: 700; }
+    .exp-username {
+      font-family: 'Orbitron', monospace; font-weight: 800; font-size: 21px;
+      color: var(--text); letter-spacing: 0.5px;
+    }
+    .exp-stamps { display: flex; flex-wrap: wrap; gap: 8px; }
+    .exp-stamp {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 1.5px;
+      padding: 6px 12px; border: 2px solid currentColor; border-radius: 3px;
+      transform: rotate(-3deg); display: inline-block; text-transform: uppercase; font-weight: 700;
+      background: rgba(0,0,0,0.15);
+    }
+    .exp-stamp.ok   { color: var(--glow2); }
+    .exp-stamp.warn { color: var(--danger); }
+    .exp-stamp.mod  { color: #a855f7; }
+    .exp-section { padding: 22px 24px; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+    .exp-section:last-of-type { border-bottom: none; }
+    .exp-section-title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .exp-section-num {
+      font-family: 'Share Tech Mono', monospace; font-size: 10px; color: var(--bg);
+      background: var(--glow2); width: 20px; height: 20px; border-radius: 3px;
+      display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;
+    }
+    .exp-section-label {
+      font-family: 'Orbitron', monospace; font-size: 11px; letter-spacing: 1.5px;
+      color: var(--glow2); text-transform: uppercase; font-weight: 700; white-space: nowrap;
+    }
+    .exp-section-line {
+      flex: 1; height: 1px;
+      background: repeating-linear-gradient(90deg, rgba(0,255,157,0.35) 0 4px, transparent 4px 9px);
+    }
+    .exp-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px 22px; }
+    .exp-field-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+      color: var(--text2); text-transform: uppercase; margin-bottom: 5px;
+    }
+    .exp-field-value {
+      font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--text); padding-bottom: 7px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .exp-row {
+      font-size: 12px; color: var(--text); padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.05);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+    }
+    .exp-row:first-child { border-top: none; }
+    .exp-row-meta { font-size: 9px; color: var(--text2); margin-top: 3px; }
+
     /* ── Empty / loading ── */
     .empty-state {
       text-align: center;
@@ -3582,7 +3654,7 @@ function updateStats() {
     window.loadUserExpediente = async function(uid) {
       const container = document.getElementById('expedienteResult');
       container.innerHTML = `
-        <div style="width:100%;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;padding:30px;">
+        <div class="exp-card" style="padding:30px;">
           <div class="empty-state"><div class="spinner"></div>CARGANDO EXPEDIENTE...</div>
         </div>
       `;
@@ -3595,7 +3667,7 @@ function updateStats() {
         ]);
 
         if (!userSnap.exists()) {
-          container.innerHTML = `<div style="width:100%;background:var(--panel);border:1px solid rgba(255,68,102,0.3);border-radius:12px;padding:20px;"><div class="empty-state">Usuario no encontrado</div></div>`;
+          container.innerHTML = `<div class="exp-card" style="padding:20px;"><div class="empty-state">Usuario no encontrado</div></div>`;
           return;
         }
 
@@ -3629,88 +3701,110 @@ function updateStats() {
           });
         }
 
-        // Badges de estado
-        const statusBadges = [];
-        if (d.role === 'moderator') statusBadges.push(`<span class="status-badge active" style="background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.4);color:#a855f7;">🛡️ MODERADOR</span>`);
-        if (d.clanMember) statusBadges.push(`<span class="status-badge active">👥 CLAN</span>`);
-        if (d.bannedChat) statusBadges.push(`<span class="status-badge banned">💬 BAN CHAT</span>`);
-        if (d.bannedLeaderboard) statusBadges.push(`<span class="status-badge banned">🏆 BAN RANKING</span>`);
-        if (d.bannedWrite) statusBadges.push(`<span class="status-badge banned">🚫 BAN ESCRITURA</span>`);
-        if (!statusBadges.length) statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
+        // Sellos de estado (estilo timbre/stamp)
+        const stamps = [];
+        if (d.role === 'moderator') stamps.push(`<span class="exp-stamp mod">🛡️ Moderador</span>`);
+        if (d.clanMember) stamps.push(`<span class="exp-stamp ok">👥 Clan</span>`);
+        if (d.bannedChat) stamps.push(`<span class="exp-stamp warn">💬 Ban chat</span>`);
+        if (d.bannedLeaderboard) stamps.push(`<span class="exp-stamp warn">🏆 Ban ranking</span>`);
+        if (d.bannedWrite) stamps.push(`<span class="exp-stamp warn">🚫 Ban escritura</span>`);
+        if (!stamps.length) stamps.push(`<span class="exp-stamp ok">✓ Activo</span>`);
 
         const historialPais = Array.isArray(d.countryHistory) ? d.countryHistory : [];
+        const folio = uid.slice(0, 8).toUpperCase();
 
         container.innerHTML = `
-          <div style="width:100%;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;overflow:hidden;">
-            <div style="padding:2px;background:linear-gradient(90deg,#00ff88,#00ffff);"></div>
+          <div class="exp-card">
+            <div class="exp-topbar"></div>
 
             <!-- Encabezado -->
-            <div style="padding:20px;border-bottom:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+            <div class="exp-header">
               <div>
-                <div style="font-family:'Rajdhani',sans-serif;font-weight:800;font-size:20px;color:var(--text);">${escapeHtmlAdmin(username)}</div>
-                <div style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:2px;">UID: ${escapeHtmlAdmin(uid)}</div>
+                <div class="exp-eyebrow">Expediente Nº <b>${folio}</b> · AEMX</div>
+                <div class="exp-username">${escapeHtmlAdmin(username)}</div>
+                <div style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:3px;">UID: ${escapeHtmlAdmin(uid)}</div>
               </div>
-              <div>${statusBadges.join(' ')}</div>
+              <div class="exp-stamps">${stamps.join('')}</div>
             </div>
 
-            <!-- Datos generales -->
-            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📋 Datos generales</div>
-              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
-                ${!window.isModeratorSession ? expedienteField('País', escapeHtmlAdmin(d.country || '—')) : ''}
-                ${expedienteField('Parcelas', parcelasTotal.toLocaleString())}
-                ${expedienteField('Común', d.common || 0)}
-                ${expedienteField('Rara', d.rare || 0)}
-                ${expedienteField('Épica', d.epic || 0)}
-                ${expedienteField('Legendaria', d.legendary || 0)}
-                ${expedienteField('AEMX Coins', d.coins || 0)}
-                ${expedienteField('Título', escapeHtmlAdmin(d.titulo_juego || '—'))}
-                ${expedienteField('Última actualización', d.updatedAt ? new Date(d.updatedAt).toLocaleString('es-MX') : '—')}
-                ${expedienteField('Último coin diario', d.lastCoinDate ? escapeHtmlAdmin(d.lastCoinDate) : '—')}
-                ${expedienteField('Guía completada', d.guiasCompleted ? '✅ Sí' : '—')}
-                ${expedienteField('Recompensa de guía', d.guiasReward ? '✅ Reclamada' : '—')}
+            <!-- 01 · Datos generales -->
+            <div class="exp-section">
+              <div class="exp-section-title">
+                <span class="exp-section-num">01</span>
+                <span class="exp-section-label">Datos generales</span>
+                <span class="exp-section-line"></span>
+              </div>
+              <div class="exp-fields">
+                ${!window.isModeratorSession ? `<div><div class="exp-field-label">País</div><div class="exp-field-value">${escapeHtmlAdmin(d.country || '—')}</div></div>` : ''}
+                <div><div class="exp-field-label">Parcelas totales</div><div class="exp-field-value">${parcelasTotal.toLocaleString()}</div></div>
+                <div><div class="exp-field-label">Común</div><div class="exp-field-value">${d.common || 0}</div></div>
+                <div><div class="exp-field-label">Rara</div><div class="exp-field-value">${d.rare || 0}</div></div>
+                <div><div class="exp-field-label">Épica</div><div class="exp-field-value">${d.epic || 0}</div></div>
+                <div><div class="exp-field-label">Legendaria</div><div class="exp-field-value">${d.legendary || 0}</div></div>
+                <div><div class="exp-field-label">AEMX Coins</div><div class="exp-field-value">🪙 ${d.coins || 0}</div></div>
+                <div><div class="exp-field-label">Título</div><div class="exp-field-value">${escapeHtmlAdmin(d.titulo_juego || '—')}</div></div>
+                <div><div class="exp-field-label">Última actualización</div><div class="exp-field-value">${d.updatedAt ? new Date(d.updatedAt).toLocaleString('es-MX') : '—'}</div></div>
+                <div><div class="exp-field-label">Último coin diario</div><div class="exp-field-value">${d.lastCoinDate ? escapeHtmlAdmin(d.lastCoinDate) : '—'}</div></div>
+                <div><div class="exp-field-label">Guía completada</div><div class="exp-field-value">${d.guiasCompleted ? '✅ Sí' : '—'}</div></div>
+                <div><div class="exp-field-label">Recompensa de guía</div><div class="exp-field-value">${d.guiasReward ? '✅ Reclamada' : '—'}</div></div>
               </div>
               ${(!window.isModeratorSession && historialPais.length) ? `
-                <div style="margin-top:14px;">
-                  <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Historial de país (${historialPais.length})</div>
-                  <div style="font-size:11px;color:var(--text2);font-family:'Share Tech Mono',monospace;line-height:1.8;">
+                <div style="margin-top:16px;">
+                  <div class="exp-field-label">Historial de país (${historialPais.length})</div>
+                  <div style="font-size:11px;color:var(--text2);font-family:'Share Tech Mono',monospace;line-height:1.8;margin-top:4px;">
                     ${historialPais.map(h => `• ${escapeHtmlAdmin(typeof h === 'string' ? h : JSON.stringify(h))}`).join('<br>')}
                   </div>
                 </div>
               ` : ''}
             </div>
 
-            <!-- Medallas -->
-            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">🏅 Medallas (${medallasHtml.length})</div>
-              ${medallasHtml.length ? medallasHtml.join('') : '<div class="empty-state" style="padding:10px 0;">Sin medallas</div>'}
+            <!-- 02 · Medallas -->
+            <div class="exp-section">
+              <div class="exp-section-title">
+                <span class="exp-section-num">02</span>
+                <span class="exp-section-label">Medallas (${medallasHtml.length})</span>
+                <span class="exp-section-line"></span>
+              </div>
+              ${medallasHtml.length ? medallasHtml.join('') : '<div class="empty-state" style="padding:6px 0;">Sin medallas</div>'}
             </div>
 
-            <!-- Códigos generados -->
-            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">🎟️ Códigos generados (${codigosGenerados.length})</div>
+            <!-- 03 · Códigos generados -->
+            <div class="exp-section">
+              <div class="exp-section-title">
+                <span class="exp-section-num">03</span>
+                <span class="exp-section-label">Códigos generados (${codigosGenerados.length})</span>
+                <span class="exp-section-line"></span>
+              </div>
               ${codigosGenerados.length ? codigosGenerados.map(c => `
-                <div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                <div class="exp-row">
                   <span style="font-family:'Share Tech Mono',monospace;">${escapeHtmlAdmin(c.code)}</span>
                   <span style="color:var(--text2);">valor: ${escapeHtmlAdmin(String(c.value ?? '—'))} · ${c.createdAt ? new Date(c.createdAt).toLocaleString('es-MX') : ''}</span>
                 </div>
-              `).join('') : '<div class="empty-state" style="padding:10px 0;">Sin códigos generados</div>'}
+              `).join('') : '<div class="empty-state" style="padding:6px 0;">Sin códigos generados</div>'}
             </div>
 
-            <!-- Notificaciones pendientes -->
-            <div style="padding:20px;">
-              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📬 Notificaciones pendientes (${notifsPendientes.length})</div>
+            <!-- 04 · Notificaciones pendientes -->
+            <div class="exp-section">
+              <div class="exp-section-title">
+                <span class="exp-section-num">04</span>
+                <span class="exp-section-label">Notificaciones pendientes (${notifsPendientes.length})</span>
+                <span class="exp-section-line"></span>
+              </div>
               ${notifsPendientes.length ? notifsPendientes.map(n => `
-                <div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid rgba(255,255,255,0.05);">
+                <div class="exp-row" style="display:block;">
                   ${escapeHtmlAdmin(n.message || '')}
-                  <div style="font-size:9px;color:var(--text2);margin-top:2px;">${n.timestamp ? new Date(n.timestamp).toLocaleString('es-MX') : ''} · ${escapeHtmlAdmin(n.sender || 'Admin')}</div>
+                  <div class="exp-row-meta">${n.timestamp ? new Date(n.timestamp).toLocaleString('es-MX') : ''} · ${escapeHtmlAdmin(n.sender || 'Admin')}</div>
                 </div>
-              `).join('') : '<div class="empty-state" style="padding:10px 0;">Sin notificaciones pendientes</div>'}
+              `).join('') : '<div class="empty-state" style="padding:6px 0;">Sin notificaciones pendientes</div>'}
             </div>
 
-            <!-- Gráfica de historial de parcelas -->
-            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
-              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📊 Historial de parcelas</div>
+            <!-- 05 · Historial de parcelas -->
+            <div class="exp-section">
+              <div class="exp-section-title">
+                <span class="exp-section-num">05</span>
+                <span class="exp-section-label">Historial de parcelas</span>
+                <span class="exp-section-line"></span>
+              </div>
               <div id="expedienteChartWrap" style="position:relative;min-height:220px;">
                 <div class="empty-state" id="expedienteChartEmpty"><div class="spinner"></div>CARGANDO HISTORIAL...</div>
                 <canvas id="expedienteChart" style="display:none;"></canvas>
@@ -3718,8 +3812,8 @@ function updateStats() {
             </div>
 
             <!-- Datos crudos (por si hay campos no listados arriba) -->
-            <details style="padding:20px;border-top:1px solid rgba(255,255,255,0.06);">
-              <summary style="cursor:pointer;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;">🔧 Ver datos crudos completos</summary>
+            <details class="exp-section">
+              <summary style="cursor:pointer;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-family:'Share Tech Mono',monospace;">🔧 Ver datos crudos completos</summary>
               <pre style="margin-top:10px;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-word;font-family:'Share Tech Mono',monospace;max-height:300px;overflow-y:auto;">${escapeHtmlAdmin(JSON.stringify(window.isModeratorSession ? (({country, countryHistory, ...resto}) => resto)(d) : d, null, 2))}</pre>
             </details>
           </div>
@@ -3728,7 +3822,7 @@ function updateStats() {
         renderExpedienteHistorialChart(uid, username);
       } catch(e) {
         console.error('Error cargando expediente:', e);
-        container.innerHTML = `<div style="width:100%;background:var(--panel);border:1px solid rgba(255,68,102,0.3);border-radius:12px;padding:20px;"><div class="empty-state">Error al cargar el expediente</div></div>`;
+        container.innerHTML = `<div class="exp-card" style="padding:20px;"><div class="empty-state">Error al cargar el expediente</div></div>`;
       }
     };
 
