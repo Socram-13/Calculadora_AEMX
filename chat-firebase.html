@@ -980,11 +980,27 @@ const userRef = ref(database, 'chat_presence/' + userId);
         // fuera de initChat, a nivel de módulo).
         function escapeHtmlNotif(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
+        // Historial local persistente: separado de lo que hay en Firebase.
+        // Firebase solo se usa como "buzón de entrada" temporal; una vez
+        // leída, se limpia del servidor, pero la copia local se conserva
+        // para poder verla después.
+        const NOTIF_STORAGE_KEY = 'notificaciones_historial';
+
+        function getNotifHistorial() {
+            try { return JSON.parse(localStorage.getItem(NOTIF_STORAGE_KEY) || '[]'); }
+            catch(e) { return []; }
+        }
+
+        function saveNotifHistorial(historial) {
+            localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(historial));
+        }
+
         function updateNotificationsBadge() {
-            const notifs = JSON.parse(localStorage.getItem('notificaciones') || '[]');
+            const historial = getNotifHistorial();
+            const unread = historial.filter(n => !n.read).length;
             const badge = document.getElementById('notificationsBadge');
-            if (notifs.length > 0) {
-                badge.textContent = notifs.length;
+            if (unread > 0) {
+                badge.textContent = unread;
                 badge.classList.remove('hidden');
             } else {
                 badge.classList.add('hidden');
@@ -995,21 +1011,32 @@ const userRef = ref(database, 'chat_presence/' + userId);
         // chat ya está abierto, se refleja al instante (antes solo se leía
         // una vez con get(), al conectar, así que las notificaciones enviadas
         // después nunca se veían hasta recargar la página).
+        // Las notificaciones que llegan se fusionan al historial local (no
+        // se sobrescribe), así que aunque luego se borren del servidor,
+        // siguen disponibles para verlas después.
         function loadNotificationsFromFirebase(uid) {
             try {
                 console.log('[NOTIF DEBUG] Suscribiendo listener a notifications/' + uid);
                 onValue(ref(database, `notifications/${uid}`), (snap) => {
                     console.log('[NOTIF DEBUG] onValue disparado. ¿Existe data?', snap.exists(), '| raw:', snap.val());
-                    const notifs = [];
+                    const historial = getNotifHistorial();
+                    const idsExistentes = new Set(historial.map(n => n.id));
+                    let huboNuevas = false;
+
                     if (snap.exists()) {
                         snap.forEach(childSnap => {
-                            notifs.push({
-                                id: childSnap.key,
-                                ...childSnap.val()
-                            });
+                            if (!idsExistentes.has(childSnap.key)) {
+                                historial.push({
+                                    id: childSnap.key,
+                                    read: false,
+                                    ...childSnap.val()
+                                });
+                                huboNuevas = true;
+                            }
                         });
                     }
-                    localStorage.setItem('notificaciones', JSON.stringify(notifs));
+
+                    if (huboNuevas) saveNotifHistorial(historial);
                     updateNotificationsBadge();
                 });
             } catch(e) {
@@ -1017,9 +1044,8 @@ const userRef = ref(database, 'chat_presence/' + userId);
             }
         }
 
-        // Marca como leídas en Firebase: se llama al abrir el modal, no al
-        // recibir, para no borrar del servidor antes de que el usuario
-        // llegue a verlas.
+        // Limpia el buzón en Firebase (ya se fusionó al historial local) y
+        // marca todo el historial local como leído.
         async function markNotificationsAsRead(uid) {
             try {
                 await remove(ref(database, `notifications/${uid}`));
@@ -1027,27 +1053,30 @@ const userRef = ref(database, 'chat_presence/' + userId);
             } catch(e) {
                 console.warn('Error marcando notificaciones como leídas:', e);
             }
+            const historial = getNotifHistorial().map(n => ({ ...n, read: true }));
+            saveNotifHistorial(historial);
+            updateNotificationsBadge();
         }
 
         window.openNotificationsModal = function() {
-            const notifs = JSON.parse(localStorage.getItem('notificaciones') || '[]');
+            const historial = [...getNotifHistorial()].reverse(); // más recientes primero
             const list = document.getElementById('notificationsList');
-            
-            if (notifs.length === 0) {
+
+            if (historial.length === 0) {
                 list.innerHTML = '<div class="notifications-empty">Sin notificaciones</div>';
             } else {
-                list.innerHTML = notifs.map((n, idx) => `
+                list.innerHTML = historial.map(n => `
                     <div class="notification-item">
                         <div>
                             <div class="notification-content">${escapeHtmlNotif(n.message || '')}</div>
                             <div class="notification-date">${new Date(n.timestamp || Date.now()).toLocaleDateString()} ${new Date(n.timestamp || Date.now()).toLocaleTimeString()}</div>
                         </div>
-                        <button class="notification-delete" onclick="deleteNotification(${idx})" title="Eliminar">🗑️</button>
+                        <button class="notification-delete" onclick="deleteNotification('${n.id}')" title="Eliminar">🗑️</button>
                     </div>
                 `).join('');
             }
 
-            if (notifs.length > 0 && window._notifUid) {
+            if (window._notifUid) {
                 markNotificationsAsRead(window._notifUid);
             }
 
@@ -1058,10 +1087,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
             document.getElementById('notificationsModal').classList.remove('visible');
         };
 
-        window.deleteNotification = function(index) {
-            let notifs = JSON.parse(localStorage.getItem('notificaciones') || '[]');
-            notifs.splice(index, 1);
-            localStorage.setItem('notificaciones', JSON.stringify(notifs));
+        window.deleteNotification = function(id) {
+            const historial = getNotifHistorial().filter(n => n.id !== id);
+            saveNotifHistorial(historial);
             updateNotificationsBadge();
             window.openNotificationsModal(); // Recargar lista
         };
