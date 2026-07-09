@@ -3601,6 +3601,7 @@ function updateStats() {
 
         const d = userSnap.val();
         const username = d.username || uid;
+        const parcelasTotal = (parseInt(d.common) || 0) + (parseInt(d.rare) || 0) + (parseInt(d.epic) || 0) + (parseInt(d.legendary) || 0);
 
         // Notificaciones pendientes de este usuario
         const notifsPendientes = [];
@@ -3657,7 +3658,11 @@ function updateStats() {
               <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📋 Datos generales</div>
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
                 ${expedienteField('País', escapeHtmlAdmin(d.country || '—'))}
-                ${expedienteField('Parcelas', (d.total || 0).toLocaleString())}
+                ${expedienteField('Parcelas', parcelasTotal.toLocaleString())}
+                ${expedienteField('Común', d.common || 0)}
+                ${expedienteField('Rara', d.rare || 0)}
+                ${expedienteField('Épica', d.epic || 0)}
+                ${expedienteField('Legendaria', d.legendary || 0)}
                 ${expedienteField('AEMX Coins', d.coins || 0)}
                 ${expedienteField('Título', escapeHtmlAdmin(d.titulo_juego || '—'))}
                 ${expedienteField('Última actualización', d.updatedAt ? new Date(d.updatedAt).toLocaleString('es-MX') : '—')}
@@ -3703,6 +3708,15 @@ function updateStats() {
               `).join('') : '<div class="empty-state" style="padding:10px 0;">Sin notificaciones pendientes</div>'}
             </div>
 
+            <!-- Gráfica de historial de parcelas -->
+            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📊 Historial de parcelas</div>
+              <div id="expedienteChartWrap" style="position:relative;min-height:220px;">
+                <div class="empty-state" id="expedienteChartEmpty"><div class="spinner"></div>CARGANDO HISTORIAL...</div>
+                <canvas id="expedienteChart" style="display:none;"></canvas>
+              </div>
+            </div>
+
             <!-- Datos crudos (por si hay campos no listados arriba) -->
             <details style="padding:20px;border-top:1px solid rgba(255,255,255,0.06);">
               <summary style="cursor:pointer;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;">🔧 Ver datos crudos completos</summary>
@@ -3710,11 +3724,102 @@ function updateStats() {
             </details>
           </div>
         `;
+
+        renderExpedienteHistorialChart(uid, username);
       } catch(e) {
         console.error('Error cargando expediente:', e);
         container.innerHTML = `<div style="width:100%;background:var(--panel);border:1px solid rgba(255,68,102,0.3);border-radius:12px;padding:20px;"><div class="empty-state">Error al cargar el expediente</div></div>`;
       }
     };
+
+    let expedienteChartInstance = null;
+
+    async function renderExpedienteHistorialChart(uid, username) {
+      const empty = document.getElementById('expedienteChartEmpty');
+      const canvas = document.getElementById('expedienteChart');
+      if (!empty || !canvas) return; // el usuario cambió de sección antes de que esto terminara
+
+      try {
+        // historialData (definido en el bloque de snapshots) solo se carga
+        // automáticamente para admin; para mods, o si aún no ha corrido, lo
+        // cargamos aquí bajo demanda (la regla de Firebase ya permite leer
+        // 'historial' a cualquier usuario autenticado).
+        if (typeof loadHistorialData === 'function' && (typeof historialData === 'undefined' || Object.keys(historialData).length === 0)) {
+          await loadHistorialData();
+        }
+
+        const meses = Object.keys(historialData || {}).sort();
+        const puntos = meses
+          .filter(m => historialData[m] && historialData[m][uid])
+          .map(m => ({ mes: m, parcelas: historialData[m][uid].parcelas }));
+
+        if (puntos.length === 0) {
+          empty.innerHTML = 'Sin snapshots registrados para este usuario todavía.';
+          empty.style.display = 'flex';
+          canvas.style.display = 'none';
+          return;
+        }
+
+        empty.style.display = 'none';
+        canvas.style.display = 'block';
+
+        const labels = puntos.map(p => {
+          const [y, mo] = p.mes.split('-');
+          const nombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+          return `${nombres[parseInt(mo) - 1]} ${y}`;
+        });
+        const data = puntos.map(p => p.parcelas);
+
+        if (expedienteChartInstance) { expedienteChartInstance.destroy(); expedienteChartInstance = null; }
+
+        expedienteChartInstance = new Chart(canvas, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: username,
+              data,
+              borderColor: '#00ff88',
+              backgroundColor: '#00ff8822',
+              pointBackgroundColor: '#00ff88',
+              pointRadius: 5,
+              pointHoverRadius: 8,
+              tension: 0.3,
+              fill: true,
+              spanGaps: true,
+            }]
+          },
+          options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+              legend: {
+                labels: { color: '#cce4ff', font: { family: 'Rajdhani', size: 13, weight: '600' }, usePointStyle: true, padding: 16 }
+              },
+              tooltip: {
+                backgroundColor: '#0b1626',
+                borderColor: '#1a3a5c',
+                borderWidth: 1,
+                titleColor: '#00ff88',
+                bodyColor: '#cce4ff',
+                titleFont: { family: 'Orbitron', size: 10 },
+                bodyFont: { family: 'Rajdhani', size: 13 },
+                callbacks: { label: ctx => ` ${ctx.parsed.y?.toLocaleString() ?? '—'} parcelas` }
+              }
+            },
+            scales: {
+              x: { ticks: { color: '#6b8ab0', font: { family: 'Share Tech Mono', size: 11 } }, grid: { color: 'rgba(26,58,92,0.5)' } },
+              y: { ticks: { color: '#6b8ab0', font: { family: 'Share Tech Mono', size: 11 }, callback: v => v.toLocaleString() }, grid: { color: 'rgba(26,58,92,0.5)' } }
+            }
+          }
+        });
+      } catch(e) {
+        console.error('Error renderizando gráfica del expediente:', e);
+        empty.innerHTML = 'Error al cargar el historial.';
+        empty.style.display = 'flex';
+        canvas.style.display = 'none';
+      }
+    }
 
     // Nota: allUsersCache y populateNotificationRecipientSelect() ahora se
     // alimentan directamente desde loadUsers() en el script module (arriba),
