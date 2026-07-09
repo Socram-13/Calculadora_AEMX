@@ -656,6 +656,8 @@
             console.log('[ADMIN CHECK] email:', firebaseUser.email, '| isAdmin:', currentUserIsAdmin, '| isModerator:', currentUserIsModerator);
 
             window._notifUid = firebaseUser.uid;
+            console.log('%c[NOTIF DEBUG] UID que este chat usa para leer notificaciones:', 'color:#00ff88;font-weight:bold;', firebaseUser.uid);
+            console.log('[NOTIF DEBUG] Compáralo contra la clave bajo notifications/ en Firebase Console.');
             loadNotificationsFromFirebase(firebaseUser.uid);
 
             window.setUsername = setUsername;
@@ -990,7 +992,9 @@ const userRef = ref(database, 'chat_presence/' + userId);
         // después nunca se veían hasta recargar la página).
         function loadNotificationsFromFirebase(uid) {
             try {
+                console.log('[NOTIF DEBUG] Suscribiendo listener a notifications/' + uid);
                 onValue(ref(database, `notifications/${uid}`), (snap) => {
+                    console.log('[NOTIF DEBUG] onValue disparado. ¿Existe data?', snap.exists(), '| raw:', snap.val());
                     const notifs = [];
                     if (snap.exists()) {
                         snap.forEach(childSnap => {
