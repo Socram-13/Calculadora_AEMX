@@ -1155,6 +1155,26 @@
     .exp-stamp.ok   { color: var(--glow2); }
     .exp-stamp.warn { color: var(--danger); }
     .exp-stamp.mod  { color: #a855f7; }
+
+    /* ── Casillero tipo ficha ── */
+    .exp-mugshot {
+      width: 76px; height: 76px; flex-shrink: 0; border: 2px dashed rgba(0,255,157,0.35);
+      border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      font-size: 32px; color: rgba(0,255,157,0.35); background: rgba(0,0,0,0.2);
+    }
+    .exp-header-main { display: flex; gap: 16px; align-items: center; }
+    .exp-caso-label {
+      font-family: 'Share Tech Mono', monospace; font-size: 9px; color: var(--text2);
+      text-transform: uppercase; letter-spacing: 1.5px;
+    }
+    .exp-big-stamp {
+      font-family: 'Orbitron', monospace; font-size: 15px; font-weight: 800; letter-spacing: 2px;
+      padding: 10px 20px; border: 3px solid currentColor; border-radius: 4px;
+      transform: rotate(-6deg); text-transform: uppercase; text-align: center;
+      background: rgba(0,0,0,0.15); white-space: nowrap;
+    }
+    .exp-big-stamp.ok   { color: var(--glow2); }
+    .exp-big-stamp.warn { color: var(--danger); }
     .exp-section { padding: 22px 24px; border-bottom: 1px dashed rgba(255,255,255,0.08); }
     .exp-section:last-of-type { border-bottom: none; }
     .exp-section-title { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
@@ -3701,14 +3721,19 @@ function updateStats() {
           });
         }
 
-        // Sellos de estado (estilo timbre/stamp)
+        // Sello grande de estado (libre / bajo sanción)
+        const tieneSancion = d.bannedChat || d.bannedLeaderboard || d.bannedWrite;
+        const bigStamp = tieneSancion
+          ? `<div class="exp-big-stamp warn">⚠️ Bajo sanción</div>`
+          : `<div class="exp-big-stamp ok">✓ Libre de sanciones</div>`;
+
+        // Sellos secundarios (rol / clan / sanciones específicas)
         const stamps = [];
         if (d.role === 'moderator') stamps.push(`<span class="exp-stamp mod">🛡️ Moderador</span>`);
         if (d.clanMember) stamps.push(`<span class="exp-stamp ok">👥 Clan</span>`);
-        if (d.bannedChat) stamps.push(`<span class="exp-stamp warn">💬 Ban chat</span>`);
-        if (d.bannedLeaderboard) stamps.push(`<span class="exp-stamp warn">🏆 Ban ranking</span>`);
-        if (d.bannedWrite) stamps.push(`<span class="exp-stamp warn">🚫 Ban escritura</span>`);
-        if (!stamps.length) stamps.push(`<span class="exp-stamp ok">✓ Activo</span>`);
+        if (d.bannedChat) stamps.push(`<span class="exp-stamp warn">💬 Chat restringido</span>`);
+        if (d.bannedLeaderboard) stamps.push(`<span class="exp-stamp warn">🏆 Ranking restringido</span>`);
+        if (d.bannedWrite) stamps.push(`<span class="exp-stamp warn">🚫 Escritura restringida</span>`);
 
         const historialPais = Array.isArray(d.countryHistory) ? d.countryHistory : [];
         const folio = uid.slice(0, 8).toUpperCase();
@@ -3717,21 +3742,25 @@ function updateStats() {
           <div class="exp-card">
             <div class="exp-topbar"></div>
 
-            <!-- Encabezado -->
+            <!-- Encabezado tipo ficha -->
             <div class="exp-header">
-              <div>
-                <div class="exp-eyebrow">Expediente Nº <b>${folio}</b> · AEMX</div>
-                <div class="exp-username">${escapeHtmlAdmin(username)}</div>
-                <div style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:3px;">UID: ${escapeHtmlAdmin(uid)}</div>
+              <div class="exp-header-main">
+                <div class="exp-mugshot">👤</div>
+                <div>
+                  <div class="exp-caso-label">Caso Nº <b style="color:var(--glow2);">${folio}</b> · AEMX Intelligence</div>
+                  <div class="exp-username">${escapeHtmlAdmin(username)}</div>
+                  <div style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:3px;">UID: ${escapeHtmlAdmin(uid)}</div>
+                  <div style="margin-top:8px;">${stamps.join('')}</div>
+                </div>
               </div>
-              <div class="exp-stamps">${stamps.join('')}</div>
+              ${bigStamp}
             </div>
 
-            <!-- 01 · Datos generales -->
+            <!-- 01 · Datos del sujeto -->
             <div class="exp-section">
               <div class="exp-section-title">
                 <span class="exp-section-num">01</span>
-                <span class="exp-section-label">Datos generales</span>
+                <span class="exp-section-label">Datos del sujeto</span>
                 <span class="exp-section-line"></span>
               </div>
               <div class="exp-fields">
@@ -3762,7 +3791,7 @@ function updateStats() {
             <div class="exp-section">
               <div class="exp-section-title">
                 <span class="exp-section-num">02</span>
-                <span class="exp-section-label">Medallas (${medallasHtml.length})</span>
+                <span class="exp-section-label">Méritos y condecoraciones (${medallasHtml.length})</span>
                 <span class="exp-section-line"></span>
               </div>
               ${medallasHtml.length ? medallasHtml.join('') : '<div class="empty-state" style="padding:6px 0;">Sin medallas</div>'}
@@ -3772,7 +3801,7 @@ function updateStats() {
             <div class="exp-section">
               <div class="exp-section-title">
                 <span class="exp-section-num">03</span>
-                <span class="exp-section-label">Códigos generados (${codigosGenerados.length})</span>
+                <span class="exp-section-label">Evidencia emitida (${codigosGenerados.length})</span>
                 <span class="exp-section-line"></span>
               </div>
               ${codigosGenerados.length ? codigosGenerados.map(c => `
@@ -3787,7 +3816,7 @@ function updateStats() {
             <div class="exp-section">
               <div class="exp-section-title">
                 <span class="exp-section-num">04</span>
-                <span class="exp-section-label">Notificaciones pendientes (${notifsPendientes.length})</span>
+                <span class="exp-section-label">Comunicados oficiales pendientes (${notifsPendientes.length})</span>
                 <span class="exp-section-line"></span>
               </div>
               ${notifsPendientes.length ? notifsPendientes.map(n => `
@@ -3802,7 +3831,7 @@ function updateStats() {
             <div class="exp-section">
               <div class="exp-section-title">
                 <span class="exp-section-num">05</span>
-                <span class="exp-section-label">Historial de parcelas</span>
+                <span class="exp-section-label">Registro de actividad (parcelas)</span>
                 <span class="exp-section-line"></span>
               </div>
               <div id="expedienteChartWrap" style="position:relative;min-height:220px;">
@@ -3813,7 +3842,7 @@ function updateStats() {
 
             <!-- Datos crudos (por si hay campos no listados arriba) -->
             <details class="exp-section">
-              <summary style="cursor:pointer;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-family:'Share Tech Mono',monospace;">🔧 Ver datos crudos completos</summary>
+              <summary style="cursor:pointer;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-family:'Share Tech Mono',monospace;">🔧 Anexo técnico · Datos crudos completos</summary>
               <pre style="margin-top:10px;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-word;font-family:'Share Tech Mono',monospace;max-height:300px;overflow-y:auto;">${escapeHtmlAdmin(JSON.stringify(window.isModeratorSession ? (({country, countryHistory, ...resto}) => resto)(d) : d, null, 2))}</pre>
             </details>
           </div>
