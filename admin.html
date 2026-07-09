@@ -3051,7 +3051,7 @@ function updateStats() {
 
     // ══ HISTORIAL DE PARCELAS ══
 
-    let historialData = {};   // { 'YYYY-MM': { uid: { username, parcelas } } }
+    window.historialData = {};   // { 'YYYY-MM': { uid: { username, parcelas } } }
     let historialChart = null;
 
     // Colores para las líneas de la gráfica
@@ -3095,15 +3095,15 @@ function updateStats() {
     async function loadHistorialData() {
       try {
         const snap = await get(ref(db, 'historial'));
-        historialData = {};
+        window.historialData = {};
 
         if (snap.exists()) {
           snap.forEach(monthSnap => {
-            historialData[monthSnap.key] = monthSnap.val();
+            window.historialData[monthSnap.key] = monthSnap.val();
           });
         }
 
-        const meses = Object.keys(historialData).length;
+        const meses = Object.keys(window.historialData).length;
         document.getElementById('historialSnapshotCount').textContent =
           meses > 0 ? `${meses} snapshot${meses > 1 ? 's' : ''}` : 'Sin snapshots';
 
@@ -3140,7 +3140,7 @@ function updateStats() {
         return;
       }
 
-      const meses = Object.keys(historialData).sort();
+      const meses = Object.keys(window.historialData).sort();
       if (meses.length === 0) {
         showToast('No hay snapshots guardados', true);
         return;
@@ -3149,11 +3149,11 @@ function updateStats() {
       // Construir datasets
       const datasets = selectedUids.map((uid, i) => {
         const color    = CHART_COLORS[i % CHART_COLORS.length];
-        const username = historialData[meses[0]]?.[uid]?.username
-          || historialData[meses.find(m => historialData[m][uid])]?.[uid]?.username
+        const username = window.historialData[meses[0]]?.[uid]?.username
+          || window.historialData[meses.find(m => window.historialData[m][uid])]?.[uid]?.username
           || uid;
 
-        const data = meses.map(mes => historialData[mes]?.[uid]?.parcelas ?? null);
+        const data = meses.map(mes => window.historialData[mes]?.[uid]?.parcelas ?? null);
 
         return {
           label: username,
@@ -3744,14 +3744,14 @@ function updateStats() {
         // automáticamente para admin; para mods, o si aún no ha corrido, lo
         // cargamos aquí bajo demanda (la regla de Firebase ya permite leer
         // 'historial' a cualquier usuario autenticado).
-        if (typeof loadHistorialData === 'function' && (typeof historialData === 'undefined' || Object.keys(historialData).length === 0)) {
+        if (typeof loadHistorialData === 'function' && Object.keys(window.historialData || {}).length === 0) {
           await loadHistorialData();
         }
 
-        const meses = Object.keys(historialData || {}).sort();
+        const meses = Object.keys(window.historialData || {}).sort();
         const puntos = meses
-          .filter(m => historialData[m] && historialData[m][uid])
-          .map(m => ({ mes: m, parcelas: historialData[m][uid].parcelas }));
+          .filter(m => window.historialData[m] && window.historialData[m][uid])
+          .map(m => ({ mes: m, parcelas: window.historialData[m][uid].parcelas }));
 
         if (puntos.length === 0) {
           empty.innerHTML = 'Sin snapshots registrados para este usuario todavía.';
