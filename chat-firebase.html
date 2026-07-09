@@ -975,6 +975,11 @@ const userRef = ref(database, 'chat_presence/' + userId);
         // ━━━ SISTEMA DE NOTIFICACIONES ━━━
         // ═══════════════════════════════════════════════════════════
 
+        // escapeHtml propia para este bloque: la de initChat() vive en su
+        // propio closure y no es visible aquí (openNotificationsModal está
+        // fuera de initChat, a nivel de módulo).
+        function escapeHtmlNotif(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
         function updateNotificationsBadge() {
             const notifs = JSON.parse(localStorage.getItem('notificaciones') || '[]');
             const badge = document.getElementById('notificationsBadge');
@@ -1034,7 +1039,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 list.innerHTML = notifs.map((n, idx) => `
                     <div class="notification-item">
                         <div>
-                            <div class="notification-content">${escapeHtml(n.message || '')}</div>
+                            <div class="notification-content">${escapeHtmlNotif(n.message || '')}</div>
                             <div class="notification-date">${new Date(n.timestamp || Date.now()).toLocaleDateString()} ${new Date(n.timestamp || Date.now()).toLocaleTimeString()}</div>
                         </div>
                         <button class="notification-delete" onclick="deleteNotification(${idx})" title="Eliminar">🗑️</button>
