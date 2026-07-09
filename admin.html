@@ -3739,6 +3739,93 @@ function updateStats() {
         const historialPais = Array.isArray(d.countryHistory) ? d.countryHistory : [];
         const folio = uid.slice(0, 8).toUpperCase();
 
+        // ── Rendimiento económico (misma lógica que la calculadora de index.html) ──
+        const RATES_EXP = { common: 0.0000000011, rare: 0.0000000016, epic: 0.0000000022, legendary: 0.0000000044 };
+        const cN = parseInt(d.common) || 0, rN = parseInt(d.rare) || 0, eN = parseInt(d.epic) || 0, lN = parseInt(d.legendary) || 0;
+        const badgesN = parseInt(d.badges) || 0;
+        const abN = parseInt(d.atlasbucks) || 0;
+        const totalN = cN + rN + eN + lN;
+
+        const EUROPA_COUNTRIES_EXP = new Set(["Spain", "France", "Germany", "Italy", "Russia"]);
+        let adBoostExp, adRangeExp;
+        const paisExp = d.country || 'Mexico';
+        if (EUROPA_COUNTRIES_EXP.has(paisExp)) {
+          if      (totalN <= 70)  { adBoostExp = 20; adRangeExp = "1–70 parcelas"; }
+          else if (totalN <= 100) { adBoostExp = 15; adRangeExp = "71–100 parcelas"; }
+          else if (totalN <= 135) { adBoostExp = 10; adRangeExp = "101–135 parcelas"; }
+          else if (totalN <= 170) { adBoostExp = 8;  adRangeExp = "136–170 parcelas"; }
+          else if (totalN <= 200) { adBoostExp = 7;  adRangeExp = "171–200 parcelas"; }
+          else if (totalN <= 250) { adBoostExp = 6;  adRangeExp = "201–250 parcelas"; }
+          else if (totalN <= 300) { adBoostExp = 5;  adRangeExp = "251–300 parcelas"; }
+          else if (totalN <= 350) { adBoostExp = 4;  adRangeExp = "301–350 parcelas"; }
+          else if (totalN <= 400) { adBoostExp = 3;  adRangeExp = "351–400 parcelas"; }
+          else                    { adBoostExp = 2;  adRangeExp = "401+ parcelas"; }
+        } else if (paisExp === "Brazil") {
+          if      (totalN <= 60)  { adBoostExp = 20; adRangeExp = "1–60 parcelas"; }
+          else if (totalN <= 75)  { adBoostExp = 15; adRangeExp = "61–75 parcelas"; }
+          else if (totalN <= 100) { adBoostExp = 12; adRangeExp = "76–100 parcelas"; }
+          else if (totalN <= 120) { adBoostExp = 10; adRangeExp = "101–120 parcelas"; }
+          else if (totalN <= 150) { adBoostExp = 8;  adRangeExp = "121–150 parcelas"; }
+          else if (totalN <= 200) { adBoostExp = 6;  adRangeExp = "151–200 parcelas"; }
+          else if (totalN <= 250) { adBoostExp = 5;  adRangeExp = "201–250 parcelas"; }
+          else if (totalN <= 300) { adBoostExp = 4;  adRangeExp = "251–300 parcelas"; }
+          else if (totalN <= 400) { adBoostExp = 3;  adRangeExp = "301–400 parcelas"; }
+          else                    { adBoostExp = 2;  adRangeExp = "401+ parcelas"; }
+        } else if (paisExp === "United States") {
+          if      (totalN <= 150)  { adBoostExp = 30; adRangeExp = "1–150 parcelas"; }
+          else if (totalN <= 220)  { adBoostExp = 20; adRangeExp = "151–220 parcelas"; }
+          else if (totalN <= 290)  { adBoostExp = 15; adRangeExp = "221–290 parcelas"; }
+          else if (totalN <= 365)  { adBoostExp = 12; adRangeExp = "291–365 parcelas"; }
+          else if (totalN <= 435)  { adBoostExp = 10; adRangeExp = "366–435 parcelas"; }
+          else if (totalN <= 545)  { adBoostExp = 8;  adRangeExp = "436–545 parcelas"; }
+          else if (totalN <= 625)  { adBoostExp = 7;  adRangeExp = "546–625 parcelas"; }
+          else if (totalN <= 730)  { adBoostExp = 6;  adRangeExp = "626–730 parcelas"; }
+          else if (totalN <= 875)  { adBoostExp = 5;  adRangeExp = "731–875 parcelas"; }
+          else if (totalN <= 1100) { adBoostExp = 4;  adRangeExp = "876–1100 parcelas"; }
+          else if (totalN <= 1500) { adBoostExp = 3;  adRangeExp = "1101–1500 parcelas"; }
+          else                     { adBoostExp = 2;  adRangeExp = "1501+ parcelas"; }
+        } else {
+          if      (totalN <= 50)  { adBoostExp = 20; adRangeExp = "1–50 parcelas"; }
+          else if (totalN <= 85)  { adBoostExp = 15; adRangeExp = "51–85 parcelas"; }
+          else if (totalN <= 100) { adBoostExp = 12; adRangeExp = "86–100 parcelas"; }
+          else if (totalN <= 140) { adBoostExp = 8;  adRangeExp = "101–140 parcelas"; }
+          else if (totalN <= 175) { adBoostExp = 7;  adRangeExp = "141–175 parcelas"; }
+          else if (totalN <= 225) { adBoostExp = 5;  adRangeExp = "176–225 parcelas"; }
+          else if (totalN <= 300) { adBoostExp = 4;  adRangeExp = "226–300 parcelas"; }
+          else if (totalN <= 400) { adBoostExp = 3;  adRangeExp = "301–400 parcelas"; }
+          else                    { adBoostExp = 2;  adRangeExp = "401+ parcelas"; }
+        }
+
+        let badgePctExp = 0;
+        if      (badgesN >= 1  && badgesN <= 10)  badgePctExp = 0.05;
+        else if (badgesN >= 11 && badgesN <= 30)  badgePctExp = 0.10;
+        else if (badgesN >= 31 && badgesN <= 60)  badgePctExp = 0.15;
+        else if (badgesN >= 61 && badgesN <= 100) badgePctExp = 0.20;
+        else if (badgesN > 100)                   badgePctExp = 0.25;
+        const badgeBoostExp = 1 + badgePctExp;
+
+        const basePerSecExp = (cN * RATES_EXP.common) + (rN * RATES_EXP.rare) + (eN * RATES_EXP.epic) + (lN * RATES_EXP.legendary);
+        const horasCalcExp = parseInt(d.horasCalculo) || 24;
+        const secsPerDayExp = horasCalcExp * 3600;
+        const boostedPerSecExp = basePerSecExp * badgeBoostExp * adBoostExp;
+        const basePerMonthExp = basePerSecExp * secsPerDayExp * 30;
+        const perMonthExp = boostedPerSecExp * secsPerDayExp * 30;
+
+        const abParcelasExp = totalN * 100;
+        const abInsigniasExp = badgesN * 200;
+        const abTotalExp = abParcelasExp + abInsigniasExp + abN;
+        const usdTotalExp = (abTotalExp / 100) * 5;
+
+        let ppdTextExp = '—';
+        if (d.startDate && totalN > 0) {
+          const startExp = new Date(d.startDate);
+          const nowExp = new Date();
+          const diasJugadosExp = Math.max(1, Math.floor((nowExp - startExp) / 86400000));
+          ppdTextExp = (totalN / diasJugadosExp).toFixed(1) + ' parcelas/día';
+        }
+
+        const fmtUsdExp = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
         container.innerHTML = `
           <div class="exp-card">
             <div class="exp-topbar"></div>
@@ -3838,6 +3925,25 @@ function updateStats() {
               <div id="expedienteChartWrap" style="position:relative;min-height:220px;">
                 <div class="empty-state" id="expedienteChartEmpty"><div class="spinner"></div>CARGANDO HISTORIAL...</div>
                 <canvas id="expedienteChart" style="display:none;"></canvas>
+              </div>
+            </div>
+
+            <!-- 06 · Rendimiento económico -->
+            <div class="exp-section">
+              <div class="exp-section-title">
+                <span class="exp-section-num">06</span>
+                <span class="exp-section-label">Rendimiento Económico</span>
+                <span class="exp-section-line"></span>
+              </div>
+              <div class="exp-fields">
+                <div><div class="exp-field-label">Valor estimado (AB)</div><div class="exp-field-value">${abTotalExp.toLocaleString()} AB</div></div>
+                <div><div class="exp-field-label">Valor estimado (USD)</div><div class="exp-field-value">${fmtUsdExp(usdTotalExp)}</div></div>
+                <div><div class="exp-field-label">Ad Boost activo</div><div class="exp-field-value">${adBoostExp}× <span style="color:var(--text2);font-size:10px;">(${adRangeExp})</span></div></div>
+                <div><div class="exp-field-label">Badge Boost</div><div class="exp-field-value">${badgePctExp > 0 ? '+' + (badgePctExp * 100) + '%' : '—'}</div></div>
+                <div><div class="exp-field-label">Producción base / mes</div><div class="exp-field-value">${fmtUsdExp(basePerMonthExp)}</div></div>
+                <div><div class="exp-field-label">Producción potenciada / mes</div><div class="exp-field-value">${fmtUsdExp(perMonthExp)}</div></div>
+                <div><div class="exp-field-label">Ritmo de juego (PPD)</div><div class="exp-field-value">${ppdTextExp}</div></div>
+                <div><div class="exp-field-label">Horas de cálculo configuradas</div><div class="exp-field-value">${horasCalcExp} h</div></div>
               </div>
             </div>
 
