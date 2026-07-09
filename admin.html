@@ -3730,7 +3730,7 @@ function updateStats() {
         // Sellos secundarios (rol / clan / sanciones específicas)
         const stamps = [];
         if (d.role === 'moderator') stamps.push(`<span class="exp-stamp mod">🛡️ Moderador</span>`);
-        if (d.clanMember) stamps.push(`<span class="exp-stamp ok">👥 Clan</span>`);
+        if (d.clanMember) stamps.push(`<span class="exp-stamp ok">👥 Clan AEMX</span>`);
         if (d.bannedChat) stamps.push(`<span class="exp-stamp warn">💬 Chat restringido</span>`);
         if (d.bannedLeaderboard) stamps.push(`<span class="exp-stamp warn">🏆 Ranking restringido</span>`);
         if (d.bannedWrite) stamps.push(`<span class="exp-stamp warn">🚫 Escritura restringida</span>`);
@@ -3747,7 +3747,7 @@ function updateStats() {
               <div class="exp-header-main">
                 <div class="exp-mugshot">👤</div>
                 <div>
-                  <div class="exp-caso-label">Caso Nº <b style="color:var(--glow2);">${folio}</b> · AEMX Intelligence</div>
+                  <div class="exp-caso-label">Explorador <b style="color:var(--glow2);">${folio}</b> · AEMX Intelligence</div>
                   <div class="exp-username">${escapeHtmlAdmin(username)}</div>
                   <div style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:3px;">UID: ${escapeHtmlAdmin(uid)}</div>
                   <div style="margin-top:8px;">${stamps.join('')}</div>
@@ -3760,7 +3760,7 @@ function updateStats() {
             <div class="exp-section">
               <div class="exp-section-title">
                 <span class="exp-section-num">01</span>
-                <span class="exp-section-label">Datos del sujeto</span>
+                <span class="exp-section-label">Datos del Explorador</span>
                 <span class="exp-section-line"></span>
               </div>
               <div class="exp-fields">
