@@ -3832,6 +3832,37 @@ function updateStats() {
         const pctLegendaryExp = totalN > 0 ? ((lN / totalN) * 100).toFixed(1) : '0.0';
         const swatchExp = (color, glow) => `<span style="display:inline-block;width:11px;height:11px;background:${color};border-radius:3px;box-shadow:0 0 6px ${glow};margin-right:6px;vertical-align:middle;"></span>`;
 
+        // ── Donut de distribución (agrupa los 4 tipos de parcela) ──
+        const donutTypesExp = [
+          { val: cN, color: '#4ade80', glow: 'rgba(74,222,128,0.6)', label: 'Común',     pct: pctCommonExp },
+          { val: rN, color: '#60a5fa', glow: 'rgba(96,165,250,0.6)', label: 'Rara',       pct: pctRareExp },
+          { val: eN, color: '#c084fc', glow: 'rgba(192,132,252,0.6)', label: 'Épica',     pct: pctEpicExp },
+          { val: lN, color: '#facc15', glow: 'rgba(250,204,21,0.6)', label: 'Legendaria', pct: pctLegendaryExp },
+        ];
+        const donutRExp = 32, donutCircExp = 2 * Math.PI * donutRExp;
+        let donutOffsetExp = 0;
+        const donutSegmentsExp = totalN > 0 ? donutTypesExp.map(t => {
+          const frac = t.val / totalN;
+          const len = frac * donutCircExp;
+          const seg = `<circle cx="40" cy="40" r="${donutRExp}" fill="none" stroke="${t.color}" stroke-width="12"
+            stroke-dasharray="${len.toFixed(2)} ${(donutCircExp - len).toFixed(2)}"
+            stroke-dashoffset="${(-donutOffsetExp).toFixed(2)}"
+            transform="rotate(-90 40 40)" stroke-linecap="butt"/>`;
+          donutOffsetExp += len;
+          return seg;
+        }).join('') : '';
+        const donutSvgExp = `
+          <svg width="88" height="88" viewBox="0 0 80 80" style="flex-shrink:0;">
+            <circle cx="40" cy="40" r="${donutRExp}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
+            ${donutSegmentsExp}
+            <text x="40" y="44" text-anchor="middle" font-family="'Share Tech Mono',monospace" font-size="14" fill="var(--glow2)">${totalN}</text>
+          </svg>`;
+        const donutLegendExp = donutTypesExp.map(t => `
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:2px 0;">
+            ${swatchExp(t.color, t.glow)}<span style="color:var(--text2);min-width:66px;">${t.label}</span>
+            <b>${t.val}</b><span style="color:var(--text2);">(${t.pct}%)</span>
+          </div>`).join('');
+
         container.innerHTML = `
           <div class="exp-card">
             <div class="exp-topbar"></div>
@@ -3857,13 +3888,13 @@ function updateStats() {
                 <span class="exp-section-label">Datos del Explorador</span>
                 <span class="exp-section-line"></span>
               </div>
+              <div style="display:flex;gap:18px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
+                ${donutSvgExp}
+                <div>${donutLegendExp}</div>
+              </div>
               <div class="exp-fields">
                 ${!window.isModeratorSession ? `<div><div class="exp-field-label">País</div><div class="exp-field-value">${escapeHtmlAdmin(d.country || '—')}</div></div>` : ''}
                 <div><div class="exp-field-label">Parcelas totales</div><div class="exp-field-value">${parcelasTotal.toLocaleString()}</div></div>
-                <div><div class="exp-field-label">Común</div><div class="exp-field-value">${swatchExp('#4ade80','rgba(74,222,128,0.6)')}${d.common || 0} <span style="color:var(--text2);font-size:10px;">(${pctCommonExp}%)</span></div></div>
-                <div><div class="exp-field-label">Rara</div><div class="exp-field-value">${swatchExp('#60a5fa','rgba(96,165,250,0.6)')}${d.rare || 0} <span style="color:var(--text2);font-size:10px;">(${pctRareExp}%)</span></div></div>
-                <div><div class="exp-field-label">Épica</div><div class="exp-field-value">${swatchExp('#c084fc','rgba(192,132,252,0.6)')}${d.epic || 0} <span style="color:var(--text2);font-size:10px;">(${pctEpicExp}%)</span></div></div>
-                <div><div class="exp-field-label">Legendaria</div><div class="exp-field-value">${swatchExp('#facc15','rgba(250,204,21,0.6)')}${d.legendary || 0} <span style="color:var(--text2);font-size:10px;">(${pctLegendaryExp}%)</span></div></div>
                 <div><div class="exp-field-label">AEMX Coins</div><div class="exp-field-value">🪙 ${d.coins || 0}</div></div>
                 <div><div class="exp-field-label">Título</div><div class="exp-field-value">${escapeHtmlAdmin(d.titulo_juego || '—')}</div></div>
                 <div><div class="exp-field-label">Última actualización</div><div class="exp-field-value">${d.updatedAt ? new Date(d.updatedAt).toLocaleString('es-MX') : '—'}</div></div>
