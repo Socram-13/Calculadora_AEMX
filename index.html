@@ -2384,7 +2384,11 @@
         }
         const d = snap.val();
 
-        if (d.username) { document.getElementById('username').value = d.username; if(window.adjustBadge) window.adjustBadge(); }
+        if (d.username) {
+          document.getElementById('username').value = d.username;
+          try { localStorage.setItem('atlas-username', d.username); } catch(e) {}
+          if(window.adjustBadge) window.adjustBadge();
+        }
         if (d.titulo_juego && d.titulo_juego.trim()) {
           const tEl = document.getElementById('titulo-juego');
           const tWrap = document.getElementById('titulo-juego-wrap');
