@@ -2000,6 +2000,17 @@
             </button>
           </div>
         </div>
+
+        <!-- Notificaciones pendientes (enviadas, aún no leídas) -->
+        <div style="width:100%;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;overflow:hidden;margin-top:16px;">
+          <div style="padding:14px 20px;border-bottom:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+            <span class="table-title" style="color:#00ff88;">📥 PENDIENTES (no leídas)</span>
+            <button class="aviso-btn" style="border-color:#00ff88;color:#00ff88;background:rgba(0,255,136,0.1);" onclick="loadPendingNotifications()">🔄 ACTUALIZAR</button>
+          </div>
+          <div id="pendingNotificationsList" style="padding:16px;">
+            <div class="empty-state">Presiona ACTUALIZAR para cargar</div>
+          </div>
+        </div>
       </div>
 
       <div class="table-col" id="usersSection">
@@ -2274,6 +2285,8 @@
     window._dbPush = push;
     window._dbUpdate = update;
     window._dbServerTimestamp = serverTimestamp;
+    window._dbGet = get;
+    window._dbRemove = remove;
     window._auth = auth;
 
     // ── Auth ──
@@ -3338,6 +3351,7 @@ function updateStats() {
         notifSection.style.display = 'block';
         btnUsers.classList.remove('active');
         btnNotif.classList.add('active');
+        loadPendingNotifications();
       }
     };
 
@@ -3438,6 +3452,74 @@ function updateStats() {
         btn.style.opacity = '1';
       }
     };
+
+    // ── Notificaciones pendientes (ya enviadas, aún no leídas por el usuario) ──
+    window.loadPendingNotifications = async function() {
+      const container = document.getElementById('pendingNotificationsList');
+      if (!container) return;
+      container.innerHTML = '<div class="empty-state"><div class="spinner"></div>CARGANDO...</div>';
+
+      try {
+        const snap = await window._dbGet(window._dbRef(window._db, 'notifications'));
+        if (!snap.exists()) {
+          container.innerHTML = '<div class="empty-state">Sin notificaciones pendientes</div>';
+          return;
+        }
+
+        const usersByUid = {};
+        (window.allUsersCache || []).forEach(u => { usersByUid[u.uid] = u.username; });
+
+        let html = '';
+        snap.forEach(userSnap => {
+          const uid = userSnap.key;
+          const username = usersByUid[uid] || uid;
+          const msgs = [];
+          userSnap.forEach(msgSnap => msgs.push(msgSnap.val()));
+          if (msgs.length === 0) return;
+
+          html += `
+            <div style="border:1px solid rgba(0,255,136,0.2);border-radius:8px;padding:12px 14px;margin-bottom:10px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px;">
+                <span style="font-family:'Rajdhani',sans-serif;font-weight:700;color:var(--text);">${username}</span>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;">${msgs.length} pendiente${msgs.length > 1 ? 's' : ''}</span>
+                  <button class="btn-action" style="background:rgba(255,68,102,0.1);border:1px solid rgba(255,68,102,0.4);color:var(--danger);font-size:9px;padding:4px 10px;" onclick="clearUserNotifications('${uid}','${username.replace(/'/g, "\\'")}')">🗑️ BORRAR</button>
+                </div>
+              </div>
+              ${msgs.map(m => `
+                <div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid rgba(255,255,255,0.05);">
+                  ${escapeHtmlAdmin(m.message || '')}
+                  <div style="font-size:9px;color:var(--text2);margin-top:2px;">${m.timestamp ? new Date(m.timestamp).toLocaleString('es-MX') : ''} · ${escapeHtmlAdmin(m.sender || 'Admin')}</div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        });
+
+        container.innerHTML = html || '<div class="empty-state">Sin notificaciones pendientes</div>';
+      } catch(e) {
+        console.error('Error cargando notificaciones pendientes:', e);
+        container.innerHTML = '<div class="empty-state">Error al cargar</div>';
+      }
+    };
+
+    window.clearUserNotifications = async function(uid, username) {
+      try {
+        await window._dbRemove(window._dbRef(window._db, `notifications/${uid}`));
+        await window._dbUpdate(window._dbRef(window._db, `users/${uid}`), { hasNewNotifications: false });
+        showToastAdmin(`🗑️ Notificaciones de ${username} borradas`);
+        loadPendingNotifications();
+      } catch(e) {
+        console.error('Error borrando notificaciones:', e);
+        showToastAdmin('Error al borrar', true);
+      }
+    };
+
+    function escapeHtmlAdmin(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
 
     // Nota: allUsersCache y populateNotificationRecipientSelect() ahora se
     // alimentan directamente desde loadUsers() en el script module (arriba),
