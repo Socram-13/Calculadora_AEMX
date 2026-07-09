@@ -1930,6 +1930,7 @@
       <div class="filters">
         <button class="filter-btn active" id="btnSwitchUsers" onclick="switchAdminSection('users')">👥 USUARIOS</button>
         <button class="filter-btn" id="btnSwitchNotif" onclick="switchAdminSection('notifications')">📬 NOTIF</button>
+        <button class="filter-btn" id="btnSwitchExpediente" onclick="switchAdminSection('expediente')">🗂️ EXPEDIENTE</button>
       </div>
     </div>
 
@@ -2011,6 +2012,25 @@
             <div class="empty-state">Presiona ACTUALIZAR para cargar</div>
           </div>
         </div>
+      </div>
+
+      <!-- Sección de Expediente de Usuario -->
+      <div class="table-col" id="expedienteSection" style="display:none;">
+        <div style="width:100%;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;overflow:hidden;">
+          <div style="padding:2px;background:linear-gradient(90deg,#00ff88,#00ffff);"></div>
+          <div style="padding:16px 20px;border-bottom:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);">
+            <span class="table-title" style="color:#00ff88;">🗂️ EXPEDIENTE DE USUARIO</span>
+          </div>
+          <div style="padding:20px;">
+            <label style="display:block;font-size:9px;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">Buscar usuario:</label>
+            <input type="text" id="expedienteSearchInput" list="expedienteSearchOptions"
+              placeholder="Escribe un nombre de usuario..." autocomplete="off" oninput="onExpedienteSearchInput(this.value)"
+              style="width:100%;padding:10px 12px;background:rgba(0,0,0,0.3);border:1px solid rgba(0,255,136,0.3);border-radius:8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;outline:none;">
+            <datalist id="expedienteSearchOptions"></datalist>
+          </div>
+        </div>
+
+        <div id="expedienteResult" style="margin-top:16px;"></div>
       </div>
 
       <div class="table-col" id="usersSection">
@@ -3338,20 +3358,29 @@ function updateStats() {
     window.switchAdminSection = function(section) {
       const usersSection = document.getElementById('usersSection');
       const notifSection = document.getElementById('notificationsSection');
+      const expedienteSection = document.getElementById('expedienteSection');
       const btnUsers = document.getElementById('btnSwitchUsers');
       const btnNotif = document.getElementById('btnSwitchNotif');
-      
+      const btnExpediente = document.getElementById('btnSwitchExpediente');
+
+      usersSection.style.display = 'none';
+      notifSection.style.display = 'none';
+      expedienteSection.style.display = 'none';
+      btnUsers.classList.remove('active');
+      btnNotif.classList.remove('active');
+      btnExpediente.classList.remove('active');
+
       if (section === 'users') {
         usersSection.style.display = 'block';
-        notifSection.style.display = 'none';
         btnUsers.classList.add('active');
-        btnNotif.classList.remove('active');
       } else if (section === 'notifications') {
-        usersSection.style.display = 'none';
         notifSection.style.display = 'block';
-        btnUsers.classList.remove('active');
         btnNotif.classList.add('active');
         loadPendingNotifications();
+      } else if (section === 'expediente') {
+        expedienteSection.style.display = 'block';
+        btnExpediente.classList.add('active');
+        populateExpedienteSearch();
       }
     };
 
@@ -3520,6 +3549,172 @@ function updateStats() {
       div.textContent = str;
       return div.innerHTML;
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // ━━━ EXPEDIENTE DE USUARIO ━━━
+    // ═══════════════════════════════════════════════════════════
+
+    window.populateExpedienteSearch = function() {
+      const input = document.getElementById('expedienteSearchInput');
+      const list = document.getElementById('expedienteSearchOptions');
+      if (!input || !list) return;
+      const sorted = [...(window.allUsersCache || [])].sort((a, b) => a.username.localeCompare(b.username));
+      list.innerHTML = sorted.map(u => `<option value="${escapeHtmlAdmin(u.username.trim())}"></option>`).join('');
+    };
+
+    window.onExpedienteSearchInput = function(value) {
+      const trimmed = (value || '').trim();
+      const user = (window.allUsersCache || []).find(
+        u => u.username.trim().toLowerCase() === trimmed.toLowerCase()
+      );
+      if (user) loadUserExpediente(user.uid);
+    };
+
+    function expedienteField(label, value) {
+      return `
+        <div>
+          <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;">${label}</div>
+          <div style="font-size:13px;color:var(--text);font-family:'Rajdhani',sans-serif;font-weight:600;">${value}</div>
+        </div>
+      `;
+    }
+
+    window.loadUserExpediente = async function(uid) {
+      const container = document.getElementById('expedienteResult');
+      container.innerHTML = `
+        <div style="width:100%;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;padding:30px;">
+          <div class="empty-state"><div class="spinner"></div>CARGANDO EXPEDIENTE...</div>
+        </div>
+      `;
+
+      try {
+        const [userSnap, notifSnap, codesSnap] = await Promise.all([
+          window._dbGet(window._dbRef(window._db, `users/${uid}`)),
+          window._dbGet(window._dbRef(window._db, `notifications/${uid}`)),
+          window._dbGet(window._dbRef(window._db, 'codes'))
+        ]);
+
+        if (!userSnap.exists()) {
+          container.innerHTML = `<div style="width:100%;background:var(--panel);border:1px solid rgba(255,68,102,0.3);border-radius:12px;padding:20px;"><div class="empty-state">Usuario no encontrado</div></div>`;
+          return;
+        }
+
+        const d = userSnap.val();
+        const username = d.username || uid;
+
+        // Notificaciones pendientes de este usuario
+        const notifsPendientes = [];
+        if (notifSnap.exists()) {
+          notifSnap.forEach(child => notifsPendientes.push(child.val()));
+        }
+
+        // Códigos generados por este usuario
+        const codigosGenerados = [];
+        if (codesSnap.exists()) {
+          codesSnap.forEach(child => {
+            const c = child.val();
+            if (c.createdBy === uid) codigosGenerados.push({ code: child.key, ...c });
+          });
+        }
+
+        // Medallas desbloqueadas
+        const medallasHtml = [];
+        if (d.medals && typeof d.medals === 'object') {
+          Object.entries(d.medals).forEach(([categoria, items]) => {
+            if (!items || typeof items !== 'object') return;
+            Object.keys(items).forEach(medalId => {
+              if (items[medalId] === true) medallasHtml.push(`<span class="status-badge active" style="margin:3px 4px 0 0;">🏅 ${escapeHtmlAdmin(categoria)}: ${escapeHtmlAdmin(medalId)}</span>`);
+            });
+          });
+        }
+
+        // Badges de estado
+        const statusBadges = [];
+        if (d.role === 'moderator') statusBadges.push(`<span class="status-badge active" style="background:rgba(168,85,247,0.15);border-color:rgba(168,85,247,0.4);color:#a855f7;">🛡️ MODERADOR</span>`);
+        if (d.clanMember) statusBadges.push(`<span class="status-badge active">👥 CLAN</span>`);
+        if (d.bannedChat) statusBadges.push(`<span class="status-badge banned">💬 BAN CHAT</span>`);
+        if (d.bannedLeaderboard) statusBadges.push(`<span class="status-badge banned">🏆 BAN RANKING</span>`);
+        if (d.bannedWrite) statusBadges.push(`<span class="status-badge banned">🚫 BAN ESCRITURA</span>`);
+        if (!statusBadges.length) statusBadges.push(`<span class="status-badge active">ACTIVO</span>`);
+
+        const historialPais = Array.isArray(d.countryHistory) ? d.countryHistory : [];
+
+        container.innerHTML = `
+          <div style="width:100%;background:var(--panel);border:1px solid rgba(0,255,136,0.25);border-radius:12px;overflow:hidden;">
+            <div style="padding:2px;background:linear-gradient(90deg,#00ff88,#00ffff);"></div>
+
+            <!-- Encabezado -->
+            <div style="padding:20px;border-bottom:1px solid rgba(0,255,136,0.2);background:rgba(0,255,136,0.04);display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+              <div>
+                <div style="font-family:'Rajdhani',sans-serif;font-weight:800;font-size:20px;color:var(--text);">${escapeHtmlAdmin(username)}</div>
+                <div style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:2px;">UID: ${escapeHtmlAdmin(uid)}</div>
+              </div>
+              <div>${statusBadges.join(' ')}</div>
+            </div>
+
+            <!-- Datos generales -->
+            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📋 Datos generales</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;">
+                ${expedienteField('País', escapeHtmlAdmin(d.country || '—'))}
+                ${expedienteField('Parcelas', (d.total || 0).toLocaleString())}
+                ${expedienteField('AEMX Coins', d.coins || 0)}
+                ${expedienteField('Título', escapeHtmlAdmin(d.titulo_juego || '—'))}
+                ${expedienteField('Última actualización', d.updatedAt ? new Date(d.updatedAt).toLocaleString('es-MX') : '—')}
+                ${expedienteField('Último coin diario', d.lastCoinDate ? escapeHtmlAdmin(d.lastCoinDate) : '—')}
+                ${expedienteField('Guía completada', d.guiasCompleted ? '✅ Sí' : '—')}
+                ${expedienteField('Recompensa de guía', d.guiasReward ? '✅ Reclamada' : '—')}
+              </div>
+              ${historialPais.length ? `
+                <div style="margin-top:14px;">
+                  <div style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Historial de país (${historialPais.length})</div>
+                  <div style="font-size:11px;color:var(--text2);font-family:'Share Tech Mono',monospace;line-height:1.8;">
+                    ${historialPais.map(h => `• ${escapeHtmlAdmin(typeof h === 'string' ? h : JSON.stringify(h))}`).join('<br>')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+
+            <!-- Medallas -->
+            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">🏅 Medallas (${medallasHtml.length})</div>
+              ${medallasHtml.length ? medallasHtml.join('') : '<div class="empty-state" style="padding:10px 0;">Sin medallas</div>'}
+            </div>
+
+            <!-- Códigos generados -->
+            <div style="padding:20px;border-bottom:1px solid rgba(255,255,255,0.06);">
+              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">🎟️ Códigos generados (${codigosGenerados.length})</div>
+              ${codigosGenerados.length ? codigosGenerados.map(c => `
+                <div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+                  <span style="font-family:'Share Tech Mono',monospace;">${escapeHtmlAdmin(c.code)}</span>
+                  <span style="color:var(--text2);">valor: ${escapeHtmlAdmin(String(c.value ?? '—'))} · ${c.createdAt ? new Date(c.createdAt).toLocaleString('es-MX') : ''}</span>
+                </div>
+              `).join('') : '<div class="empty-state" style="padding:10px 0;">Sin códigos generados</div>'}
+            </div>
+
+            <!-- Notificaciones pendientes -->
+            <div style="padding:20px;">
+              <div style="font-size:11px;color:#00ff88;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;font-weight:700;">📬 Notificaciones pendientes (${notifsPendientes.length})</div>
+              ${notifsPendientes.length ? notifsPendientes.map(n => `
+                <div style="font-size:12px;color:var(--text);padding:6px 0;border-top:1px solid rgba(255,255,255,0.05);">
+                  ${escapeHtmlAdmin(n.message || '')}
+                  <div style="font-size:9px;color:var(--text2);margin-top:2px;">${n.timestamp ? new Date(n.timestamp).toLocaleString('es-MX') : ''} · ${escapeHtmlAdmin(n.sender || 'Admin')}</div>
+                </div>
+              `).join('') : '<div class="empty-state" style="padding:10px 0;">Sin notificaciones pendientes</div>'}
+            </div>
+
+            <!-- Datos crudos (por si hay campos no listados arriba) -->
+            <details style="padding:20px;border-top:1px solid rgba(255,255,255,0.06);">
+              <summary style="cursor:pointer;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;">🔧 Ver datos crudos completos</summary>
+              <pre style="margin-top:10px;font-size:11px;color:var(--text2);white-space:pre-wrap;word-break:break-word;font-family:'Share Tech Mono',monospace;max-height:300px;overflow-y:auto;">${escapeHtmlAdmin(JSON.stringify(d, null, 2))}</pre>
+            </details>
+          </div>
+        `;
+      } catch(e) {
+        console.error('Error cargando expediente:', e);
+        container.innerHTML = `<div style="width:100%;background:var(--panel);border:1px solid rgba(255,68,102,0.3);border-radius:12px;padding:20px;"><div class="empty-state">Error al cargar el expediente</div></div>`;
+      }
+    };
 
     // Nota: allUsersCache y populateNotificationRecipientSelect() ahora se
     // alimentan directamente desde loadUsers() en el script module (arriba),
