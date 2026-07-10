@@ -3972,6 +3972,24 @@ function updateStats() {
                 <span class="exp-section-label">Rendimiento Económico</span>
                 <span class="exp-section-line"></span>
               </div>
+              <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;">
+                  <img src="passport.png" style="width:22px;height:22px;object-fit:contain;">
+                  <div><div class="exp-field-label">Insignias</div><div class="exp-field-value">${badgesN}</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;">
+                  <img src="diamont.png" style="width:22px;height:22px;object-fit:contain;">
+                  <div><div class="exp-field-label">Diamantes</div><div class="exp-field-value">${parseInt(d.diamonds) || 0}</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;">
+                  <img src="ficha.png" style="width:22px;height:22px;object-fit:contain;">
+                  <div><div class="exp-field-label">Fichas de Puja</div><div class="exp-field-value">${parseInt(d.fichasPuja) || 0}</div></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;">
+                  <img src="atlasbuck.png" style="width:22px;height:22px;object-fit:contain;">
+                  <div><div class="exp-field-label">Atlas Bucks</div><div class="exp-field-value">${abN}</div></div>
+                </div>
+              </div>
               <div class="exp-fields">
                 <div><div class="exp-field-label">Valor estimado (AB)</div><div class="exp-field-value">${abTotalExp.toLocaleString()} AB</div></div>
                 <div><div class="exp-field-label">Valor estimado (USD)</div><div class="exp-field-value">${fmtUsdExp(usdTotalExp)}</div></div>
