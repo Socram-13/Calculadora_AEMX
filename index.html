@@ -2443,9 +2443,10 @@
         // Si hay datos del scanner pendientes, no sobreescribir parcelas/insignias
         const _hasScannerData = !!localStorage.getItem('atlas-scanner-data');
         const _scannerFields = new Set(['common','rare','epic','legendary','badges']);
-        ['common','rare','epic','legendary','badges','diamonds','atlasbucks'].forEach(k => {
+        ['common','rare','epic','legendary','badges','diamonds','atlasbucks','fichasPuja'].forEach(k => {
           if (_hasScannerData && _scannerFields.has(k)) return;
-          if (d[k] !== undefined) { document.getElementById(k).value = d[k]; }
+          const elId = k === 'fichasPuja' ? 'fichas-puja' : k;
+          if (d[k] !== undefined) { document.getElementById(elId).value = d[k]; }
         });
         
         // Cargar horasCalculo (default: 24 si no existe)
