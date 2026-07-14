@@ -379,15 +379,14 @@
       align-items: flex-start;
     }
 
-    /* ── Left column: mapa compacto ── */
+    /* ── Mapa (ahora en pestaña propia) ── */
     .map-col {
-      position: sticky;
-      top: 16px;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      width: 280px;
-      flex-shrink: 0;
+      width: 100%;
+      max-width: 480px;
+      margin: 0 auto;
     }
 
     .map-card {
@@ -449,7 +448,7 @@
     }
 
     #mini-map {
-      height: 320px;
+      height: 420px;
       width: 100%;
       background: #060b14;
     }
@@ -488,7 +487,6 @@
 
     @media (max-width: 900px) {
       .admin-body { flex-direction: column; }
-      .map-col { position: static; width: 100%; }
       #mini-map { height: 260px; }
     }
 
@@ -551,7 +549,7 @@
     body.moderator-mode #avisoControlsSection,
     body.moderator-mode .active-codes-section,
     body.moderator-mode .historial-section,
-    body.moderator-mode .map-col {
+    body.moderator-mode #btnSwitchMap {
       display: none !important;
     }
     body.moderator-mode .admin-body {
@@ -2024,42 +2022,11 @@
         <button class="filter-btn active" id="btnSwitchUsers" onclick="switchAdminSection('users')">👥 USUARIOS</button>
         <button class="filter-btn" id="btnSwitchNotif" onclick="switchAdminSection('notifications')">📬 NOTIF</button>
         <button class="filter-btn" id="btnSwitchExpediente" onclick="switchAdminSection('expediente')">🗂️ EXPEDIENTE</button>
+        <button class="filter-btn" id="btnSwitchMap" onclick="switchAdminSection('map')">🗺️ MAPA</button>
       </div>
     </div>
 
     <div class="admin-body">
-
-      <!-- LEFT: Mapa compacto -->
-      <div class="map-col">
-        <div class="map-card">
-          <div class="map-card-header">
-            <span class="map-card-title">🗺️ MAPA EN VIVO</span>
-            <span class="map-live-dot">EN VIVO</span>
-          </div>
-          <div id="mini-map"></div>
-          <div class="map-mini-stats">
-            <div class="map-mini-stat">
-              <div class="num" id="miniStatJugadores">—</div>
-              <div class="lbl">Jugadores</div>
-            </div>
-            <div class="map-mini-stat">
-              <div class="num" id="miniStatEstados">—</div>
-              <div class="lbl">Estados</div>
-            </div>
-            <div class="map-mini-stat">
-              <div class="num" id="miniStatCiudades">—</div>
-              <div class="lbl">Ciudades</div>
-            </div>
-            <div class="map-mini-stat">
-              <div class="num" id="miniStatAemx" style="color:var(--glow2)">—</div>
-              <div class="lbl">Miembros AEMX</div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- RIGHT: Tabla usuarios -->
 
       <!-- Sección de Notificaciones -->
       <div class="table-col" id="notificationsSection" style="display:none;">
@@ -2124,6 +2091,37 @@
         </div>
 
         <div id="expedienteResult" style="margin-top:16px;"></div>
+      </div>
+
+      <!-- Sección de Mapa en vivo (solo admin) -->
+      <div class="table-col" id="mapSection" style="display:none;">
+        <div class="map-col">
+          <div class="map-card">
+            <div class="map-card-header">
+              <span class="map-card-title">🗺️ MAPA EN VIVO</span>
+              <span class="map-live-dot">EN VIVO</span>
+            </div>
+            <div id="mini-map"></div>
+            <div class="map-mini-stats">
+              <div class="map-mini-stat">
+                <div class="num" id="miniStatJugadores">—</div>
+                <div class="lbl">Jugadores</div>
+              </div>
+              <div class="map-mini-stat">
+                <div class="num" id="miniStatEstados">—</div>
+                <div class="lbl">Estados</div>
+              </div>
+              <div class="map-mini-stat">
+                <div class="num" id="miniStatCiudades">—</div>
+                <div class="lbl">Ciudades</div>
+              </div>
+              <div class="map-mini-stat">
+                <div class="num" id="miniStatAemx" style="color:var(--glow2)">—</div>
+                <div class="lbl">Miembros AEMX</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="table-col" id="usersSection">
@@ -2229,7 +2227,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script>
     // ── Mini mapa Leaflet ──
-    const miniMap = L.map('mini-map', {
+    window.miniMap = L.map('mini-map', {
       center: [23.6345, -102.5528],
       zoom: 4,
       zoomControl: true,
@@ -3449,19 +3447,25 @@ function updateStats() {
     let selectedNotificationTargetName = null;
 
     window.switchAdminSection = function(section) {
+      if (section === 'map' && window.isModeratorSession) return; // solo admin
+
       const usersSection = document.getElementById('usersSection');
       const notifSection = document.getElementById('notificationsSection');
       const expedienteSection = document.getElementById('expedienteSection');
+      const mapSection = document.getElementById('mapSection');
       const btnUsers = document.getElementById('btnSwitchUsers');
       const btnNotif = document.getElementById('btnSwitchNotif');
       const btnExpediente = document.getElementById('btnSwitchExpediente');
+      const btnMap = document.getElementById('btnSwitchMap');
 
       usersSection.style.display = 'none';
       notifSection.style.display = 'none';
       expedienteSection.style.display = 'none';
+      mapSection.style.display = 'none';
       btnUsers.classList.remove('active');
       btnNotif.classList.remove('active');
       btnExpediente.classList.remove('active');
+      btnMap.classList.remove('active');
 
       if (section === 'users') {
         usersSection.style.display = 'block';
@@ -3474,6 +3478,11 @@ function updateStats() {
         expedienteSection.style.display = 'block';
         btnExpediente.classList.add('active');
         populateExpedienteSearch();
+      } else if (section === 'map') {
+        mapSection.style.display = 'block';
+        btnMap.classList.add('active');
+        // El mapa se creó mientras estaba oculto; hay que forzar el recálculo de tamaño
+        setTimeout(() => { if (window.miniMap) window.miniMap.invalidateSize(); }, 50);
       }
     };
 
