@@ -1141,6 +1141,10 @@
       font-family: 'Orbitron', monospace; font-weight: 800; font-size: 21px;
       color: var(--text); letter-spacing: 0.5px;
     }
+    .exp-warn-icon {
+      display: inline-flex; vertical-align: middle; margin-left: 8px;
+      transform: translateY(-2px); cursor: help;
+    }
     .exp-stamps { display: flex; flex-wrap: wrap; gap: 8px; }
     .exp-stamp {
       font-family: 'Share Tech Mono', monospace; font-size: 10px; letter-spacing: 1.5px;
@@ -3744,16 +3748,21 @@ function updateStats() {
           ? `<span class="exp-stamp caution">⏱️ Inactivo${d.updatedAt ? ` · ${Math.floor(diasSinActualizarExp)} días sin actividad` : ' · sin registro'}</span>`
           : `<span class="exp-stamp ok">🟢 Activo · hace ${Math.floor(diasSinActualizarExp)} día${Math.floor(diasSinActualizarExp) === 1 ? '' : 's'}</span>`;
 
-        // Advertencia por varios cambios de ubicación (el historial detallado solo se ve en la lista de usuarios)
+        // Advertencia por varios cambios de ubicación: solo ícono, sin texto ni contador
         const historialPais = Array.isArray(d.countryHistory) ? d.countryHistory : [];
-        const ubicacionStamp = historialPais.length >= 2
-          ? `<span class="exp-stamp caution">📍 Cambios de ubicación</span>`
+        const ubicacionWarnIcon = historialPais.length >= 2
+          ? `<span class="exp-warn-icon" title="Varios cambios de ubicación registrados">
+               <svg viewBox="0 0 24 24" width="22" height="22" fill="none">
+                 <path d="M12 3.2 L21.5 20 H2.5 Z" fill="#ffd400" stroke="#ff7a00" stroke-width="1.6" stroke-linejoin="round"/>
+                 <rect x="10.9" y="9.5" width="2.2" height="6" rx="1.1" fill="#ff7a00"/>
+                 <circle cx="12" cy="17.3" r="1.15" fill="#ff7a00"/>
+               </svg>
+             </span>`
           : '';
 
         // Sellos secundarios (rol / clan / sanciones específicas)
         const stamps = [];
         stamps.push(actividadStamp);
-        if (ubicacionStamp) stamps.push(ubicacionStamp);
         if (d.role === 'moderator') stamps.push(`<span class="exp-stamp mod">🛡️ Moderador</span>`);
         if (d.clanMember) stamps.push(`<span class="exp-stamp ok">👥 Clan AEMX</span>`);
         if (d.bannedChat) stamps.push(`<span class="exp-stamp warn">💬 Chat restringido</span>`);
@@ -3896,7 +3905,7 @@ function updateStats() {
                 <div class="exp-mugshot">${d.avatar ? `<img src="${d.avatar}" alt="">` : '🧑‍🚀'}</div>
                 <div>
                   <div class="exp-caso-label">Explorador <b style="color:var(--glow2);">${folio}</b> · AEMX Intelligence</div>
-                  <div class="exp-username">${escapeHtmlAdmin(username)}</div>
+                  <div class="exp-username">${escapeHtmlAdmin(username)}${ubicacionWarnIcon}</div>
                   <div style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-top:3px;">UID: ${escapeHtmlAdmin(uid)}</div>
                   <div style="margin-top:8px;">${stamps.join('')}</div>
                 </div>
