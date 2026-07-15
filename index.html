@@ -4208,10 +4208,11 @@
 
     if (boostedPerSec > 0) {
       const secsFor1 = 1 / boostedPerSec;
-      const d = Math.floor(secsFor1 / 86400);
-      const h = Math.floor((secsFor1 % 86400) / 3600);
-      const m = Math.floor((secsFor1 % 3600) / 60);
-      const s = Math.floor(secsFor1 % 60);
+      const d = Math.floor(secsFor1 / secsPerDay);
+      const remSecsFor1 = secsFor1 % secsPerDay;
+      const h = Math.floor(remSecsFor1 / 3600);
+      const m = Math.floor((remSecsFor1 % 3600) / 60);
+      const s = Math.floor(remSecsFor1 % 60);
       document.getElementById('t1-days').textContent  = d;
       document.getElementById('t1-hours').textContent = String(h).padStart(2,'0');
       document.getElementById('t1-mins').textContent  = String(m).padStart(2,'0');
