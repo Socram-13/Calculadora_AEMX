@@ -3973,6 +3973,28 @@
     calc();
   }
 
+  // Calcula el tiempo real (segundos) para juntar $1 USD respetando el orden
+  // del día: primero se consumen las horas CON boost y luego, si hace falta,
+  // las horas SIN boost. Si el $1 se alcanza dentro de las horas boosteadas,
+  // el resultado no depende de cuántas horas "sobrantes" sin boost tengas.
+  function calcularTiempoSecuencial(boostedPerSec, baseBadgePerSec, secsBoosted, secsUnboosted) {
+    const incomePerDay = boostedPerSec * secsBoosted + baseBadgePerSec * secsUnboosted;
+    if (incomePerDay <= 0) return Infinity;
+
+    const fullDays = Math.floor(1 / incomePerDay);
+    let totalSecs = fullDays * 86400;
+    let remaining = 1 - fullDays * incomePerDay;
+
+    const earnedInBoost = boostedPerSec * secsBoosted;
+    if (boostedPerSec > 0 && remaining <= earnedInBoost) {
+      totalSecs += remaining / boostedPerSec;
+    } else {
+      remaining -= earnedInBoost;
+      totalSecs += secsBoosted + (baseBadgePerSec > 0 ? remaining / baseBadgePerSec : 0);
+    }
+    return totalSecs;
+  }
+
   function calc() {
     const c = getVal('common');
     const r = getVal('rare');
@@ -4180,7 +4202,7 @@
         localStorage.setItem('aura_rent_day', perDay.toFixed(4));
         localStorage.setItem('aura_rent_month', perMonth.toFixed(4));
         localStorage.setItem('aura_ad_boost', adBoost);
-        localStorage.setItem('aura_secs_per_usd', avgPerSec > 0 ? (1 / avgPerSec).toFixed(2) : '0');
+        localStorage.setItem('aura_secs_per_usd', (avgPerSec > 0 && isFinite(calcularTiempoSecuencial(boostedPerSec, baseBadgePerSec, secsBoosted, secsUnboosted))) ? calcularTiempoSecuencial(boostedPerSec, baseBadgePerSec, secsBoosted, secsUnboosted).toFixed(2) : '0');
     } catch(e) {}
 
     document.getElementById('r-srb-hour-base').textContent     = '$' + (basePerSec * 3600).toFixed(8);
@@ -4227,8 +4249,9 @@
     document.getElementById('v-ab-total').textContent      = abTotal.toLocaleString() + ' AB';
     document.getElementById('v-usd-total').textContent     = '$' + usdTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USD';
 
-    if (avgPerSec > 0) {
-      const secsFor1 = 1 / avgPerSec;
+    const secsFor1Sequential = calcularTiempoSecuencial(boostedPerSec, baseBadgePerSec, secsBoosted, secsUnboosted);
+    if (avgPerSec > 0 && isFinite(secsFor1Sequential)) {
+      const secsFor1 = secsFor1Sequential;
       const d = Math.floor(secsFor1 / 86400);
       const remSecsFor1 = secsFor1 % 86400;
       const h = Math.floor(remSecsFor1 / 3600);
