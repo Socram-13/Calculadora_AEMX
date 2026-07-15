@@ -3446,7 +3446,7 @@
         </div>
         <div class="counter">
           <button class="counter-btn" onclick="changeHours(-1)">−</button>
-          <input type="number" id="horas-calculo" value="24" min="1" max="24" oninput="calc()">
+          <input type="number" id="horas-calculo" value="24" min="0" max="24" oninput="calc()">
           <button class="counter-btn" onclick="changeHours(1)">+</button>
         </div>
       </div>
@@ -3936,8 +3936,9 @@
 
   function changeHours(delta) {
     const el = document.getElementById('horas-calculo');
-    const current = parseInt(el.value) || 24;
-    const newValue = Math.max(1, Math.min(24, current + delta));
+    const parsed = parseInt(el.value);
+    const current = isNaN(parsed) ? 24 : parsed;
+    const newValue = Math.max(0, Math.min(24, current + delta));
     el.value = newValue;
     calc();
   }
@@ -4084,28 +4085,41 @@
     document.getElementById('parcels-buyable').textContent = parcelsBuyable;
     document.getElementById('ab-total-display').textContent = ab.toLocaleString() + ' AB';
 
-    const boostedPerSec = basePerSec * badgeBoost * adBoost;
+    const boostedPerSec   = basePerSec * badgeBoost * adBoost; // tasa MIENTRAS el boost está cargado
+    const baseBadgePerSec = basePerSec * badgeBoost;           // tasa cuando el boost NO está cargado (las insignias sí siguen contando)
 
-    // Obtener horas de cálculo configuradas (default: 24)
-    const horasCalculo = parseInt(document.getElementById('horas-calculo').value) || 24;
-    const secsPerDay = horasCalculo * 3600; // segundos en el día según horas configuradas
-    
-    const perMin   = boostedPerSec * 60;
-    const perHour  = boostedPerSec * 3600;
-    const perDay   = boostedPerSec * secsPerDay;
+    // Horas de cálculo = cuántas horas al día tienes el boost de anuncios cargado (0-24)
+    let horasCalculo = parseInt(document.getElementById('horas-calculo').value);
+    if (isNaN(horasCalculo)) horasCalculo = 24;
+    horasCalculo = Math.max(0, Math.min(24, horasCalculo));
+
+    const secsPerDay    = 86400; // un día siempre tiene 24h reales, sin importar cuánto boost cargues
+    const secsBoosted   = horasCalculo * 3600;        // segundos/día CON boost de anuncios
+    const secsUnboosted = secsPerDay - secsBoosted;    // segundos/día SIN boost de anuncios (pero con insignias)
+
+    // Tasa promedio real por segundo, mezclando horas cargadas y no cargadas
+    const avgPerSec = (boostedPerSec * secsBoosted + baseBadgePerSec * secsUnboosted) / secsPerDay;
+
+    const perMin   = boostedPerSec * 60;   // instantánea, mientras el boost está cargado
+    const perHour  = boostedPerSec * 3600; // instantánea, mientras el boost está cargado
+    const perDay   = avgPerSec * secsPerDay;
     const perWeek  = perDay * 7;
     const perMonth = perDay * 30;
 
-    const basePerMonth = basePerSec * secsPerDay * 30;
-    const badgeExtra = basePerMonth * (badgeBoost - 1);
-    const adExtra = basePerMonth * badgeBoost * (adBoost - 1);
-
+    // Comparación "sin nada": 24h reales, sin insignias ni boost de anuncios
     const basePerMin  = basePerSec * 60;
     const basePerHour = basePerSec * 3600;
     const basePerDay  = basePerSec * secsPerDay;
     const basePerWeek = basePerDay * 7;
     const basePerMo   = basePerDay * 30;
     const basePerYear = basePerDay * 365;
+
+    // Comparación "solo con insignias, sin boost de anuncios": 24h reales
+    const badgeOnlyPerDay   = baseBadgePerSec * secsPerDay;
+    const badgeOnlyPerMonth = badgeOnlyPerDay * 30;
+
+    const badgeExtra = badgeOnlyPerMonth - basePerMo;   // lo que suman las insignias (todo el día)
+    const adExtra     = perMonth - badgeOnlyPerMonth;    // lo que suma el boost de anuncios (solo horas cargadas)
 
     document.getElementById('r-sec-base').textContent  = '$' + basePerSec.toFixed(12);
     document.getElementById('r-min-base').textContent  = '$' + basePerMin.toFixed(10);
@@ -4123,7 +4137,7 @@
     document.getElementById('r-year').textContent   = fmt(perDay * 365);
     document.getElementById('r-month').textContent = fmt(perMonth);
 
-    document.getElementById('b-base').textContent      = '$' + basePerMonth.toFixed(4) + '/mes';
+    document.getElementById('b-base').textContent      = '$' + basePerMo.toFixed(4) + '/mes';
     const badgePctEl = document.getElementById('b-badge-pct');
     if (badgePct === 0) {
       badgePctEl.style.display = 'none';
@@ -4141,15 +4155,20 @@
     const EVENT_BOOST  = 50;
     const EVENT_HOURS  = 32;
     const EVENTS_MONTH = 2;
-    const MONTH_HOURS  = 30 * horasCalculo; // Usar horas configuradas
+    const MONTH_HOURS  = 30 * 24; // un mes siempre tiene ~720 horas reales, no depende de horas-calculo
     const TOTAL_EVT_H  = EVENT_HOURS * EVENTS_MONTH;
-    const NORMAL_HOURS = MONTH_HOURS - TOTAL_EVT_H;
+    const NORMAL_HOURS = Math.max(0, MONTH_HOURS - TOTAL_EVT_H);
 
     const boostedPerHour   = boostedPerSec * 3600;
+    const baseBadgePerHour = baseBadgePerSec * 3600;
     const eventPerHour     = basePerSec * badgeBoost * EVENT_BOOST * 3600;
 
+    // De las horas normales (sin evento), la misma proporción diaria va cargada / no cargada
+    const normalBoostedHours   = NORMAL_HOURS * (horasCalculo / 24);
+    const normalUnboostedHours = NORMAL_HOURS - normalBoostedHours;
+
     const incomeSingleEvt  = eventPerHour  * EVENT_HOURS;
-    const incomeNormal     = boostedPerHour * NORMAL_HOURS;
+    const incomeNormal     = (boostedPerHour * normalBoostedHours) + (baseBadgePerHour * normalUnboostedHours);
     const incomeAllEvts    = eventPerHour  * TOTAL_EVT_H;
     const totalWithEvents  = incomeNormal  + incomeAllEvts;
 
@@ -4161,7 +4180,7 @@
         localStorage.setItem('aura_rent_day', perDay.toFixed(4));
         localStorage.setItem('aura_rent_month', perMonth.toFixed(4));
         localStorage.setItem('aura_ad_boost', adBoost);
-        localStorage.setItem('aura_secs_per_usd', boostedPerSec > 0 ? (1 / boostedPerSec).toFixed(2) : '0');
+        localStorage.setItem('aura_secs_per_usd', avgPerSec > 0 ? (1 / avgPerSec).toFixed(2) : '0');
     } catch(e) {}
 
     document.getElementById('r-srb-hour-base').textContent     = '$' + (basePerSec * 3600).toFixed(8);
@@ -4178,10 +4197,12 @@
     document.getElementById('b-event-income').textContent      = fmt(incomeAllEvts);
     document.getElementById('b-event-total').textContent       = fmt(totalWithEvents);
 
-    const YEAR_HOURS    = 365 * horasCalculo; // Usar horas configuradas
+    const YEAR_HOURS    = 365 * 24; // un año siempre tiene ~8760 horas reales, no depende de horas-calculo
     const YEAR_EVT_H    = EVENT_HOURS * EVENTS_MONTH * 12;
-    const YEAR_NORMAL_H = YEAR_HOURS - YEAR_EVT_H;
-    const perYear = (boostedPerHour * YEAR_NORMAL_H) + (eventPerHour * YEAR_EVT_H);
+    const YEAR_NORMAL_H = Math.max(0, YEAR_HOURS - YEAR_EVT_H);
+    const yearBoostedHours   = YEAR_NORMAL_H * (horasCalculo / 24);
+    const yearUnboostedHours = YEAR_NORMAL_H - yearBoostedHours;
+    const perYear = (boostedPerHour * yearBoostedHours) + (baseBadgePerHour * yearUnboostedHours) + (eventPerHour * YEAR_EVT_H);
     document.getElementById('r-year').textContent = fmt(perYear);
     document.getElementById('r-year-base').textContent = fmt(basePerYear);
     document.getElementById('b-year').textContent = '$' + perYear.toFixed(4);
@@ -4206,10 +4227,10 @@
     document.getElementById('v-ab-total').textContent      = abTotal.toLocaleString() + ' AB';
     document.getElementById('v-usd-total').textContent     = '$' + usdTotal.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' USD';
 
-    if (boostedPerSec > 0) {
-      const secsFor1 = 1 / boostedPerSec;
-      const d = Math.floor(secsFor1 / secsPerDay);
-      const remSecsFor1 = secsFor1 % secsPerDay;
+    if (avgPerSec > 0) {
+      const secsFor1 = 1 / avgPerSec;
+      const d = Math.floor(secsFor1 / 86400);
+      const remSecsFor1 = secsFor1 % 86400;
       const h = Math.floor(remSecsFor1 / 3600);
       const m = Math.floor((remSecsFor1 % 3600) / 60);
       const s = Math.floor(remSecsFor1 % 60);
