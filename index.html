@@ -5917,8 +5917,8 @@
             r: _srb ? (5 + Math.random() * 5) : (4 + Math.random() * 4),
             alpha: _initAlpha,
             initialAlpha: _initAlpha,
-            vx: -(_srb ? (0.9 + Math.random() * 0.8) : (0.6 + Math.random() * 0.5)),
-            vy: _srb ? (0.9 + Math.random() * 0.8) : (0.6 + Math.random() * 0.5),
+            vx: -(_srb ? (1.1 + Math.random() * 0.3) : (0.6 + Math.random() * 0.5)),
+            vy: _srb ? (1.1 + Math.random() * 0.3) : (0.6 + Math.random() * 0.5),
             life: 0,
             fire: _srb,
           });
@@ -5940,11 +5940,12 @@
         smokeRaf = requestAnimationFrame(() => animateSmoke(chart));
       }
 
-      function drawPuff(ctx2, x, y, s, alpha, heat) {
+      function drawPuff(ctx2, x, y, s, alpha, heat, spread) {
         heat = heat || 0; // 1 = naranja fuego (recién nacida), 0 = gris humo (vieja)
+        spread = (spread === undefined) ? 1 : spread; // 1 = puff normal, <1 = chorro angosto
         const blobs = [
-          [0, 0, 1.0], [-s*0.5, s*0.3, 0.75], [s*0.5, s*0.4, 0.7],
-          [-s*0.2, s*0.7, 0.65], [s*0.3, s*0.8, 0.6], [0, s*0.4, 0.55],
+          [0, 0, 1.0], [-s*0.5*spread, s*0.3, 0.75], [s*0.5*spread, s*0.4, 0.7],
+          [-s*0.2*spread, s*0.7, 0.65], [s*0.3*spread, s*0.8, 0.6], [0, s*0.4, 0.55],
         ];
         const rC = Math.round(255*heat + 190*(1-heat));
         const gC = Math.round(140*heat + 190*(1-heat));
@@ -6137,7 +6138,8 @@
             ctx2.save();
             for (const p of smokeParticles) {
               const _heat = p.fire ? Math.max(0, p.alpha / p.initialAlpha) : 0;
-              drawPuff(ctx2, p.x, p.y, p.r, p.alpha, _heat);
+              const _spread = p.fire ? (0.35 + (1 - _heat) * 0.65) : 1;
+              drawPuff(ctx2, p.x, p.y, p.r, p.alpha, _heat, _spread);
             }
             ctx2.restore();
           }
