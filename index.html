@@ -2344,6 +2344,13 @@
     window._fbSignIn   = () => signInWithPopup(auth, provider);
     window._fbSignOut  = () => signOut(auth);
 
+    // 🔇 Lectura silenciosa del aviso (solo para detectar SRB, NO se muestra en pantalla)
+    window._srbActive = false;
+    onValue(ref(db, 'config/aviso'), (snap) => {
+      const aviso = snap.exists() ? String(snap.val()) : '';
+      window._srbActive = /super\s*rent\s*boost\s*50\s*x.*activ/i.test(aviso);
+    });
+
     onAuthStateChanged(auth, (user) => {
       if (user) {
         window._fbUser = user;
@@ -5900,27 +5907,31 @@
         const rx = lastMeta.x;
         const ry = lastMeta.y - 4;
 
-        // Emitir nueva partícula cada ~400ms
-        if (!chart._lastSmoke || performance.now() - chart._lastSmoke > 150) {
+        // Emitir nueva partícula: más seguido y más larga si SRB (Super Rent Boost) está activo
+        const _srb = !!window._srbActive;
+        if (!chart._lastSmoke || performance.now() - chart._lastSmoke > (_srb ? 60 : 150)) {
+          const _initAlpha = _srb ? (0.7 + Math.random() * 0.3) : (0.5 + Math.random() * 0.3);
           smokeParticles.push({
             x: rx - 6,
             y: ry - 8,
-            r: 4 + Math.random() * 4,
-            alpha: 0.5 + Math.random() * 0.3,
-            vx: -(0.6 + Math.random() * 0.5),
-            vy: 0.6 + Math.random() * 0.5,
+            r: _srb ? (5 + Math.random() * 5) : (4 + Math.random() * 4),
+            alpha: _initAlpha,
+            initialAlpha: _initAlpha,
+            vx: -(_srb ? (0.9 + Math.random() * 0.8) : (0.6 + Math.random() * 0.5)),
+            vy: _srb ? (0.9 + Math.random() * 0.8) : (0.6 + Math.random() * 0.5),
             life: 0,
+            fire: _srb,
           });
           chart._lastSmoke = performance.now();
         }
 
-        // Actualizar partículas
+        // Actualizar partículas (el fuego dura más: crece más y se desvanece más lento)
         for (let i = smokeParticles.length - 1; i >= 0; i--) {
           const p = smokeParticles[i];
           p.x += p.vx;
           p.y += p.vy;
-          p.r += 0.3;
-          p.alpha -= 0.018;
+          p.r += p.fire ? 0.45 : 0.3;
+          p.alpha -= p.fire ? 0.010 : 0.018;
           p.life++;
           if (p.alpha <= 0) smokeParticles.splice(i, 1);
         }
@@ -5929,16 +5940,20 @@
         smokeRaf = requestAnimationFrame(() => animateSmoke(chart));
       }
 
-      function drawPuff(ctx2, x, y, s, alpha) {
+      function drawPuff(ctx2, x, y, s, alpha, heat) {
+        heat = heat || 0; // 1 = naranja fuego (recién nacida), 0 = gris humo (vieja)
         const blobs = [
           [0, 0, 1.0], [-s*0.5, s*0.3, 0.75], [s*0.5, s*0.4, 0.7],
           [-s*0.2, s*0.7, 0.65], [s*0.3, s*0.8, 0.6], [0, s*0.4, 0.55],
         ];
+        const rC = Math.round(255*heat + 190*(1-heat));
+        const gC = Math.round(140*heat + 190*(1-heat));
+        const bC = Math.round(  0*heat + 195*(1-heat));
         for (const [bx, by, br] of blobs) {
           const g = ctx2.createRadialGradient(x+bx, y+by, 0, x+bx, y+by, s*br);
-          g.addColorStop(0,   `rgba(200,200,205,${alpha*0.9})`);
-          g.addColorStop(0.5, `rgba(185,185,190,${alpha*0.5})`);
-          g.addColorStop(1,   `rgba(170,170,175,0)`);
+          g.addColorStop(0,   `rgba(${rC},${gC},${bC},${alpha*0.9})`);
+          g.addColorStop(0.5, `rgba(${Math.round(rC*0.9)},${Math.round(gC*0.9)},${Math.round(bC*0.9)},${alpha*0.5})`);
+          g.addColorStop(1,   `rgba(${Math.round(rC*0.8)},${Math.round(gC*0.8)},${Math.round(bC*0.8)},0)`);
           ctx2.beginPath();
           ctx2.arc(x+bx, y+by, s*br, 0, Math.PI*2);
           ctx2.fillStyle = g;
@@ -6121,7 +6136,8 @@
           if (lastMeta) {
             ctx2.save();
             for (const p of smokeParticles) {
-              drawPuff(ctx2, p.x, p.y, p.r, p.alpha);
+              const _heat = p.fire ? Math.max(0, p.alpha / p.initialAlpha) : 0;
+              drawPuff(ctx2, p.x, p.y, p.r, p.alpha, _heat);
             }
             ctx2.restore();
           }
