@@ -5908,7 +5908,7 @@
         // Si los puntos caben con espacio de sobra, se estira a todo el ancho
         // disponible (respetando el padding, igual a ambos lados). Si no caben
         // con 34px/punto, se usa el ancho necesario y aparece scroll horizontal.
-        const anchoFinal = Math.max(anchoNecesario, contenedorAncho);
+        const anchoFinal = Math.max(anchoNecesario, contenedorAncho) + 18; // +18: mismo margen que el padding inicial del card, para que se respete también al final del scroll
         chartInner.style.width = anchoFinal + 'px';
         canvas.style.width     = anchoFinal + 'px';
         canvas.style.height    = '220px';
