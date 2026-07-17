@@ -5895,7 +5895,7 @@
         Math.abs(yMaxFijo).toLocaleString().length,
         Math.abs(yMinFijo).toLocaleString().length
       );
-      const Y_AXIS_WIDTH = Math.max(48, yAxisLenMuestra * 9 + 20);
+      const Y_AXIS_WIDTH = Math.max(40, yAxisLenMuestra * 9 + 6);
       if (yAxisWrap) yAxisWrap.style.width = Y_AXIS_WIDTH + 'px';
 
       // Aplicar ancho compacto ahora que ya sabemos el total final de puntos
@@ -6337,7 +6337,7 @@
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
-            layout: { padding: { top: 34, right: 2, left: 0, bottom: 0 } },
+            layout: { padding: { top: 34, right: 0, left: 0, bottom: 0 } },
             plugins: { legend: { display: false }, tooltip: { enabled: false } },
             scales: {
               x: {
@@ -6361,7 +6361,7 @@
                   stepSize: stepDinamico,
                   maxTicksLimit: maxTicksDinamico,
                   crossAlign: 'far', // pega el número al borde derecho del box (junto al gráfico), usando todo el ancho disponible
-                  padding: 2,
+                  padding: 0,
                 },
                 grid: { display: false },
               }
