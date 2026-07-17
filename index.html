@@ -5862,24 +5862,6 @@
       valores.push(totalActual);
       const idxActual = valores.length - 1;
 
-      // Aplicar ancho compacto ahora que ya sabemos el total final de puntos
-      if (chartInner && outerScroll) {
-        const estiloOuter = getComputedStyle(outerScroll);
-        const padL = parseFloat(estiloOuter.paddingLeft) || 0;
-        const padR = parseFloat(estiloOuter.paddingRight) || 0;
-        const Y_AXIS_WIDTH = 64;
-        const contenedorAncho = (outerScroll.clientWidth - padL - padR - Y_AXIS_WIDTH) || 300;
-        const anchoNecesario  = labels.length * PX_PER_POINT;
-        // Si los puntos caben con espacio de sobra, se estira a todo el ancho
-        // disponible (respetando el padding, igual a ambos lados). Si no caben
-        // con 34px/punto, se usa el ancho necesario y aparece scroll horizontal.
-        const anchoFinal = Math.max(anchoNecesario, contenedorAncho);
-        chartInner.style.width = anchoFinal + 'px';
-        canvas.style.width     = anchoFinal + 'px';
-        canvas.style.height    = '220px';
-        outerScroll.style.overflowX = anchoNecesario > contenedorAncho ? 'auto' : 'hidden';
-      }
-
       const accentColor = '#F5A623';
 
       // Step dinámico para el eje Y: se ajusta al rango de datos pero
@@ -5904,6 +5886,34 @@
         return { step, maxTicksLimit, min: axisMin, max: axisMax };
       }
       const { step: stepDinamico, maxTicksLimit: maxTicksDinamico, min: yMinFijo, max: yMaxFijo } = calcularStepDinamico(valores);
+
+      // Ancho del eje Y dinámico: se mide el número más largo que se va a
+      // mostrar (con separador de miles) y se reserva el espacio justo para
+      // que nunca se corte, sin desperdiciar espacio de más.
+      const yAxisWrap = document.getElementById('historialYAxisWrap');
+      const yAxisLenMuestra = Math.max(
+        Math.abs(yMaxFijo).toLocaleString().length,
+        Math.abs(yMinFijo).toLocaleString().length
+      );
+      const Y_AXIS_WIDTH = Math.max(48, yAxisLenMuestra * 9 + 20);
+      if (yAxisWrap) yAxisWrap.style.width = Y_AXIS_WIDTH + 'px';
+
+      // Aplicar ancho compacto ahora que ya sabemos el total final de puntos
+      if (chartInner && outerScroll) {
+        const estiloOuter = getComputedStyle(outerScroll);
+        const padL = parseFloat(estiloOuter.paddingLeft) || 0;
+        const padR = parseFloat(estiloOuter.paddingRight) || 0;
+        const contenedorAncho = (outerScroll.clientWidth - padL - padR - Y_AXIS_WIDTH) || 300;
+        const anchoNecesario  = labels.length * PX_PER_POINT;
+        // Si los puntos caben con espacio de sobra, se estira a todo el ancho
+        // disponible (respetando el padding, igual a ambos lados). Si no caben
+        // con 34px/punto, se usa el ancho necesario y aparece scroll horizontal.
+        const anchoFinal = Math.max(anchoNecesario, contenedorAncho);
+        chartInner.style.width = anchoFinal + 'px';
+        canvas.style.width     = anchoFinal + 'px';
+        canvas.style.height    = '220px';
+        outerScroll.style.overflowX = anchoNecesario > contenedorAncho ? 'auto' : 'hidden';
+      }
 
       if (_historialYAxisChart) { _historialYAxisChart.destroy(); _historialYAxisChart = null; }
 
@@ -6327,7 +6337,7 @@
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
-            layout: { padding: { top: 34, right: 0, left: 4, bottom: 0 } },
+            layout: { padding: { top: 34, right: 2, left: 0, bottom: 0 } },
             plugins: { legend: { display: false }, tooltip: { enabled: false } },
             scales: {
               x: {
@@ -6350,6 +6360,8 @@
                   callback: v => v.toLocaleString(),
                   stepSize: stepDinamico,
                   maxTicksLimit: maxTicksDinamico,
+                  crossAlign: 'far', // pega el número al borde derecho del box (junto al gráfico), usando todo el ancho disponible
+                  padding: 2,
                 },
                 grid: { display: false },
               }
