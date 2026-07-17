@@ -6447,6 +6447,13 @@
       _historialChart._idxActual = idxActual;
       animateSmoke(_historialChart);
 
+      // Al cargar, mostrar el extremo más reciente (donde está el cohete) en vez
+      // del más antiguo. Se hace en un microtask/rAF para asegurar que el ancho
+      // ya se aplicó y el layout está listo antes de mover el scroll.
+      requestAnimationFrame(() => {
+        if (outerScroll) outerScroll.scrollLeft = outerScroll.scrollWidth;
+      });
+
       // Fondo animado
       if (window._startHistorialBg) window._startHistorialBg(totalActual);
 
