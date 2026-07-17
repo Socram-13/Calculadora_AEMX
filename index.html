@@ -1580,7 +1580,6 @@
     padding: 20px 0;
   }
   #historialUserChart {
-    width: 100%;
     max-height: 220px;
   }
 
@@ -2917,10 +2916,12 @@
       <span class="historial-arrow">▼</span>
     </button>
     <div class="historial-body" id="historialBody">
-      <div class="historial-inner" style="position:relative;">
-        <canvas id="historialBgCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;pointer-events:none;z-index:0;"></canvas>
-        <div class="historial-empty" id="historialEmptyMsg" style="position:relative;z-index:1;">Cargando...</div>
-        <canvas id="historialUserChart" style="display:none;position:relative;z-index:1;"></canvas>
+      <div class="historial-inner" id="historialOuterScroll" style="position:relative;overflow-x:auto;">
+        <div id="historialChartInner" style="position:relative;height:220px;">
+          <canvas id="historialBgCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;pointer-events:none;z-index:0;"></canvas>
+          <div class="historial-empty" id="historialEmptyMsg" style="position:relative;z-index:1;">Cargando...</div>
+          <canvas id="historialUserChart" style="display:none;position:relative;z-index:1;"></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -5839,6 +5840,13 @@
       if (emptyMsg)  emptyMsg.style.display = 'none';
       if (canvas)    canvas.style.display   = 'block';
 
+      // Ancho compacto: con etiquetas verticales cada punto necesita mucho menos
+      // espacio horizontal que antes (rotadas), así que fijamos px por punto en vez
+      // de estirar el gráfico a 100% del contenedor. Si no caben todos, se habilita scroll.
+      const PX_PER_POINT = 34;
+      const chartInner = document.getElementById('historialChartInner');
+      const outerScroll = document.getElementById('historialOuterScroll');
+
       // Agregar dato actual del usuario
       const totalActual = (parseInt(document.getElementById('common')?.value) || 0)
                         + (parseInt(document.getElementById('rare')?.value)   || 0)
@@ -5850,7 +5858,34 @@
       valores.push(totalActual);
       const idxActual = valores.length - 1;
 
+      // Aplicar ancho compacto ahora que ya sabemos el total final de puntos
+      if (chartInner && outerScroll) {
+        const contenedorAncho = outerScroll.clientWidth || 300;
+        const anchoNecesario  = labels.length * PX_PER_POINT;
+        const anchoFinal = Math.max(anchoNecesario, 0);
+        chartInner.style.width = anchoFinal + 'px';
+        canvas.style.width     = anchoFinal + 'px';
+        canvas.style.height    = '220px';
+        // Si caben todos los puntos sin llegar al ancho del contenedor, no forzamos scroll
+        outerScroll.style.overflowX = anchoFinal > contenedorAncho ? 'auto' : 'hidden';
+      }
+
       const accentColor = '#F5A623';
+
+      // Step dinámico para el eje Y: se ajusta al rango de datos pero
+      // nunca supera 100 (usa números "redondos": 1,2,5,10,20,25,50,100)
+      function calcularStepDinamico(valoresArr) {
+        const nums = valoresArr.filter(v => v !== null && v !== undefined);
+        if (nums.length === 0) return 100;
+        const min = Math.min(...nums), max = Math.max(...nums);
+        const rango = Math.max(max - min, 1);
+        const targetTicks = 6; // divisiones aproximadas deseadas
+        const raw = rango / targetTicks;
+        const candidatos = [1, 2, 5, 10, 20, 25, 50, 100];
+        const step = candidatos.find(n => n >= raw) || 100;
+        return Math.min(step, 100);
+      }
+      const stepDinamico = calcularStepDinamico(valores);
 
       if (_historialChart) { _historialChart.destroy(); _historialChart = null; }
       if (window._historialDiffInterval) { clearInterval(window._historialDiffInterval); window._historialDiffInterval = null; }
@@ -6312,6 +6347,7 @@
                 color: '#7a5c30',
                 font:  { family: 'Nunito', size: 11, weight: '700' },
                 callback: v => v.toLocaleString(),
+                stepSize: stepDinamico,
               },
               grid: { color: 'rgba(200,169,110,0.3)' },
               afterBuildTicks(axis) {
