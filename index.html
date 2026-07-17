@@ -2916,14 +2916,16 @@
       <span class="historial-arrow">▼</span>
     </button>
     <div class="historial-body" id="historialBody">
-      <div class="historial-inner" id="historialOuterScroll" style="position:relative;overflow-x:auto;display:flex;align-items:flex-start;">
-        <div id="historialYAxisWrap" style="position:sticky;left:0;top:0;z-index:6;background:transparent;flex-shrink:0;width:64px;height:220px;">
-          <canvas id="historialYAxis" style="width:100%;height:100%;display:block;"></canvas>
-        </div>
-        <div id="historialChartInner" style="position:relative;height:220px;">
-          <canvas id="historialBgCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;pointer-events:none;z-index:0;"></canvas>
-          <div class="historial-empty" id="historialEmptyMsg" style="position:relative;z-index:1;">Cargando...</div>
-          <canvas id="historialUserChart" style="display:none;position:relative;z-index:1;"></canvas>
+      <div class="historial-inner" style="position:relative;overflow:hidden;">
+        <div id="historialOuterScroll" style="position:relative;overflow-x:auto;display:flex;align-items:flex-start;">
+          <div id="historialYAxisWrap" style="position:sticky;left:0;top:0;z-index:6;background:transparent;flex-shrink:0;width:64px;height:220px;">
+            <canvas id="historialYAxis" style="width:100%;height:100%;display:block;"></canvas>
+          </div>
+          <div id="historialChartInner" style="position:relative;height:220px;">
+            <canvas id="historialBgCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;pointer-events:none;z-index:0;"></canvas>
+            <div class="historial-empty" id="historialEmptyMsg" style="position:relative;z-index:1;">Cargando...</div>
+            <canvas id="historialUserChart" style="display:none;position:relative;z-index:1;"></canvas>
+          </div>
         </div>
       </div>
     </div>
@@ -5908,7 +5910,7 @@
         // Si los puntos caben con espacio de sobra, se estira a todo el ancho
         // disponible (respetando el padding, igual a ambos lados). Si no caben
         // con 34px/punto, se usa el ancho necesario y aparece scroll horizontal.
-        const anchoFinal = Math.max(anchoNecesario, contenedorAncho) + 18; // +18: mismo margen que el padding inicial del card, para que se respete también al final del scroll
+        const anchoFinal = Math.max(anchoNecesario, contenedorAncho);
         chartInner.style.width = anchoFinal + 'px';
         canvas.style.width     = anchoFinal + 'px';
         canvas.style.height    = '220px';
