@@ -5860,11 +5860,14 @@
 
       // Aplicar ancho compacto ahora que ya sabemos el total final de puntos
       if (chartInner && outerScroll) {
-        const contenedorAncho = outerScroll.clientWidth || 300;
+        const estiloOuter = getComputedStyle(outerScroll);
+        const padL = parseFloat(estiloOuter.paddingLeft) || 0;
+        const padR = parseFloat(estiloOuter.paddingRight) || 0;
+        const contenedorAncho = (outerScroll.clientWidth - padL - padR) || 300;
         const anchoNecesario  = labels.length * PX_PER_POINT;
         // Si los puntos caben con espacio de sobra, se estira a todo el ancho
-        // disponible (como antes). Si no caben con 34px/punto, se usa el ancho
-        // necesario y aparece scroll horizontal en vez de comprimir más.
+        // disponible (respetando el padding, igual a ambos lados). Si no caben
+        // con 34px/punto, se usa el ancho necesario y aparece scroll horizontal.
         const anchoFinal = Math.max(anchoNecesario, contenedorAncho);
         chartInner.style.width = anchoFinal + 'px';
         canvas.style.width     = anchoFinal + 'px';
