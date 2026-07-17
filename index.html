@@ -2916,7 +2916,8 @@
       <span class="historial-arrow">▼</span>
     </button>
     <div class="historial-body" id="historialBody">
-      <div class="historial-inner" id="historialOuterScroll" style="position:relative;overflow-x:auto;">
+      <div class="historial-inner" id="historialOuterScroll" style="position:relative;overflow-x:auto;display:flex;align-items:flex-start;">
+        <canvas id="historialYAxis" style="position:sticky;left:0;top:0;z-index:6;background:var(--panel);flex-shrink:0;"></canvas>
         <div id="historialChartInner" style="position:relative;height:220px;">
           <canvas id="historialBgCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;border-radius:8px;pointer-events:none;z-index:0;"></canvas>
           <div class="historial-empty" id="historialEmptyMsg" style="position:relative;z-index:1;">Cargando...</div>
@@ -5755,6 +5756,7 @@
   })();
 
   let _historialChart = null;
+  let _historialYAxisChart = null;
 
   function toggleHistorial() {
     const btn  = document.getElementById('historialToggle');
@@ -5863,7 +5865,8 @@
         const estiloOuter = getComputedStyle(outerScroll);
         const padL = parseFloat(estiloOuter.paddingLeft) || 0;
         const padR = parseFloat(estiloOuter.paddingRight) || 0;
-        const contenedorAncho = (outerScroll.clientWidth - padL - padR) || 300;
+        const Y_AXIS_WIDTH = 54;
+        const contenedorAncho = (outerScroll.clientWidth - padL - padR - Y_AXIS_WIDTH) || 300;
         const anchoNecesario  = labels.length * PX_PER_POINT;
         // Si los puntos caben con espacio de sobra, se estira a todo el ancho
         // disponible (respetando el padding, igual a ambos lados). Si no caben
@@ -5881,7 +5884,7 @@
       // nunca supera 100 (usa números "redondos": 1,2,5,10,20,25,50,100)
       function calcularStepDinamico(valoresArr) {
         const nums = valoresArr.filter(v => v !== null && v !== undefined);
-        if (nums.length === 0) return { step: 100, maxTicksLimit: 12 };
+        if (nums.length === 0) return { step: 100, maxTicksLimit: 12, min: 0, max: 100 };
         const min = Math.min(...nums), max = Math.max(...nums);
         const rango = Math.max(max - min, 1);
         const targetTicks = 6; // divisiones aproximadas deseadas
@@ -5892,9 +5895,15 @@
         // su maxTicksLimit por defecto (~11); lo calculamos explícito para que
         // NUNCA lo sobreescriba y respete siempre nuestro tope de 100.
         const maxTicksLimit = Math.ceil(rango / step) + 3;
-        return { step, maxTicksLimit };
+        // min/max explícitos y fijos (no autoscale) para que el eje Y "sticky"
+        // y el eje Y del gráfico principal queden exactamente sincronizados.
+        const axisMin = Math.floor(min / step) * step;
+        const axisMax = Math.ceil(max / step) * step + step; // 1 fila extra arriba
+        return { step, maxTicksLimit, min: axisMin, max: axisMax };
       }
-      const { step: stepDinamico, maxTicksLimit: maxTicksDinamico } = calcularStepDinamico(valores);
+      const { step: stepDinamico, maxTicksLimit: maxTicksDinamico, min: yMinFijo, max: yMaxFijo } = calcularStepDinamico(valores);
+
+      if (_historialYAxisChart) { _historialYAxisChart.destroy(); _historialYAxisChart = null; }
 
       if (_historialChart) { _historialChart.destroy(); _historialChart = null; }
       if (window._historialDiffInterval) { clearInterval(window._historialDiffInterval); window._historialDiffInterval = null; }
@@ -6301,6 +6310,53 @@
         }
       };
 
+      // Chart "fantasma" solo para el eje Y, fijo (sticky) fuera del scroll horizontal.
+      // Usa exactamente el mismo min/max/step/altura/rotación de etiquetas que el
+      // chart principal para que ambos queden pixel-alineados verticalmente.
+      const yAxisCanvas = document.getElementById('historialYAxis');
+      if (yAxisCanvas) {
+        yAxisCanvas.style.width  = '54px';
+        yAxisCanvas.style.height = '220px';
+        _historialYAxisChart = new Chart(yAxisCanvas, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{ data: valores, borderWidth: 0, pointRadius: 0, fill: false }]
+          },
+          options: {
+            responsive: true,
+            animation: false,
+            layout: { padding: { top: 34, right: 0, left: 4, bottom: 0 } },
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: {
+              x: {
+                ticks: {
+                  color: 'transparent', // reserva el mismo alto que las fechas rotadas, pero invisible
+                  font: { family: 'Nunito', size: 11, weight: '700' },
+                  maxRotation: 90,
+                  minRotation: 90,
+                  autoSkip: false,
+                },
+                grid: { display: false },
+                border: { display: false },
+              },
+              y: {
+                min: yMinFijo,
+                max: yMaxFijo,
+                ticks: {
+                  color: '#7a5c30',
+                  font:  { family: 'Nunito', size: 11, weight: '700' },
+                  callback: v => v.toLocaleString(),
+                  stepSize: stepDinamico,
+                  maxTicksLimit: maxTicksDinamico,
+                },
+                grid: { display: false },
+              }
+            }
+          }
+        });
+      }
+
       _historialChart = new Chart(canvas, {
         type: 'line',
         data: {
@@ -6355,22 +6411,14 @@
               grid:  { color: 'rgba(200,169,110,0.3)' },
             },
             y: {
+              min: yMinFijo,
+              max: yMaxFijo,
               ticks: {
-                color: '#7a5c30',
-                font:  { family: 'Nunito', size: 11, weight: '700' },
-                callback: v => v.toLocaleString(),
+                display: false, // el eje Y visible ahora lo dibuja el canvas sticky aparte
                 stepSize: stepDinamico,
                 maxTicksLimit: maxTicksDinamico,
               },
               grid: { color: 'rgba(200,169,110,0.3)' },
-              afterBuildTicks(axis) {
-                if (axis.ticks.length >= 2) {
-                  const step = axis.ticks[1].value - axis.ticks[0].value;
-                  const last = axis.ticks[axis.ticks.length - 1].value;
-                  axis.ticks.push({ value: last + step });
-                  axis.max = last + step;
-                }
-              }
             }
           }
         },
