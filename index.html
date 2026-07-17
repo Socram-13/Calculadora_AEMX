@@ -5776,14 +5776,25 @@
       const emptyMsg  = document.getElementById('historialEmptyMsg');
       const canvas    = document.getElementById('historialUserChart');
 
-      // Leer solo las claves de meses (shallow) para comparar con caché
+      // Leer todo el historial (Firebase no soporta lectura "shallow" desde el SDK,
+      // así que este get() ya trae los datos completos de todos los snapshots)
       const { getDatabase, ref, get, query, orderByKey } = window._fbModules || {};
       const snapKeys = await window._fbGet(window._fbRef(window._fbDb, 'historial'));
       const noHaySnapshots = !snapKeys.exists() || !snapKeys.val();
 
-      // Obtener último mes disponible
+      // Obtener TODAS las claves disponibles (no solo la última) para poder
+      // detectar snapshots nuevos aunque tengan fecha pasada
       const todasLasClaves = noHaySnapshots ? [] : Object.keys(snapKeys.val() || {}).sort();
-      const ultimaMes = todasLasClaves[todasLasClaves.length - 1];
+      // Firma = lista completa de keys que contienen datos de este usuario.
+      // Si se agrega/edita/quita CUALQUIER snapshot de este usuario (pasado o no),
+      // esta firma cambia y se invalida el caché.
+      const clavesDeEsteUsuario = noHaySnapshots ? [] : todasLasClaves.filter(k => {
+        const v = snapKeys.val()[k];
+        return v && v[uid] !== undefined;
+      });
+      const firmaUsuario = clavesDeEsteUsuario
+        .map(k => `${k}:${snapKeys.val()[k][uid].parcelas}`)
+        .join('|');
 
       // Revisar caché local
       let mesesData = {};
@@ -5792,19 +5803,16 @@
           const cached = localStorage.getItem(CACHE_KEY);
           if (cached) {
             const parsed = JSON.parse(cached);
-            if (parsed.ultimaMes === ultimaMes) mesesData = parsed.mesesData;
+            if (parsed.firmaUsuario === firmaUsuario) mesesData = parsed.mesesData;
           }
         } catch(e) {}
-        if (Object.keys(mesesData).length === 0) {
-          const snap = await window._fbGet(window._fbRef(window._fbDb, 'historial'));
-          snap.forEach(mesSnap => {
-            const mesKey = mesSnap.key;
-            const mesVal = mesSnap.val();
-            if (mesVal && mesVal[uid] !== undefined) {
-              mesesData[mesKey] = mesVal[uid].parcelas ?? null;
-            }
+        if (Object.keys(mesesData).length === 0 && clavesDeEsteUsuario.length > 0) {
+          // Reconstruir directamente desde snapKeys.val() (ya tenemos todo, sin re-fetch)
+          const historialVal = snapKeys.val();
+          clavesDeEsteUsuario.forEach(mesKey => {
+            mesesData[mesKey] = historialVal[mesKey][uid].parcelas ?? null;
           });
-          try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ultimaMes, mesesData })); } catch(e) {}
+          try { localStorage.setItem(CACHE_KEY, JSON.stringify({ firmaUsuario, mesesData })); } catch(e) {}
         }
       }
 
