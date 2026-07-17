@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor de Historial · ATLAS EARTH AEMX</title>
+<link rel="icon" type="image/png" href="imagen_1.png">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #060b14;
+    --panel:     #0b1626;
+    --panel2:    #0f1e35;
+    --border:    #1a3a5c;
+    --glow:      #00c8ff;
+    --glow2:     #00ff9d;
+    --danger:    #ff4466;
+    --warning:   #ffaa00;
+    --success:   #00ff9d;
+    --text:      #cce4ff;
+    --text2:     #6b8ab0;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 20px;
+    color: var(--glow);
+    text-shadow: 0 0 12px rgba(0,200,255,0.4);
+    margin-bottom: 4px;
+  }
+  .sub { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+  a.back { color: var(--glow); text-decoration: none; font-size: 13px; }
+  a.back:hover { text-decoration: underline; }
+
+  /* Auth overlay */
+  #authOverlay {
+    position: fixed; inset: 0; background: rgba(6,11,20,0.97);
+    display: flex; align-items: center; justify-content: center; z-index: 999;
+    flex-direction: column; gap: 16px;
+  }
+  #authOverlay.hidden { display: none; }
+  .btn-google {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 12px 24px; border-radius: 8px; font-family: 'Rajdhani'; font-weight: 700;
+    font-size: 15px; cursor: pointer;
+  }
+  .btn-google:hover { border-color: var(--glow); }
+  #accessDenied {
+    display: none; color: var(--danger); font-weight: 700; font-size: 14px;
+  }
+  #accessDenied.visible { display: block; }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 20px; max-width: 900px;
+  }
+  label { font-size: 13px; color: var(--text2); display: block; margin-bottom: 6px; }
+  select, input {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 12px; border-radius: 8px; font-family: 'Rajdhani'; font-size: 14px;
+    width: 100%;
+  }
+  select:focus, input:focus { outline: none; border-color: var(--glow); }
+
+  .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 10px; }
+  .col { flex: 1; min-width: 160px; }
+  .col-narrow { flex: 0 0 160px; }
+
+  button.action {
+    background: linear-gradient(135deg, var(--glow2), #00c896);
+    color: #06140f; border: none; padding: 10px 18px; border-radius: 8px;
+    font-family: 'Rajdhani'; font-weight: 700; font-size: 14px; cursor: pointer;
+  }
+  button.action:hover { filter: brightness(1.1); }
+  button.action:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  th, td { padding: 10px 8px; border-bottom: 1px solid var(--border); font-size: 14px; text-align: left; }
+  th { color: var(--text2); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td input { padding: 6px 8px; font-size: 13px; }
+  .btn-save { background: var(--glow); color: #041018; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
+  .btn-del  { background: var(--danger); color: #200; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
+  .btn-save:hover, .btn-del:hover { filter: brightness(1.15); }
+
+  .empty-msg { color: var(--text2); font-size: 13px; padding: 16px 0; text-align: center; }
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--panel2); border: 1px solid var(--glow); color: var(--text);
+    padding: 12px 20px; border-radius: 8px; font-size: 14px; z-index: 1000;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .toast.error { border-color: var(--danger); }
+  .toast.visible { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="authOverlay">
+  <h1>🔒 Editor de Historial</h1>
+  <button class="btn-google" onclick="authWithGoogle()">Iniciar sesión con Google</button>
+  <div id="authError" style="color: var(--danger); font-size: 13px;"></div>
+</div>
+<div id="accessDenied">Acceso denegado: tu cuenta no tiene permisos de administrador/moderador.</div>
+
+<div id="app" style="display:none;">
+  <a class="back" href="admin.html">&larr; Volver al panel admin</a>
+  <h1 style="margin-top:10px;">📊 Editor de Historial (Snapshots)</h1>
+  <div class="sub">Agrega, edita o quita registros de parcelas por fecha para un usuario específico, sin afectar a los demás usuarios de ese mismo snapshot.</div>
+
+  <div class="panel">
+    <label for="userSelect">Usuario</label>
+    <select id="userSelect" onchange="onUserChange()">
+      <option value="">— Selecciona un usuario —</option>
+    </select>
+  </div>
+
+  <div class="panel" id="addPanel" style="display:none;">
+    <label>Agregar / actualizar registro</label>
+    <div class="row">
+      <div class="col">
+        <label for="newDate">Fecha y hora</label>
+        <input type="datetime-local" id="newDate">
+      </div>
+      <div class="col-narrow">
+        <label for="newParcelas">Parcelas totales</label>
+        <input type="number" id="newParcelas" min="0" step="1" placeholder="0">
+      </div>
+      <div class="col-narrow">
+        <button class="action" onclick="guardarRegistro()">💾 Guardar</button>
+      </div>
+    </div>
+    <div class="sub" style="margin:0;">Si eliges una fecha/hora que ya tiene un snapshot para este usuario, se sobreescribirá su valor de parcelas (solo el de este usuario).</div>
+  </div>
+
+  <div class="panel" id="tablePanel" style="display:none;">
+    <label id="tableLabel">Historial del usuario</label>
+    <table>
+      <thead>
+        <tr><th>Fecha / Snapshot</th><th>Parcelas</th><th style="width:180px;">Acciones</th></tr>
+      </thead>
+      <tbody id="historyBody"></tbody>
+    </table>
+    <div class="empty-msg" id="emptyMsg" style="display:none;">Este usuario no tiene registros de historial todavía.</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+  import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup }
+                              from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+  import { getDatabase, ref, get, update, remove }
+                              from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+  const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
+
+  const firebaseConfig = {
+    apiKey:        'AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk',
+    authDomain:    'aemx-chat.firebaseapp.com',
+    databaseURL:   'https://aemx-chat-default-rtdb.firebaseio.com',
+    projectId:     'aemx-chat',
+    storageBucket: 'aemx-chat.appspot.com',
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getDatabase(app);
+
+  window.authWithGoogle = async function() {
+    document.getElementById('authError').textContent = '';
+    try {
+      await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch(e) {
+      document.getElementById('authError').textContent = 'Error al iniciar sesión.';
+    }
+  };
+
+  let allUsers = [];
+  let historialCompleto = {}; // { key: { uid: {username, parcelas} } }
+
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    document.getElementById('authOverlay').classList.add('hidden');
+
+    const isAdminUser = user.email === ADMIN_EMAIL;
+    let isModeratorUser = false;
+    if (!isAdminUser) {
+      try {
+        const snap = await get(ref(db, `users/${user.uid}`));
+        isModeratorUser = snap.exists() && snap.val().role === 'moderator';
+      } catch(e) { console.warn(e); }
+    }
+
+    if (!isAdminUser && !isModeratorUser) {
+      document.getElementById('accessDenied').classList.add('visible');
+      return;
+    }
+
+    document.getElementById('app').style.display = 'block';
+    await cargarUsuarios();
+    await cargarHistorialCompleto();
+  });
+
+  async function cargarUsuarios() {
+    const snap = await get(ref(db, 'users'));
+    allUsers = [];
+    if (snap.exists()) {
+      snap.forEach((child) => {
+        const d = child.val() || {};
+        if (!d.username) return;
+        allUsers.push({ uid: child.key, username: d.username });
+      });
+    }
+    allUsers.sort((a, b) => a.username.localeCompare(b.username));
+    const select = document.getElementById('userSelect');
+    select.innerHTML = '<option value="">— Selecciona un usuario —</option>' +
+      allUsers.map(u => `<option value="${u.uid}">${u.username}</option>`).join('');
+  }
+
+  async function cargarHistorialCompleto() {
+    const snap = await get(ref(db, 'historial'));
+    historialCompleto = {};
+    if (snap.exists()) {
+      snap.forEach((monthSnap) => {
+        historialCompleto[monthSnap.key] = monthSnap.val();
+      });
+    }
+  }
+
+  function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast visible' + (isError ? ' error' : '');
+    setTimeout(() => t.classList.remove('visible'), 2500);
+  }
+
+  window.onUserChange = function() {
+    const uid = document.getElementById('userSelect').value;
+    document.getElementById('addPanel').style.display = uid ? 'block' : 'none';
+    document.getElementById('tablePanel').style.display = uid ? 'block' : 'none';
+    if (uid) renderTabla(uid);
+  };
+
+  function renderTabla(uid) {
+    const username = allUsers.find(u => u.uid === uid)?.username || uid;
+    document.getElementById('tableLabel').textContent = `Historial de ${username}`;
+
+    const keys = Object.keys(historialCompleto)
+      .filter(k => historialCompleto[k] && historialCompleto[k][uid])
+      .sort()
+      .reverse();
+
+    const body = document.getElementById('historyBody');
+    const emptyMsg = document.getElementById('emptyMsg');
+
+    if (keys.length === 0) {
+      body.innerHTML = '';
+      emptyMsg.style.display = 'block';
+      return;
+    }
+    emptyMsg.style.display = 'none';
+
+    body.innerHTML = keys.map(k => {
+      const parcelas = historialCompleto[k][uid].parcelas ?? 0;
+      const safeKey = k.replace(/"/g, '&quot;');
+      return `
+        <tr data-key="${safeKey}">
+          <td>${k}</td>
+          <td><input type="number" min="0" step="1" value="${parcelas}" class="parcelas-input"></td>
+          <td>
+            <button class="btn-save" onclick="editarRegistro('${uid}','${safeKey}', this)">💾</button>
+            <button class="btn-del" onclick="quitarRegistro('${uid}','${safeKey}')">🗑️</button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  window.guardarRegistro = async function() {
+    const uid = document.getElementById('userSelect').value;
+    const username = allUsers.find(u => u.uid === uid)?.username || '';
+    const dateVal = document.getElementById('newDate').value; // YYYY-MM-DDTHH:MM
+    const parcelas = parseInt(document.getElementById('newParcelas').value);
+
+    if (!uid) { showToast('Selecciona un usuario', true); return; }
+    if (!dateVal) { showToast('Selecciona fecha y hora', true); return; }
+    if (isNaN(parcelas) || parcelas < 0) { showToast('Parcelas inválidas', true); return; }
+
+    const key = dateVal.replace('T', '_').replace(':', '');
+    // Formato final esperado: YYYY-MM-DD_HHMM
+    const [datePart, timePart] = dateVal.split('T');
+    const finalKey = `${datePart}_${timePart.replace(':', '')}`;
+
+    try {
+      await update(ref(db, `historial/${finalKey}`), {
+        [uid]: { username, parcelas }
+      });
+      if (!historialCompleto[finalKey]) historialCompleto[finalKey] = {};
+      historialCompleto[finalKey][uid] = { username, parcelas };
+      showToast(`✅ Registro guardado en ${finalKey}`);
+      renderTabla(uid);
+      document.getElementById('newParcelas').value = '';
+    } catch(e) {
+      console.error(e);
+      showToast('Error al guardar', true);
+    }
+  };
+
+  window.editarRegistro = async function(uid, key, btn) {
+    const row = btn.closest('tr');
+    const parcelas = parseInt(row.querySelector('.parcelas-input').value);
+    if (isNaN(parcelas) || parcelas < 0) { showToast('Parcelas inválidas', true); return; }
+    const username = allUsers.find(u => u.uid === uid)?.username || '';
+
+    try {
+      await update(ref(db, `historial/${key}`), {
+        [uid]: { username, parcelas }
+      });
+      historialCompleto[key][uid] = { username, parcelas };
+      showToast(`✅ ${key} actualizado`);
+    } catch(e) {
+      console.error(e);
+      showToast('Error al actualizar', true);
+    }
+  };
+
+  window.quitarRegistro = async function(uid, key) {
+    if (!confirm(`¿Quitar el registro de ${key}? Solo se elimina el dato de este usuario, los demás usuarios de ese snapshot no se ven afectados.`)) return;
+    try {
+      await remove(ref(db, `historial/${key}/${uid}`));
+      delete historialCompleto[key][uid];
+      showToast(`🗑️ Registro de ${key} eliminado`);
+      renderTabla(uid);
+    } catch(e) {
+      console.error(e);
+      showToast('Error al eliminar', true);
+    }
+  };
+</script>
+</body>
+</html>
