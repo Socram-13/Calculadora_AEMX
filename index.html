@@ -6298,7 +6298,13 @@
           },
           scales: {
             x: {
-              ticks: { color: '#7a5c30', font: { family: 'Nunito', size: 11, weight: '700' } },
+              ticks: {
+                color: '#7a5c30',
+                font: { family: 'Nunito', size: 11, weight: '700' },
+                maxRotation: 90,
+                minRotation: 90,
+                autoSkip: false,
+              },
               grid:  { color: 'rgba(200,169,110,0.3)' },
             },
             y: {
