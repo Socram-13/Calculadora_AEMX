@@ -6354,6 +6354,8 @@
               y: {
                 min: yMinFijo,
                 max: yMaxFijo,
+                afterFit: scale => { scale.width = scale.chart.width; }, // usa TODO el ancho del canvas, sin dejar zona de plot vacía
+                border: { display: false }, // ya no hay línea que separar, era el borde de esa zona vacía
                 ticks: {
                   color: '#7a5c30',
                   font:  { family: 'Nunito', size: 11, weight: '700' },
