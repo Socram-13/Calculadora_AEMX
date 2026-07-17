@@ -2917,7 +2917,7 @@
     </button>
     <div class="historial-body" id="historialBody">
       <div class="historial-inner" id="historialOuterScroll" style="position:relative;overflow-x:auto;display:flex;align-items:flex-start;">
-        <div id="historialYAxisWrap" style="position:sticky;left:0;top:0;z-index:6;background:var(--panel);flex-shrink:0;width:64px;height:220px;">
+        <div id="historialYAxisWrap" style="position:sticky;left:0;top:0;z-index:6;background:transparent;flex-shrink:0;width:64px;height:220px;">
           <canvas id="historialYAxis" style="width:100%;height:100%;display:block;"></canvas>
         </div>
         <div id="historialChartInner" style="position:relative;height:220px;">
@@ -6357,7 +6357,7 @@
                 afterFit: scale => { scale.width = scale.chart.width; }, // usa TODO el ancho del canvas, sin dejar zona de plot vacía
                 border: { display: false }, // ya no hay línea que separar, era el borde de esa zona vacía
                 ticks: {
-                  color: '#7a5c30',
+                  color: accentColor,
                   font:  { family: 'Nunito', size: 11, weight: '700' },
                   callback: v => v.toLocaleString(),
                   stepSize: stepDinamico,
