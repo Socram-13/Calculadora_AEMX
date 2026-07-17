@@ -2917,7 +2917,7 @@
     </button>
     <div class="historial-body" id="historialBody">
       <div class="historial-inner" id="historialOuterScroll" style="position:relative;overflow-x:auto;display:flex;align-items:flex-start;">
-        <div id="historialYAxisWrap" style="position:sticky;left:0;top:0;z-index:6;background:var(--panel);flex-shrink:0;width:54px;height:220px;">
+        <div id="historialYAxisWrap" style="position:sticky;left:0;top:0;z-index:6;background:var(--panel);flex-shrink:0;width:64px;height:220px;">
           <canvas id="historialYAxis" style="width:100%;height:100%;display:block;"></canvas>
         </div>
         <div id="historialChartInner" style="position:relative;height:220px;">
@@ -5867,7 +5867,7 @@
         const estiloOuter = getComputedStyle(outerScroll);
         const padL = parseFloat(estiloOuter.paddingLeft) || 0;
         const padR = parseFloat(estiloOuter.paddingRight) || 0;
-        const Y_AXIS_WIDTH = 54;
+        const Y_AXIS_WIDTH = 64;
         const contenedorAncho = (outerScroll.clientWidth - padL - padR - Y_AXIS_WIDTH) || 300;
         const anchoNecesario  = labels.length * PX_PER_POINT;
         // Si los puntos caben con espacio de sobra, se estira a todo el ancho
