@@ -6152,6 +6152,22 @@
                 ctx2.restore();
               }
             }
+
+            // Línea azul = TOTAL ACTUAL de parcelas (sin etiqueta, punteada animada)
+            if (totalActual >= yAxis.min && totalActual <= yAxis.max) {
+              const yPos = yAxis.getPixelForValue(totalActual);
+              ctx2.save();
+              ctx2.setLineDash([6, 4]);
+              ctx2.lineDashOffset = -(performance.now() / 40 % 10); // marching ants
+              ctx2.strokeStyle = 'rgba(37,99,235,0.8)';
+              ctx2.lineWidth = 1.5;
+              ctx2.beginPath();
+              ctx2.moveTo(xLeft, yPos);
+              ctx2.lineTo(xRight, yPos);
+              ctx2.stroke();
+              ctx2.setLineDash([]);
+              ctx2.restore();
+            }
         }
       };
 
