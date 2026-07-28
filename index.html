@@ -2310,13 +2310,41 @@
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+  <!-- ===== AVISO NAVEGADOR EMBEBIDO (WebView) ===== -->
+  <div id="webview-warning" style="display:none;position:fixed;inset:0;z-index:999999;background:#111;color:#fff;font-family:'Nunito',sans-serif;text-align:center;padding:24px;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:10px;">Estás abriendo esta página dentro de Facebook / Instagram / TikTok</div>
+    <div style="font-size:13px;opacity:0.85;max-width:420px;margin-bottom:18px;">El inicio de sesión con Google no funciona en este navegador integrado y la app puede quedarse en pantalla negra. Abre este enlace en Chrome o Safari.</div>
+    <button onclick="(function(){var u=location.href;try{navigator.clipboard.writeText(u);}catch(e){}window.open(u,'_system');document.getElementById('webview-warning').style.display='none';})()" style="background:#F5A623;border:none;color:#111;font-weight:800;padding:10px 18px;border-radius:10px;font-size:13px;cursor:pointer;">Copiar enlace y continuar de todos modos</button>
+  </div>
+  <script>
+    (function() {
+      try {
+        var ua = navigator.userAgent || '';
+        var isWebView = /FBAN|FBAV|Instagram|Line\/|MicroMessenger|TikTok|musical_ly|Snapchat/i.test(ua) ||
+          (/; wv\)/i.test(ua)) ||
+          (/iPhone|iPod|iPad/.test(ua) && !/Safari/.test(ua) && !/CriOS/.test(ua) && !/FxiOS/.test(ua));
+        if (isWebView) {
+          var w = document.getElementById('webview-warning');
+          if (w) w.style.display = 'flex';
+        }
+      } catch (e) { /* si falla la detección, no bloquear nada */ }
+    })();
+  </script>
+
+  <!-- ===== AVISO DE ERROR DE CARGA (fallback si Firebase/Auth truena) ===== -->
+  <div id="init-error-banner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:999998;background:#7f0000;color:#fff;text-align:center;padding:12px 16px;font-family:'Nunito',sans-serif;font-weight:800;font-size:13px;">
+    ⚠️ No se pudo iniciar la conexión con el servidor. Recarga la página o intenta desde otro navegador.
+  </div>
+
   <!-- ===== FIREBASE SDK ===== -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged, browserLocalPersistence, setPersistence }
-      from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, get, update, onValue }
-      from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+    try {
+      const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+      const { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged, browserLocalPersistence, setPersistence }
+        = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+      const { getDatabase, ref, set, get, update, onValue }
+        = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
 
     const firebaseConfig = {
       apiKey: "AIzaSyB-xx2PlBjvnHe0K7Bf1MspVqUlfjky0mk",
@@ -2709,6 +2737,11 @@
         if (el) el.addEventListener('change', () => { if(window._fbUser) window._fbSaveAll(); });
       });
     });
+    } catch (initErr) {
+      console.error('Error al inicializar la app:', initErr);
+      const b = document.getElementById('init-error-banner');
+      if (b) b.style.display = 'block';
+    }
   </script>
   <!-- ===== FIN FIREBASE SDK ===== -->
 </head>
@@ -3679,12 +3712,23 @@
           })
           .catch(err => { console.warn(err); if (btn) { btn.disabled = false; btn.textContent = 'Cerrar sesión'; } });
       } else {
+        if (btn) { btn.disabled = true; btn.textContent = 'Conectando...'; }
         window._fbSignIn()
           .then(() => {
             if (s) { s.textContent = '✔ Sesión iniciada'; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 2500); }
             if (window._fbUser && window._coinsLoad) window._coinsLoad(window._fbUser.uid);
           })
-          .catch(err => console.warn('Sign-in error:', err));
+          .catch(err => {
+            console.warn('Sign-in error:', err);
+            let msg = '⚠️ No se pudo iniciar sesión. Intenta de nuevo.';
+            if (err && err.code === 'auth/popup-blocked') msg = '⚠️ Tu navegador bloqueó la ventana de Google. Permite popups e intenta de nuevo.';
+            else if (err && err.code === 'auth/popup-closed-by-user') msg = 'Cerraste la ventana de inicio de sesión antes de terminar.';
+            else if (err && err.code === 'auth/network-request-failed') msg = '⚠️ Sin conexión al servidor. Revisa tu internet.';
+            if (s) { s.textContent = msg; s.classList.add('visible'); setTimeout(() => s.classList.remove('visible'), 4000); }
+          })
+          .finally(() => {
+            if (btn) { btn.disabled = false; btn.textContent = window._fbUser ? 'Cerrar sesión' : '🔑 Iniciar con Google'; }
+          });
       }
     }
 
