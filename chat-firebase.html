@@ -886,11 +886,53 @@ const userRef = ref(database, 'chat_presence/' + userId);
                 }
             }
 
+            // ── Avisos programados: cálculo LOCAL (no depende de que admin.html esté abierto) ──
+            // Replica la lógica de updateActiveAviso() de admin.html, pero corre en el navegador
+            // de cualquier usuario que tenga el chat abierto, así el aviso se activa/desactiva solo.
+            window._avisosSchedule = null; // datos crudos de config/avisos (5 slots)
+            window._legacyAvisoText = '';  // fallback: texto ya calculado en config/aviso (compatibilidad)
+            window._currentAvisoText = '';
+
+            function computeActiveAvisoText(avisosData) {
+                if (!avisosData) return null; // null = "no hay datos nuevos, usar fallback"
+                const now = new Date();
+                const activeTexts = [];
+                for (let i = 0; i < 5; i++) {
+                    const slot = avisosData[`slot${i}`];
+                    if (slot && slot.enabled && slot.text && slot.start && slot.end) {
+                        const start = new Date(slot.start);
+                        const end = new Date(slot.end);
+                        if (now >= start && now <= end) {
+                            activeTexts.push(slot.text);
+                        }
+                    }
+                }
+                return activeTexts.join('   •••   ');
+            }
+
+            function recomputeAvisoLocal() {
+                const computed = computeActiveAvisoText(window._avisosSchedule);
+                // Si hay slots programados (aunque estén todos inactivos ahora), manda el cálculo local.
+                // Si no existe el nodo config/avisos (no migrado), usa el texto legacy de config/aviso.
+                window._currentAvisoText = (computed !== null) ? computed : window._legacyAvisoText;
+                loadTicker(window._currentAvisoText);
+            }
+
+            // Escucha el horario crudo de los 5 slots y recalcula al instante si cambia
+            onValue(ref(database, 'config/avisos'), (snap) => {
+                window._avisosSchedule = snap.exists() ? snap.val() : null;
+                recomputeAvisoLocal();
+            });
+
+            // Revisa cada 20s por si ya se cruzó una hora de inicio/fin sin que cambien los datos
+            setInterval(recomputeAvisoLocal, 20000);
+
             onValue(ref(database, 'config'), (snap) => {
                 const cfg = snap.exists() ? snap.val() : {};
 
-                // Aviso ticker
-                loadTicker(cfg.aviso || '');
+                // Fallback legacy (por si config/avisos aún no existe en este proyecto)
+                window._legacyAvisoText = cfg.aviso || '';
+                recomputeAvisoLocal();
 
                 // TTL del chat
                 const nuevoTTL = cfg.chatTTL !== undefined ? cfg.chatTTL : 24;
@@ -1573,20 +1615,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                 // Mensaje 3 — 5s después del mensaje 2
                 setTimeout(() => {
-                    if (!window._fbGet || !window._fbRef || !window._fbDatabase) {
-                        addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.');
-                        return;
+                    let msg = 'En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.';
+                    const aviso = window._currentAvisoText || '';
+                    if (aviso && aviso.trim()) {
+                        msg += '<br><br>📢 <strong>Aviso activo:</strong><br>' + aviso.trim();
                     }
-                    window._fbGet(window._fbRef(window._fbDatabase, 'config/aviso')).then(snap => {
-                        const aviso = snap.exists() ? snap.val() : '';
-                        let msg = 'En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.';
-                        if (aviso && aviso.trim()) {
-                            msg += '<br><br>📢 <strong>Aviso activo:</strong><br>' + aviso.trim();
-                        }
-                        addAuraMessage(msg);
-                    }).catch(() => {
-                        addAuraMessage('En el chat puedes aclarar tus dudas comunicándote con los otros Exploradores. ¡No dudes en participar!<br><br>💡 Si necesitas mi ayuda en cualquier momento, incluye <strong>@aura</strong> en tu mensaje y con gusto te respondo.');
-                    });
+                    addAuraMessage(msg);
                 }, 12000);
 
             } else {
@@ -1600,20 +1634,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
                                    `${horas} horas`;
 
                 setTimeout(() => {
-                    if (!window._fbGet || !window._fbRef || !window._fbDatabase) {
-                        addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
-                        return;
+                    let msg = 'Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.';
+                    const aviso = window._currentAvisoText || '';
+                    if (aviso && aviso.trim()) {
+                        msg += '<br><br>📢 <strong>Aviso activo:</strong><br>' + aviso.trim();
                     }
-                    window._fbGet(window._fbRef(window._fbDatabase, 'config/aviso')).then(snap => {
-                        const aviso = snap.exists() ? snap.val() : '';
-                        let msg = 'Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.';
-                        if (aviso && aviso.trim()) {
-                            msg += '<br><br>📢 <strong>Aviso activo:</strong><br>' + aviso.trim();
-                        }
-                        addAuraMessage(msg);
-                    }).catch(() => {
-                        addAuraMessage('Hola Explorador! Han pasado <strong>' + horasTexto + '</strong> desde tu ultima visita. ¿En qué puedo ayudarte hoy?<br><br>💡 Recuerda incluir <strong>@aura</strong> en tu mensaje si necesitas mi ayuda.');
-                    });
+                    addAuraMessage(msg);
                 }, 2000);
             }
         });
