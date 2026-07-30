@@ -2343,12 +2343,43 @@
     window._fbSignIn   = () => signInWithPopup(auth, provider);
     window._fbSignOut  = () => signOut(auth);
 
-    // 🔇 Lectura silenciosa del aviso (solo para detectar SRB, NO se muestra en pantalla)
+    // 🔇 Detección de SRB: cálculo LOCAL desde config/avisos (no depende de admin.html abierto)
     window._srbActive = false;
-    onValue(ref(db, 'config/aviso'), (snap) => {
-      const aviso = snap.exists() ? String(snap.val()) : '';
-      window._srbActive = /super\s*rent\s*boost\s*50\s*x.*activ/i.test(aviso);
+    window._avisosScheduleIdx = null;   // horario crudo de los 5 slots
+    window._legacyAvisoTextIdx = '';    // fallback: texto viejo calculado por admin.html
+
+    function _computeActiveAvisoTextIdx(avisosData) {
+      if (!avisosData) return null; // null = "sin datos nuevos, usar fallback legacy"
+      const now = new Date();
+      const activeTexts = [];
+      for (let i = 0; i < 5; i++) {
+        const slot = avisosData['slot' + i];
+        if (slot && slot.enabled && slot.text && slot.start && slot.end) {
+          const start = new Date(slot.start);
+          const end = new Date(slot.end);
+          if (now >= start && now <= end) activeTexts.push(slot.text);
+        }
+      }
+      return activeTexts.join('   •••   ');
+    }
+
+    function _recomputeSrbLocal() {
+      const computed = _computeActiveAvisoTextIdx(window._avisosScheduleIdx);
+      const avisoTexto = (computed !== null) ? computed : window._legacyAvisoTextIdx;
+      window._srbActive = /super\s*rent\s*boost\s*50\s*x.*activ/i.test(avisoTexto);
+    }
+
+    onValue(ref(db, 'config/avisos'), (snap) => {
+      window._avisosScheduleIdx = snap.exists() ? snap.val() : null;
+      _recomputeSrbLocal();
     });
+
+    onValue(ref(db, 'config/aviso'), (snap) => {
+      window._legacyAvisoTextIdx = snap.exists() ? String(snap.val()) : '';
+      _recomputeSrbLocal();
+    });
+
+    setInterval(_recomputeSrbLocal, 20000);
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
