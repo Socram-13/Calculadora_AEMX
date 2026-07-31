@@ -2695,10 +2695,14 @@
         } else {
           data.updatedAt = Date.now();
           if (window.userCountry) data.country = window.userCountry;
-          data.clanMember        = false;
-          data.bannedChat        = false;
-          data.bannedLeaderboard = false;
-          data.role              = '';
+          // ⚠️ NO incluir role/clanMember/bannedChat/bannedLeaderboard aquí.
+          // Las reglas de Firebase exigen que newData de estos campos sea IGUAL
+          // al valor previo (data.child(...).val()), que para un usuario nuevo
+          // es `null` (el nodo no existe). Si mandamos '' o false explícitos,
+          // '' == null y false == null son falsos → la regla rechaza el write
+          // y el usuario nuevo nunca logra crear su registro. Dejándolos fuera,
+          // se quedan sin definir (null) igual que antes, y el admin los
+          // define después desde el panel cuando corresponda.
         }
         await update(ref(db, `users/${user.uid}`), data);
       } catch(e) { console.warn('Firebase save error:', e); }
