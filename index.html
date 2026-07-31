@@ -2682,10 +2682,12 @@
           if (prev.city)           data.city           = prev.city;
           if (prev.countryHistory) data.countryHistory = prev.countryHistory;
           if (prev.titulo_juego && !data.titulo_juego) data.titulo_juego = prev.titulo_juego;
-          data.clanMember        = prev.clanMember        === true;
-          data.bannedChat        = prev.bannedChat        === true;
-          data.bannedLeaderboard = prev.bannedLeaderboard === true;
-          data.role              = prev.role              || '';
+          // ⚠️ NO tocar role/clanMember/bannedChat/bannedLeaderboard aquí.
+          // Son campos exclusivos del panel de admin. Si el cliente los manda
+          // explícitamente (incluso reescribiendo el mismo valor previo como
+          // false/'' cuando el campo aún no existía), la regla de Firebase
+          // "newData == data" puede fallar (false/'' != null) y tumba TODO
+          // el write. Con no incluirlos, quedan intactos automáticamente.
           const parcelasChanged =
             String(data.common)    !== String(prev.common    || 0) ||
             String(data.rare)      !== String(prev.rare      || 0) ||
