@@ -2315,7 +2315,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged, browserLocalPersistence, setPersistence }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, get, update, onValue }
+    import { getDatabase, ref, set, get, update, onValue, push, serverTimestamp }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -2624,6 +2624,18 @@
     }
     window.updateNotificationsBadgeIndex = updateNotificationsBadgeIndex;
 
+    // ━━━ Anuncio automático en el chat: aumento de insignias o parcelas ━━━
+    async function announceMilestone(emoji, username, count, label) {
+      try {
+        await push(ref(db, 'messages'), {
+          username: 'AEMX',
+          text: `${emoji} ${username} alcanzó ${count} ${label}`,
+          timestamp: serverTimestamp(),
+          isSystem: true
+        });
+      } catch (e) { console.warn('No se pudo anunciar el logro:', e); }
+    }
+
     // ✅ FIX PRINCIPAL: _fbSaveAll ahora siempre incluye el avatar desde localStorage
     window._fbSaveAll = async function(includeAvatar = false) {
       const user = window._fbUser;
@@ -2688,12 +2700,35 @@
           // false/'' cuando el campo aún no existía), la regla de Firebase
           // "newData == data" puede fallar (false/'' != null) y tumba TODO
           // el write. Con no incluirlos, quedan intactos automáticamente.
-          const parcelasChanged =
+          const anyParcelaFieldChanged =
             String(data.common)    !== String(prev.common    || 0) ||
             String(data.rare)      !== String(prev.rare      || 0) ||
             String(data.epic)      !== String(prev.epic      || 0) ||
             String(data.legendary) !== String(prev.legendary || 0);
-          data.updatedAt = parcelasChanged ? Date.now() : (prev.updatedAt || null);
+          data.updatedAt = anyParcelaFieldChanged ? Date.now() : (prev.updatedAt || null);
+
+          const prevTotalParcelas =
+            (Number(prev.common)    || 0) +
+            (Number(prev.rare)      || 0) +
+            (Number(prev.epic)      || 0) +
+            (Number(prev.legendary) || 0);
+          const newTotalParcelas =
+            (Number(data.common)    || 0) +
+            (Number(data.rare)      || 0) +
+            (Number(data.epic)      || 0) +
+            (Number(data.legendary) || 0);
+
+          // ── Parcelas totales: si aumentó respecto al valor guardado, anunciar en el chat ──
+          if (newTotalParcelas > prevTotalParcelas && data.username) {
+            announceMilestone('📈', data.username, newTotalParcelas, 'parcelas');
+          }
+
+          // ── Insignias: si aumentó respecto al valor guardado, anunciar en el chat ──
+          const prevBadges = Number(prev.badges) || 0;
+          const newBadges  = Number(data.badges) || 0;
+          if (newBadges > prevBadges && data.username) {
+            announceMilestone('🏅', data.username, newBadges, 'insignias');
+          }
         } else {
           data.updatedAt = Date.now();
           if (window.userCountry) data.country = window.userCountry;
