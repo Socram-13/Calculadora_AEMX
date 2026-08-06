@@ -2718,16 +2718,25 @@
             (Number(data.epic)      || 0) +
             (Number(data.legendary) || 0);
 
+          // ── Cooldown anti-spam: máximo 1 anuncio de feed cada 5 min por usuario ──
+          // Se guarda en Firebase (no en localStorage) para que no se pueda
+          // evadir borrando datos del navegador o guardando muy seguido.
+          const FEED_COOLDOWN_MS = 5 * 60 * 1000;
+          const lastAnnounceAt = Number(prev.lastFeedAnnounce) || 0;
+          const canAnnounceNow = (Date.now() - lastAnnounceAt) > FEED_COOLDOWN_MS;
+
           // ── Parcelas totales: si aumentó respecto al valor guardado, anunciar en el chat ──
-          if (newTotalParcelas > prevTotalParcelas && data.username) {
+          if (newTotalParcelas > prevTotalParcelas && data.username && canAnnounceNow) {
             announceMilestone('📈', data.username, newTotalParcelas, 'parcelas');
+            data.lastFeedAnnounce = Date.now();
           }
 
           // ── Insignias: si aumentó respecto al valor guardado, anunciar en el chat ──
           const prevBadges = Number(prev.badges) || 0;
           const newBadges  = Number(data.badges) || 0;
-          if (newBadges > prevBadges && data.username) {
+          if (newBadges > prevBadges && data.username && canAnnounceNow) {
             announceMilestone('🏅', data.username, newBadges, 'insignias');
+            data.lastFeedAnnounce = Date.now();
           }
         } else {
           data.updatedAt = Date.now();
