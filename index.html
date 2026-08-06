@@ -2629,7 +2629,7 @@
       try {
         await push(ref(db, 'messages'), {
           username: 'Sistema',
-          text: `${emoji} ${username} alcanzó ${count} ${label}`,
+          text: `${emoji} ${username} ahora tiene un total de ${count} ${label}`,
           timestamp: serverTimestamp(),
           isSystem: true
         });

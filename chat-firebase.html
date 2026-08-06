@@ -79,16 +79,10 @@
         .message { display:flex;gap:8px;animation:messageSlide .3s ease-out;align-items:flex-end;max-width:80%; }
         .message-system-feed {
             display:flex;align-items:center;justify-content:center;gap:8px;
-            align-self:center;max-width:92%;margin:6px 0;padding:6px 14px;
-            border-radius:999px;background:rgba(255,140,0,.08);
-            border:1px solid rgba(255,140,0,.35);
+            align-self:center;max-width:92%;
             animation:messageSlide .3s ease-out;
         }
-        .message-system-feed-avatar {
-            width:22px;height:22px;min-width:22px;border-radius:50%;
-            background:rgba(255,140,0,.15);border:1px solid rgba(255,140,0,.5);
-            display:flex;align-items:center;justify-content:center;font-size:13px;
-        }
+        .message-system-feed + .message-system-feed { margin-top: -6px; }
         .message-system-feed-text {
             font-size:12px;font-weight:700;color:#ff8c00;text-align:center;
             text-shadow:0 0 6px rgba(255,140,0,.4);
@@ -401,10 +395,9 @@
         .message-system-feed { position: relative; }
         .message-system-feed .btn-delete-msg {
             position: static;
-            opacity: 0.6;
+            opacity: 1;
             border-color: rgba(255,140,0,.6);
         }
-        .message-system-feed .btn-delete-msg:hover { opacity: 1 !important; }
 
         #deleteConfirmDialog {
             position: fixed;
@@ -833,7 +826,6 @@ const userRef = ref(database, 'chat_presence/' + userId);
                         : '';
                     container.insertAdjacentHTML('beforeend', `
                         <div class="message-system-feed">
-                            <div class="message-system-feed-avatar">🤖</div>
                             <span class="message-system-feed-text">${escapeHtml(text)}</span>
                             ${deleteBtnSys}
                         </div>
