@@ -2628,7 +2628,7 @@
     async function announceMilestone(emoji, username, count, label) {
       try {
         await push(ref(db, 'messages'), {
-          username: 'AEMX',
+          username: 'Sistema',
           text: `${emoji} ${username} alcanzó ${count} ${label}`,
           timestamp: serverTimestamp(),
           isSystem: true
