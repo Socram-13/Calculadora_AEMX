@@ -670,11 +670,8 @@
             const ADMIN_EMAIL = 'ingmarcosrodriguez31@gmail.com';
             const currentUserIsAdmin = firebaseUser.email === ADMIN_EMAIL;
             const currentUserIsModerator = !currentUserIsAdmin && isModerator === true;
-            console.log('[ADMIN CHECK] email:', firebaseUser.email, '| isAdmin:', currentUserIsAdmin, '| isModerator:', currentUserIsModerator);
 
             window._notifUid = firebaseUser.uid;
-            console.log('%c[NOTIF DEBUG] UID que este chat usa para leer notificaciones:', 'color:#00ff88;font-weight:bold;', firebaseUser.uid);
-            console.log('[NOTIF DEBUG] Compáralo contra la clave bajo notifications/ en Firebase Console.');
             loadNotificationsFromFirebase(firebaseUser.uid);
 
             window.setUsername = setUsername;
@@ -1092,9 +1089,7 @@ const userRef = ref(database, 'chat_presence/' + userId);
         // siguen disponibles para verlas después.
         function loadNotificationsFromFirebase(uid) {
             try {
-                console.log('[NOTIF DEBUG] Suscribiendo listener a notifications/' + uid);
                 onValue(ref(database, `notifications/${uid}`), (snap) => {
-                    console.log('[NOTIF DEBUG] onValue disparado. ¿Existe data?', snap.exists(), '| raw:', snap.val());
                     const historial = getNotifHistorial();
                     const idsExistentes = new Set(historial.map(n => n.id));
                     let huboNuevas = false;
