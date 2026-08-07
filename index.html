@@ -790,6 +790,117 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  .streak-track {
+    margin-top: 10px;
+    padding: 12px 16px 14px;
+    background: linear-gradient(180deg, #fff8e1 0%, #fff3d4 100%);
+    border: 2px solid #F5A623;
+    border-radius: 14px;
+  }
+  .streak-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .streak-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    color: #7a4a0a;
+    letter-spacing: 0.5px;
+  }
+  .streak-day-label {
+    font-family: 'Nunito', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    color: #c8851a;
+  }
+  .streak-dots {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .streak-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    justify-self: center;
+    background: var(--sand);
+    border: 2px solid var(--sand-dark);
+    color: var(--text2);
+    transition: all .25s;
+  }
+  .streak-dot.done {
+    background: linear-gradient(180deg, #81C784 0%, #4CAF50 100%);
+    border-color: #2d7a25;
+    color: #fff;
+  }
+  .streak-dot.today {
+    background: linear-gradient(180deg, #FFD060 0%, #F5A623 100%);
+    border-color: #c8851a;
+    color: #7a4a0a;
+    box-shadow: 0 0 0 3px rgba(245,166,35,0.3);
+    animation: streakPulse 1.4s ease-in-out infinite;
+  }
+  .streak-dot.gift {
+    background: var(--sand);
+    border-color: #c8851a;
+    color: #c8851a;
+  }
+  .streak-dot.gift.today {
+    background: linear-gradient(180deg, #FFD060 0%, #F5A623 100%);
+    color: #7a4a0a;
+  }
+  @keyframes streakPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.12); }
+  }
+  .streak-dot.done.today-ring {
+    box-shadow: 0 0 0 3px rgba(76,175,80,0.35);
+  }
+  .streak-line {
+    height: 3px;
+    background: var(--sand-dark);
+    border-radius: 2px;
+  }
+  .streak-line.filled {
+    background: linear-gradient(90deg, #4CAF50, #81C784);
+  }
+  .streak-note {
+    font-family: 'Nunito', sans-serif;
+    font-size: 10px;
+    color: #c8851a;
+    text-align: center;
+    line-height: 1.4;
+  }
+  body.theme-original .streak-track {
+    background: linear-gradient(135deg, #1a1200 0%, #0d0b00 100%) !important;
+    border-color: rgba(255,215,0,0.35) !important;
+  }
+  body.theme-original .streak-label,
+  body.theme-original .streak-day-label,
+  body.theme-original .streak-note {
+    color: #ffd700 !important;
+  }
+  body.theme-original .streak-dot {
+    background: #060b14 !important;
+    border-color: rgba(255,215,0,0.25) !important;
+    color: #ffd700 !important;
+  }
+  body.theme-original .streak-dot.today,
+  body.theme-original .streak-dot.gift.today {
+    background: linear-gradient(135deg, rgba(255,215,0,0.35), rgba(255,180,0,0.15)) !important;
+    border-color: #ffd700 !important;
+    color: #ffd700 !important;
+  }
+
   .coin-toast {
     position: fixed;
     top: 24px;
@@ -3775,6 +3886,15 @@
     </button>
   </div>
 
+  <div class="streak-track" id="streak-track" style="display:none;">
+    <div class="streak-header">
+      <span class="streak-label">🔥 Racha de Check-In</span>
+      <span class="streak-day-label" id="streak-day-label">Día 0 de 7</span>
+    </div>
+    <div class="streak-dots" id="streak-dots"></div>
+    <div class="streak-note">Llega al día 7 sin fallar y gana <strong>5 coins</strong> en vez de 1. Si te saltas un día, la racha se reinicia.</div>
+  </div>
+
   <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-top:12px;flex-wrap:wrap;">
     <button class="btn-save" onclick="shareData()" id="btn-share-data">💾 &nbsp;Guardar</button>
     <div id="google-auth-bar" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -3889,10 +4009,11 @@
       } catch(e) {}
     }
 
-    function showCoinToast(total) {
+    function showCoinToast(total, amount = 1) {
       const toast = document.getElementById('coin-toast');
       if (!toast) return;
-      toast.textContent = `🪙 +1 COIN GANADO · TOTAL: ${total}`;
+      const label = amount >= 5 ? '🎉 ¡RACHA DE 7 DÍAS! +5 COINS' : '🪙 +1 COIN GANADO';
+      toast.textContent = `${label} · TOTAL: ${total}`;
       toast.classList.add('show');
       setTimeout(() => toast.classList.remove('show'), 3000);
     }
@@ -3900,6 +4021,61 @@
     function setCoinStatus(html) {
       const el = document.getElementById('coins-status-text');
       if (el) el.outerHTML = `<span id="coins-status-text">${html}</span>`;
+    }
+
+    function fechaAyer(hoyStr) {
+      const d = new Date(hoyStr + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      return d.toISOString().split('T')[0];
+    }
+
+    // Calcula cuántos días "verdes" mostrar y si hoy ya se hizo check-in,
+    // sin mutar nada — se usa tanto para pintar la racha como referencia.
+    function getDisplayStreakState(data, hoy) {
+      const ayer = fechaAyer(hoy);
+      const todayChecked = data.lastCoinDate === hoy;
+      const rawStreak = Number(data.checkinStreak) || 0;
+      let greenDays;
+      if (todayChecked) {
+        greenDays = rawStreak;
+      } else if (data.lastCoinDate === ayer && rawStreak < 7) {
+        greenDays = rawStreak;
+      } else {
+        greenDays = 0; // racha rota, o el ciclo anterior ya se completó
+      }
+      return { greenDays, todayChecked };
+    }
+
+    function renderStreakTrack(greenDays, todayChecked) {
+      const track = document.getElementById('streak-track');
+      const dotsEl = document.getElementById('streak-dots');
+      const dayLabel = document.getElementById('streak-day-label');
+      if (!track || !dotsEl || !dayLabel) return;
+      track.style.display = '';
+
+      const displayDay = Math.min(todayChecked ? greenDays : greenDays + 1, 7);
+      dayLabel.textContent = `Día ${displayDay} de 7`;
+
+      let html = '';
+      for (let i = 1; i <= 7; i++) {
+        const isGift = i === 7;
+        const isDone = i <= greenDays;
+        const isTodayPending = !todayChecked && i === greenDays + 1;
+        const isTodayDone = todayChecked && i === greenDays;
+
+        let cls = 'streak-dot';
+        let content = isGift ? '🎁' : String(i);
+        if (isGift) cls += ' gift';
+        if (isDone) { cls += ' done'; content = '✔'; if (isTodayDone) cls += ' today-ring'; }
+        else if (isTodayPending) { cls += ' today'; content = isGift ? '🎁' : '★'; }
+
+        html += `<div class="${cls}">${content}</div>`;
+        if (i < 7) {
+          const filled = i <= greenDays ? 'filled' : '';
+          html += `<div class="streak-line ${filled}"></div>`;
+        }
+      }
+      dotsEl.innerHTML = html;
     }
 
     window._awardDailyCoin = async function() {
@@ -3933,20 +4109,36 @@
           window._coinsUpdateDisplay(data.coins || 0);
           setCoinStatus(`<span class="waiting">Vuelve mañana a guardar tus datos para ganar otro coin 🕐</span>`);
           updateCheckInBtn(true);
+          const st = getDisplayStreakState(data, hoy);
+          renderStreakTrack(st.greenDays, st.todayChecked);
           return;
         }
 
-        const nuevoTotal = (data.coins || 0) + 1;
+        // ── Racha de 7 días: calcular si continúa, se rompe, o completa el ciclo ──
+        const ayer = fechaAyer(hoy);
+        const rawStreak = Number(data.checkinStreak) || 0;
+        const newStreak = (ultimaFecha === ayer && rawStreak < 7) ? rawStreak + 1 : 1;
+        const isBonus = newStreak === 7;
+        const awardAmount = isBonus ? 5 : 1;
+
+        const nuevoTotal = (data.coins || 0) + awardAmount;
         await _upd(_ref(_db, `users/${uid}`), {
-          coins:        nuevoTotal,
-          lastCoinDate: hoy
+          coins:            nuevoTotal,
+          lastCoinDate:     hoy,
+          checkinStreak:    newStreak,
+          lastStreakWriteAt: window._fbServerTimestamp ? window._fbServerTimestamp() : Date.now()
         });
 
         window._coinsUpdateDisplay(nuevoTotal);
         playCoinSound();
-        showCoinToast(nuevoTotal);
-        setCoinStatus(`<span class="earned">✔ +1 Coin ganado hoy · ${hoy}</span>`);
+        showCoinToast(nuevoTotal, awardAmount);
+        if (isBonus) {
+          setCoinStatus(`<span class="earned">🎉 ¡Racha de 7 días! +5 Coins · ${hoy}</span>`);
+        } else {
+          setCoinStatus(`<span class="earned">✔ +1 Coin ganado hoy · ${hoy}</span>`);
+        }
         updateCheckInBtn(true);
+        renderStreakTrack(isBonus ? 7 : newStreak, true);
 
       } catch (err) {
         console.warn('Coins error:', err);
@@ -3967,6 +4159,8 @@
 
         if (!coinsActivo) {
           if (coinsBar) coinsBar.style.display = 'none';
+          const st0 = document.getElementById('streak-track');
+          if (st0) st0.style.display = 'none';
           return;
         }
 
@@ -3983,6 +4177,8 @@
 
         if (!esMexico) {
           if (coinsBar) coinsBar.style.display = 'none';
+          const st1 = document.getElementById('streak-track');
+          if (st1) st1.style.display = 'none';
           return;
         }
 
@@ -4000,6 +4196,9 @@
           setCoinStatus(`<span class="waiting">Haz Check In para ganar 1 coin 🪙</span>`);
           updateCheckInBtn(false);
         }
+
+        const st = getDisplayStreakState(serverData, hoy);
+        renderStreakTrack(st.greenDays, st.todayChecked);
 
       } catch(e) {
         console.warn('Coins load error:', e);
