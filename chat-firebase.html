@@ -725,6 +725,14 @@ const userRef = ref(database, 'chat_presence/' + userId);
                     const messages = [];
                     snapshot.forEach((childSnapshot) => { messages.push({ key: childSnapshot.key, ...childSnapshot.val() }); });
                     messages.sort((a, b) => a.timestamp - b.timestamp);
+
+                    // Conteo independiente de mensajes de feed (isSystem) — límite 5
+                    const feedMsgs = messages.filter(m => m.isSystem === true).sort((a, b) => a.timestamp - b.timestamp);
+                    if (feedMsgs.length > 5) {
+                        const toDelete = feedMsgs.slice(0, feedMsgs.length - 5);
+                        toDelete.forEach(m => remove(ref(database, 'messages/' + m.key)).catch(e => console.error('trim feed error:', e)));
+                    }
+
                     const total = messages.length;
                     // ✅ Con lista limitada, detectamos novedad por el último mensaje
                     const newest = total ? messages[total - 1] : null;
