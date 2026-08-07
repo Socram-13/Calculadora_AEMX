@@ -792,10 +792,21 @@
 
   .streak-track {
     margin-top: 10px;
-    padding: 12px 16px 14px;
-    background: linear-gradient(180deg, #fff8e1 0%, #fff3d4 100%);
-    border: 2px solid #F5A623;
-    border-radius: 14px;
+    padding: 14px 16px 14px;
+    background: linear-gradient(180deg, #fff8e1 0%, #ffeaa0 100%);
+    border: 3px solid #F5A623;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 5px 0 #c8851a, 0 8px 16px rgba(0,0,0,0.1);
+  }
+  .streak-track::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #FFD060, transparent);
+    opacity: 0.9;
   }
   .streak-header {
     display: flex;
@@ -804,23 +815,23 @@
     margin-bottom: 10px;
   }
   .streak-label {
-    font-family: 'Nunito', sans-serif;
-    font-size: 11px;
-    font-weight: 800;
-    color: #7a4a0a;
-    letter-spacing: 0.5px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: #c8851a;
+    text-transform: uppercase;
   }
   .streak-day-label {
-    font-family: 'Nunito', sans-serif;
-    font-size: 11px;
-    font-weight: 800;
-    color: #c8851a;
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    font-weight: 400;
+    color: #7a4a0a;
   }
   .streak-dots {
     display: grid;
     grid-template-columns: repeat(13, 1fr);
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }
   .streak-dot {
     width: 24px;
@@ -829,24 +840,27 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    font-family: 'Fredoka One', cursive;
     font-size: 11px;
-    font-weight: 800;
+    font-weight: 400;
     justify-self: center;
     background: var(--sand);
     border: 2px solid var(--sand-dark);
     color: var(--text2);
+    box-shadow: 0 2px 0 var(--sand-dark);
     transition: all .25s;
   }
   .streak-dot.done {
     background: linear-gradient(180deg, #81C784 0%, #4CAF50 100%);
     border-color: #2d7a25;
     color: #fff;
+    box-shadow: 0 2px 0 #2d7a25;
   }
   .streak-dot.today {
     background: linear-gradient(180deg, #FFD060 0%, #F5A623 100%);
     border-color: #c8851a;
     color: #7a4a0a;
-    box-shadow: 0 0 0 3px rgba(245,166,35,0.3);
+    box-shadow: 0 2px 0 #c8851a, 0 0 0 3px rgba(245,166,35,0.3);
     animation: streakPulse 1.4s ease-in-out infinite;
   }
   .streak-dot.gift {
@@ -863,7 +877,7 @@
     50%      { transform: scale(1.12); }
   }
   .streak-dot.done.today-ring {
-    box-shadow: 0 0 0 3px rgba(76,175,80,0.35);
+    box-shadow: 0 2px 0 #2d7a25, 0 0 0 3px rgba(76,175,80,0.35);
   }
   .streak-line {
     height: 3px;
@@ -876,13 +890,16 @@
   .streak-note {
     font-family: 'Nunito', sans-serif;
     font-size: 10px;
+    font-weight: 700;
     color: #c8851a;
     text-align: center;
     line-height: 1.4;
+    letter-spacing: 0.3px;
   }
   body.theme-original .streak-track {
     background: linear-gradient(135deg, #1a1200 0%, #0d0b00 100%) !important;
     border-color: rgba(255,215,0,0.35) !important;
+    box-shadow: none !important;
   }
   body.theme-original .streak-label,
   body.theme-original .streak-day-label,
