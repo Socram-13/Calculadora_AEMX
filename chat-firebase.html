@@ -750,7 +750,12 @@ const userRef = ref(database, 'chat_presence/' + userId);
 
                     lastMessageCount = total;
                     chatInitialized = true;
-                    messages.slice(-20).forEach((msg) => {
+
+                    // No renderizar más de los últimos 5 mensajes de feed, aunque el borrado en Firebase aún no se haya confirmado
+                    const feedKeysToShow = new Set(feedMsgs.slice(-5).map(m => m.key));
+                    const messagesToRender = messages.filter(m => m.isSystem !== true || feedKeysToShow.has(m.key));
+
+                    messagesToRender.slice(-20).forEach((msg) => {
                         if (!msg.username || !msg.text) return;
                         const isAdminMsg = msg.isAdmin === true || (currentUserIsAdmin && msg.username === currentUsername);
                         const isModeratorMsg = !isAdminMsg && (msg.isModerator === true || (currentUserIsModerator && msg.username === currentUsername));
