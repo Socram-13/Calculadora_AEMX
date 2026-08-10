@@ -4004,7 +4004,19 @@
       if (!btn || btn.disabled) return;
       btn.disabled = true;
       btn.textContent = '⏳ ...';
-      await window._awardDailyCoin();
+      try {
+        await window._awardDailyCoin();
+      } catch (e) {
+        console.warn('Check-in error:', e);
+      } finally {
+        // Si _awardDailyCoin no dejó el botón en estado "hecho", lo regresamos
+        // a su estado normal para que el usuario pueda reintentar.
+        if (btn.textContent === '⏳ ...') {
+          btn.disabled = false;
+          btn.textContent = '🏁 CHECK IN';
+          setCoinStatus(`<span class="waiting">No se pudo procesar el check-in, intenta de nuevo 🔁</span>`);
+        }
+      }
     };
 
     function playCoinSound() {
@@ -4142,8 +4154,7 @@
         await _upd(_ref(_db, `users/${uid}`), {
           coins:            nuevoTotal,
           lastCoinDate:     hoy,
-          checkinStreak:    newStreak,
-          lastStreakWriteAt: window._fbServerTimestamp ? window._fbServerTimestamp() : Date.now()
+          checkinStreak:    newStreak
         });
 
         window._coinsUpdateDisplay(nuevoTotal);
@@ -4159,6 +4170,7 @@
 
       } catch (err) {
         console.warn('Coins error:', err);
+        setCoinStatus(`<span class="waiting">⚠ No se pudo procesar el check-in, intenta de nuevo</span>`);
       }
     };
 
