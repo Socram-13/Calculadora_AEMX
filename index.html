@@ -2443,7 +2443,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, onAuthStateChanged, browserLocalPersistence, setPersistence }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getDatabase, ref, set, get, update, onValue, push, serverTimestamp }
+    import { getDatabase, ref, set, get, update, onValue, push, serverTimestamp, remove }
       from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
     const firebaseConfig = {
@@ -2763,6 +2763,21 @@
           timestamp: serverTimestamp(),
           isSystem: true
         });
+
+        // Mantener solo los últimos 5 mensajes de feed en el servidor
+        const snap = await get(ref(db, 'messages'));
+        if (snap.exists()) {
+          const all = [];
+          snap.forEach(child => {
+            const v = child.val();
+            if (v.isSystem === true) all.push({ key: child.key, timestamp: v.timestamp || 0 });
+          });
+          all.sort((a, b) => a.timestamp - b.timestamp);
+          if (all.length > 5) {
+            const toDelete = all.slice(0, all.length - 5);
+            await Promise.all(toDelete.map(m => remove(ref(db, 'messages/' + m.key))));
+          }
+        }
       } catch (e) { console.warn('No se pudo anunciar en el feed:', e); }
     }
     window._fbAnnounceFeed = announceFeedText;
