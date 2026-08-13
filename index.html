@@ -4140,13 +4140,15 @@
       try {
         const configSnap = await _get(_ref(_db, 'config/coinsActivo'));
         const coinsActivo = configSnap.exists() ? configSnap.val() : true;
-        const pais = (window.userCountry || '').toLowerCase();
-        const esMexico = pais.includes('mexico') || pais.includes('méxico');
-
-        if (!coinsActivo || !esMexico) return;
+        if (!coinsActivo) return;
 
         const snap = await _get(_ref(_db, `users/${uid}`));
         const data = snap.exists() ? snap.val() : {};
+
+        const pais = (data.country || window.userCountry || '').toLowerCase();
+        const esMexico = pais.includes('mexico') || pais.includes('méxico');
+        if (!esMexico) return;
+
         const ultimaFecha = data.lastCoinDate || null;
 
         if (ultimaFecha === hoy) {
