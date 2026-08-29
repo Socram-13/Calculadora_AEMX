@@ -2287,12 +2287,9 @@
     background: linear-gradient(90deg, #00c8ff, #4ade80, #facc15, #c084fc, #00c8ff) !important;
   }
 
-  /* ══ Botón de cambio de tema ══ */
+  /* ══ Botón de cambio de tema (ahora dentro del modal de configuración) ══ */
   #theme-toggle-btn {
-    position: fixed;
-    bottom: 100px;
-    right: 28px;
-    z-index: 9999;
+    position: static;
     width: 54px;
     height: 54px;
     border-radius: 50%;
@@ -2305,7 +2302,6 @@
     justify-content: center;
     font-size: 22px;
     transition: transform 0.2s, box-shadow 0.2s;
-    title: "Cambiar tema";
   }
   #theme-toggle-btn:hover {
     transform: translateY(-2px);
@@ -2321,25 +2317,119 @@
     box-shadow: 0 0 16px rgba(0,200,255,0.5) !important;
   }
 
-  #theme-toggle-tooltip {
+  /* ══ Modal de configuración (reusa look del bottom-sheet de medallas) ══ */
+  .settings-modal-overlay {
     position: fixed;
-    bottom: 162px;
-    right: 22px;
-    z-index: 9999;
-    background: var(--panel);
-    border: 2px solid var(--border);
-    border-radius: 10px;
-    padding: 5px 10px;
-    font-family: 'Fredoka One', cursive;
-    font-size: 11px;
-    color: var(--text);
-    white-space: nowrap;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 10000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
-    box-shadow: 0 3px 0 var(--sand-dark);
+    transition: opacity 0.25s ease;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
   }
-  #theme-toggle-btn:hover + #theme-toggle-tooltip { opacity: 1; }
+  .settings-modal-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .settings-modal {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(100%);
+    width: 100%;
+    max-width: 480px;
+    background: var(--panel);
+    border: 3px solid var(--border);
+    border-bottom: none;
+    border-radius: 24px 24px 0 0;
+    padding: 20px 24px calc(28px + env(safe-area-inset-bottom, 0px));
+    z-index: 10001;
+    transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+    box-shadow: 0 -6px 0 var(--sand-dark), 0 -12px 40px rgba(0,0,0,0.2);
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  .settings-modal.open {
+    transform: translateX(-50%) translateY(0);
+  }
+  .settings-modal-handle {
+    width: 40px;
+    height: 5px;
+    background: var(--sand-dark);
+    border-radius: 3px;
+    margin: 0 auto 16px;
+  }
+  .settings-modal-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 4px;
+    border-top: 2px dashed var(--border);
+  }
+  .settings-row:first-of-type { border-top: none; }
+  .settings-row-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .settings-row-desc {
+    font-size: 11px;
+    color: var(--text);
+    opacity: 0.7;
+    margin-top: 2px;
+    font-family: sans-serif;
+  }
+  /* Switch on/off para notificaciones */
+  .settings-switch {
+    position: relative;
+    width: 50px;
+    height: 28px;
+    flex-shrink: 0;
+  }
+  .settings-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .settings-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: var(--sand-dark);
+    border-radius: 28px;
+    transition: 0.2s;
+    border: 2px solid var(--border);
+  }
+  .settings-switch-slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  .settings-switch input:checked + .settings-switch-slider {
+    background: linear-gradient(135deg, #00c8ff, #4ade80);
+  }
+  .settings-switch input:checked + .settings-switch-slider::before {
+    transform: translateX(22px);
+  }
 
   /* Tooltips para enlaces de redes sociales */
   .tooltip-bubble {
@@ -2945,9 +3035,128 @@
 </head>
 <body>
 
-<!-- ══ BOTÓN CAMBIO DE TEMA ══ -->
-<button id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema">🎨</button>
-<div id="theme-toggle-tooltip">Cambiar tema</div>
+<!-- ══ MODAL DE CONFIGURACIÓN (tema + notificaciones) ══ -->
+<div class="settings-modal-overlay" id="settingsModalOverlay" onclick="closeSettingsModal()"></div>
+<div class="settings-modal" id="settingsModal">
+  <div class="settings-modal-handle"></div>
+  <div class="settings-modal-title">⚙️ Configuración</div>
+
+  <div class="settings-row">
+    <div>
+      <div class="settings-row-label">Cambiar tema</div>
+      <div class="settings-row-desc">Alterna entre el estilo Atlas y el estilo Original</div>
+    </div>
+    <button id="theme-toggle-btn" onclick="toggleTheme()" title="Cambiar tema">🎨</button>
+  </div>
+
+  <div class="settings-row">
+    <div>
+      <div class="settings-row-label">Notificación de Check In</div>
+      <div class="settings-row-desc">Avisa cuando el check in diario esté disponible</div>
+    </div>
+    <label class="settings-switch">
+      <input type="checkbox" id="checkinNotifToggle" onchange="onCheckinNotifToggle(this.checked)">
+      <span class="settings-switch-slider"></span>
+    </label>
+  </div>
+</div>
+
+<script>
+  function openSettingsModal() {
+    document.getElementById('settingsModalOverlay').classList.add('open');
+    document.getElementById('settingsModal').classList.add('open');
+  }
+  function closeSettingsModal() {
+    document.getElementById('settingsModalOverlay').classList.remove('open');
+    document.getElementById('settingsModal').classList.remove('open');
+  }
+</script>
+
+<!-- ══ NOTIFICACIÓN DE CHECK-IN (local, vía Service Worker) ══ -->
+<script>
+  const CHECKIN_NOTIF_KEY = 'aemx-checkin-notif';   // 'on' | 'off'
+  const CHECKIN_NOTIFIED_KEY = 'aemx-checkin-notified-date';
+
+  // Registra el Service Worker (necesario para showNotification en PWA instalada)
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('No se pudo registrar el Service Worker:', err);
+      });
+    });
+  }
+
+  // Ajusta el estado visual del switch al cargar la página
+  (function initCheckinNotifToggle() {
+    const toggle = document.getElementById('checkinNotifToggle');
+    if (!toggle) return;
+    const pref = localStorage.getItem(CHECKIN_NOTIF_KEY);
+    toggle.checked = (pref === 'on' && typeof Notification !== 'undefined' && Notification.permission === 'granted');
+  })();
+
+  // Maneja el switch ON/OFF
+  window.onCheckinNotifToggle = async function(checked) {
+    const toggle = document.getElementById('checkinNotifToggle');
+    if (!checked) {
+      localStorage.setItem(CHECKIN_NOTIF_KEY, 'off');
+      return;
+    }
+    if (typeof Notification === 'undefined') {
+      setCoinStatus && setCoinStatus(`<span class="waiting">Tu navegador no soporta notificaciones</span>`);
+      if (toggle) toggle.checked = false;
+      return;
+    }
+    let permission = Notification.permission;
+    if (permission === 'default') {
+      permission = await Notification.requestPermission();
+    }
+    if (permission === 'granted') {
+      localStorage.setItem(CHECKIN_NOTIF_KEY, 'on');
+      // Si el check-in ya está disponible ahora mismo, no reenviamos aviso hoy;
+      // solo confirmamos que quedó activado con una notificación de prueba.
+      showCheckinNotification('🔔 Notificaciones activadas', 'Te avisaremos cuando el check in esté disponible.');
+    } else {
+      localStorage.setItem(CHECKIN_NOTIF_KEY, 'off');
+      if (toggle) toggle.checked = false;
+      setCoinStatus && setCoinStatus(`<span class="waiting">Permiso de notificaciones denegado</span>`);
+    }
+  };
+
+  function showCheckinNotification(title, body) {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          body: body,
+          icon: 'icon-192.png',
+          badge: 'icon-192.png',
+          tag: 'aemx-checkin'
+        });
+      }).catch(() => {
+        try { new Notification(title, { body: body, icon: 'icon-192.png' }); } catch(e) {}
+      });
+    } else {
+      try { new Notification(title, { body: body, icon: 'icon-192.png' }); } catch(e) {}
+    }
+  }
+
+  // Se llama cuando ya sabemos que el check-in de hoy sigue disponible
+  window.maybeNotifyCheckinAvailable = function(hoy) {
+    if (localStorage.getItem(CHECKIN_NOTIF_KEY) !== 'on') return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    if (localStorage.getItem(CHECKIN_NOTIFIED_KEY) === hoy) return; // ya se avisó hoy
+    localStorage.setItem(CHECKIN_NOTIFIED_KEY, hoy);
+    showCheckinNotification('🏁 ¡Check In disponible!', 'Ya puedes hacer tu check in de hoy y ganar tu coin.');
+  };
+
+  // Reintenta el chequeo cuando el usuario vuelve a la app (no garantiza
+  // aviso si la app estuvo cerrada, pero cubre el caso de segundo plano/reapertura)
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && window._fbUser && window._coinsLoad) {
+      window._coinsLoad(window._fbUser.uid);
+    }
+  });
+</script>
 
 <script>
   (function() {
@@ -3039,6 +3248,17 @@
               transition:transform 0.2s,box-shadow 0.2s;"
        onmouseover="this.style.transform='scale(1.15)';this.style.boxShadow='0 4px 12px rgba(0,86,165,0.7)'"
        onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 2px 6px rgba(0,86,165,0.5)'">i</a>
+    <button type="button" onclick="openSettingsModal()"
+       title="Configuración"
+       style="position:absolute;top:10px;left:10px;z-index:10;
+              width:20px;height:20px;border-radius:50%;
+              background:#0056A5;color:#fff;border:none;padding:0;
+              display:flex;align-items:center;justify-content:center;
+              font-size:11px;line-height:1;cursor:pointer;
+              box-shadow:0 2px 6px rgba(0,86,165,0.5);
+              transition:transform 0.2s,box-shadow 0.2s;"
+       onmouseover="this.style.transform='scale(1.15)';this.style.boxShadow='0 4px 12px rgba(0,86,165,0.7)'"
+       onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 2px 6px rgba(0,86,165,0.5)'">⚙️</button>
     <label for="avatar-input" style="display:none;" id="avatar-label"></label>
     <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
     <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
@@ -4241,6 +4461,7 @@
         } else {
           setCoinStatus(`<span class="waiting">Haz Check In para ganar 1 coin 🪙</span>`);
           updateCheckInBtn(false);
+          maybeNotifyCheckinAvailable(hoy);
         }
 
         const st = getDisplayStreakState(serverData, hoy);
