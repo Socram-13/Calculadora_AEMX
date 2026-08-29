@@ -1145,42 +1145,6 @@
     line-height: 1.3;
   }
 
-  .profile-avatar-color {
-    position: absolute;
-    bottom: 2px;
-    left: 2px;
-    width: 32px;
-    height: 32px;
-    background: var(--gold);
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 15px;
-    cursor: pointer;
-    box-shadow: 0 2px 0 #c8851a;
-    z-index: 3;
-  }
-
-  .profile-avatar-edit {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 32px;
-    height: 32px;
-    background: var(--gold);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    color: #7a4a0a;
-    cursor: pointer;
-    box-shadow: 0 2px 0 #c8851a;
-    display: none;
-    z-index: 3;
-  }
-
   .profile-info {
     flex: 1;
   }
@@ -2430,6 +2394,30 @@
   .settings-switch input:checked + .settings-switch-slider::before {
     transform: translateX(22px);
   }
+  .settings-icon-btn {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 3px solid #c8851a;
+    background: linear-gradient(180deg, #FFD060 0%, #F5A623 100%);
+    box-shadow: 0 3px 0 #c8851a;
+    color: #7a4a0a;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .settings-icon-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #c8851a;
+  }
+  .settings-icon-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 0 #c8851a;
+  }
 
   /* Tooltips para enlaces de redes sociales */
   .tooltip-bubble {
@@ -3043,6 +3031,22 @@
 
   <div class="settings-row">
     <div>
+      <div class="settings-row-label">Foto de perfil</div>
+      <div class="settings-row-desc">Sube o cambia tu foto de perfil</div>
+    </div>
+    <button type="button" class="settings-icon-btn" id="avatar-edit" title="Editar foto de perfil">✎</button>
+  </div>
+
+  <div class="settings-row">
+    <div>
+      <div class="settings-row-label">Color de borde</div>
+      <div class="settings-row-desc">Elige el color del marco de tu avatar</div>
+    </div>
+    <button type="button" class="settings-icon-btn" id="avatar-color-btn" title="Cambiar color de borde">🎨</button>
+  </div>
+
+  <div class="settings-row">
+    <div>
       <div class="settings-row-label">Cambiar tema</div>
       <div class="settings-row-desc">Alterna entre el estilo Atlas y el estilo Original</div>
     </div>
@@ -3255,25 +3259,22 @@
     <button type="button" onclick="openSettingsModal()"
        title="Configuración"
        style="position:absolute;top:10px;left:10px;z-index:10;
-              width:20px;height:20px;border-radius:50%;
-              background:#0056A5;color:#fff;border:none;padding:0;
+              background:none;border:none;padding:0;margin:0;
               display:flex;align-items:center;justify-content:center;
-              font-size:11px;line-height:1;cursor:pointer;
-              box-shadow:0 2px 6px rgba(0,86,165,0.5);
-              transition:transform 0.2s,box-shadow 0.2s;"
-       onmouseover="this.style.transform='scale(1.15)';this.style.boxShadow='0 4px 12px rgba(0,86,165,0.7)'"
-       onmouseout="this.style.transform='scale(1)';this.style.boxShadow='0 2px 6px rgba(0,86,165,0.5)'">⚙️</button>
+              font-size:18px;line-height:1;cursor:pointer;
+              filter:drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+              transition:transform 0.2s;"
+       onmouseover="this.style.transform='scale(1.15) rotate(20deg)'"
+       onmouseout="this.style.transform='scale(1) rotate(0deg)'">⚙️</button>
     <label for="avatar-input" style="display:none;" id="avatar-label"></label>
     <input type="file" id="avatar-input" accept="image/*" onchange="loadAvatar(event)" style="display:none;">
     <input type="color" id="avatar-border-color" value="#00c8ff" oninput="changeAvatarBorder(this.value)" style="display:none;">
-    <div class="profile-avatar-wrapper" id="avatar-wrapper" onmouseenter="showAvatarButtons()" onmouseleave="hideAvatarButtons()">
+    <div class="profile-avatar-wrapper" id="avatar-wrapper">
       <div class="profile-avatar-placeholder" id="avatar-placeholder">
         <span class="upload-icon">👤</span>
         <span class="upload-label">Foto de<br>perfil</span>
       </div>
       <img id="avatar-img" class="profile-avatar" src="" alt="avatar" style="display:none;">
-      <div class="profile-avatar-edit" id="avatar-edit">✎</div>
-      <div class="profile-avatar-color" id="avatar-color-btn">🎨</div>
     </div>
     <div class="profile-info">
       <div class="profile-name-label">Nombre de usuario</div>
@@ -5163,7 +5164,6 @@
   const avatarPlaceholder = document.getElementById('avatar-placeholder');
   const avatarEdit = document.getElementById('avatar-edit');
   const avatarInput = document.getElementById('avatar-input');
-  const avatarWrapper = document.getElementById('avatar-wrapper');
   const avatarBorderColor = document.getElementById('avatar-border-color');
 
   function openFilePicker() { avatarInput.click(); }
@@ -5314,21 +5314,6 @@
   }
   window.applyThemeColor = applyThemeColor;
 
-  function showAvatarButtons() {
-    const editBtn = document.getElementById('avatar-edit');
-    const colorBtn = document.getElementById('avatar-color-btn');
-    const img = document.getElementById('avatar-img');
-    if (editBtn && img && img.style.display !== 'none') editBtn.style.display = 'flex';
-    if (colorBtn) colorBtn.style.display = 'flex';
-  }
-
-  function hideAvatarButtons() {
-    const editBtn = document.getElementById('avatar-edit');
-    const colorBtn = document.getElementById('avatar-color-btn');
-    if (editBtn) editBtn.style.display = 'none';
-    if (colorBtn) colorBtn.style.display = 'none';
-  }
-
   function changeAvatarBorder(color) {
     applyThemeColor(color);
     localStorage.setItem('atlas-avatar-border', color);
@@ -5363,13 +5348,9 @@
         // Actualizar UI
         const img = document.getElementById('avatar-img');
         const placeholder = document.getElementById('avatar-placeholder');
-        const editBtn = document.getElementById('avatar-edit');
-        const colorBtn = document.getElementById('avatar-color-btn');
         img.src = compressed;
         img.style.display = 'block';
         if (placeholder) placeholder.style.display = 'none';
-        if (editBtn) editBtn.style.display = 'none';
-        if (colorBtn) colorBtn.style.display = 'none';
 
         // Guardar en localStorage
         localStorage.setItem('atlas-avatar', compressed);
@@ -5428,13 +5409,9 @@
     if (avatar) {
       const img = document.getElementById('avatar-img');
       const placeholder = document.getElementById('avatar-placeholder');
-      const editBtn = document.getElementById('avatar-edit');
       img.src = avatar;
       img.style.display = 'block';
       placeholder.style.display = 'none';
-      editBtn.style.display = 'none';
-      const colorBtn2 = document.getElementById('avatar-color-btn');
-      if (colorBtn2) colorBtn2.style.display = 'none';
     }
 
     let borderColor = localStorage.getItem('atlas-avatar-border') || '';
