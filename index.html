@@ -2299,19 +2299,19 @@
   }
   .settings-modal {
     position: fixed;
-    bottom: 0;
+    top: 0;
     left: 50%;
-    transform: translateX(-50%) translateY(100%);
+    transform: translateX(-50%) translateY(-100%);
     width: 100%;
     max-width: 480px;
     background: var(--panel);
     border: 3px solid var(--border);
-    border-bottom: none;
-    border-radius: 24px 24px 0 0;
-    padding: 20px 24px calc(28px + env(safe-area-inset-bottom, 0px));
+    border-top: none;
+    border-radius: 0 0 24px 24px;
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 24px 28px;
     z-index: 10001;
     transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
-    box-shadow: 0 -6px 0 var(--sand-dark), 0 -12px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 0 var(--sand-dark), 0 12px 40px rgba(0,0,0,0.2);
     overscroll-behavior: contain;
     -webkit-overflow-scrolling: touch;
     max-height: 85vh;
@@ -2325,7 +2325,7 @@
     height: 5px;
     background: var(--sand-dark);
     border-radius: 3px;
-    margin: 0 auto 16px;
+    margin: 16px auto 0;
   }
   .settings-modal-title {
     font-family: 'Fredoka One', cursive;
@@ -2645,10 +2645,8 @@
         if (d.avatar && d.avatar.length > 0) {
           const img = document.getElementById('avatar-img');
           const ph  = document.getElementById('avatar-placeholder');
-          const eb  = document.getElementById('avatar-edit');
           img.src = d.avatar; img.style.display='block';
           if(ph) ph.style.display='none';
-          if(eb) eb.style.display='none';
           localStorage.setItem('atlas-avatar', d.avatar);
         }
         if (d.borderColor) {
@@ -3026,7 +3024,6 @@
 <!-- ══ MODAL DE CONFIGURACIÓN (tema + notificaciones) ══ -->
 <div class="settings-modal-overlay" id="settingsModalOverlay" onclick="closeSettingsModal()"></div>
 <div class="settings-modal" id="settingsModal">
-  <div class="settings-modal-handle"></div>
   <div class="settings-modal-title">⚙️ Configuración</div>
 
   <div class="settings-row">
@@ -3063,6 +3060,8 @@
       <span class="settings-switch-slider"></span>
     </label>
   </div>
+
+  <div class="settings-modal-handle"></div>
 </div>
 
 <script>
