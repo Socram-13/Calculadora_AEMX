@@ -3141,12 +3141,16 @@
   }
 
   // Se llama cuando ya sabemos que el check-in de hoy sigue disponible
-  window.maybeNotifyCheckinAvailable = function(hoy) {
+  window.maybeNotifyCheckinAvailable = function(hoy, streak) {
     if (localStorage.getItem(CHECKIN_NOTIF_KEY) !== 'on') return;
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
     if (localStorage.getItem(CHECKIN_NOTIFIED_KEY) === hoy) return; // ya se avisó hoy
     localStorage.setItem(CHECKIN_NOTIFIED_KEY, hoy);
-    showCheckinNotification('🏁 ¡Check In disponible!', 'Ya puedes hacer tu check in de hoy y ganar tu coin.');
+    const s = Number(streak) || 0;
+    const body = s > 0
+      ? `Llevas una racha de ${s} día${s === 1 ? '' : 's'}, no la pierdas 🔥`
+      : 'Ya puedes hacer tu check in de hoy y ganar tu coin.';
+    showCheckinNotification('🏁 ¡Check In disponible!', body);
   };
 
   // Reintenta el chequeo cuando el usuario vuelve a la app (no garantiza
@@ -4455,16 +4459,17 @@
 
         window._coinsUpdateDisplay(coins);
 
+        const st = getDisplayStreakState(serverData, hoy);
+
         if (serverData.lastCoinDate === hoy) {
           setCoinStatus(`<span class="waiting">Vuelve mañana para ganar otro coin 🕐</span>`);
           updateCheckInBtn(true);
         } else {
           setCoinStatus(`<span class="waiting">Haz Check In para ganar 1 coin 🪙</span>`);
           updateCheckInBtn(false);
-          maybeNotifyCheckinAvailable(hoy);
+          maybeNotifyCheckinAvailable(hoy, st.greenDays);
         }
 
-        const st = getDisplayStreakState(serverData, hoy);
         renderStreakTrack(st.greenDays, st.todayChecked);
 
       } catch(e) {
